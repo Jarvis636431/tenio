@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
-// 模拟数据
+// 模拟数据 - 扩展到项目结束日期 8/17
 const chartData = {
   procurement: [
     { date: "8/1", value: 120000, plan: 100000 },
@@ -16,6 +16,16 @@ const chartData = {
     { date: "8/5", value: 230000, plan: 200000 },
     { date: "8/6", value: 250000, plan: 230000 },
     { date: "8/7", value: 280000, plan: 250000 },
+    { date: "8/8", value: 310000, plan: 280000 },
+    { date: "8/9", value: 340000, plan: 310000 },
+    { date: "8/10", value: 370000, plan: 340000 },
+    { date: "8/11", value: 400000, plan: 370000 },
+    { date: "8/12", value: 430000, plan: 400000 },
+    { date: "8/13", value: 460000, plan: 430000 },
+    { date: "8/14", value: 490000, plan: 460000 },
+    { date: "8/15", value: 520000, plan: 490000 },
+    { date: "8/16", value: 550000, plan: 520000 },
+    { date: "8/17", value: 580000, plan: 550000 },
   ],
   labor: [
     { date: "8/1", value: 12, plan: 10 },
@@ -25,6 +35,16 @@ const chartData = {
     { date: "8/5", value: 22, plan: 20 },
     { date: "8/6", value: 25, plan: 22 },
     { date: "8/7", value: 28, plan: 25 },
+    { date: "8/8", value: 30, plan: 28 },
+    { date: "8/9", value: 32, plan: 30 },
+    { date: "8/10", value: 35, plan: 32 },
+    { date: "8/11", value: 38, plan: 35 },
+    { date: "8/12", value: 40, plan: 38 },
+    { date: "8/13", value: 42, plan: 40 },
+    { date: "8/14", value: 45, plan: 42 },
+    { date: "8/15", value: 48, plan: 45 },
+    { date: "8/16", value: 50, plan: 48 },
+    { date: "8/17", value: 52, plan: 50 },
   ],
   funding: [
     { date: "8/1", value: 500000, plan: 480000 },
@@ -34,6 +54,16 @@ const chartData = {
     { date: "8/5", value: 950000, plan: 920000 },
     { date: "8/6", value: 1100000, plan: 1050000 },
     { date: "8/7", value: 1200000, plan: 1180000 },
+    { date: "8/8", value: 1350000, plan: 1300000 },
+    { date: "8/9", value: 1480000, plan: 1420000 },
+    { date: "8/10", value: 1620000, plan: 1550000 },
+    { date: "8/11", value: 1750000, plan: 1680000 },
+    { date: "8/12", value: 1880000, plan: 1820000 },
+    { date: "8/13", value: 2000000, plan: 1950000 },
+    { date: "8/14", value: 2120000, plan: 2080000 },
+    { date: "8/15", value: 2250000, plan: 2200000 },
+    { date: "8/16", value: 2380000, plan: 2330000 },
+    { date: "8/17", value: 2500000, plan: 2450000 },
   ],
   materials: [
     { date: "8/1", value: 85, plan: 80 },
@@ -43,6 +73,16 @@ const chartData = {
     { date: "8/5", value: 88, plan: 85 },
     { date: "8/6", value: 96, plan: 92 },
     { date: "8/7", value: 89, plan: 88 },
+    { date: "8/8", value: 93, plan: 90 },
+    { date: "8/9", value: 87, plan: 89 },
+    { date: "8/10", value: 94, plan: 91 },
+    { date: "8/11", value: 90, plan: 88 },
+    { date: "8/12", value: 97, plan: 94 },
+    { date: "8/13", value: 91, plan: 89 },
+    { date: "8/14", value: 95, plan: 93 },
+    { date: "8/15", value: 88, plan: 90 },
+    { date: "8/16", value: 98, plan: 95 },
+    { date: "8/17", value: 92, plan: 90 },
   ],
 };
 
@@ -77,7 +117,7 @@ const chartConfig = {
   }
 };
 
-// 物料类型数据
+// 物料类型数据 - 扩展到 8/17
 const materialTypesData = {
   concrete: {
     name: "混凝土",
@@ -89,6 +129,16 @@ const materialTypesData = {
       { date: "8/5", value: 88, plan: 85 },
       { date: "8/6", value: 96, plan: 92 },
       { date: "8/7", value: 89, plan: 88 },
+      { date: "8/8", value: 93, plan: 90 },
+      { date: "8/9", value: 87, plan: 89 },
+      { date: "8/10", value: 94, plan: 91 },
+      { date: "8/11", value: 90, plan: 88 },
+      { date: "8/12", value: 97, plan: 94 },
+      { date: "8/13", value: 91, plan: 89 },
+      { date: "8/14", value: 95, plan: 93 },
+      { date: "8/15", value: 88, plan: 90 },
+      { date: "8/16", value: 98, plan: 95 },
+      { date: "8/17", value: 92, plan: 90 },
     ]
   },
   steel: {
@@ -101,6 +151,16 @@ const materialTypesData = {
       { date: "8/5", value: 98, plan: 92 },
       { date: "8/6", value: 94, plan: 96 },
       { date: "8/7", value: 97, plan: 94 },
+      { date: "8/8", value: 89, plan: 95 },
+      { date: "8/9", value: 96, plan: 91 },
+      { date: "8/10", value: 93, plan: 94 },
+      { date: "8/11", value: 99, plan: 96 },
+      { date: "8/12", value: 91, plan: 97 },
+      { date: "8/13", value: 94, plan: 92 },
+      { date: "8/14", value: 88, plan: 95 },
+      { date: "8/15", value: 97, plan: 90 },
+      { date: "8/16", value: 95, plan: 98 },
+      { date: "8/17", value: 100, plan: 96 },
     ]
   },
   blocks: {
@@ -113,6 +173,16 @@ const materialTypesData = {
       { date: "8/5", value: 91, plan: 86 },
       { date: "8/6", value: 89, plan: 90 },
       { date: "8/7", value: 93, plan: 89 },
+      { date: "8/8", value: 87, plan: 92 },
+      { date: "8/9", value: 95, plan: 89 },
+      { date: "8/10", value: 92, plan: 93 },
+      { date: "8/11", value: 88, plan: 90 },
+      { date: "8/12", value: 96, plan: 93 },
+      { date: "8/13", value: 90, plan: 87 },
+      { date: "8/14", value: 94, plan: 92 },
+      { date: "8/15", value: 91, plan: 89 },
+      { date: "8/16", value: 97, plan: 94 },
+      { date: "8/17", value: 89, plan: 91 },
     ]
   },
   mortar: {
@@ -125,6 +195,16 @@ const materialTypesData = {
       { date: "8/5", value: 87, plan: 90 },
       { date: "8/6", value: 94, plan: 87 },
       { date: "8/7", value: 91, plan: 92 },
+      { date: "8/8", value: 88, plan: 89 },
+      { date: "8/9", value: 96, plan: 93 },
+      { date: "8/10", value: 90, plan: 87 },
+      { date: "8/11", value: 93, plan: 95 },
+      { date: "8/12", value: 89, plan: 91 },
+      { date: "8/13", value: 97, plan: 94 },
+      { date: "8/14", value: 92, plan: 89 },
+      { date: "8/15", value: 95, plan: 97 },
+      { date: "8/16", value: 88, plan: 93 },
+      { date: "8/17", value: 99, plan: 96 },
     ]
   }
 };
