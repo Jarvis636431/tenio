@@ -77,7 +77,8 @@ export default function NewProject() {
       setIsCreating(false);
     }
   };
-  return <div className="max-w-4xl mx-auto space-y-6">
+  return <div className="h-full p-4">
+    <div className="max-w-4xl mx-auto bg-card rounded-xl shadow-sm p-6 space-y-6">
       <div className="space-y-2">
         <h1 className="font-bold tracking-tight text-2xl">新建项目</h1>
         <p className="text-muted-foreground text-sm">
@@ -187,5 +188,6 @@ export default function NewProject() {
           </CardContent>
         </Card>
       </div>
-    </div>;
+    </div>
+  </div>;
 }
