@@ -38,7 +38,7 @@ export function AppSidebar() {
   }) => isActive ? "bg-primary text-primary-foreground" : "hover:bg-accent";
 
       return <Sidebar className="bg-sidebar border-r" collapsible="icon">
-      <SidebarHeader className="bg-sidebar-accent/50 p-4 py-[13.5px] flex flex-row items-center justify-between">
+      <SidebarHeader className="p-4 py-[13.5px] flex flex-row items-center justify-between">
         {isCollapsed ? (
           <SidebarTrigger className="h-6 w-6 flex-shrink-0">
             <Menu className="h-4 w-4" />
