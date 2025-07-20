@@ -6,20 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-
 export default function NewProject() {
   const [bidNotice, setBidNotice] = useState<File | null>(null);
   const [controlPrice, setControlPrice] = useState("");
   const [cadFile, setCadFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
-
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, setter: (file: File | null) => void) => {
     const file = event.target.files?.[0] || null;
     setter(file);
   };
-
   const handleDrop = (event: React.DragEvent<HTMLDivElement>, setter: (file: File | null) => void, acceptedTypes: string[]) => {
     event.preventDefault();
     const files = event.dataTransfer.files;
@@ -38,11 +37,9 @@ export default function NewProject() {
       }
     }
   };
-
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
   };
-
   const handleStartAnalysis = async () => {
     if (!bidNotice || !controlPrice || !cadFile) {
       toast({
@@ -80,12 +77,10 @@ export default function NewProject() {
       setIsCreating(false);
     }
   };
-
-  return (
-    <div className="max-w-4xl mx-auto space-y-6">
+  return <div className="max-w-4xl mx-auto space-y-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">新建项目</h1>
-        <p className="text-muted-foreground">
+        <h1 className="font-bold tracking-tight text-2xl">新建项目</h1>
+        <p className="text-muted-foreground text-sm">
           上传项目文件并设置基础信息以开始项目管理
         </p>
       </div>
@@ -94,31 +89,21 @@ export default function NewProject() {
         {/* 中标通知书上传 */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <FileText className="h-5 w-5 text-primary" />
               中标通知书
             </CardTitle>
-            <CardDescription>用于识别项目城市，建筑类型，中标金额</CardDescription>
+            <CardDescription className="text-sm">用于识别项目城市，建筑类型，中标金额</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div 
-                className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors"
-                onDrop={e => handleDrop(e, setBidNotice, ['.pdf'])}
-                onDragOver={handleDragOver}
-              >
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors" onDrop={e => handleDrop(e, setBidNotice, ['.pdf'])} onDragOver={handleDragOver}>
                 <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
                     {bidNotice ? bidNotice.name : "点击或拖拽上传 PDF 文件"}
                   </p>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={e => handleFileUpload(e, setBidNotice)}
-                    className="hidden"
-                    id="bid-notice"
-                  />
+                  <input type="file" accept=".pdf" onChange={e => handleFileUpload(e, setBidNotice)} className="hidden" id="bid-notice" />
                   <Label htmlFor="bid-notice" className="cursor-pointer">
                     <Button variant="outline" type="button">
                       选择文件
@@ -133,25 +118,18 @@ export default function NewProject() {
         {/* 内部控制价 */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Wrench className="h-5 w-5 text-primary" />
               内部控制价
             </CardTitle>
-            <CardDescription>设置项目的内部控制价百分比</CardDescription>
+            <CardDescription className="text-sm">设置项目的内部控制价百分比</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="control-price">控制价百分比</Label>
                 <div className="relative">
-                  <Input
-                    id="control-price"
-                    type="number"
-                    placeholder="输入百分比"
-                    value={controlPrice}
-                    onChange={e => setControlPrice(e.target.value)}
-                    className="pr-8"
-                  />
+                  <Input id="control-price" type="number" placeholder="输入百分比" value={controlPrice} onChange={e => setControlPrice(e.target.value)} className="pr-8" />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
                     %
                   </span>
@@ -167,31 +145,21 @@ export default function NewProject() {
         {/* CAD 文件上传 */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Upload className="h-5 w-5 text-primary" />
               CAD 图纸
             </CardTitle>
-            <CardDescription>用于识别建筑类型和结构类型</CardDescription>
+            <CardDescription className="text-sm">用于识别建筑类型和结构类型</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div 
-                className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors"
-                onDrop={e => handleDrop(e, setCadFile, ['.dwg', '.dxf'])}
-                onDragOver={handleDragOver}
-              >
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors" onDrop={e => handleDrop(e, setCadFile, ['.dwg', '.dxf'])} onDragOver={handleDragOver}>
                 <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
                     {cadFile ? cadFile.name : "点击或拖拽上传 DWG 或 DXF 文件"}
                   </p>
-                  <input
-                    type="file"
-                    accept=".dwg,.dxf"
-                    onChange={e => handleFileUpload(e, setCadFile)}
-                    className="hidden"
-                    id="cad-file"
-                  />
+                  <input type="file" accept=".dwg,.dxf" onChange={e => handleFileUpload(e, setCadFile)} className="hidden" id="cad-file" />
                   <Label htmlFor="cad-file" className="cursor-pointer">
                     <Button variant="outline" type="button">
                       选择文件
@@ -206,24 +174,18 @@ export default function NewProject() {
         {/* 开始解析按钮 */}
         <Card>
           <CardHeader>
-            <CardTitle>项目解析</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg">项目解析</CardTitle>
+            <CardDescription className="text-sm">
               完成上述文件上传后，点击开始解析生成项目
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              onClick={handleStartAnalysis}
-              className="w-full"
-              size="lg"
-              disabled={!bidNotice || !controlPrice || !cadFile || isCreating}
-            >
+            <Button onClick={handleStartAnalysis} className="w-full" size="lg" disabled={!bidNotice || !controlPrice || !cadFile || isCreating}>
               <Play className="mr-2 h-4 w-4" />
               {isCreating ? "正在创建..." : "开始解析"}
             </Button>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 }
