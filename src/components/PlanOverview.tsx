@@ -72,7 +72,7 @@ export function PlanOverview() {
               </div>
               <div className="overflow-x-auto">
                 <div className="min-w-full">
-                  <div className="rounded-md border">
+                  <div className="rounded-md border bg-background">{/* 添加白色背景 */}
                     {/* 固定表头 */}
                     <div className="sticky top-0 bg-background z-10">
                       <Table>
