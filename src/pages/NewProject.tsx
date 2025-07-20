@@ -98,7 +98,7 @@ export default function NewProject() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">新建项目</h1>
         <p className="text-muted-foreground">
-          用于识别项目城市，建筑类型，中标金额 CAD
+          上传项目文件并设置基础信息以开始项目管理
         </p>
       </div>
 
