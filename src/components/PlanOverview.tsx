@@ -78,7 +78,7 @@ export function PlanOverview() {
                       <div className="sticky top-0 bg-background z-10">
                         <Table>
                           <TableHeader>
-                            <TableRow>
+                            <TableRow className="bg-muted/60">
                               <TableHead>任务名称</TableHead>
                               <TableHead>开始日期</TableHead>
                               <TableHead>结束日期</TableHead>
