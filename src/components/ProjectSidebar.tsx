@@ -59,10 +59,10 @@ export function ProjectSidebar({ activeView, onViewChange }: ProjectSidebarProps
                 <button
                   onClick={() => onViewChange(item.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all duration-200 relative",
                     isActive 
-                      ? "bg-primary text-primary-foreground" 
-                      : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                      ? "bg-primary text-primary-foreground shadow-sm before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary-foreground before:rounded-r-sm" 
+                      : "hover:bg-accent hover:text-accent-foreground text-muted-foreground"
                   )}
                   title={isCollapsed ? item.label : undefined}
                 >
