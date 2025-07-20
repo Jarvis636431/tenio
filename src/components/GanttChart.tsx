@@ -79,7 +79,7 @@ export function GanttChart({ data }: GanttChartProps) {
   });
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>施工工序甘特图</CardTitle>
         <CardDescription>
