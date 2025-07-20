@@ -1453,82 +1453,82 @@ const overviewColors = {
   }
 };
 
-// 总览模式的中文图表配置
+// 总览模式的中文图表配置，颜色与overviewColors保持一致
 const overviewChartConfigs = {
   materials: {
     concrete: {
       label: "混凝土",
-      color: "#ef4444"
+      color: overviewColors.materials.concrete
     },
     steel: {
       label: "钢筋", 
-      color: "#f97316"
+      color: overviewColors.materials.steel
     },
     blocks: {
       label: "空心混凝土砌块",
-      color: "#eab308"
+      color: overviewColors.materials.blocks
     },
     mortar: {
       label: "砂浆",
-      color: "#84cc16"
+      color: overviewColors.materials.mortar
     }
   },
   labor: {
     carpenter: {
       label: "木工",
-      color: "#10b981"
+      color: overviewColors.labor.carpenter
     },
     steelworker: {
       label: "钢筋工",
-      color: "#06b6d4"
+      color: overviewColors.labor.steelworker
     },
     concreter: {
       label: "混凝土工",
-      color: "#8b5cf6"
+      color: overviewColors.labor.concreter
     },
     electrician: {
       label: "电工",
-      color: "#ec4899"
+      color: overviewColors.labor.electrician
     }
   },
   funding: {
     total: {
       label: "总资金",
-      color: "#f59e0b"
+      color: overviewColors.funding.total
     },
     labor_cost: {
       label: "人工费用",
-      color: "#10b981"
+      color: overviewColors.funding.labor_cost
     },
     material_cost: {
       label: "材料费用",
-      color: "#ef4444"
+      color: overviewColors.funding.material_cost
     },
     equipment_cost: {
       label: "设备费用",
-      color: "#8b5cf6"
+      color: overviewColors.funding.equipment_cost
     },
     management_cost: {
       label: "管理费用",
-      color: "#06b6d4"
+      color: overviewColors.funding.management_cost
     }
   },
   procurement: {
     materials: {
       label: "材料采购",
-      color: "#3b82f6"
+      color: overviewColors.procurement.materials
     },
     equipment: {
       label: "设备采购",
-      color: "#8b5cf6"
+      color: overviewColors.procurement.equipment
     },
     subcontract: {
       label: "分包采购",
-      color: "#10b981"
+      color: overviewColors.procurement.subcontract
     },
     orders: {
       label: "订单管理",
-      color: "#f59e0b"
+      color: overviewColors.procurement.orders
     }
   }
 };
