@@ -110,7 +110,7 @@ export default function NewProject() {
               <FileText className="h-5 w-5 text-primary" />
               中标通知书
             </CardTitle>
-            <CardDescription>上传 PDF 格式的中标通知书</CardDescription>
+            <CardDescription>用于识别项目城市，建筑类型，中标金额</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -183,23 +183,23 @@ export default function NewProject() {
               <Upload className="h-5 w-5 text-primary" />
               CAD 图纸
             </CardTitle>
-            <CardDescription>上传 DWG 格式的 CAD 图纸文件</CardDescription>
+            <CardDescription>用于识别 建筑类型和结构类型</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div 
                 className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors"
-                onDrop={(e) => handleDrop(e, setCadFile, ['.dwg'])}
+                onDrop={(e) => handleDrop(e, setCadFile, ['.dwg', '.dxf'])}
                 onDragOver={handleDragOver}
               >
                 <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    {cadFile ? cadFile.name : "点击或拖拽上传 DWG 文件"}
+                    {cadFile ? cadFile.name : "点击或拖拽上传 DWG 或 DXF 文件"}
                   </p>
                   <input
                     type="file"
-                    accept=".dwg"
+                    accept=".dwg,.dxf"
                     onChange={(e) => handleFileUpload(e, setCadFile)}
                     className="hidden"
                     id="cad-file"
