@@ -77,8 +77,8 @@ export default function NewProject() {
       setIsCreating(false);
     }
   };
-  return <div className="h-full p-4">
-    <div className="max-w-4xl mx-auto bg-card rounded-xl shadow-sm p-6 space-y-6">
+  return <div className="h-full p-6">
+    <div className="w-full bg-card rounded-xl shadow-sm p-6 space-y-6">
       <div className="space-y-2">
         <h1 className="font-bold tracking-tight text-2xl">新建项目</h1>
         <p className="text-muted-foreground text-sm">
@@ -86,7 +86,8 @@ export default function NewProject() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* 第一行：三个上传卡片 */}
+      <div className="grid gap-6 md:grid-cols-3">
         {/* 中标通知书上传 */}
         <Card>
           <CardHeader>
@@ -171,22 +172,17 @@ export default function NewProject() {
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* 开始解析按钮 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">项目解析</CardTitle>
-            <CardDescription className="text-sm">
-              完成上述文件上传后，点击开始解析生成项目
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleStartAnalysis} className="w-full" size="lg" disabled={!bidNotice || !controlPrice || !cadFile || isCreating}>
-              <Play className="mr-2 h-4 w-4" />
-              {isCreating ? "正在创建..." : "开始解析"}
-            </Button>
-          </CardContent>
-        </Card>
+      {/* 第二行：解析按钮 */}
+      <div className="flex flex-col items-center space-y-4">
+        <Button onClick={handleStartAnalysis} size="lg" disabled={!bidNotice || !controlPrice || !cadFile || isCreating} className="px-12">
+          <Play className="mr-2 h-4 w-4" />
+          {isCreating ? "正在创建..." : "开始解析"}
+        </Button>
+        <p className="text-muted-foreground text-sm text-center">
+          完成上述文件上传后，点击开始解析生成项目
+        </p>
       </div>
     </div>
   </div>;
