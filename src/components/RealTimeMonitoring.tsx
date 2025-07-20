@@ -629,16 +629,16 @@ export function RealTimeMonitoring() {
               )}
 
               {/* 统计卡片 */}
-              <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="grid gap-3 md:grid-cols-3 mb-4">
+                <Card className="h-24">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                     <CardTitle className="text-sm font-medium">
                       {currentConfig.isCumulative ? "累计实际值" : "当前值"}
                     </CardTitle>
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold" style={{ color: currentConfig.color }}>
+                  <CardContent className="pt-0">
+                    <div className="text-xl font-bold" style={{ color: currentConfig.color }}>
                       {stats.current.toLocaleString()}{currentConfig.unit}
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -649,15 +649,15 @@ export function RealTimeMonitoring() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Card className="h-24">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                     <CardTitle className="text-sm font-medium">
                       {currentConfig.isCumulative ? "累计计划值" : "计划值"}
                     </CardTitle>
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-muted-foreground">
+                  <CardContent className="pt-0">
+                    <div className="text-xl font-bold text-muted-foreground">
                       {stats.plan.toLocaleString()}{currentConfig.unit}
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -665,13 +665,13 @@ export function RealTimeMonitoring() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Card className="h-24">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                     <CardTitle className="text-sm font-medium">完成率</CardTitle>
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
+                  <CardContent className="pt-0">
+                    <div className="text-xl font-bold">
                       {Math.round((stats.current / stats.plan) * 100)}%
                     </div>
                     <p className="text-xs text-muted-foreground">
