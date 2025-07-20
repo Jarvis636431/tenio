@@ -5,52 +5,44 @@ import { FileText, Calendar, CheckCircle2, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // 模拟项目数据
-const projects = [
-  {
-    id: 1,
-    name: "办公楼建设项目",
-    createdAt: "2024-01-10",
-    taskCount: 15,
-    orderCount: 8,
-    status: "已完成"
-  },
-  {
-    id: 2,
-    name: "住宅小区A区项目",
-    createdAt: "2024-02-15",
-    taskCount: 23,
-    orderCount: 12,
-    status: "进行中"
-  },
-  {
-    id: 3,
-    name: "商业综合体项目",
-    createdAt: "2024-03-20",
-    taskCount: 31,
-    orderCount: 18,
-    status: "进行中"
-  },
-  {
-    id: 4,
-    name: "工业园区基础设施",
-    createdAt: "2024-04-05",
-    taskCount: 19,
-    orderCount: 10,
-    status: "规划中"
-  },
-  {
-    id: 5,
-    name: "学校扩建项目",
-    createdAt: "2024-05-12",
-    taskCount: 27,
-    orderCount: 15,
-    status: "进行中"
-  }
-];
-
+const projects = [{
+  id: 1,
+  name: "办公楼建设项目",
+  createdAt: "2024-01-10",
+  taskCount: 15,
+  orderCount: 8,
+  status: "已完成"
+}, {
+  id: 2,
+  name: "住宅小区A区项目",
+  createdAt: "2024-02-15",
+  taskCount: 23,
+  orderCount: 12,
+  status: "进行中"
+}, {
+  id: 3,
+  name: "商业综合体项目",
+  createdAt: "2024-03-20",
+  taskCount: 31,
+  orderCount: 18,
+  status: "进行中"
+}, {
+  id: 4,
+  name: "工业园区基础设施",
+  createdAt: "2024-04-05",
+  taskCount: 19,
+  orderCount: 10,
+  status: "规划中"
+}, {
+  id: 5,
+  name: "学校扩建项目",
+  createdAt: "2024-05-12",
+  taskCount: 27,
+  orderCount: 15,
+  status: "进行中"
+}];
 export default function ProjectManagement() {
   const navigate = useNavigate();
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "已完成":
@@ -63,28 +55,20 @@ export default function ProjectManagement() {
         return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
   };
-
   const handleProjectClick = (projectId: number) => {
     navigate(`/project/${projectId}`);
   };
-
-  return (
-    <div className="h-full p-4">
+  return <div className="h-full p-4">
       <div className="max-w-6xl mx-auto bg-card rounded-xl shadow-sm p-6 space-y-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">项目管理</h1>
-        <p className="text-muted-foreground">
+        <h1 className="font-bold tracking-tight text-2xl">项目管理</h1>
+        <p className="text-muted-foreground text-sm">
           管理您的施工项目，上传CAD图纸自动生成进度表
         </p>
       </div>
 
       <div className="space-y-4">
-        {projects.map((project) => (
-          <Card 
-            key={project.id} 
-            className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleProjectClick(project.id)}
-          >
+        {projects.map(project => <Card key={project.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleProjectClick(project.id)}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -113,19 +97,14 @@ export default function ProjectManagement() {
                     </div>
                   </div>
                   
-                  <Badge 
-                    variant="secondary" 
-                    className={getStatusColor(project.status)}
-                  >
+                  <Badge variant="secondary" className={getStatusColor(project.status)}>
                     {project.status}
                   </Badge>
                 </div>
               </div>
             </CardContent>
-          </Card>
-        ))}
+          </Card>)}
       </div>
       </div>
-    </div>
-  );
+    </div>;
 }
