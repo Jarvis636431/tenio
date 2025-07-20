@@ -45,7 +45,7 @@ export default function ProjectDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">项目 {id}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">办公楼建设项目</h1>
           <p className="text-muted-foreground">施工进度管理与监控</p>
         </div>
         <div className="flex gap-2">
