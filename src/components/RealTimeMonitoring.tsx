@@ -1832,7 +1832,7 @@ export function RealTimeMonitoring() {
                               key === 'funding' ? (name === 'total' ? '总资金' : name === 'labor_cost' ? '人工费用' : name === 'material_cost' ? '材料费用' : name === 'equipment_cost' ? '设备费用' : '管理费用') :
                               (name === 'materials' ? '材料采购' : name === 'equipment' ? '设备采购' : name === 'subcontract' ? '分包采购' : '订单管理')
                             ) : (name === "value" ? "实际值" : "计划值")
-                          ]} />}
+                          ]} />} />
                           
                           {isOverview ? (
                             // 总览模式：显示所有类型的线条
