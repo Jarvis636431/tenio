@@ -62,7 +62,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {mainMenuItems.map(item => <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={getNavCls}>
+                    <NavLink to={item.url} className={({ isActive }) => getNavCls({ isActive })}>
                       <item.icon className="h-4 w-4 flex-shrink-0" />
                       {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
@@ -82,7 +82,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {projects.map(project => <SidebarMenuItem key={project.id}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={project.url} className={getNavCls}>
+                    <NavLink to={project.url} className={({ isActive }) => getNavCls({ isActive })}>
                       <FolderPlus className="h-4 w-4 flex-shrink-0" />
                       {!isCollapsed && <span>{project.name}</span>}
                     </NavLink>
