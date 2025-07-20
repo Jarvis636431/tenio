@@ -67,6 +67,8 @@ export function AppSidebar() {
                     style={isActive(item.url) ? {
                       '--sidebar-accent': 'hsl(0 0% 100%)',
                       '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
+                      backgroundColor: 'white',
+                      color: 'black',
                       fontWeight: 'bold'
                     } as any : {}}
                   >
@@ -95,6 +97,8 @@ export function AppSidebar() {
                     style={isActive(project.url) ? {
                       '--sidebar-accent': 'hsl(0 0% 100%)',
                       '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
+                      backgroundColor: 'white',
+                      color: 'black',
                       fontWeight: 'bold'
                     } as any : {}}
                   >
