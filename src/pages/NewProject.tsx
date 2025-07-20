@@ -104,7 +104,7 @@ export default function NewProject() {
           <CardContent>
             <div className="space-y-4">
               <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors" onDrop={e => handleDrop(e, setCadFile, ['.dwg', '.dxf'])} onDragOver={handleDragOver}>
-                <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                {!cadFile && <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
                     {cadFile ? cadFile.name : "点击或拖拽上传 DWG 或 DXF 文件"}
@@ -141,7 +141,7 @@ export default function NewProject() {
             <CardContent>
               <div className="space-y-4">
                 <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors" onDrop={e => handleDrop(e, setBidNotice, ['.pdf'])} onDragOver={handleDragOver}>
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  {!bidNotice && <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
                       {bidNotice ? bidNotice.name : "点击或拖拽上传 PDF 文件"}
