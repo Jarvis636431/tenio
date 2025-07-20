@@ -69,7 +69,8 @@ export default function ProjectManagement() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="h-full p-4">
+      <div className="max-w-6xl mx-auto bg-card rounded-xl shadow-sm p-6 space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">项目管理</h1>
         <p className="text-muted-foreground">
@@ -123,6 +124,7 @@ export default function ProjectManagement() {
             </CardContent>
           </Card>
         ))}
+      </div>
       </div>
     </div>
   );
