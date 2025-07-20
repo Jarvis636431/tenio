@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
@@ -286,6 +287,10 @@ const ChartLegendContent = React.forwardRef<
         {payload.map((item) => {
           const key = `${nameKey || item.dataKey || "value"}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
+
+          console.log('Legend item:', item)
+          console.log('Legend key:', key)
+          console.log('Legend itemConfig:', itemConfig)
 
           return (
             <div
