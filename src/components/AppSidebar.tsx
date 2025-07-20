@@ -35,7 +35,7 @@ export function AppSidebar() {
     isActive
   }: {
     isActive: boolean;
-  }) => isActive ? "bg-primary text-primary-foreground" : "hover:bg-accent";
+  }) => isActive ? "bg-blue-600 text-white" : "hover:bg-accent";
 
       return <Sidebar className="bg-sidebar border-r" collapsible="icon">
       <SidebarHeader className="p-4 py-[13.5px] flex flex-row items-center justify-between">
