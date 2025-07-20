@@ -157,7 +157,7 @@ export function PlanOverview() {
       
         {/* 可滚动的内容区域 */}
         <div className="flex-1 overflow-auto">
-          <TabsContent value="schedule" className="h-full m-0 p-6 px-0 py-0">
+          <TabsContent value="schedule" className="h-full m-0 py-4 px-0">
             <div className="w-full">
               <div>
                 <div className="overflow-x-auto">
@@ -216,7 +216,7 @@ export function PlanOverview() {
             </div>
           </TabsContent>
 
-          <TabsContent value="gantt" className="h-full m-0 p-6">
+          <TabsContent value="gantt" className="h-full m-0 py-4 px-0">
             <GanttChart data={scheduleData} />
           </TabsContent>
         </div>
