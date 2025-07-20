@@ -1729,7 +1729,7 @@ export function RealTimeMonitoring() {
           // 根据当前选中的具体类型获取对应的颜色
           let specificColor = currentConfig.color; // 默认颜色
 
-          if (key === 'materials' && selectedMaterialType !== 'overview') {
+          if (key === 'materials') {
             specificColor = overviewColors.materials[selectedMaterialType as keyof typeof overviewColors.materials];
           } else if (key === 'labor' && selectedLaborType !== 'overview') {
             specificColor = overviewColors.labor[selectedLaborType as keyof typeof overviewColors.labor];
@@ -1835,66 +1835,33 @@ export function RealTimeMonitoring() {
                           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                           <XAxis dataKey="date" className="text-muted-foreground" fontSize={12} interval={0} />
                           <YAxis className="text-muted-foreground" fontSize={12} tickFormatter={value => `${value}${currentConfig.unit}`} />
-                          <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => [`${value}${currentConfig.unit}`, isOverview ? key === 'materials' ? name === 'concrete' ? '混凝土' : name === 'steel' ? '钢筋' : name === 'blocks' ? '空心混凝土砌块' : '砂浆' : key === 'labor' ? name === 'carpenter' ? '木工' : name === 'steelworker' ? '钢筋工' : name === 'concreter' ? '混凝土工' : '电工' : key === 'funding' ? name === 'total' ? '总资金' : name === 'labor_cost' ? '人工费用' : name === 'material_cost' ? '材料费用' : name === 'equipment_cost' ? '设备费用' : '管理费用' : name === 'materials' ? '材料采购' : name === 'equipment' ? '设备采购' : name === 'subcontract' ? '分包采购' : '订单管理' : name === "value" ? "实际值" : "计划值"]} />}
+                          <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => [`${value}${currentConfig.unit}`, name === "value" ? "实际值" : "计划值"]} />} />
                           
-                          {isOverview ?
-                      // 总览模式：显示所有类型的线条
-                      <>
-                              {key === 'materials' && Object.entries(materialTypesData).map(([typeKey, typeData]) => <Line key={typeKey} type="monotone" dataKey={(entry: any) => {
-                          const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
-                          return dataPoint ? dataPoint.value : null;
-                        }} stroke={overviewColors.materials[typeKey as keyof typeof overviewColors.materials]} strokeWidth={2} dot={{
-                          fill: overviewColors.materials[typeKey as keyof typeof overviewColors.materials],
-                          strokeWidth: 2,
-                          r: 3
-                        }} name={typeKey} />)}
-                              
-                              {key === 'labor' && Object.entries(laborTypesData).map(([typeKey, typeData]) => <Line key={typeKey} type="monotone" dataKey={(entry: any) => {
-                          const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
-                          return dataPoint ? dataPoint.value : null;
-                        }} stroke={overviewColors.labor[typeKey as keyof typeof overviewColors.labor]} strokeWidth={2} dot={{
-                          fill: overviewColors.labor[typeKey as keyof typeof overviewColors.labor],
-                          strokeWidth: 2,
-                          r: 3
-                        }} name={typeKey} />)}
-                              
-                              {key === 'funding' && Object.entries(fundingTypesData).map(([typeKey, typeData]) => <Line key={typeKey} type="monotone" dataKey={(entry: any) => {
-                          const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
-                          return dataPoint ? dataPoint.value : null;
-                        }} stroke={overviewColors.funding[typeKey as keyof typeof overviewColors.funding]} strokeWidth={2} dot={{
-                          fill: overviewColors.funding[typeKey as keyof typeof overviewColors.funding],
-                          strokeWidth: 2,
-                          r: 3
-                        }} name={typeKey} />)}
-                              
-                              {key === 'procurement' && Object.entries(procurementTypesData).map(([typeKey, typeData]) => <Line key={typeKey} type="monotone" dataKey={(entry: any) => {
-                          const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
-                          return dataPoint ? dataPoint.value : null;
-                        }} stroke={overviewColors.procurement[typeKey as keyof typeof overviewColors.procurement]} strokeWidth={2} dot={{
-                          fill: overviewColors.procurement[typeKey as keyof typeof overviewColors.procurement],
-                          strokeWidth: 2,
-                          r: 3
-                        }} name={typeKey} />)}
-                              
-                              <ChartLegend content={<ChartLegendContent />} />
-                            </> :
-                      // 单一类型模式：显示实际值和计划值线条
-                      <>
-                              <Line type="monotone" dataKey="value" stroke={chartConfigForComponent.value.color} strokeWidth={3} dot={{
-                          fill: chartConfigForComponent.value.color,
-                          strokeWidth: 2,
-                          r: 4
-                        }} activeDot={{
-                          r: 6,
-                          stroke: chartConfigForComponent.value.color,
-                          strokeWidth: 2
-                        }} />
-                              <Line type="monotone" dataKey="plan" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={{
-                          fill: "#94a3b8",
-                          strokeWidth: 2,
-                          r: 3
-                        }} />
-                            </>}
+                          <Line 
+                            type="monotone" 
+                            dataKey="value" 
+                            stroke={chartConfigForComponent?.value?.color || "#ef4444"} 
+                            strokeWidth={2} 
+                            dot={{
+                              fill: chartConfigForComponent?.value?.color || "#ef4444",
+                              strokeWidth: 2,
+                              r: 3
+                            }} 
+                            name="value" 
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="plan" 
+                            stroke="#94a3b8" 
+                            strokeWidth={2} 
+                            strokeDasharray="5 5" 
+                            dot={{
+                              fill: "#94a3b8", 
+                              strokeWidth: 2,
+                              r: 3
+                            }} 
+                            name="plan" 
+                          />
                         </LineChart>
                       </ResponsiveContainer>
                     </ChartContainer>
