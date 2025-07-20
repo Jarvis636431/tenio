@@ -65,7 +65,7 @@ export function AIAssistant() {
         }`}
         size="icon"
       >
-        <Sparkles className="w-6 h-6" />
+        <Sparkles className="w-8 h-8" />
       </Button>
 
       {/* AI助手悬浮窗 */}
