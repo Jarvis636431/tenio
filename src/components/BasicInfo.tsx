@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Edit, Save, RefreshCw, Upload, FileText, X } from "lucide-react";
+import { Edit, Save, RefreshCw, FileText, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,25 +65,6 @@ export function BasicInfo() {
     console.log("保存基础信息:", data);
     setIsEditing(false);
     toast.success("项目基础信息已保存");
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    Array.from(files).forEach((file) => {
-      const newFile: UploadedFile = {
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        uploadDate: new Date().toISOString().split('T')[0],
-        parsed: false
-      };
-      setUploadedFiles(prev => [...prev, newFile]);
-    });
-    
-    toast.success("文件上传成功，正在解析...");
   };
 
   const removeFile = (fileId: string) => {
@@ -273,6 +253,36 @@ export function BasicInfo() {
             </form>
           </Form>
 
+          {/* 项目文件列表 */}
+          <div className="mt-6 pt-6 border-t">
+            <div className="space-y-4">
+              <h4 className="font-medium">项目文件</h4>
+              {uploadedFiles.map((file) => (
+                <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium text-sm">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(file.size)} • {file.uploadDate} • 
+                        <span className={file.parsed ? "text-green-600" : "text-yellow-600"}>
+                          {file.parsed ? " 已解析" : " 解析中"}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFile(file.id)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {!isEditing && (
             <div className="mt-6 pt-6 border-t">
               <Button onClick={regeneratePlan} className="w-full">
@@ -281,57 +291,6 @@ export function BasicInfo() {
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* 文件管理 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>项目文件</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* 文件上传区域 */}
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-            <Upload className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">拖拽文件到此处或点击上传</p>
-              <Input
-                type="file"
-                multiple
-                onChange={handleFileUpload}
-                className="w-full"
-                accept=".pdf,.doc,.docx,.dwg,.dxf"
-              />
-            </div>
-          </div>
-
-          {/* 已上传文件列表 */}
-          <div className="space-y-2">
-            <h4 className="font-medium">已上传文件</h4>
-            {uploadedFiles.map((file) => (
-              <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatFileSize(file.size)} • {file.uploadDate} • 
-                      <span className={file.parsed ? "text-green-600" : "text-yellow-600"}>
-                        {file.parsed ? " 已解析" : " 解析中"}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeFile(file.id)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
         </CardContent>
       </Card>
     </div>
