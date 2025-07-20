@@ -23,13 +23,14 @@ export default function ProjectDetail() {
   };
 
   return (
-    <div className="h-full flex">
+    <div className="h-full flex overflow-hidden">
       {/* 项目内部侧边栏 */}
-      <ProjectSidebar activeView={activeView} onViewChange={setActiveView} />
+      <div className="h-full overflow-hidden">
+        <ProjectSidebar activeView={activeView} onViewChange={setActiveView} />
+      </div>
       
       {/* 主内容区域 */}
-      <div className="flex-1 flex flex-col">
-
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* 动态内容区域 */}
         <div className="flex-1 p-6 overflow-auto">
           {renderContent()}
