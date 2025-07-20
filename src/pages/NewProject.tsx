@@ -67,7 +67,7 @@ export default function NewProject() {
         title: "项目创建成功",
         description: `项目已成功创建，文件解析完成`
       });
-      navigate(`/project/${newProjectId}`);
+      navigate(`/project/${newProjectId}?view=plan-overview`);
     } catch (error) {
       toast({
         title: "创建失败",

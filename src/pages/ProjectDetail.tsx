@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { ProjectSidebar } from "@/components/ProjectSidebar";
 import { BasicInfo } from "@/components/BasicInfo";
 import { PlanOverview } from "@/components/PlanOverview";
@@ -9,7 +9,15 @@ import { OrderManagement } from "@/components/OrderManagement";
 
 export default function ProjectDetail() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const [activeView, setActiveView] = useState("basic-info");
+
+  useEffect(() => {
+    const viewParam = searchParams.get("view");
+    if (viewParam === "plan-overview") {
+      setActiveView("plan-overview");
+    }
+  }, [searchParams]);
 
   const renderContent = () => {
     switch (activeView) {
