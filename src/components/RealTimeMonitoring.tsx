@@ -1453,6 +1453,86 @@ const overviewColors = {
   }
 };
 
+// 总览模式的中文图表配置
+const overviewChartConfigs = {
+  materials: {
+    concrete: {
+      label: "混凝土",
+      color: "#ef4444"
+    },
+    steel: {
+      label: "钢筋", 
+      color: "#f97316"
+    },
+    blocks: {
+      label: "空心混凝土砌块",
+      color: "#eab308"
+    },
+    mortar: {
+      label: "砂浆",
+      color: "#84cc16"
+    }
+  },
+  labor: {
+    carpenter: {
+      label: "木工",
+      color: "#10b981"
+    },
+    steelworker: {
+      label: "钢筋工",
+      color: "#06b6d4"
+    },
+    concreter: {
+      label: "混凝土工",
+      color: "#8b5cf6"
+    },
+    electrician: {
+      label: "电工",
+      color: "#ec4899"
+    }
+  },
+  funding: {
+    total: {
+      label: "总资金",
+      color: "#f59e0b"
+    },
+    labor_cost: {
+      label: "人工费用",
+      color: "#10b981"
+    },
+    material_cost: {
+      label: "材料费用",
+      color: "#ef4444"
+    },
+    equipment_cost: {
+      label: "设备费用",
+      color: "#8b5cf6"
+    },
+    management_cost: {
+      label: "管理费用",
+      color: "#06b6d4"
+    }
+  },
+  procurement: {
+    materials: {
+      label: "材料采购",
+      color: "#3b82f6"
+    },
+    equipment: {
+      label: "设备采购",
+      color: "#8b5cf6"
+    },
+    subcontract: {
+      label: "分包采购",
+      color: "#10b981"
+    },
+    orders: {
+      label: "订单管理",
+      color: "#f59e0b"
+    }
+  }
+};
+
 // 计算统计值的辅助函数
 const calculateStats = (data: Array<{
   value: number;
@@ -1632,6 +1712,23 @@ export function RealTimeMonitoring() {
           stats = calculateStats(displayData || data, currentConfig.isCumulative);
         }
 
+        // 动态生成图表配置
+        let chartConfigForComponent;
+        if (isOverview) {
+          chartConfigForComponent = overviewChartConfigs[key as keyof typeof overviewChartConfigs] || {};
+        } else {
+          chartConfigForComponent = {
+            value: {
+              label: "实际值",
+              color: currentConfig.color
+            },
+            plan: {
+              label: "计划值", 
+              color: "#94a3b8"
+            }
+          };
+        }
+
         return <TabsContent key={key} value={key} className="space-y-4">
               {/* 类型选择器 */}
               {typeSelector && <div className="flex items-center gap-4 p-0">
@@ -1706,16 +1803,7 @@ export function RealTimeMonitoring() {
                 <CardContent>
                   <div className="overflow-x-auto">
                     <ChartContainer 
-                      config={isOverview ? {} : {
-                        value: {
-                          label: "实际值",
-                          color: currentConfig.color
-                        },
-                        plan: {
-                          label: "计划值",
-                          color: "#94a3b8"
-                        }
-                      }} 
+                      config={chartConfigForComponent} 
                       className="h-[400px]" 
                       style={{
                         minWidth: isOverview ? "800px" : `${(displayData || data).length * 80}px`
@@ -1744,7 +1832,7 @@ export function RealTimeMonitoring() {
                               key === 'funding' ? (name === 'total' ? '总资金' : name === 'labor_cost' ? '人工费用' : name === 'material_cost' ? '材料费用' : name === 'equipment_cost' ? '设备费用' : '管理费用') :
                               (name === 'materials' ? '材料采购' : name === 'equipment' ? '设备采购' : name === 'subcontract' ? '分包采购' : '订单管理')
                             ) : (name === "value" ? "实际值" : "计划值")
-                          ]} />} />
+                          ]} />}
                           
                           {isOverview ? (
                             // 总览模式：显示所有类型的线条
