@@ -62,69 +62,71 @@ export function PlanOverview() {
       
         {/* 可滚动的内容区域 */}
         <div className="flex-1 overflow-auto">
-          <TabsContent value="schedule" className="h-px m-0 p-6 flex flex-col">
-            <div className="w-full">
-              <div className="space-y-1 mb-6">
-                <h2 className="text-xl font-semibold">总进度规划表</h2>
-                <p className="text-muted-foreground">
+          <TabsContent value="schedule" className="h-full m-0 p-6">
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>总进度规划表</CardTitle>
+                <CardDescription>
                   项目施工任务的详细进度规划与人员安排
-                </p>
-              </div>
-              <div className="overflow-x-auto">
-                <div className="min-w-full">
-                  <div className="rounded-md border">
-                    {/* 固定表头 */}
-                    <div className="sticky top-0 bg-background z-10">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>任务名称</TableHead>
-                            <TableHead>开始日期</TableHead>
-                            <TableHead>结束日期</TableHead>
-                            <TableHead>持续天数</TableHead>
-                            <TableHead>工种</TableHead>
-                            <TableHead>人数</TableHead>
-                            <TableHead>操作</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                      </Table>
-                    </div>
-                    
-                    {/* 可滚动表格内容 */}
-                    <div className="flex-1 overflow-y-auto">
-                      <Table>
-                        <TableBody>
-                          {scheduleData.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell className="font-medium">{item.task}</TableCell>
-                              <TableCell>{item.startDate}</TableCell>
-                              <TableCell>{item.endDate}</TableCell>
-                              <TableCell>{item.duration}</TableCell>
-                              <TableCell>
-                                <Badge className={getWorkerBadgeColor(item.worker)}>
-                                  {item.worker}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{item.count}</TableCell>
-                              <TableCell>
-                                <div className="flex gap-2">
-                                  <Button variant="outline" size="sm">
-                                    编辑
-                                  </Button>
-                                  <Button variant="outline" size="sm">
-                                    详情
-                                  </Button>
-                                </div>
-                              </TableCell>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <div className="min-w-full">
+                    <div className="rounded-md border">
+                      {/* 固定表头 */}
+                      <div className="sticky top-0 bg-background z-10">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>任务名称</TableHead>
+                              <TableHead>开始日期</TableHead>
+                              <TableHead>结束日期</TableHead>
+                              <TableHead>持续天数</TableHead>
+                              <TableHead>工种</TableHead>
+                              <TableHead>人数</TableHead>
+                              <TableHead>操作</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                        </Table>
+                      </div>
+                      
+                      {/* 可滚动表格内容 */}
+                      <div className="max-h-96 overflow-y-auto">
+                        <Table>
+                          <TableBody>
+                            {scheduleData.map((item) => (
+                              <TableRow key={item.id}>
+                                <TableCell className="font-medium">{item.task}</TableCell>
+                                <TableCell>{item.startDate}</TableCell>
+                                <TableCell>{item.endDate}</TableCell>
+                                <TableCell>{item.duration}</TableCell>
+                                <TableCell>
+                                  <Badge className={getWorkerBadgeColor(item.worker)}>
+                                    {item.worker}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>{item.count}</TableCell>
+                                <TableCell>
+                                  <div className="flex gap-2">
+                                    <Button variant="outline" size="sm">
+                                      编辑
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      详情
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="gantt" className="h-full m-0 p-6">
