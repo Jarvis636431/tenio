@@ -42,7 +42,7 @@ export function PlanOverview() {
     <div className="h-full flex flex-col">
       <Tabs defaultValue="schedule" className="h-full flex flex-col">
         {/* 固定在顶部的部分 */}
-        <div className="shrink-0 space-y-6 p-6 bg-background border-b">
+        <div className="shrink-0 space-y-6 p-6 border-b">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold tracking-tight">计划总览</h1>
             <p className="text-muted-foreground">项目施工进度规划与时间轴视图</p>
