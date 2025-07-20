@@ -81,56 +81,10 @@ export function GanttChart({ data }: GanttChartProps) {
   return (
     <div className="h-full flex flex-col">
       {/* 固定在顶部的部分 */}
-      <div className="shrink-0 space-y-6 p-6 bg-background border-b">
+      <div className="shrink-0 space-y-6 p-6 bg-background">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">施工工序甘特图</h1>
           <p className="text-muted-foreground">基于总进度规划表生成的项目时间轴视图</p>
-        </div>
-
-        {/* 图例 */}
-        <div className="p-4 bg-muted/30 rounded-lg">
-          <h4 className="font-medium mb-3">工种图例</h4>
-          <div className="flex flex-wrap gap-3">
-            {Object.entries({
-              "木工": "#3b82f6",
-              "混凝土工": "#f97316", 
-              "砌筑工": "#10b981",
-              "抹灰工": "#8b5cf6",
-              "安装工": "#ec4899",
-            }).map(([worker, color]) => (
-              <div key={worker} className="flex items-center gap-2">
-                <div 
-                  className="w-4 h-4 rounded-sm"
-                  style={{ backgroundColor: color }}
-                />
-                <span className="text-sm">{worker}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 统计信息 */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-3 bg-primary/5 rounded-lg">
-            <div className="text-lg font-bold text-primary">{totalDays}</div>
-            <div className="text-xs text-muted-foreground">总工期（天）</div>
-          </div>
-          <div className="text-center p-3 bg-success/5 rounded-lg">
-            <div className="text-lg font-bold text-success">{data.length}</div>
-            <div className="text-xs text-muted-foreground">施工任务</div>
-          </div>
-          <div className="text-center p-3 bg-warning/5 rounded-lg">
-            <div className="text-lg font-bold text-warning">
-              {new Set(data.map(item => item.worker)).size}
-            </div>
-            <div className="text-xs text-muted-foreground">工种类型</div>
-          </div>
-          <div className="text-center p-3 bg-destructive/5 rounded-lg">
-            <div className="text-lg font-bold text-destructive">
-              {data.reduce((sum, item) => sum + item.count, 0)}
-            </div>
-            <div className="text-xs text-muted-foreground">总人数</div>
-          </div>
         </div>
       </div>
 
