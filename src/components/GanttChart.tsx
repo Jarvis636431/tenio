@@ -79,12 +79,6 @@ export function GanttChart({
     };
   });
   return <div className="w-full">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold">施工工序甘特图</h2>
-        <p className="text-sm text-muted-foreground">
-          基于总进度规划表生成的项目时间轴视图
-        </p>
-      </div>
       <div>
         <div className="border rounded-lg overflow-hidden">
           <div className="flex">
