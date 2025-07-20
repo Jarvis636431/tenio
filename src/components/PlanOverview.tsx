@@ -63,14 +63,14 @@ export function PlanOverview() {
         {/* 可滚动的内容区域 */}
         <div className="flex-1 overflow-auto">
           <TabsContent value="schedule" className="h-full m-0 p-6">
-            <Card className="w-full">
-              <CardHeader>
-                <CardTitle>总进度规划表</CardTitle>
-                <CardDescription>
+            <div className="w-full">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold">总进度规划表</h2>
+                <p className="text-sm text-muted-foreground">
                   项目施工任务的详细进度规划与人员安排
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                </p>
+              </div>
+              <div>
                 <div className="overflow-x-auto">
                   <div className="min-w-full">
                     <div className="rounded-md border">
@@ -125,8 +125,8 @@ export function PlanOverview() {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="gantt" className="h-full m-0 p-6">
