@@ -61,8 +61,16 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {mainMenuItems.map(item => <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={({ isActive }) => getNavCls({ isActive })}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={isActive(item.url)}
+                    style={isActive(item.url) ? {
+                      '--sidebar-accent': 'hsl(0 0% 100%)',
+                      '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
+                      fontWeight: 'bold'
+                    } as any : {}}
+                  >
+                    <NavLink to={item.url}>
                       <item.icon className="h-4 w-4 flex-shrink-0" />
                       {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
@@ -81,8 +89,16 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {projects.map(project => <SidebarMenuItem key={project.id}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={project.url} className={({ isActive }) => getNavCls({ isActive })}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={isActive(project.url)}
+                    style={isActive(project.url) ? {
+                      '--sidebar-accent': 'hsl(0 0% 100%)',
+                      '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
+                      fontWeight: 'bold'
+                    } as any : {}}
+                  >
+                    <NavLink to={project.url}>
                       <FolderPlus className="h-4 w-4 flex-shrink-0" />
                       {!isCollapsed && <span>{project.name}</span>}
                     </NavLink>
