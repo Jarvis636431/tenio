@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Activity, ShoppingCart, Users, DollarSign, Package } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -214,6 +213,268 @@ const materialTypesData = {
   }
 };
 
+// 劳动力工种数据
+const laborTypesData = {
+  carpenter: {
+    name: "木工",
+    data: [
+      { date: "8/1", value: 8, plan: 10 },
+      { date: "8/2", value: 10, plan: 9 },
+      { date: "8/3", value: 9, plan: 11 },
+      { date: "8/4", value: 12, plan: 10 },
+      { date: "8/5", value: 11, plan: 10 },
+      { date: "8/6", value: 10, plan: 12 },
+      { date: "8/7", value: 9, plan: 11 },
+      { date: "8/8", value: 11, plan: 10 },
+      { date: "8/9", value: 10, plan: 12 },
+      { date: "8/10", value: 12, plan: 11 },
+      { date: "8/11", value: 11, plan: 10 },
+      { date: "8/12", value: 10, plan: 12 },
+      { date: "8/13", value: 9, plan: 11 },
+      { date: "8/14", value: 12, plan: 10 },
+      { date: "8/15", value: 11, plan: 11 },
+      { date: "8/16", value: 10, plan: 12 },
+      { date: "8/17", value: 11, plan: 10 },
+    ]
+  },
+  steelworker: {
+    name: "钢筋工",
+    data: [
+      { date: "8/1", value: 6, plan: 8 },
+      { date: "8/2", value: 8, plan: 7 },
+      { date: "8/3", value: 7, plan: 9 },
+      { date: "8/4", value: 9, plan: 8 },
+      { date: "8/5", value: 8, plan: 8 },
+      { date: "8/6", value: 10, plan: 9 },
+      { date: "8/7", value: 9, plan: 8 },
+      { date: "8/8", value: 8, plan: 10 },
+      { date: "8/9", value: 7, plan: 9 },
+      { date: "8/10", value: 10, plan: 8 },
+      { date: "8/11", value: 9, plan: 9 },
+      { date: "8/12", value: 8, plan: 10 },
+      { date: "8/13", value: 10, plan: 8 },
+      { date: "8/14", value: 9, plan: 9 },
+      { date: "8/15", value: 8, plan: 10 },
+      { date: "8/16", value: 10, plan: 8 },
+      { date: "8/17", value: 9, plan: 9 },
+    ]
+  },
+  concreter: {
+    name: "混凝土工",
+    data: [
+      { date: "8/1", value: 4, plan: 6 },
+      { date: "8/2", value: 6, plan: 5 },
+      { date: "8/3", value: 5, plan: 7 },
+      { date: "8/4", value: 7, plan: 6 },
+      { date: "8/5", value: 6, plan: 6 },
+      { date: "8/6", value: 8, plan: 7 },
+      { date: "8/7", value: 7, plan: 6 },
+      { date: "8/8", value: 6, plan: 8 },
+      { date: "8/9", value: 5, plan: 7 },
+      { date: "8/10", value: 8, plan: 6 },
+      { date: "8/11", value: 7, plan: 7 },
+      { date: "8/12", value: 6, plan: 8 },
+      { date: "8/13", value: 8, plan: 6 },
+      { date: "8/14", value: 7, plan: 7 },
+      { date: "8/15", value: 6, plan: 8 },
+      { date: "8/16", value: 8, plan: 6 },
+      { date: "8/17", value: 7, plan: 7 },
+    ]
+  },
+  electrician: {
+    name: "电工",
+    data: [
+      { date: "8/1", value: 2, plan: 3 },
+      { date: "8/2", value: 3, plan: 2 },
+      { date: "8/3", value: 2, plan: 4 },
+      { date: "8/4", value: 4, plan: 3 },
+      { date: "8/5", value: 3, plan: 3 },
+      { date: "8/6", value: 4, plan: 3 },
+      { date: "8/7", value: 3, plan: 3 },
+      { date: "8/8", value: 3, plan: 4 },
+      { date: "8/9", value: 2, plan: 3 },
+      { date: "8/10", value: 4, plan: 3 },
+      { date: "8/11", value: 3, plan: 3 },
+      { date: "8/12", value: 3, plan: 4 },
+      { date: "8/13", value: 4, plan: 3 },
+      { date: "8/14", value: 3, plan: 3 },
+      { date: "8/15", value: 3, plan: 4 },
+      { date: "8/16", value: 4, plan: 3 },
+      { date: "8/17", value: 3, plan: 3 },
+    ]
+  }
+};
+
+// 资金类型数据
+const fundingTypesData = {
+  total: {
+    name: "总资金",
+    data: chartData.funding
+  },
+  labor_cost: {
+    name: "人工费用",
+    data: [
+      { date: "8/1", value: 35000, plan: 30000 },
+      { date: "8/2", value: 42000, plan: 40000 },
+      { date: "8/3", value: 28000, plan: 35000 },
+      { date: "8/4", value: 50000, plan: 45000 },
+      { date: "8/5", value: 38000, plan: 42000 },
+      { date: "8/6", value: 48000, plan: 45000 },
+      { date: "8/7", value: 32000, plan: 38000 },
+      { date: "8/8", value: 55000, plan: 50000 },
+      { date: "8/9", value: 42000, plan: 45000 },
+      { date: "8/10", value: 52000, plan: 48000 },
+      { date: "8/11", value: 38000, plan: 42000 },
+      { date: "8/12", value: 58000, plan: 52000 },
+      { date: "8/13", value: 45000, plan: 48000 },
+      { date: "8/14", value: 60000, plan: 55000 },
+      { date: "8/15", value: 40000, plan: 45000 },
+      { date: "8/16", value: 58000, plan: 55000 },
+      { date: "8/17", value: 48000, plan: 50000 },
+    ]
+  },
+  material_cost: {
+    name: "材料费用",
+    data: [
+      { date: "8/1", value: 55000, plan: 50000 },
+      { date: "8/2", value: 65000, plan: 60000 },
+      { date: "8/3", value: 48000, plan: 55000 },
+      { date: "8/4", value: 75000, plan: 70000 },
+      { date: "8/5", value: 62000, plan: 65000 },
+      { date: "8/6", value: 78000, plan: 72000 },
+      { date: "8/7", value: 52000, plan: 58000 },
+      { date: "8/8", value: 80000, plan: 75000 },
+      { date: "8/9", value: 68000, plan: 70000 },
+      { date: "8/10", value: 82000, plan: 78000 },
+      { date: "8/11", value: 58000, plan: 65000 },
+      { date: "8/12", value: 85000, plan: 80000 },
+      { date: "8/13", value: 72000, plan: 75000 },
+      { date: "8/14", value: 88000, plan: 82000 },
+      { date: "8/15", value: 65000, plan: 70000 },
+      { date: "8/16", value: 85000, plan: 82000 },
+      { date: "8/17", value: 75000, plan: 78000 },
+    ]
+  },
+  equipment_cost: {
+    name: "设备费用",
+    data: [
+      { date: "8/1", value: 22000, plan: 20000 },
+      { date: "8/2", value: 28000, plan: 25000 },
+      { date: "8/3", value: 18000, plan: 22000 },
+      { date: "8/4", value: 35000, plan: 30000 },
+      { date: "8/5", value: 25000, plan: 28000 },
+      { date: "8/6", value: 32000, plan: 30000 },
+      { date: "8/7", value: 20000, plan: 25000 },
+      { date: "8/8", value: 38000, plan: 35000 },
+      { date: "8/9", value: 28000, plan: 30000 },
+      { date: "8/10", value: 35000, plan: 32000 },
+      { date: "8/11", value: 22000, plan: 28000 },
+      { date: "8/12", value: 40000, plan: 38000 },
+      { date: "8/13", value: 30000, plan: 32000 },
+      { date: "8/14", value: 42000, plan: 38000 },
+      { date: "8/15", value: 25000, plan: 30000 },
+      { date: "8/16", value: 40000, plan: 38000 },
+      { date: "8/17", value: 32000, plan: 35000 },
+    ]
+  },
+  management_cost: {
+    name: "管理费用",
+    data: [
+      { date: "8/1", value: 12000, plan: 10000 },
+      { date: "8/2", value: 15000, plan: 14000 },
+      { date: "8/3", value: 8000, plan: 12000 },
+      { date: "8/4", value: 18000, plan: 16000 },
+      { date: "8/5", value: 14000, plan: 15000 },
+      { date: "8/6", value: 20000, plan: 18000 },
+      { date: "8/7", value: 10000, plan: 14000 },
+      { date: "8/8", value: 22000, plan: 20000 },
+      { date: "8/9", value: 16000, plan: 18000 },
+      { date: "8/10", value: 20000, plan: 18000 },
+      { date: "8/11", value: 12000, plan: 16000 },
+      { date: "8/12", value: 24000, plan: 22000 },
+      { date: "8/13", value: 18000, plan: 20000 },
+      { date: "8/14", value: 25000, plan: 22000 },
+      { date: "8/15", value: 14000, plan: 18000 },
+      { date: "8/16", value: 24000, plan: 22000 },
+      { date: "8/17", value: 20000, plan: 20000 },
+    ]
+  }
+};
+
+// 采购类型数据
+const procurementTypesData = {
+  materials: {
+    name: "材料采购",
+    data: chartData.procurement
+  },
+  equipment: {
+    name: "设备采购",
+    data: [
+      { date: "8/1", value: 18000, plan: 15000 },
+      { date: "8/2", value: 25000, plan: 22000 },
+      { date: "8/3", value: 20000, plan: 18000 },
+      { date: "8/4", value: 32000, plan: 28000 },
+      { date: "8/5", value: 28000, plan: 30000 },
+      { date: "8/6", value: 35000, plan: 32000 },
+      { date: "8/7", value: 22000, plan: 25000 },
+      { date: "8/8", value: 38000, plan: 35000 },
+      { date: "8/9", value: 30000, plan: 32000 },
+      { date: "8/10", value: 42000, plan: 38000 },
+      { date: "8/11", value: 32000, plan: 35000 },
+      { date: "8/12", value: 45000, plan: 42000 },
+      { date: "8/13", value: 35000, plan: 38000 },
+      { date: "8/14", value: 48000, plan: 45000 },
+      { date: "8/15", value: 32000, plan: 35000 },
+      { date: "8/16", value: 45000, plan: 42000 },
+      { date: "8/17", value: 38000, plan: 40000 },
+    ]
+  },
+  subcontract: {
+    name: "分包采购",
+    data: [
+      { date: "8/1", value: 22000, plan: 20000 },
+      { date: "8/2", value: 32000, plan: 28000 },
+      { date: "8/3", value: 25000, plan: 22000 },
+      { date: "8/4", value: 40000, plan: 35000 },
+      { date: "8/5", value: 35000, plan: 38000 },
+      { date: "8/6", value: 42000, plan: 40000 },
+      { date: "8/7", value: 28000, plan: 32000 },
+      { date: "8/8", value: 45000, plan: 42000 },
+      { date: "8/9", value: 38000, plan: 40000 },
+      { date: "8/10", value: 48000, plan: 45000 },
+      { date: "8/11", value: 40000, plan: 42000 },
+      { date: "8/12", value: 50000, plan: 48000 },
+      { date: "8/13", value: 42000, plan: 45000 },
+      { date: "8/14", value: 52000, plan: 50000 },
+      { date: "8/15", value: 38000, plan: 42000 },
+      { date: "8/16", value: 50000, plan: 48000 },
+      { date: "8/17", value: 45000, plan: 47000 },
+    ]
+  },
+  orders: {
+    name: "订单管理",
+    data: [
+      { date: "8/1", value: 12000, plan: 10000 },
+      { date: "8/2", value: 18000, plan: 15000 },
+      { date: "8/3", value: 15000, plan: 12000 },
+      { date: "8/4", value: 22000, plan: 20000 },
+      { date: "8/5", value: 20000, plan: 22000 },
+      { date: "8/6", value: 25000, plan: 23000 },
+      { date: "8/7", value: 16000, plan: 18000 },
+      { date: "8/8", value: 28000, plan: 25000 },
+      { date: "8/9", value: 22000, plan: 24000 },
+      { date: "8/10", value: 30000, plan: 28000 },
+      { date: "8/11", value: 24000, plan: 25000 },
+      { date: "8/12", value: 32000, plan: 30000 },
+      { date: "8/13", value: 26000, plan: 28000 },
+      { date: "8/14", value: 35000, plan: 32000 },
+      { date: "8/15", value: 22000, plan: 25000 },
+      { date: "8/16", value: 32000, plan: 30000 },
+      { date: "8/17", value: 28000, plan: 30000 },
+    ]
+  }
+};
+
 // 计算统计值的辅助函数
 const calculateStats = (data: Array<{value: number, plan: number}>, isCumulative: boolean) => {
   if (isCumulative) {
@@ -231,6 +492,9 @@ const calculateStats = (data: Array<{value: number, plan: number}>, isCumulative
 export function RealTimeMonitoring() {
   const [activeChart, setActiveChart] = useState<keyof typeof chartData>("procurement");
   const [selectedMaterialType, setSelectedMaterialType] = useState<keyof typeof materialTypesData>("concrete");
+  const [selectedLaborType, setSelectedLaborType] = useState<keyof typeof laborTypesData>("carpenter");
+  const [selectedFundingType, setSelectedFundingType] = useState<keyof typeof fundingTypesData>("total");
+  const [selectedProcurementType, setSelectedProcurementType] = useState<keyof typeof procurementTypesData>("materials");
   
   const config = chartConfig[activeChart];
   const data = chartData[activeChart];
@@ -256,35 +520,111 @@ export function RealTimeMonitoring() {
         </TabsList>
 
         {Object.entries(chartData).map(([key, data]) => {
-          // 对于物料供应标签页，使用选中的物料类型数据
-          const isMateriasTab = key === 'materials';
-          const displayData = isMateriasTab ? materialTypesData[selectedMaterialType].data : data;
+          // 根据不同标签页选择对应的数据和类型
+          let displayData, currentTypeName, typeSelector;
           const currentConfig = chartConfig[key as keyof typeof chartConfig];
+          
+          if (key === 'materials') {
+            displayData = materialTypesData[selectedMaterialType].data;
+            currentTypeName = materialTypesData[selectedMaterialType].name;
+            typeSelector = (
+              <Select 
+                value={selectedMaterialType} 
+                onValueChange={(value) => setSelectedMaterialType(value as keyof typeof materialTypesData)}
+              >
+                <SelectTrigger className="w-48 bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border">
+                  {Object.entries(materialTypesData).map(([typeKey, typeData]) => (
+                    <SelectItem key={typeKey} value={typeKey}>
+                      {typeData.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            );
+          } else if (key === 'labor') {
+            displayData = laborTypesData[selectedLaborType].data;
+            currentTypeName = laborTypesData[selectedLaborType].name;
+            typeSelector = (
+              <Select 
+                value={selectedLaborType} 
+                onValueChange={(value) => setSelectedLaborType(value as keyof typeof laborTypesData)}
+              >
+                <SelectTrigger className="w-48 bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border">
+                  {Object.entries(laborTypesData).map(([typeKey, typeData]) => (
+                    <SelectItem key={typeKey} value={typeKey}>
+                      {typeData.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            );
+          } else if (key === 'funding') {
+            displayData = fundingTypesData[selectedFundingType].data;
+            currentTypeName = fundingTypesData[selectedFundingType].name;
+            typeSelector = (
+              <Select 
+                value={selectedFundingType} 
+                onValueChange={(value) => setSelectedFundingType(value as keyof typeof fundingTypesData)}
+              >
+                <SelectTrigger className="w-48 bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border">
+                  {Object.entries(fundingTypesData).map(([typeKey, typeData]) => (
+                    <SelectItem key={typeKey} value={typeKey}>
+                      {typeData.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            );
+          } else if (key === 'procurement') {
+            displayData = procurementTypesData[selectedProcurementType].data;
+            currentTypeName = procurementTypesData[selectedProcurementType].name;
+            typeSelector = (
+              <Select 
+                value={selectedProcurementType} 
+                onValueChange={(value) => setSelectedProcurementType(value as keyof typeof procurementTypesData)}
+              >
+                <SelectTrigger className="w-48 bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border">
+                  {Object.entries(procurementTypesData).map(([typeKey, typeData]) => (
+                    <SelectItem key={typeKey} value={typeKey}>
+                      {typeData.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            );
+          } else {
+            displayData = data;
+            currentTypeName = '';
+            typeSelector = null;
+          }
           
           // 计算统计值
           const stats = calculateStats(displayData, currentConfig.isCumulative);
           
           return (
             <TabsContent key={key} value={key} className="space-y-4">
-              {/* 物料类型选择器 - 仅在物料供应标签页显示 */}
-              {isMateriasTab && (
+              {/* 类型选择器 */}
+              {typeSelector && (
                 <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
-                  <span className="text-sm font-medium">物料类型:</span>
-                  <Select 
-                    value={selectedMaterialType} 
-                    onValueChange={(value) => setSelectedMaterialType(value as keyof typeof materialTypesData)}
-                  >
-                    <SelectTrigger className="w-48 bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border">
-                      {Object.entries(materialTypesData).map(([typeKey, typeData]) => (
-                        <SelectItem key={typeKey} value={typeKey}>
-                          {typeData.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <span className="text-sm font-medium">
+                    {key === 'materials' && '物料类型:'}
+                    {key === 'labor' && '工种类型:'}
+                    {key === 'funding' && '资金类型:'}
+                    {key === 'procurement' && '采购类型:'}
+                  </span>
+                  {typeSelector}
                 </div>
               )}
 
@@ -304,7 +644,7 @@ export function RealTimeMonitoring() {
                     <p className="text-xs text-muted-foreground">
                       {currentConfig.isCumulative 
                         ? `项目累计${currentConfig.title.replace('进度', '').replace('使用', '').replace('配置', '').replace('供应', '')}`
-                        : (isMateriasTab ? `${materialTypesData[selectedMaterialType].name}最新供应率` : '最新数据点')
+                        : (currentTypeName ? `${currentTypeName}最新数据` : '最新数据点')
                       }
                     </p>
                   </CardContent>
@@ -349,15 +689,15 @@ export function RealTimeMonitoring() {
                       return <IconComponent className="h-5 w-5" />;
                     })()}
                     {currentConfig.title}
-                    {isMateriasTab && (
+                    {currentTypeName && (
                       <span className="text-base font-normal text-muted-foreground">
-                        - {materialTypesData[selectedMaterialType].name}
+                        - {currentTypeName}
                       </span>
                     )}
                   </CardTitle>
                   <CardDescription>
-                    {isMateriasTab 
-                      ? `${materialTypesData[selectedMaterialType].name}每日供应及时率监控`
+                    {currentTypeName 
+                      ? `${currentTypeName}每日${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应及时率'}监控`
                       : currentConfig.description
                     }
                   </CardDescription>
