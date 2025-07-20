@@ -117,7 +117,7 @@ export function BasicInfo() {
         <CardContent>
           <Form {...form}>
             <form className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 pb-4">
                 <FormField
                   control={form.control}
                   name="city"
