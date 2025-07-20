@@ -74,12 +74,12 @@ export function BasicInfo() {
   return <div className="h-full overflow-auto p-6 space-y-6">
       <div className="space-y-1">
         <h1 className="tracking-tight text-2xl font-normal">基础信息</h1>
-        <p className="text-muted-foreground">项目基本信息管理和文件管理</p>
+        <p className="text-muted-foreground font-light">项目基本信息管理和文件管理</p>
       </div>
 
       {/* 项目基础信息 */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between py-[6px]">
           <h4 className="font-normal">项目基础信息</h4>
           <div className="flex gap-2">
             {isEditing ? <>
@@ -195,7 +195,7 @@ export function BasicInfo() {
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium text-sm">{file.name}</p>
+                      <p className="text-sm font-normal">{file.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {formatFileSize(file.size)} • {file.uploadDate} • 
                         <span className={file.parsed ? "text-green-600" : "text-yellow-600"}>
