@@ -87,6 +87,52 @@ export function GanttChart({ data }: GanttChartProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* 图例 */}
+        <div className="mb-6 p-4 bg-muted/30 rounded-lg">
+          <h4 className="font-medium mb-3">工种图例</h4>
+          <div className="flex flex-wrap gap-3">
+            {Object.entries({
+              "木工": "#3b82f6",
+              "混凝土工": "#f97316", 
+              "砌筑工": "#10b981",
+              "抹灰工": "#8b5cf6",
+              "安装工": "#ec4899",
+            }).map(([worker, color]) => (
+              <div key={worker} className="flex items-center gap-2">
+                <div 
+                  className="w-4 h-4 rounded-sm"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-sm">{worker}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 统计信息 */}
+        <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center p-3 bg-primary/5 rounded-lg">
+            <div className="text-lg font-bold text-primary">{totalDays}</div>
+            <div className="text-xs text-muted-foreground">总工期（天）</div>
+          </div>
+          <div className="text-center p-3 bg-success/5 rounded-lg">
+            <div className="text-lg font-bold text-success">{data.length}</div>
+            <div className="text-xs text-muted-foreground">施工任务</div>
+          </div>
+          <div className="text-center p-3 bg-warning/5 rounded-lg">
+            <div className="text-lg font-bold text-warning">
+              {new Set(data.map(item => item.worker)).size}
+            </div>
+            <div className="text-xs text-muted-foreground">工种类型</div>
+          </div>
+          <div className="text-center p-3 bg-destructive/5 rounded-lg">
+            <div className="text-lg font-bold text-destructive">
+              {data.reduce((sum, item) => sum + item.count, 0)}
+            </div>
+            <div className="text-xs text-muted-foreground">总人数</div>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <div className="min-w-full">
             {/* 甘特图容器 */}
@@ -189,52 +235,6 @@ export function GanttChart({ data }: GanttChartProps) {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* 图例 */}
-        <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-          <h4 className="font-medium mb-3">工种图例</h4>
-          <div className="flex flex-wrap gap-3">
-            {Object.entries({
-              "木工": "#3b82f6",
-              "混凝土工": "#f97316", 
-              "砌筑工": "#10b981",
-              "抹灰工": "#8b5cf6",
-              "安装工": "#ec4899",
-            }).map(([worker, color]) => (
-              <div key={worker} className="flex items-center gap-2">
-                <div 
-                  className="w-4 h-4 rounded-sm"
-                  style={{ backgroundColor: color }}
-                />
-                <span className="text-sm">{worker}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 统计信息 */}
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-3 bg-primary/5 rounded-lg">
-            <div className="text-lg font-bold text-primary">{totalDays}</div>
-            <div className="text-xs text-muted-foreground">总工期（天）</div>
-          </div>
-          <div className="text-center p-3 bg-success/5 rounded-lg">
-            <div className="text-lg font-bold text-success">{data.length}</div>
-            <div className="text-xs text-muted-foreground">施工任务</div>
-          </div>
-          <div className="text-center p-3 bg-warning/5 rounded-lg">
-            <div className="text-lg font-bold text-warning">
-              {new Set(data.map(item => item.worker)).size}
-            </div>
-            <div className="text-xs text-muted-foreground">工种类型</div>
-          </div>
-          <div className="text-center p-3 bg-destructive/5 rounded-lg">
-            <div className="text-lg font-bold text-destructive">
-              {data.reduce((sum, item) => sum + item.count, 0)}
-            </div>
-            <div className="text-xs text-muted-foreground">总人数</div>
           </div>
         </div>
       </CardContent>
