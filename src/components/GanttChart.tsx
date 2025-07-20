@@ -103,20 +103,41 @@ export function GanttChart({
       </div>
       <div>
         <div className="border rounded-lg overflow-hidden">
-          {/* 表头区域 */}
-          <div className="flex border-b">
-            {/* 左侧任务名称标题 */}
-            <div className="w-64 bg-muted/50 border-r p-3 font-semibold h-12 flex items-center flex-shrink-0">
-              任务名称
+          {/* 整体布局 */}
+          <div className="flex">
+            {/* 左侧固定区域 - 完全固定，不滚动 */}
+            <div className="w-64 flex-shrink-0">
+              {/* 任务名称表头 */}
+              <div className="bg-muted/50 border-r border-b p-3 font-semibold h-12 flex items-center">
+                任务名称
+              </div>
+              {/* 任务列表 */}
+              <div className="max-h-96 overflow-y-auto border-r bg-background">
+                {timelineData.map((item, index) => 
+                  <div key={item.id} className="border-b p-3 flex flex-col justify-center h-16">
+                    <div className="font-medium text-sm mb-1">{item.task}</div>
+                    <div className="flex items-center gap-2">
+                      <Badge style={{
+                        backgroundColor: `${item.color}20`,
+                        color: item.color,
+                        borderColor: item.color
+                      }} className="text-xs">
+                        {item.worker}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {item.count}人
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            {/* 右侧时间轴标题 */}
-            <div className="flex-1">
-              <div 
-                ref={headerScrollRef}
-                className="overflow-x-auto"
-                onScroll={handleHeaderScroll}
-              >
-                <div className="bg-muted/50" style={{ minWidth: `${totalDays * 80}px` }}>
+            
+            {/* 右侧可滚动区域 - 整体水平和垂直滚动 */}
+            <div className="flex-1 overflow-auto max-h-[calc(384px+48px)]">
+              <div style={{ minWidth: `${totalDays * 80}px` }}>
+                {/* 时间轴表头 */}
+                <div className="bg-muted/50 border-b sticky top-0 z-10">
                   <div className="grid gap-0 h-12" style={{
                     gridTemplateColumns: `repeat(${totalDays}, 80px)`
                   }}>
@@ -130,67 +151,37 @@ export function GanttChart({
                     )}
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 内容区域 - 统一垂直滚动 */}
-          <div className="max-h-96 overflow-y-auto">
-            {timelineData.map((item, index) => 
-              <div key={item.id} className="flex border-b">
-                {/* 左侧固定任务名称列 */}
-                <div className="w-64 border-r p-3 flex flex-col justify-center h-16 flex-shrink-0 bg-background">
-                  <div className="font-medium text-sm mb-1">{item.task}</div>
-                  <div className="flex items-center gap-2">
-                    <Badge style={{
-                      backgroundColor: `${item.color}20`,
-                      color: item.color,
-                      borderColor: item.color
-                    }} className="text-xs">
-                      {item.worker}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {item.count}人
-                    </span>
-                  </div>
-                </div>
                 
-                {/* 右侧甘特条区域 */}
-                <div className="flex-1">
-                  <div 
-                    ref={index === 0 ? contentScrollRef : null}
-                    className="overflow-x-auto"
-                    onScroll={index === 0 ? handleContentScroll : undefined}
-                  >
-                    <div className="relative h-16" style={{ minWidth: `${totalDays * 80}px` }}>
-                      <div className="grid gap-0 h-full" style={{
-                        gridTemplateColumns: `repeat(${totalDays}, 80px)`
+                {/* 甘特图内容 */}
+                {timelineData.map((item, index) => 
+                  <div key={item.id} className="border-b relative h-16">
+                    <div className="grid gap-0 h-full" style={{
+                      gridTemplateColumns: `repeat(${totalDays}, 80px)`
+                    }}>
+                      {/* 网格背景 */}
+                      {dateHeaders.map(header => 
+                        <div key={header.day} className={`border-r border-border/20 ${header.dayOfWeek === 0 || header.dayOfWeek === 6 ? 'bg-muted/30' : ''}`} />
+                      )}
+                      
+                      {/* 任务条 */}
+                      <div className="absolute top-2 h-12 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in" style={{
+                        left: `${(item.startDay * 80)}px`,
+                        width: `${item.duration * 80}px`,
+                        backgroundColor: item.color,
+                        minWidth: '80px'
                       }}>
-                        {/* 网格背景 */}
-                        {dateHeaders.map(header => 
-                          <div key={header.day} className={`border-r border-border/20 ${header.dayOfWeek === 0 || header.dayOfWeek === 6 ? 'bg-muted/30' : ''}`} />
-                        )}
-                        
-                        {/* 任务条 */}
-                        <div className="absolute top-2 h-12 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in" style={{
-                          left: `${(item.startDay * 80)}px`,
-                          width: `${item.duration * 80}px`,
-                          backgroundColor: item.color,
-                          minWidth: '80px'
-                        }}>
-                          <div className="px-2 text-center">
-                            <div className="font-medium">{item.duration}天</div>
-                            <div className="text-xs opacity-90">
-                              {item.startDate} - {item.endDate}
-                            </div>
+                        <div className="px-2 text-center">
+                          <div className="font-medium">{item.duration}天</div>
+                          <div className="text-xs opacity-90">
+                            {item.startDate} - {item.endDate}
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
