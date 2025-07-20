@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Calendar, BarChart3, Activity, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, BarChart3, Activity, TrendingUp, ChevronLeft, ChevronRight, Info, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,12 @@ interface ProjectSidebarProps {
 }
 
 const menuItems = [
+  {
+    id: "basic-info",
+    label: "基础信息",
+    icon: Info,
+    description: "项目基本信息和文件管理"
+  },
   {
     id: "plan-overview",
     label: "计划总览",
@@ -21,6 +27,12 @@ const menuItems = [
     label: "实时监测",
     icon: Activity,
     description: "采购、劳动力、资金使用和物料供应"
+  },
+  {
+    id: "order-management",
+    label: "订单管理",
+    icon: ShoppingCart,
+    description: "采购订单和供应商管理"
   }
 ];
 
