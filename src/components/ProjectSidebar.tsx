@@ -35,7 +35,7 @@ export function ProjectSidebar({ activeView, onViewChange }: ProjectSidebarProps
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between">
         {!isCollapsed && (
-          <h2 className="font-semibold text-lg">项目导航</h2>
+          <h2 className="font-semibold text-lg">办公楼建设项目</h2>
         )}
         <Button
           variant="ghost"
