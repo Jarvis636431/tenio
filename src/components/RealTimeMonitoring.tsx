@@ -285,7 +285,6 @@ const chartData = {
     plan: 90
   }]
 };
-
 const chartConfig = {
   procurement: {
     title: "采购进度",
