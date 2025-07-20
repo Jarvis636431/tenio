@@ -39,13 +39,21 @@ export function AppSidebar() {
 
   return <Sidebar className="border-r" collapsible="icon">
       <SidebarHeader className="border-b p-4 py-[13.5px] flex flex-row items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
-          {!isCollapsed && <h1 className="text-lg font-bold text-primary">天友智管平台</h1>}
-        </div>
-        <SidebarTrigger className="h-6 w-6 flex-shrink-0">
-          <Menu className="h-4 w-4" />
-        </SidebarTrigger>
+        {isCollapsed ? (
+          <SidebarTrigger className="h-6 w-6 flex-shrink-0">
+            <Menu className="h-4 w-4" />
+          </SidebarTrigger>
+        ) : (
+          <>
+            <div className="flex items-center space-x-2">
+              <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
+              <h1 className="text-lg font-bold text-primary">天友智管平台</h1>
+            </div>
+            <SidebarTrigger className="h-6 w-6 flex-shrink-0">
+              <Menu className="h-4 w-4" />
+            </SidebarTrigger>
+          </>
+        )}
       </SidebarHeader>
 
       <SidebarContent>
