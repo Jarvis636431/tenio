@@ -92,7 +92,7 @@ export default function NewProject() {
         {/* 第一行：两列布局 */}
         <div className="grid gap-6 md:grid-cols-2 flex-1">
           {/* CAD 文件上传 */}
-          <Card className="h-full flex flex-col border-0 shadow-none">
+          <Card className="h-full flex flex-col shadow-none border border-border/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Upload className="h-5 w-5 text-primary" />
@@ -129,7 +129,7 @@ export default function NewProject() {
           {/* 右侧列：中标通知书和内部控制价 */}
           <div className="h-full flex flex-col space-y-6">
             {/* 中标通知书上传 */}
-            <Card className="flex-1 flex flex-col border-0 shadow-none">
+            <Card className="flex-1 flex flex-col shadow-none border border-border/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <FileText className="h-5 w-5 text-primary" />
@@ -164,7 +164,7 @@ export default function NewProject() {
             </Card>
 
             {/* 内部控制价 */}
-            <Card className="flex-1 flex flex-col border-0 shadow-none">
+            <Card className="flex-1 flex flex-col shadow-none border border-border/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Wrench className="h-5 w-5 text-primary" />
