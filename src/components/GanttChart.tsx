@@ -113,12 +113,12 @@ export function GanttChart({
             </div>
           </div>
 
-          {/* 内容区域 - 统一垂直滚动 */}
-          <div className="max-h-96 overflow-y-auto">
-            {timelineData.map((item, index) => 
-              <div key={item.id} className="flex border-b">
-                {/* 左侧固定任务名称列 */}
-                <div className="w-64 border-r p-3 flex flex-col justify-center h-16 flex-shrink-0 bg-background">
+          {/* 内容区域 */}
+          <div className="flex max-h-96">
+            {/* 左侧固定任务名称列 - 独立垂直滚动 */}
+            <div className="w-64 flex-shrink-0 overflow-y-auto bg-background border-r">
+              {timelineData.map((item, index) => 
+                <div key={item.id} className="border-b p-3 flex flex-col justify-center h-16">
                   <div className="font-medium text-sm mb-1">{item.task}</div>
                   <div className="flex items-center gap-2">
                     <Badge style={{
@@ -133,10 +133,14 @@ export function GanttChart({
                     </span>
                   </div>
                 </div>
-                
-                {/* 右侧甘特条区域 - 可水平滚动 */}
-                <div className="flex-1 overflow-x-auto">
-                  <div className="relative h-16" style={{ minWidth: `${totalDays * 80}px` }}>
+              )}
+            </div>
+            
+            {/* 右侧甘特图区域 - 整体滚动 */}
+            <div className="flex-1 overflow-auto">
+              <div style={{ minWidth: `${totalDays * 80}px` }}>
+                {timelineData.map((item, index) => 
+                  <div key={item.id} className="border-b relative h-16">
                     <div className="grid gap-0 h-full" style={{
                       gridTemplateColumns: `repeat(${totalDays}, 80px)`
                     }}>
@@ -161,9 +165,9 @@ export function GanttChart({
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
