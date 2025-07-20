@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function NewProject() {
   const [bidNotice, setBidNotice] = useState<File | null>(null);
   const [controlPrice, setControlPrice] = useState("");
   const [cadFile, setCadFile] = useState<File | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleFileUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -20,7 +23,7 @@ export default function NewProject() {
     setter(file);
   };
 
-  const handleStartAnalysis = () => {
+  const handleStartAnalysis = async () => {
     if (!bidNotice || !controlPrice || !cadFile) {
       toast({
         title: "请完善信息",
@@ -30,13 +33,37 @@ export default function NewProject() {
       return;
     }
 
+    setIsCreating(true);
+    
     toast({
       title: "开始解析",
       description: "正在解析项目文件，请稍候...",
     });
 
-    // 这里会触发创建新项目的逻辑
-    // 实际应用中会导航到新创建的项目页面
+    try {
+      // 模拟文件处理和项目创建过程
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // 生成新项目ID (实际应用中会从服务器返回)
+      const newProjectId = Math.floor(Math.random() * 1000) + Date.now();
+      
+      toast({
+        title: "项目创建成功",
+        description: `项目已成功创建，文件解析完成`,
+      });
+      
+      // 跳转到新创建的项目详情页
+      navigate(`/project/${newProjectId}`);
+      
+    } catch (error) {
+      toast({
+        title: "创建失败",
+        description: "项目创建过程中出现错误，请重试",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -166,10 +193,10 @@ export default function NewProject() {
               onClick={handleStartAnalysis}
               className="w-full"
               size="lg"
-              disabled={!bidNotice || !controlPrice || !cadFile}
+              disabled={!bidNotice || !controlPrice || !cadFile || isCreating}
             >
               <Play className="mr-2 h-4 w-4" />
-              开始解析
+              {isCreating ? "正在创建..." : "开始解析"}
             </Button>
           </CardContent>
         </Card>
