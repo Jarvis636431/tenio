@@ -108,7 +108,10 @@ export function RealTimeMonitoring() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <chartConfig[key as keyof typeof chartConfig].icon className="h-5 w-5" />
+                  {(() => {
+                    const IconComponent = chartConfig[key as keyof typeof chartConfig].icon;
+                    return <IconComponent className="h-5 w-5" />;
+                  })()}
                   {chartConfig[key as keyof typeof chartConfig].title}
                 </CardTitle>
                 <CardDescription>
