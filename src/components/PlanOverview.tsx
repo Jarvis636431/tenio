@@ -374,7 +374,7 @@ export function PlanOverview() {
 
       {/* 详情抽屉 */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="max-w-4xl w-full overflow-y-auto">
+        <SheetContent className="w-[90vw] max-w-none overflow-y-auto">
           {selectedTask && (
             <>
               <SheetHeader>
@@ -385,16 +385,30 @@ export function PlanOverview() {
               </SheetHeader>
 
               <div className="mt-6 space-y-6">
-                {/* 基本信息表格 */}
+                {/* 基本信息单列展示 */}
                 <div>
                   <h3 className="text-lg font-semibold mb-3">任务基本信息</h3>
                   <div className="rounded-md border">
                     <Table>
                       <TableBody>
                         <TableRow>
-                          <TableCell className="font-medium w-24">任务名称</TableCell>
+                          <TableCell className="font-medium w-32">任务名称</TableCell>
                           <TableCell>{selectedTask.task}</TableCell>
-                          <TableCell className="font-medium w-24">工种</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">开始日期</TableCell>
+                          <TableCell>{selectedTask.startDate}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">结束日期</TableCell>
+                          <TableCell>{selectedTask.endDate}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">持续天数</TableCell>
+                          <TableCell>{selectedTask.duration}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">工种</TableCell>
                           <TableCell>
                             <Badge className={getWorkerBadgeColor(selectedTask.worker)}>
                               {selectedTask.worker}
@@ -402,14 +416,6 @@ export function PlanOverview() {
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium">开始日期</TableCell>
-                          <TableCell>{selectedTask.startDate}</TableCell>
-                          <TableCell className="font-medium">结束日期</TableCell>
-                          <TableCell>{selectedTask.endDate}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">持续天数</TableCell>
-                          <TableCell>{selectedTask.duration}</TableCell>
                           <TableCell className="font-medium">人数</TableCell>
                           <TableCell>{selectedTask.count}人</TableCell>
                         </TableRow>
@@ -418,84 +424,49 @@ export function PlanOverview() {
                   </div>
                 </div>
 
-                {/* 费用明细卡片 */}
+                {/* 费用明细表格 */}
                 <div>
                   <h3 className="text-lg font-semibold mb-3">费用明细</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* 材料费用卡片 */}
-                    <Card className="border-l-4 border-l-green-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Package className="h-5 w-5 text-green-600" />
-                          材料费用
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="text-2xl font-bold text-green-600">
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>费用类型</TableHead>
+                          <TableHead className="text-right">金额</TableHead>
+                          <TableHead>说明</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-medium">材料费用</TableCell>
+                          <TableCell className="text-right font-medium">
                             {formatCurrency(selectedTask.costDetails.materialCost)}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {selectedTask.costDetails.materialDesc}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* 人工费用卡片 */}
-                    <Card className="border-l-4 border-l-blue-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Users className="h-5 w-5 text-blue-600" />
-                          人工费用
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="text-2xl font-bold text-blue-600">
+                          </TableCell>
+                          <TableCell>{selectedTask.costDetails.materialDesc}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">人工费用</TableCell>
+                          <TableCell className="text-right font-medium">
                             {formatCurrency(selectedTask.costDetails.laborCost)}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {selectedTask.costDetails.laborDesc}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* 设备费用卡片 */}
-                    <Card className="border-l-4 border-l-orange-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Wrench className="h-5 w-5 text-orange-600" />
-                          设备费用
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="text-2xl font-bold text-orange-600">
+                          </TableCell>
+                          <TableCell>{selectedTask.costDetails.laborDesc}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">设备费用</TableCell>
+                          <TableCell className="text-right font-medium">
                             {formatCurrency(selectedTask.costDetails.equipmentCost)}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {selectedTask.costDetails.equipmentDesc}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-
-                {/* 费用汇总 */}
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">费用汇总</span>
-                    <span className="text-xl font-bold">
-                      {formatCurrency(selectedTask.totalCost)}
-                    </span>
-                  </div>
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    材料 {formatCurrency(selectedTask.costDetails.materialCost)} + 
-                    人工 {formatCurrency(selectedTask.costDetails.laborCost)} + 
-                    设备 {formatCurrency(selectedTask.costDetails.equipmentCost)}
+                          </TableCell>
+                          <TableCell>{selectedTask.costDetails.equipmentDesc}</TableCell>
+                        </TableRow>
+                        <TableRow className="bg-muted/50">
+                          <TableCell className="font-semibold">总计</TableCell>
+                          <TableCell className="text-right font-bold text-lg">
+                            {formatCurrency(selectedTask.totalCost)}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
               </div>
