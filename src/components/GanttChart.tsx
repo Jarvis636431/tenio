@@ -87,55 +87,57 @@ export function GanttChart({
       </div>
       <div>
         <div className="border rounded-lg overflow-hidden">
-          {/* 固定表头 */}
-          <div className="flex border-b">
-            {/* 左侧任务名称表头 */}
-            <div className="w-64 bg-muted/50 border-r p-3 font-semibold h-12 flex items-center flex-shrink-0">
-              任务名称
-            </div>
-            {/* 右侧时间轴表头 */}
-            <div className="flex-1 bg-muted/50 overflow-x-auto">
-              <div style={{ minWidth: `${totalDays * 80}px` }}>
-                <div className="grid gap-0 h-12" style={{
-                  gridTemplateColumns: `repeat(${totalDays}, 80px)`
-                }}>
-                  {dateHeaders.map(header => 
-                    <div key={header.day} className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${header.dayOfWeek === 0 || header.dayOfWeek === 6 ? 'bg-muted/70 text-muted-foreground' : ''}`}>
-                      <div className="font-medium">{header.date}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {['日', '一', '二', '三', '四', '五', '六'][header.dayOfWeek]}
-                      </div>
+          <div className="flex">
+            {/* 左侧固定区域 */}
+            <div className="w-64 flex-shrink-0">
+              {/* 任务名称表头 */}
+              <div className="bg-muted/50 border-r border-b p-3 font-semibold h-12 flex items-center">
+                任务名称
+              </div>
+              {/* 任务列表 */}
+              <div className="max-h-96 overflow-y-auto border-r bg-background">
+                {timelineData.map((item, index) => 
+                  <div key={item.id} className="border-b p-3 flex flex-col justify-center h-16">
+                    <div className="font-medium text-sm mb-1">{item.task}</div>
+                    <div className="flex items-center gap-2">
+                      <Badge style={{
+                        backgroundColor: `${item.color}20`,
+                        color: item.color,
+                        borderColor: item.color
+                      }} className="text-xs">
+                        {item.worker}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {item.count}人
+                      </span>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-
-          {/* 可滚动内容区域 */}
-          <div className="max-h-96 overflow-y-auto">
-            {timelineData.map((item, index) => 
-              <div key={item.id} className="flex border-b">
-                {/* 左侧固定任务名称列 */}
-                <div className="w-64 border-r p-3 flex flex-col justify-center h-16 flex-shrink-0 bg-background">
-                  <div className="font-medium text-sm mb-1">{item.task}</div>
-                  <div className="flex items-center gap-2">
-                    <Badge style={{
-                      backgroundColor: `${item.color}20`,
-                      color: item.color,
-                      borderColor: item.color
-                    }} className="text-xs">
-                      {item.worker}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {item.count}人
-                    </span>
+            
+            {/* 右侧整体滚动区域 */}
+            <div className="flex-1 overflow-auto max-h-[calc(384px+48px)]">
+              <div style={{ minWidth: `${totalDays * 80}px` }}>
+                {/* 时间轴表头 */}
+                <div className="bg-muted/50 border-b sticky top-0 z-10">
+                  <div className="grid gap-0 h-12" style={{
+                    gridTemplateColumns: `repeat(${totalDays}, 80px)`
+                  }}>
+                    {dateHeaders.map(header => 
+                      <div key={header.day} className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${header.dayOfWeek === 0 || header.dayOfWeek === 6 ? 'bg-muted/70 text-muted-foreground' : ''}`}>
+                        <div className="font-medium">{header.date}</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {['日', '一', '二', '三', '四', '五', '六'][header.dayOfWeek]}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
-                {/* 右侧甘特条区域 - 水平滚动 */}
-                <div className="flex-1 overflow-x-auto">
-                  <div className="relative h-16" style={{ minWidth: `${totalDays * 80}px` }}>
+                {/* 甘特图内容 */}
+                {timelineData.map((item, index) => 
+                  <div key={item.id} className="border-b relative h-16">
                     <div className="grid gap-0 h-full" style={{
                       gridTemplateColumns: `repeat(${totalDays}, 80px)`
                     }}>
@@ -160,9 +162,9 @@ export function GanttChart({
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
