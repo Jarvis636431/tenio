@@ -248,7 +248,6 @@ const scheduleData = [{
     equipmentDesc: "高空泵送设备"
   }
 }];
-
 const getWorkerBadgeColor = (worker: string) => {
   const colors: {
     [key: string]: string;
@@ -261,22 +260,17 @@ const getWorkerBadgeColor = (worker: string) => {
   };
   return colors[worker] || "bg-gray-100 text-gray-800";
 };
-
 const formatCurrency = (amount: number) => {
   return `¥${amount.toLocaleString()}`;
 };
-
 export function PlanOverview() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<typeof scheduleData[0] | null>(null);
-
   const handleViewDetails = (task: typeof scheduleData[0]) => {
     setSelectedTask(task);
     setIsSheetOpen(true);
   };
-
-  return (
-    <div className="h-full flex flex-col p-6">
+  return <div className="h-full flex flex-col p-6">
       <Tabs defaultValue="schedule" className="h-full flex flex-col">
         {/* 固定在顶部的部分 */}
         <div className="shrink-0 space-y-6">
@@ -309,7 +303,7 @@ export function PlanOverview() {
                         <TableHead className="w-[180px]">任务名称</TableHead>
                         <TableHead className="w-[100px]">开始日期</TableHead>
                         <TableHead className="w-[100px]">结束日期</TableHead>
-                        <TableHead className="w-[80px]">持续天数</TableHead>
+                        <TableHead className="w-[80px]">持续</TableHead>
                         <TableHead className="w-[100px]">工种</TableHead>
                         <TableHead className="w-[60px]">人数</TableHead>
                         <TableHead className="w-[100px] text-right">费用</TableHead>
@@ -317,8 +311,7 @@ export function PlanOverview() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {scheduleData.map(item => (
-                        <TableRow key={item.id}>
+                      {scheduleData.map(item => <TableRow key={item.id}>
                           <TableCell className="font-medium w-[180px]">{item.task}</TableCell>
                           <TableCell className="w-[100px]">{item.startDate}</TableCell>
                           <TableCell className="w-[100px]">{item.endDate}</TableCell>
@@ -337,17 +330,12 @@ export function PlanOverview() {
                               <Button variant="outline" size="sm">
                                 编辑
                               </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleViewDetails(item)}
-                              >
+                              <Button variant="outline" size="sm" onClick={() => handleViewDetails(item)}>
                                 详情
                               </Button>
                             </div>
                           </TableCell>
-                        </TableRow>
-                      ))}
+                        </TableRow>)}
                     </TableBody>
                   </Table>
                 </div>
@@ -366,8 +354,7 @@ export function PlanOverview() {
       {/* 详情抽屉 - 移除遮罩层 */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="w-[90vw] max-w-none overflow-y-auto" showOverlay={false}>
-          {selectedTask && (
-            <>
+          {selectedTask && <>
               <SheetHeader>
                 <SheetTitle className="text-xl">{selectedTask.task} - 详细信息</SheetTitle>
                 <SheetDescription>
@@ -461,10 +448,8 @@ export function PlanOverview() {
                   </div>
                 </div>
               </div>
-            </>
-          )}
+            </>}
         </SheetContent>
       </Sheet>
-    </div>
-  );
+    </div>;
 }
