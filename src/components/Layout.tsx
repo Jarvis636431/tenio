@@ -11,10 +11,8 @@ export function Layout({
 }: LayoutProps) {
   return <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <div className="fixed left-0 top-0 h-full z-30">
-          <AppSidebar />
-        </div>
-        <main className="flex-1 ml-16 overflow-hidden">
+        <AppSidebar />
+        <main className="flex-1 p-6">
           {children}
         </main>
       </div>
