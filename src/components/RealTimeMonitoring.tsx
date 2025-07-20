@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Activity, ShoppingCart, Users, DollarSign, Package } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -138,7 +137,7 @@ export function RealTimeMonitoring() {
   const data = chartData[activeChart];
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">实时监测</h1>
         <p className="text-muted-foreground">项目关键指标的实时监控与分析</p>

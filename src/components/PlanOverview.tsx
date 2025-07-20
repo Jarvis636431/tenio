@@ -134,10 +134,10 @@ const getWorkerBadgeColor = (worker: string) => {
   return colors[worker] || "bg-gray-100 text-gray-800";
 };
 export function PlanOverview() {
-  return <div className="h-full flex flex-col">
+  return <div className="h-full flex flex-col p-6">
       <Tabs defaultValue="schedule" className="h-full flex flex-col">
         {/* 固定在顶部的部分 */}
-        <div className="shrink-0 space-y-6 p-6 px-0 py-[9px]">
+        <div className="shrink-0 space-y-6">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold tracking-tight">计划总览</h1>
             <p className="text-muted-foreground">项目施工进度规划与时间轴视图</p>
@@ -157,7 +157,7 @@ export function PlanOverview() {
       
         {/* 可滚动的内容区域 */}
         <div className="flex-1 overflow-auto">
-          <TabsContent value="schedule" className="h-full m-0 py-4 px-0">
+          <TabsContent value="schedule" className="h-full m-0 py-4">
             <div className="w-full">
               <div>
                 <div className="overflow-x-auto">
@@ -216,7 +216,7 @@ export function PlanOverview() {
             </div>
           </TabsContent>
 
-          <TabsContent value="gantt" className="h-full m-0 py-4 px-0">
+          <TabsContent value="gantt" className="h-full m-0 py-4">
             <GanttChart data={scheduleData} />
           </TabsContent>
         </div>
