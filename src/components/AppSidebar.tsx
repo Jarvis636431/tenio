@@ -35,64 +35,62 @@ export function AppSidebar() {
     isActive
   }: {
     isActive: boolean;
-  }) => isActive 
-    ? "bg-primary text-primary-foreground relative before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary-foreground before:rounded-r-sm shadow-sm" 
-    : "hover:bg-accent hover:text-accent-foreground transition-all duration-200";
+  }) => isActive ? "bg-primary text-primary-foreground" : "hover:bg-accent";
 
-  return <Sidebar className="bg-sidebar border-r" collapsible="icon">
-    <SidebarHeader className="p-4 py-[13.5px] flex flex-row items-center justify-between">
-      {isCollapsed ? (
-        <SidebarTrigger className="h-6 w-6 flex-shrink-0">
-          <Menu className="h-4 w-4" />
-        </SidebarTrigger>
-      ) : (
-        <>
-          <div className="flex items-center space-x-2">
-            <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
-            <h1 className="text-lg font-bold text-primary">天友智管平台</h1>
-          </div>
+      return <Sidebar className="bg-sidebar border-r" collapsible="icon">
+      <SidebarHeader className="p-4 py-[13.5px] flex flex-row items-center justify-between">
+        {isCollapsed ? (
           <SidebarTrigger className="h-6 w-6 flex-shrink-0">
             <Menu className="h-4 w-4" />
           </SidebarTrigger>
-        </>
-      )}
-    </SidebarHeader>
+        ) : (
+          <>
+            <div className="flex items-center space-x-2">
+              <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
+              <h1 className="text-lg font-bold text-primary">天友智管平台</h1>
+            </div>
+            <SidebarTrigger className="h-6 w-6 flex-shrink-0">
+              <Menu className="h-4 w-4" />
+            </SidebarTrigger>
+          </>
+        )}
+      </SidebarHeader>
 
-    <SidebarContent>
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {mainMenuItems.map(item => <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <NavLink to={item.url} className={getNavCls}>
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
-                    {!isCollapsed && <span>{item.title}</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>)}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainMenuItems.map(item => <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} className={getNavCls}>
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      {!isCollapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>)}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-      <div className="px-3 mb-2">
-        <div className="h-px bg-sidebar-border opacity-50"></div>
-      </div>
+        <div className="px-3 mb-2">
+          <div className="h-px bg-sidebar-border opacity-50"></div>
+        </div>
 
-      <SidebarGroup>
-        {!isCollapsed && <SidebarGroupLabel>项目列表</SidebarGroupLabel>}
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {projects.map(project => <SidebarMenuItem key={project.id}>
-                <SidebarMenuButton asChild>
-                  <NavLink to={project.url} className={getNavCls}>
-                    <FolderPlus className="h-4 w-4 flex-shrink-0" />
-                    {!isCollapsed && <span>{project.name}</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>)}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    </SidebarContent>
-  </Sidebar>;
+        <SidebarGroup>
+          {!isCollapsed && <SidebarGroupLabel>项目列表</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {projects.map(project => <SidebarMenuItem key={project.id}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={project.url} className={getNavCls}>
+                      <FolderPlus className="h-4 w-4 flex-shrink-0" />
+                      {!isCollapsed && <span>{project.name}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>)}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>;
 }
