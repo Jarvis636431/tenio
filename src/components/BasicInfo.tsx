@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+
 const basicInfoSchema = z.object({
   city: z.string().min(1, "请选择项目城市"),
   buildingType: z.string().min(1, "请选择建筑类型"),
@@ -16,7 +18,9 @@ const basicInfoSchema = z.object({
   bidAmount: z.number().min(0, "中标金额必须大于0"),
   controlPrice: z.number().min(0, "内部控制价必须大于0")
 });
+
 type BasicInfoFormData = z.infer<typeof basicInfoSchema>;
+
 interface UploadedFile {
   id: string;
   name: string;
@@ -25,8 +29,19 @@ interface UploadedFile {
   uploadDate: string;
   parsed: boolean;
 }
+
+const defaultFormValues = {
+  city: "上海市",
+  buildingType: "办公楼",
+  structureType: "框架结构",
+  bidAmount: 25000000,
+  controlPrice: 23500000
+};
+
 export function BasicInfo() {
   const [isEditing, setIsEditing] = useState(false);
+  const [savedValues, setSavedValues] = useState<BasicInfoFormData>(defaultFormValues);
+  const [hasChanges, setHasChanges] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([{
     id: "1",
     name: "中标通知书.pdf",
@@ -42,25 +57,34 @@ export function BasicInfo() {
     uploadDate: "2024-01-15",
     parsed: true
   }]);
+
   const form = useForm<BasicInfoFormData>({
     resolver: zodResolver(basicInfoSchema),
-    defaultValues: {
-      city: "上海市",
-      buildingType: "办公楼",
-      structureType: "框架结构",
-      bidAmount: 25000000,
-      controlPrice: 23500000
-    }
+    defaultValues: defaultFormValues
   });
+
+  // Watch form values to detect changes
+  const watchedValues = form.watch();
+
+  useEffect(() => {
+    const currentValues = form.getValues();
+    const hasFormChanges = JSON.stringify(currentValues) !== JSON.stringify(savedValues);
+    setHasChanges(hasFormChanges);
+  }, [watchedValues, savedValues]);
+
   const onSubmit = (data: BasicInfoFormData) => {
     console.log("保存基础信息:", data);
+    setSavedValues(data);
     setIsEditing(false);
+    setHasChanges(false);
     toast.success("项目基础信息已保存");
   };
+
   const removeFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
     toast.success("文件已删除");
   };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -68,9 +92,15 @@ export function BasicInfo() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
+
   const regeneratePlan = () => {
+    // Reset form to saved values
+    form.reset(savedValues);
+    setHasChanges(false);
+    setIsEditing(false);
     toast.success("正在重新生成施工计划...");
   };
+
   return <div className="h-full overflow-auto p-6 space-y-6">
       <div className="space-y-1">
         <h1 className="tracking-tight text-xl font-medium">基础信息</h1>
@@ -79,10 +109,9 @@ export function BasicInfo() {
 
       {/* 项目基础信息 */}
       <Card>
-        
         <CardContent className="py-[16px]">
           <Form {...form}>
-            <form className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4 pb-4">
                 <FormField control={form.control} name="city" render={({
                 field
@@ -168,13 +197,22 @@ export function BasicInfo() {
                       <FormMessage />
                     </FormItem>} />
               </div>
+
+              {/* 条件渲染保存按钮 */}
+              {hasChanges && (
+                <div className="pt-4 border-t">
+                  <Button type="submit" className="w-full">
+                    <Save className="h-4 w-4 mr-2" />
+                    保存更改
+                  </Button>
+                </div>
+              )}
             </form>
           </Form>
 
           {/* 项目文件列表 */}
           <div className="mt-6 pt-6 border-t">
             <div className="space-y-4">
-              
               {uploadedFiles.map(file => <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-muted-foreground" />
@@ -195,12 +233,17 @@ export function BasicInfo() {
             </div>
           </div>
 
-          {!isEditing && <div className="mt-6 pt-6 border-t">
-              <Button onClick={regeneratePlan} className="w-full">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                重新生成施工计划
-              </Button>
-            </div>}
+          {/* 重新生成施工计划按钮 */}
+          <div className="mt-6 pt-6 border-t">
+            <Button 
+              onClick={regeneratePlan} 
+              className="w-full"
+              disabled={hasChanges}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {hasChanges ? "请先保存更改" : "重新生成施工计划"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>;
