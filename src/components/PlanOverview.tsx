@@ -40,14 +40,14 @@ const getWorkerBadgeColor = (worker: string) => {
 export function PlanOverview() {
   return (
     <div className="h-full flex flex-col">
-      {/* 固定在顶部的部分 */}
-      <div className="shrink-0 space-y-6 p-6 bg-background border-b">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">计划总览</h1>
-          <p className="text-muted-foreground">项目施工进度规划与时间轴视图</p>
-        </div>
+      <Tabs defaultValue="schedule" className="h-full flex flex-col">
+        {/* 固定在顶部的部分 */}
+        <div className="shrink-0 space-y-6 p-6 bg-background border-b">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">计划总览</h1>
+            <p className="text-muted-foreground">项目施工进度规划与时间轴视图</p>
+          </div>
 
-        <Tabs defaultValue="schedule" className="h-full flex flex-col">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="schedule" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -58,9 +58,10 @@ export function PlanOverview() {
               施工工序甘特图
             </TabsTrigger>
           </TabsList>
+        </div>
       
-          {/* 可滚动的内容区域 */}
-          <div className="flex-1 overflow-auto">
+        {/* 可滚动的内容区域 */}
+        <div className="flex-1 overflow-auto">
           <TabsContent value="schedule" className="h-full m-0 p-6">
             <Card className="w-full">
               <CardHeader>
@@ -119,12 +120,11 @@ export function PlanOverview() {
             </Card>
           </TabsContent>
 
-            <TabsContent value="gantt" className="h-full m-0 p-6">
-              <GanttChart data={scheduleData} />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </div>
+          <TabsContent value="gantt" className="h-full m-0 p-6">
+            <GanttChart data={scheduleData} />
+          </TabsContent>
+        </div>
+      </Tabs>
     </div>
   );
 }
