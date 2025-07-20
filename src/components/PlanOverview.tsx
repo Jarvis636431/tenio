@@ -58,12 +58,9 @@ export function PlanOverview() {
               施工工序甘特图
             </TabsTrigger>
           </TabsList>
-        </Tabs>
-      </div>
-
-      {/* 可滚动的内容区域 */}
-      <div className="flex-1 overflow-auto">
-        <Tabs defaultValue="schedule" className="h-full">
+      
+          {/* 可滚动的内容区域 */}
+          <div className="flex-1 overflow-auto">
           <TabsContent value="schedule" className="h-full m-0 p-6">
             <Card className="w-full">
               <CardHeader>
@@ -122,9 +119,10 @@ export function PlanOverview() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="gantt" className="h-full m-0 p-6">
-            <GanttChart data={scheduleData} />
-          </TabsContent>
+            <TabsContent value="gantt" className="h-full m-0 p-6">
+              <GanttChart data={scheduleData} />
+            </TabsContent>
+          </div>
         </Tabs>
       </div>
     </div>
