@@ -16,7 +16,7 @@ const mainMenuItems = [{
 // 模拟项目数据
 const projects = [{
   id: "1",
-  name: "项目 1",
+  name: "办公楼建设项目",
   url: "/project/1"
 }, {
   id: "2",
