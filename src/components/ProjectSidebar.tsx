@@ -29,7 +29,7 @@ export function ProjectSidebar({ activeView, onViewChange }: ProjectSidebarProps
 
   return (
     <div className={cn(
-      "h-full bg-sidebar border-r border-border transition-all duration-300 flex flex-col overflow-hidden",
+      "h-full bg-transparent transition-all duration-300 flex flex-col overflow-hidden border-r border-border/50",
       isCollapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
