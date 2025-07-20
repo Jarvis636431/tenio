@@ -1538,6 +1538,25 @@ const overviewChartConfigs = {
   }
 };
 
+// 生成总览数据的函数
+const generateOverviewData = (typesData: any) => {
+  const firstDataSet = Object.values(typesData)[0] as any;
+  const dates = firstDataSet.data.map((item: any) => item.date);
+  
+  return dates.map((date: string) => {
+    const dataPoint: any = { date };
+    
+    Object.entries(typesData).forEach(([key, typeData]: [string, any]) => {
+      const dayData = typeData.data.find((item: any) => item.date === date);
+      if (dayData) {
+        dataPoint[key] = dayData.value;
+      }
+    });
+    
+    return dataPoint;
+  });
+};
+
 // 计算统计值的辅助函数
 const calculateStats = (data: Array<{
   value: number;
@@ -1648,7 +1667,7 @@ export function RealTimeMonitoring() {
         } else if (key === 'labor') {
           isOverview = selectedLaborType === 'overview';
           if (isOverview) {
-            displayData = null;
+            displayData = generateOverviewData(laborTypesData);
             currentTypeName = '总览';
           } else {
             displayData = laborTypesData[selectedLaborType as keyof typeof laborTypesData].data;
@@ -1668,7 +1687,7 @@ export function RealTimeMonitoring() {
         } else if (key === 'funding') {
           isOverview = selectedFundingType === 'overview';
           if (isOverview) {
-            displayData = null;
+            displayData = generateOverviewData(fundingTypesData);
             currentTypeName = '总览';
           } else {
             displayData = fundingTypesData[selectedFundingType as keyof typeof fundingTypesData].data;
@@ -1688,7 +1707,7 @@ export function RealTimeMonitoring() {
         } else if (key === 'procurement') {
           isOverview = selectedProcurementType === 'overview';
           if (isOverview) {
-            displayData = null;
+            displayData = generateOverviewData(procurementTypesData);
             currentTypeName = '总览';
           } else {
             displayData = procurementTypesData[selectedProcurementType as keyof typeof procurementTypesData].data;
@@ -1715,13 +1734,13 @@ export function RealTimeMonitoring() {
         let stats;
         if (isOverview) {
           let allTypesData;
-          if (key === 'materials') allTypesData = materialTypesData;else if (key === 'labor') allTypesData = laborTypesData;else if (key === 'funding') allTypesData = fundingTypesData;else if (key === 'procurement') allTypesData = procurementTypesData;
+          if (key === 'labor') allTypesData = laborTypesData;else if (key === 'funding') allTypesData = fundingTypesData;else if (key === 'procurement') allTypesData = procurementTypesData;
           stats = calculateOverviewStats(allTypesData, currentConfig.isCumulative);
         } else {
           stats = calculateStats(displayData || data, currentConfig.isCumulative);
         }
 
-        // 动态生成图表配置 - 修复颜色一致性问题
+        // 动态生成图表配置
         let chartConfigForComponent;
         if (isOverview) {
           chartConfigForComponent = overviewChartConfigs[key as keyof typeof overviewChartConfigs] || {};
@@ -1826,7 +1845,7 @@ export function RealTimeMonitoring() {
                   minWidth: isOverview ? "800px" : `${(displayData || data).length * 80}px`
                 }}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={isOverview ? key === 'materials' ? materialTypesData.concrete.data : key === 'labor' ? laborTypesData.carpenter.data : key === 'funding' ? fundingTypesData.total.data : procurementTypesData.materials.data : displayData || data} margin={{
+                        <LineChart data={displayData || data} margin={{
                       top: 20,
                       right: 20,
                       left: 20,
@@ -1835,33 +1854,55 @@ export function RealTimeMonitoring() {
                           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                           <XAxis dataKey="date" className="text-muted-foreground" fontSize={12} interval={0} />
                           <YAxis className="text-muted-foreground" fontSize={12} tickFormatter={value => `${value}${currentConfig.unit}`} />
-                          <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => [`${value}${currentConfig.unit}`, name === "value" ? "实际值" : "计划值"]} />} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
                           
-                          <Line 
-                            type="monotone" 
-                            dataKey="value" 
-                            stroke={chartConfigForComponent?.value?.color || "#ef4444"} 
-                            strokeWidth={2} 
-                            dot={{
-                              fill: chartConfigForComponent?.value?.color || "#ef4444",
-                              strokeWidth: 2,
-                              r: 3
-                            }} 
-                            name="value" 
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="plan" 
-                            stroke="#94a3b8" 
-                            strokeWidth={2} 
-                            strokeDasharray="5 5" 
-                            dot={{
-                              fill: "#94a3b8", 
-                              strokeWidth: 2,
-                              r: 3
-                            }} 
-                            name="plan" 
-                          />
+                          {isOverview ? (
+                            // 总览模式：渲染多条线，每个子类型一条
+                            Object.entries(chartConfigForComponent).map(([dataKey, config]: [string, any]) => (
+                              <Line 
+                                key={dataKey}
+                                type="monotone" 
+                                dataKey={dataKey} 
+                                stroke={config.color} 
+                                strokeWidth={2} 
+                                dot={{
+                                  fill: config.color,
+                                  strokeWidth: 2,
+                                  r: 3
+                                }} 
+                                name={config.label}
+                              />
+                            ))
+                          ) : (
+                            // 非总览模式：渲染实际值和计划值两条线
+                            <>
+                              <Line 
+                                type="monotone" 
+                                dataKey="value" 
+                                stroke={chartConfigForComponent?.value?.color || "#ef4444"} 
+                                strokeWidth={2} 
+                                dot={{
+                                  fill: chartConfigForComponent?.value?.color || "#ef4444",
+                                  strokeWidth: 2,
+                                  r: 3
+                                }} 
+                                name="实际值" 
+                              />
+                              <Line 
+                                type="monotone" 
+                                dataKey="plan" 
+                                stroke="#94a3b8" 
+                                strokeWidth={2} 
+                                strokeDasharray="5 5" 
+                                dot={{
+                                  fill: "#94a3b8", 
+                                  strokeWidth: 2,
+                                  r: 3
+                                }} 
+                                name="计划值" 
+                              />
+                            </>
+                          )}
                         </LineChart>
                       </ResponsiveContainer>
                     </ChartContainer>
