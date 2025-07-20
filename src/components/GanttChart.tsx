@@ -78,14 +78,14 @@ export function GanttChart({
       dayOfWeek: date.getDay()
     };
   });
-  return <Card className="w-full">
-      <CardHeader>
-        <CardTitle>施工工序甘特图</CardTitle>
-        <CardDescription>
+  return <div className="w-full">
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold">施工工序甘特图</h2>
+        <p className="text-sm text-muted-foreground">
           基于总进度规划表生成的项目时间轴视图
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+        </p>
+      </div>
+      <div>
         <div className="overflow-x-auto">
           <div className="min-w-full">
             {/* 甘特图容器 */}
@@ -166,6 +166,6 @@ export function GanttChart({
 
         {/* 统计信息 */}
         
-      </CardContent>
-    </Card>;
+      </div>
+    </div>;
 }
