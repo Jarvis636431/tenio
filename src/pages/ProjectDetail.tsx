@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GanttChart } from "@/components/GanttChart";
 
 // 模拟进度数据
 const scheduleData = [
@@ -132,25 +133,7 @@ export default function ProjectDetail() {
         </TabsContent>
 
         <TabsContent value="gantt" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>施工工序甘特图</CardTitle>
-              <CardDescription>
-                基于总进度规划表生成的可视化甘特图
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-96 flex items-center justify-center border rounded-lg bg-muted/20">
-                <div className="text-center space-y-2">
-                  <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <p className="text-muted-foreground">甘特图组件待实现</p>
-                  <p className="text-sm text-muted-foreground">
-                    将基于上述进度数据生成交互式甘特图
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <GanttChart data={scheduleData} />
         </TabsContent>
 
         <TabsContent value="dashboard" className="space-y-4">
