@@ -323,57 +323,59 @@ export function OrderManagement() {
         <CardHeader>
           <CardTitle>订单列表</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-                <TableRow>
-                  <TableHead className="min-w-[200px]">单号</TableHead>
-                  <TableHead>图纸位置</TableHead>
-                  <TableHead className="min-w-[150px]">施工内容</TableHead>
-                  <TableHead>工程量</TableHead>
-                  <TableHead>班组人数</TableHead>
-                  <TableHead>工种要求</TableHead>
-                  <TableHead>开始时间</TableHead>
-                  <TableHead>结束时间</TableHead>
-                  <TableHead>抢单价格</TableHead>
-                  <TableHead>定额价格</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedOrders.map((order) => {
-                  const bidPriceInfo = getPriceDifference(order.bidPrice, order.quotaPrice);
-                  return (
-                    <TableRow key={order.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{order.orderNumber}</TableCell>
-                      <TableCell>{order.drawingLocation || "-"}</TableCell>
-                      <TableCell>{order.constructionContent}</TableCell>
-                      <TableCell>{order.quantity}</TableCell>
-                      <TableCell>{order.teamSize}人</TableCell>
-                      <TableCell>
-                        {order.jobRequirement === "无" ? (
-                          <span className="text-muted-foreground">无</span>
-                        ) : (
-                          <Badge variant="secondary" className={getJobBadgeColor(order.jobRequirement)}>
-                            {order.jobRequirement}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>{order.startDate}</TableCell>
-                      <TableCell>{order.endDate}</TableCell>
-                      <TableCell className={bidPriceInfo.className}>
-                        ¥{order.bidPrice.toLocaleString()}
-                      </TableCell>
-                      <TableCell>¥{order.quotaPrice.toLocaleString()}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+        <CardContent className="p-0">
+          <div className="overflow-hidden">
+            <div className="overflow-auto max-h-[600px]">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+                  <TableRow>
+                    <TableHead className="min-w-[200px]">单号</TableHead>
+                    <TableHead>图纸位置</TableHead>
+                    <TableHead className="min-w-[150px]">施工内容</TableHead>
+                    <TableHead>工程量</TableHead>
+                    <TableHead>班组人数</TableHead>
+                    <TableHead>工种要求</TableHead>
+                    <TableHead>开始时间</TableHead>
+                    <TableHead>结束时间</TableHead>
+                    <TableHead>抢单价格</TableHead>
+                    <TableHead>定额价格</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedOrders.map((order) => {
+                    const bidPriceInfo = getPriceDifference(order.bidPrice, order.quotaPrice);
+                    return (
+                      <TableRow key={order.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">{order.orderNumber}</TableCell>
+                        <TableCell>{order.drawingLocation || "-"}</TableCell>
+                        <TableCell>{order.constructionContent}</TableCell>
+                        <TableCell>{order.quantity}</TableCell>
+                        <TableCell>{order.teamSize}人</TableCell>
+                        <TableCell>
+                          {order.jobRequirement === "无" ? (
+                            <span className="text-muted-foreground">无</span>
+                          ) : (
+                            <Badge variant="secondary" className={getJobBadgeColor(order.jobRequirement)}>
+                              {order.jobRequirement}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>{order.startDate}</TableCell>
+                        <TableCell>{order.endDate}</TableCell>
+                        <TableCell className={bidPriceInfo.className}>
+                          ¥{order.bidPrice.toLocaleString()}
+                        </TableCell>
+                        <TableCell>¥{order.quotaPrice.toLocaleString()}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* 分页控件 */}
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between p-4">
             <div className="text-sm text-muted-foreground">
               显示 {Math.min((currentPage - 1) * pageSize + 1, filteredOrders.length)} 到{" "}
               {Math.min(currentPage * pageSize, filteredOrders.length)} 条，共 {filteredOrders.length} 条记录
