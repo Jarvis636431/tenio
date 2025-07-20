@@ -1,12 +1,9 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 export function OrderManagement() {
-  return (
-    <div className="h-full overflow-auto p-6 space-y-6">
+  return <div className="h-full overflow-auto p-6 space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">订单管理</h1>
-        <p className="text-muted-foreground">采购订单和供应商管理</p>
+        <h1 className="tracking-tight text-xl font-medium">订单管理</h1>
+        <p className="text-muted-foreground font-light text-base">采购订单和供应商管理</p>
       </div>
 
       <Card>
@@ -19,6 +16,5 @@ export function OrderManagement() {
           </p>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
