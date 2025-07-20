@@ -86,7 +86,7 @@ export function GanttChart({
         </p>
       </div>
       <div>
-        <div className="border rounded-lg">
+        <div className="border rounded-lg overflow-hidden">
           {/* 固定表头区域 */}
           <div className="sticky top-0 bg-background z-10 flex border-b">
             {/* 左侧任务名称标题 */}
@@ -95,7 +95,7 @@ export function GanttChart({
             </div>
             
             {/* 右侧时间轴标题 */}
-            <div className="flex-1 overflow-x-auto">
+            <div className="flex-1">
               <div className="bg-muted/50" style={{ minWidth: `${totalDays * 80}px` }}>
                 <div className="grid gap-0 h-12" style={{
                   gridTemplateColumns: `repeat(${totalDays}, 80px)`
@@ -114,11 +114,11 @@ export function GanttChart({
           </div>
 
           {/* 可滚动内容区域 */}
-          <div className="max-h-96 overflow-y-auto">
-            {timelineData.map((item, index) => 
-              <div key={item.id} className="flex border-b">
-                {/* 左侧任务名称列 */}
-                <div className="w-64 border-r p-3 flex flex-col justify-center h-16 flex-shrink-0 bg-background">
+          <div className="flex">
+            {/* 左侧固定任务名称列 */}
+            <div className="w-64 flex-shrink-0 max-h-96 overflow-y-auto bg-background">
+              {timelineData.map((item, index) => 
+                <div key={item.id} className="border-r border-b p-3 flex flex-col justify-center h-16">
                   <div className="font-medium text-sm mb-1">{item.task}</div>
                   <div className="flex items-center gap-2">
                     <Badge style={{
@@ -133,10 +133,14 @@ export function GanttChart({
                     </span>
                   </div>
                 </div>
-                
-                {/* 右侧甘特条区域 */}
-                <div className="flex-1 overflow-x-auto">
-                  <div className="relative h-16" style={{ minWidth: `${totalDays * 80}px` }}>
+              )}
+            </div>
+            
+            {/* 右侧整体可滚动甘特条区域 */}
+            <div className="flex-1 max-h-96 overflow-auto">
+              <div style={{ minWidth: `${totalDays * 80}px` }}>
+                {timelineData.map((item, index) => 
+                  <div key={item.id} className="border-b relative h-16">
                     <div className="grid gap-0 h-full" style={{
                       gridTemplateColumns: `repeat(${totalDays}, 80px)`
                     }}>
@@ -161,17 +165,11 @@ export function GanttChart({
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
-
-        {/* 图例 */}
-        
-
-        {/* 统计信息 */}
-        
       </div>
     </div>;
 }
