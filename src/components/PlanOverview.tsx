@@ -62,7 +62,7 @@ export function PlanOverview() {
       
         {/* 可滚动的内容区域 */}
         <div className="flex-1 overflow-auto">
-          <TabsContent value="schedule" className="h-full m-0 p-6">
+          <TabsContent value="schedule" className="h-full m-0 p-6 flex flex-col">
             <Card className="w-full">
               <CardHeader>
                 <CardTitle>总进度规划表</CardTitle>
