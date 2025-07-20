@@ -274,9 +274,9 @@ export function BasicInfo() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeFile(file.id)}
+                    onClick={() => toast.info("查看文件功能开发中")}
                   >
-                    <X className="h-4 w-4" />
+                    查看
                   </Button>
                 </div>
               ))}
