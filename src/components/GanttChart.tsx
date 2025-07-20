@@ -87,6 +87,28 @@ export function GanttChart({ data }: GanttChartProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* 图例 */}
+        <div className="mb-6 p-4 bg-muted/30 rounded-lg">
+          <h4 className="font-medium mb-3">工种图例</h4>
+          <div className="flex flex-wrap gap-3">
+            {Object.entries({
+              "木工": "#3b82f6",
+              "混凝土工": "#f97316", 
+              "砌筑工": "#10b981",
+              "抹灰工": "#8b5cf6",
+              "安装工": "#ec4899",
+            }).map(([worker, color]) => (
+              <div key={worker} className="flex items-center gap-2">
+                <div 
+                  className="w-4 h-4 rounded-sm"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-sm">{worker}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* 统计信息 */}
         <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-3 bg-primary/5 rounded-lg">
