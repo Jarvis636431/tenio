@@ -3,7 +3,7 @@ import { Activity, ShoppingCart, Users, DollarSign, Package } from "lucide-react
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
 // 修改为每日独立值数据 - 扩展到项目结束日期 8/17
@@ -13,7 +13,7 @@ const chartData = {
     value: 25000,
     plan: 20000
   }, {
-    date: "8/2",
+    date: "8/2", 
     value: 35000,
     plan: 30000
   }, {
@@ -1424,6 +1424,35 @@ const procurementTypesData = {
   }
 };
 
+// 多线条图表颜色配置
+const overviewColors = {
+  materials: {
+    concrete: "#ef4444",
+    steel: "#f97316", 
+    blocks: "#eab308",
+    mortar: "#84cc16"
+  },
+  labor: {
+    carpenter: "#10b981",
+    steelworker: "#06b6d4",
+    concreter: "#8b5cf6",
+    electrician: "#ec4899"
+  },
+  funding: {
+    total: "#f59e0b",
+    labor_cost: "#10b981",
+    material_cost: "#ef4444",
+    equipment_cost: "#8b5cf6",
+    management_cost: "#06b6d4"
+  },
+  procurement: {
+    materials: "#3b82f6",
+    equipment: "#8b5cf6",
+    subcontract: "#10b981",
+    orders: "#f59e0b"
+  }
+};
+
 // 计算统计值的辅助函数
 const calculateStats = (data: Array<{
   value: number;
@@ -1446,14 +1475,41 @@ const calculateStats = (data: Array<{
     };
   }
 };
+
+// 计算总览模式的统计值
+const calculateOverviewStats = (allTypesData: any, isCumulative: boolean) => {
+  if (isCumulative) {
+    // 累积类指标：所有类型的总和
+    let totalActual = 0;
+    let totalPlan = 0;
+    Object.values(allTypesData).forEach((typeData: any) => {
+      totalActual += typeData.data.reduce((sum: number, item: any) => sum + item.value, 0);
+      totalPlan += typeData.data.reduce((sum: number, item: any) => sum + item.plan, 0);
+    });
+    return { current: totalActual, plan: totalPlan };
+  } else {
+    // 即时类指标：所有类型最新值的总和
+    let totalActual = 0;
+    let totalPlan = 0;
+    Object.values(allTypesData).forEach((typeData: any) => {
+      const latest = typeData.data[typeData.data.length - 1];
+      totalActual += latest.value;
+      totalPlan += latest.plan;
+    });
+    return { current: totalActual, plan: totalPlan };
+  }
+};
+
 export function RealTimeMonitoring() {
   const [activeChart, setActiveChart] = useState<keyof typeof chartData>("procurement");
-  const [selectedMaterialType, setSelectedMaterialType] = useState<keyof typeof materialTypesData>("concrete");
-  const [selectedLaborType, setSelectedLaborType] = useState<keyof typeof laborTypesData>("carpenter");
-  const [selectedFundingType, setSelectedFundingType] = useState<keyof typeof fundingTypesData>("total");
-  const [selectedProcurementType, setSelectedProcurementType] = useState<keyof typeof procurementTypesData>("materials");
+  const [selectedMaterialType, setSelectedMaterialType] = useState<keyof typeof materialTypesData | "overview">("overview");
+  const [selectedLaborType, setSelectedLaborType] = useState<keyof typeof laborTypesData | "overview">("overview");
+  const [selectedFundingType, setSelectedFundingType] = useState<keyof typeof fundingTypesData | "overview">("overview");
+  const [selectedProcurementType, setSelectedProcurementType] = useState<keyof typeof procurementTypesData | "overview">("overview");
+
   const config = chartConfig[activeChart];
   const data = chartData[activeChart];
+
   return <div className="p-6 space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">实时监测</h1>
@@ -1473,55 +1529,84 @@ export function RealTimeMonitoring() {
 
         {Object.entries(chartData).map(([key, data]) => {
         // 根据不同标签页选择对应的数据和类型
-        let displayData, currentTypeName, typeSelector;
+        let displayData, currentTypeName, typeSelector, isOverview = false;
         const currentConfig = chartConfig[key as keyof typeof chartConfig];
+        
         if (key === 'materials') {
-          displayData = materialTypesData[selectedMaterialType].data;
-          currentTypeName = materialTypesData[selectedMaterialType].name;
-          typeSelector = <Select value={selectedMaterialType} onValueChange={value => setSelectedMaterialType(value as keyof typeof materialTypesData)}>
+          isOverview = selectedMaterialType === 'overview';
+          if (isOverview) {
+            displayData = null;
+            currentTypeName = '总览';
+          } else {
+            displayData = materialTypesData[selectedMaterialType as keyof typeof materialTypesData].data;
+            currentTypeName = materialTypesData[selectedMaterialType as keyof typeof materialTypesData].name;
+          }
+          typeSelector = <Select value={selectedMaterialType} onValueChange={value => setSelectedMaterialType(value as keyof typeof materialTypesData | "overview")}>
                 <SelectTrigger className="w-48 bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border">
+                  <SelectItem value="overview">总览</SelectItem>
                   {Object.entries(materialTypesData).map(([typeKey, typeData]) => <SelectItem key={typeKey} value={typeKey}>
                       {typeData.name}
                     </SelectItem>)}
                 </SelectContent>
               </Select>;
         } else if (key === 'labor') {
-          displayData = laborTypesData[selectedLaborType].data;
-          currentTypeName = laborTypesData[selectedLaborType].name;
-          typeSelector = <Select value={selectedLaborType} onValueChange={value => setSelectedLaborType(value as keyof typeof laborTypesData)}>
+          isOverview = selectedLaborType === 'overview';
+          if (isOverview) {
+            displayData = null;
+            currentTypeName = '总览';
+          } else {
+            displayData = laborTypesData[selectedLaborType as keyof typeof laborTypesData].data;
+            currentTypeName = laborTypesData[selectedLaborType as keyof typeof laborTypesData].name;
+          }
+          typeSelector = <Select value={selectedLaborType} onValueChange={value => setSelectedLaborType(value as keyof typeof laborTypesData | "overview")}>
                 <SelectTrigger className="w-48 bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border">
+                  <SelectItem value="overview">总览</SelectItem>
                   {Object.entries(laborTypesData).map(([typeKey, typeData]) => <SelectItem key={typeKey} value={typeKey}>
                       {typeData.name}
                     </SelectItem>)}
                 </SelectContent>
               </Select>;
         } else if (key === 'funding') {
-          displayData = fundingTypesData[selectedFundingType].data;
-          currentTypeName = fundingTypesData[selectedFundingType].name;
-          typeSelector = <Select value={selectedFundingType} onValueChange={value => setSelectedFundingType(value as keyof typeof fundingTypesData)}>
+          isOverview = selectedFundingType === 'overview';
+          if (isOverview) {
+            displayData = null;
+            currentTypeName = '总览';
+          } else {
+            displayData = fundingTypesData[selectedFundingType as keyof typeof fundingTypesData].data;
+            currentTypeName = fundingTypesData[selectedFundingType as keyof typeof fundingTypesData].name;
+          }
+          typeSelector = <Select value={selectedFundingType} onValueChange={value => setSelectedFundingType(value as keyof typeof fundingTypesData | "overview")}>
                 <SelectTrigger className="w-48 bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border">
+                  <SelectItem value="overview">总览</SelectItem>
                   {Object.entries(fundingTypesData).map(([typeKey, typeData]) => <SelectItem key={typeKey} value={typeKey}>
                       {typeData.name}
                     </SelectItem>)}
                 </SelectContent>
               </Select>;
         } else if (key === 'procurement') {
-          displayData = procurementTypesData[selectedProcurementType].data;
-          currentTypeName = procurementTypesData[selectedProcurementType].name;
-          typeSelector = <Select value={selectedProcurementType} onValueChange={value => setSelectedProcurementType(value as keyof typeof procurementTypesData)}>
+          isOverview = selectedProcurementType === 'overview';
+          if (isOverview) {
+            displayData = null;
+            currentTypeName = '总览';
+          } else {
+            displayData = procurementTypesData[selectedProcurementType as keyof typeof procurementTypesData].data;
+            currentTypeName = procurementTypesData[selectedProcurementType as keyof typeof procurementTypesData].name;
+          }
+          typeSelector = <Select value={selectedProcurementType} onValueChange={value => setSelectedProcurementType(value as keyof typeof procurementTypesData | "overview")}>
                 <SelectTrigger className="w-48 bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border">
+                  <SelectItem value="overview">总览</SelectItem>
                   {Object.entries(procurementTypesData).map(([typeKey, typeData]) => <SelectItem key={typeKey} value={typeKey}>
                       {typeData.name}
                     </SelectItem>)}
@@ -1534,10 +1619,22 @@ export function RealTimeMonitoring() {
         }
 
         // 计算统计值
-        const stats = calculateStats(displayData, currentConfig.isCumulative);
+        let stats;
+        if (isOverview) {
+          let allTypesData;
+          if (key === 'materials') allTypesData = materialTypesData;
+          else if (key === 'labor') allTypesData = laborTypesData;
+          else if (key === 'funding') allTypesData = fundingTypesData;
+          else if (key === 'procurement') allTypesData = procurementTypesData;
+          
+          stats = calculateOverviewStats(allTypesData, currentConfig.isCumulative);
+        } else {
+          stats = calculateStats(displayData || data, currentConfig.isCumulative);
+        }
+
         return <TabsContent key={key} value={key} className="space-y-4">
               {/* 类型选择器 */}
-              {typeSelector && <div className="flex items-center gap-4 p-4 rounded-lg py-0 px-0 bg-transparent">
+              {typeSelector && <div className="flex items-center gap-4 p-0">
                   <span className="text-sm font-medium">
                     {key === 'materials' && '物料类型:'}
                     {key === 'labor' && '工种类型:'}
@@ -1549,52 +1646,43 @@ export function RealTimeMonitoring() {
 
               {/* 统计卡片 */}
               <div className="grid gap-3 md:grid-cols-3 mb-4">
-                <Card className="h-24">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 my-0">
+                <Card className="h-20">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 py-3">
                     <CardTitle className="text-sm font-medium">
                       {currentConfig.isCumulative ? "累计实际值" : "当前值"}
                     </CardTitle>
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="text-xl font-bold" style={{
+                  <CardContent className="pt-0 pb-3">
+                    <div className="text-lg font-bold" style={{
                   color: currentConfig.color
                 }}>
                       {stats.current.toLocaleString()}{currentConfig.unit}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {currentConfig.isCumulative ? `项目累计${currentConfig.title.replace('进度', '').replace('使用', '').replace('配置', '').replace('供应', '')}` : currentTypeName ? `${currentTypeName}最新数据` : '最新数据点'}
-                    </p>
                   </CardContent>
                 </Card>
-                <Card className="h-24">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <Card className="h-20">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 py-3">
                     <CardTitle className="text-sm font-medium">
                       {currentConfig.isCumulative ? "累计计划值" : "计划值"}
                     </CardTitle>
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="text-xl font-bold text-muted-foreground">
+                  <CardContent className="pt-0 pb-3">
+                    <div className="text-lg font-bold text-muted-foreground">
                       {stats.plan.toLocaleString()}{currentConfig.unit}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      预期目标
-                    </p>
                   </CardContent>
                 </Card>
-                <Card className="h-24">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <Card className="h-20">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 py-3">
                     <CardTitle className="text-sm font-medium">完成率</CardTitle>
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="text-xl font-bold">
+                  <CardContent className="pt-0 pb-3">
+                    <div className="text-lg font-bold">
                       {Math.round(stats.current / stats.plan * 100)}%
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      相对于计划
-                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -1612,48 +1700,136 @@ export function RealTimeMonitoring() {
                       </span>}
                   </CardTitle>
                   <CardDescription>
-                    {currentTypeName ? `${currentTypeName}每日${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应及时率'}监控` : currentConfig.description}
+                    {isOverview ? `${currentConfig.title}各类型数据对比总览` : (currentTypeName ? `${currentTypeName}每日${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应及时率'}监控` : currentConfig.description)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
-                    <ChartContainer config={{
-                  value: {
-                    label: "实际值",
-                    color: currentConfig.color
-                  },
-                  plan: {
-                    label: "计划值",
-                    color: "#94a3b8"
-                  }
-                }} className="h-[400px]" style={{
-                  minWidth: `${displayData.length * 80}px`
-                }}>
+                    <ChartContainer 
+                      config={isOverview ? {} : {
+                        value: {
+                          label: "实际值",
+                          color: currentConfig.color
+                        },
+                        plan: {
+                          label: "计划值",
+                          color: "#94a3b8"
+                        }
+                      }} 
+                      className="h-[400px]" 
+                      style={{
+                        minWidth: isOverview ? "800px" : `${(displayData || data).length * 80}px`
+                      }}
+                    >
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={displayData} margin={{
-                      top: 20,
-                      right: 20,
-                      left: 20,
-                      bottom: 20
-                    }}>
+                        <LineChart 
+                          data={isOverview ? (key === 'materials' ? materialTypesData.concrete.data : 
+                                            key === 'labor' ? laborTypesData.carpenter.data :
+                                            key === 'funding' ? fundingTypesData.total.data :
+                                            procurementTypesData.materials.data) : (displayData || data)} 
+                          margin={{
+                            top: 20,
+                            right: 20,
+                            left: 20,
+                            bottom: isOverview ? 60 : 20
+                          }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                           <XAxis dataKey="date" className="text-muted-foreground" fontSize={12} interval={0} />
                           <YAxis className="text-muted-foreground" fontSize={12} tickFormatter={value => `${value}${currentConfig.unit}`} />
-                          <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => [`${value}${currentConfig.unit}`, name === "value" ? "实际值" : "计划值"]} />} />
-                          <Line type="monotone" dataKey="value" stroke={currentConfig.color} strokeWidth={3} dot={{
-                        fill: currentConfig.color,
-                        strokeWidth: 2,
-                        r: 4
-                      }} activeDot={{
-                        r: 6,
-                        stroke: currentConfig.color,
-                        strokeWidth: 2
-                      }} />
-                          <Line type="monotone" dataKey="plan" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={{
-                        fill: "#94a3b8",
-                        strokeWidth: 2,
-                        r: 3
-                      }} />
+                          <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => [`${value}${currentConfig.unit}`, 
+                            isOverview ? (
+                              key === 'materials' ? (name === 'concrete' ? '混凝土' : name === 'steel' ? '钢筋' : name === 'blocks' ? '空心混凝土砌块' : '砂浆') :
+                              key === 'labor' ? (name === 'carpenter' ? '木工' : name === 'steelworker' ? '钢筋工' : name === 'concreter' ? '混凝土工' : '电工') :
+                              key === 'funding' ? (name === 'total' ? '总资金' : name === 'labor_cost' ? '人工费用' : name === 'material_cost' ? '材料费用' : name === 'equipment_cost' ? '设备费用' : '管理费用') :
+                              (name === 'materials' ? '材料采购' : name === 'equipment' ? '设备采购' : name === 'subcontract' ? '分包采购' : '订单管理')
+                            ) : (name === "value" ? "实际值" : "计划值")
+                          ]} />} />
+                          
+                          {isOverview ? (
+                            // 总览模式：显示所有类型的线条
+                            <>
+                              {key === 'materials' && Object.entries(materialTypesData).map(([typeKey, typeData]) => (
+                                <Line 
+                                  key={typeKey}
+                                  type="monotone" 
+                                  dataKey={(entry: any) => {
+                                    const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
+                                    return dataPoint ? dataPoint.value : null;
+                                  }}
+                                  stroke={overviewColors.materials[typeKey as keyof typeof overviewColors.materials]} 
+                                  strokeWidth={2}
+                                  dot={{ fill: overviewColors.materials[typeKey as keyof typeof overviewColors.materials], strokeWidth: 2, r: 3 }}
+                                  name={typeKey}
+                                />
+                              ))}
+                              
+                              {key === 'labor' && Object.entries(laborTypesData).map(([typeKey, typeData]) => (
+                                <Line 
+                                  key={typeKey}
+                                  type="monotone" 
+                                  dataKey={(entry: any) => {
+                                    const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
+                                    return dataPoint ? dataPoint.value : null;
+                                  }}
+                                  stroke={overviewColors.labor[typeKey as keyof typeof overviewColors.labor]} 
+                                  strokeWidth={2}
+                                  dot={{ fill: overviewColors.labor[typeKey as keyof typeof overviewColors.labor], strokeWidth: 2, r: 3 }}
+                                  name={typeKey}
+                                />
+                              ))}
+                              
+                              {key === 'funding' && Object.entries(fundingTypesData).map(([typeKey, typeData]) => (
+                                <Line 
+                                  key={typeKey}
+                                  type="monotone" 
+                                  dataKey={(entry: any) => {
+                                    const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
+                                    return dataPoint ? dataPoint.value : null;
+                                  }}
+                                  stroke={overviewColors.funding[typeKey as keyof typeof overviewColors.funding]} 
+                                  strokeWidth={2}
+                                  dot={{ fill: overviewColors.funding[typeKey as keyof typeof overviewColors.funding], strokeWidth: 2, r: 3 }}
+                                  name={typeKey}
+                                />
+                              ))}
+                              
+                              {key === 'procurement' && Object.entries(procurementTypesData).map(([typeKey, typeData]) => (
+                                <Line 
+                                  key={typeKey}
+                                  type="monotone" 
+                                  dataKey={(entry: any) => {
+                                    const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
+                                    return dataPoint ? dataPoint.value : null;
+                                  }}
+                                  stroke={overviewColors.procurement[typeKey as keyof typeof overviewColors.procurement]} 
+                                  strokeWidth={2}
+                                  dot={{ fill: overviewColors.procurement[typeKey as keyof typeof overviewColors.procurement], strokeWidth: 2, r: 3 }}
+                                  name={typeKey}
+                                />
+                              ))}
+                              
+                              <ChartLegend content={<ChartLegendContent />} />
+                            </>
+                          ) : (
+                            // 单一类型模式：显示实际值和计划值线条
+                            <>
+                              <Line type="monotone" dataKey="value" stroke={currentConfig.color} strokeWidth={3} dot={{
+                                fill: currentConfig.color,
+                                strokeWidth: 2,
+                                r: 4
+                              }} activeDot={{
+                                r: 6,
+                                stroke: currentConfig.color,
+                                strokeWidth: 2
+                              }} />
+                              <Line type="monotone" dataKey="plan" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={{
+                                fill: "#94a3b8",
+                                strokeWidth: 2,
+                                r: 3
+                              }} />
+                            </>
+                          )}
                         </LineChart>
                       </ResponsiveContainer>
                     </ChartContainer>
