@@ -1,6 +1,7 @@
 import { useMemo, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
 interface ScheduleItem {
   id: number;
   task: string;
@@ -10,9 +11,11 @@ interface ScheduleItem {
   worker: string;
   count: number;
 }
+
 interface GanttChartProps {
   data: ScheduleItem[];
 }
+
 const getWorkerColor = (worker: string): string => {
   const colors: {
     [key: string]: string;
@@ -25,6 +28,7 @@ const getWorkerColor = (worker: string): string => {
   };
   return colors[worker] || "#6b7280";
 };
+
 const parseDate = (dateStr: string): Date => {
   // 解析 "8月1日" 格式的日期
   const match = dateStr.match(/(\d+)月(\d+)日/);
@@ -35,9 +39,8 @@ const parseDate = (dateStr: string): Date => {
   }
   return new Date();
 };
-export function GanttChart({
-  data
-}: GanttChartProps) {
+
+export function GanttChart({ data }: GanttChartProps) {
   const {
     timelineData,
     totalDays,
@@ -47,11 +50,13 @@ export function GanttChart({
     const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
     const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
     const totalDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
     const timelineData = data.map(item => {
       const start = parseDate(item.startDate);
       const end = parseDate(item.endDate);
       const startDay = Math.ceil((start.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
       const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
       return {
         ...item,
         startDay,
@@ -59,6 +64,7 @@ export function GanttChart({
         color: getWorkerColor(item.worker)
       };
     });
+
     return {
       timelineData,
       totalDays,
@@ -78,19 +84,21 @@ export function GanttChart({
       dayOfWeek: date.getDay()
     };
   });
-  return <div className="w-full">
-      <div>
-        <div className="border rounded-lg overflow-hidden">
-          <div className="flex">
+
+  return (
+    <div className="w-full h-full flex flex-col">
+      <div className="flex-1 overflow-hidden">
+        <div className="border rounded-lg overflow-hidden h-full flex flex-col">
+          <div className="flex flex-1 overflow-hidden">
             {/* 左侧固定区域 */}
-            <div className="w-64 flex-shrink-0">
+            <div className="w-64 flex-shrink-0 flex flex-col">
               {/* 任务名称表头 */}
               <div className="bg-muted/50 border-r border-b p-3 font-semibold h-12 flex items-center">
                 任务名称
               </div>
               {/* 任务列表 */}
-              <div className="max-h-96 overflow-y-auto border-r bg-background">
-                {timelineData.map((item, index) => 
+              <div className="flex-1 overflow-y-auto border-r bg-background">
+                {timelineData.map((item, index) => (
                   <div key={item.id} className="border-b p-3 flex flex-col justify-center h-16">
                     <div className="font-medium text-sm mb-1">{item.task}</div>
                     <div className="flex items-center gap-2">
@@ -106,61 +114,64 @@ export function GanttChart({
                       </span>
                     </div>
                   </div>
-                )}
+                ))}
               </div>
             </div>
             
             {/* 右侧整体滚动区域 */}
-            <div className="flex-1 overflow-auto max-h-[calc(384px+48px)]">
-              <div style={{ minWidth: `${totalDays * 80}px` }}>
+            <div className="flex-1 overflow-auto flex flex-col">
+              <div style={{ minWidth: `${totalDays * 80}px` }} className="flex-1">
                 {/* 时间轴表头 */}
                 <div className="bg-muted/50 border-b sticky top-0 z-10">
                   <div className="grid gap-0 h-12" style={{
                     gridTemplateColumns: `repeat(${totalDays}, 80px)`
                   }}>
-                    {dateHeaders.map(header => 
+                    {dateHeaders.map(header => (
                       <div key={header.day} className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${header.dayOfWeek === 0 || header.dayOfWeek === 6 ? 'bg-muted/70 text-muted-foreground' : ''}`}>
                         <div className="font-medium">{header.date}</div>
                         <div className="text-[10px] text-muted-foreground">
                           {['日', '一', '二', '三', '四', '五', '六'][header.dayOfWeek]}
                         </div>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
                 
                 {/* 甘特图内容 */}
-                {timelineData.map((item, index) => 
-                  <div key={item.id} className="border-b relative h-16">
-                    <div className="grid gap-0 h-full" style={{
-                      gridTemplateColumns: `repeat(${totalDays}, 80px)`
-                    }}>
-                      {/* 网格背景 */}
-                      {dateHeaders.map(header => 
-                        <div key={header.day} className={`border-r border-border/20 ${header.dayOfWeek === 0 || header.dayOfWeek === 6 ? 'bg-muted/30' : ''}`} />
-                      )}
-                      
-                      {/* 任务条 */}
-                      <div className="absolute top-2 h-12 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in" style={{
-                        left: `${(item.startDay * 80)}px`,
-                        width: `${item.duration * 80}px`,
-                        backgroundColor: item.color,
-                        minWidth: '80px'
+                <div className="flex-1">
+                  {timelineData.map((item, index) => (
+                    <div key={item.id} className="border-b relative h-16">
+                      <div className="grid gap-0 h-full" style={{
+                        gridTemplateColumns: `repeat(${totalDays}, 80px)`
                       }}>
-        <div className="px-2 text-center">
-          <div className="font-medium">{item.duration}天</div>
-          <div className="text-xs opacity-90">
-            {parseDate(item.startDate).getMonth() + 1}/{parseDate(item.startDate).getDate()} - {parseDate(item.endDate).getMonth() + 1}/{parseDate(item.endDate).getDate()}
-          </div>
-        </div>
+                        {/* 网格背景 */}
+                        {dateHeaders.map(header => (
+                          <div key={header.day} className={`border-r border-border/20 ${header.dayOfWeek === 0 || header.dayOfWeek === 6 ? 'bg-muted/30' : ''}`} />
+                        ))}
+                        
+                        {/* 任务条 */}
+                        <div className="absolute top-2 h-12 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in" style={{
+                          left: `${(item.startDay * 80)}px`,
+                          width: `${item.duration * 80}px`,
+                          backgroundColor: item.color,
+                          minWidth: '80px'
+                        }}>
+                          <div className="px-2 text-center">
+                            <div className="font-medium">{item.duration}天</div>
+                            <div className="text-xs opacity-90">
+                              {parseDate(item.startDate).getMonth() + 1}/{parseDate(item.startDate).getDate()} - {parseDate(item.endDate).getMonth() + 1}/{parseDate(item.endDate).getDate()}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }
