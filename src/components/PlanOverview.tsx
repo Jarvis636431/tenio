@@ -58,7 +58,7 @@ export function PlanOverview() {
         </TabsList>
 
         <TabsContent value="schedule" className="space-y-4">
-          <Card className="w-full">
+          <Card>
             <CardHeader>
               <CardTitle>总进度规划表</CardTitle>
               <CardDescription>

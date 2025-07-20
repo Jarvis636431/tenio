@@ -25,12 +25,14 @@ export default function ProjectDetail() {
   return (
     <div className="h-full flex">
       {/* 项目内部侧边栏 */}
-      <ProjectSidebar activeView={activeView} onViewChange={setActiveView} />
+      <div className="fixed left-0 top-0 h-full z-10">
+        <ProjectSidebar activeView={activeView} onViewChange={setActiveView} />
+      </div>
       
       {/* 主内容区域 */}
-      <div className="flex-1 flex flex-col">
-        {/* 页面头部 */}
-        <div className="border-b border-border p-6">
+      <div className="flex-1 flex flex-col ml-64">
+        {/* 页面头部 - 固定 */}
+        <div className="sticky top-0 bg-background border-b border-border p-6 z-20">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h1 className="text-3xl font-bold tracking-tight">办公楼建设项目</h1>
@@ -49,7 +51,7 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        {/* 动态内容区域 */}
+        {/* 动态内容区域 - 可滚动 */}
         <div className="flex-1 p-6 overflow-auto">
           {renderContent()}
         </div>
