@@ -74,45 +74,54 @@ export function PlanOverview() {
                 <div className="overflow-x-auto">
                   <div className="min-w-full">
                     <div className="rounded-md border">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>任务名称</TableHead>
-                            <TableHead>开始日期</TableHead>
-                            <TableHead>结束日期</TableHead>
-                            <TableHead>持续天数</TableHead>
-                            <TableHead>工种</TableHead>
-                            <TableHead>人数</TableHead>
-                            <TableHead>操作</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {scheduleData.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell className="font-medium">{item.task}</TableCell>
-                              <TableCell>{item.startDate}</TableCell>
-                              <TableCell>{item.endDate}</TableCell>
-                              <TableCell>{item.duration}</TableCell>
-                              <TableCell>
-                                <Badge className={getWorkerBadgeColor(item.worker)}>
-                                  {item.worker}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{item.count}</TableCell>
-                              <TableCell>
-                                <div className="flex gap-2">
-                                  <Button variant="outline" size="sm">
-                                    编辑
-                                  </Button>
-                                  <Button variant="outline" size="sm">
-                                    详情
-                                  </Button>
-                                </div>
-                              </TableCell>
+                      {/* 固定表头 */}
+                      <div className="sticky top-0 bg-background z-10">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>任务名称</TableHead>
+                              <TableHead>开始日期</TableHead>
+                              <TableHead>结束日期</TableHead>
+                              <TableHead>持续天数</TableHead>
+                              <TableHead>工种</TableHead>
+                              <TableHead>人数</TableHead>
+                              <TableHead>操作</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                        </Table>
+                      </div>
+                      
+                      {/* 可滚动表格内容 */}
+                      <div className="max-h-96 overflow-y-auto">
+                        <Table>
+                          <TableBody>
+                            {scheduleData.map((item) => (
+                              <TableRow key={item.id}>
+                                <TableCell className="font-medium">{item.task}</TableCell>
+                                <TableCell>{item.startDate}</TableCell>
+                                <TableCell>{item.endDate}</TableCell>
+                                <TableCell>{item.duration}</TableCell>
+                                <TableCell>
+                                  <Badge className={getWorkerBadgeColor(item.worker)}>
+                                    {item.worker}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>{item.count}</TableCell>
+                                <TableCell>
+                                  <div className="flex gap-2">
+                                    <Button variant="outline" size="sm">
+                                      编辑
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      详情
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
                   </div>
                 </div>
