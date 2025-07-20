@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, X, Send } from "lucide-react";
+import { Star, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -65,7 +65,7 @@ export function AIAssistant() {
         }`}
         size="icon"
       >
-        <Sparkles className="w-6 h-6" />
+        <Star className="w-7 h-7" />
       </Button>
 
       {/* AI助手悬浮窗 */}
