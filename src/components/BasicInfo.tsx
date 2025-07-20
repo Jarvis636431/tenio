@@ -79,24 +79,8 @@ export function BasicInfo() {
 
       {/* 项目基础信息 */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between py-[6px]">
-          <h4 className="font-normal">项目基础信息</h4>
-          <div className="flex gap-2">
-            {isEditing ? <>
-                <Button variant="outline" onClick={() => setIsEditing(false)}>
-                  取消
-                </Button>
-                <Button onClick={form.handleSubmit(onSubmit)}>
-                  <Save className="h-4 w-4 mr-2" />
-                  保存
-                </Button>
-              </> : <Button variant="outline" onClick={() => setIsEditing(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                编辑
-              </Button>}
-          </div>
-        </CardHeader>
-        <CardContent>
+        
+        <CardContent className="py-[16px]">
           <Form {...form}>
             <form className="space-y-4">
               <div className="grid grid-cols-2 gap-4 pb-4">
@@ -190,7 +174,7 @@ export function BasicInfo() {
           {/* 项目文件列表 */}
           <div className="mt-6 pt-6 border-t">
             <div className="space-y-4">
-              <h4 className="font-normal">项目文件</h4>
+              
               {uploadedFiles.map(file => <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-muted-foreground" />
