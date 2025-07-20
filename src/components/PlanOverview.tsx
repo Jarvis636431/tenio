@@ -74,45 +74,54 @@ export function PlanOverview() {
                 <div className="overflow-x-auto">
                   <div className="min-w-full">
                     <div className="rounded-md border">
-                      <Table>
-                        <TableHeader className="sticky top-0 bg-background z-10">
-                          <TableRow className="bg-muted/60">
-                            <TableHead className="w-[200px]">任务名称</TableHead>
-                            <TableHead className="w-[120px]">开始日期</TableHead>
-                            <TableHead className="w-[120px]">结束日期</TableHead>
-                            <TableHead className="w-[100px]">持续天数</TableHead>
-                            <TableHead className="w-[120px]">工种</TableHead>
-                            <TableHead className="w-[80px]">人数</TableHead>
-                            <TableHead className="w-[150px]">操作</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody className="max-h-96 overflow-y-auto">
-                          {scheduleData.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell className="font-medium w-[200px]">{item.task}</TableCell>
-                              <TableCell className="w-[120px]">{item.startDate}</TableCell>
-                              <TableCell className="w-[120px]">{item.endDate}</TableCell>
-                              <TableCell className="w-[100px]">{item.duration}</TableCell>
-                              <TableCell className="w-[120px]">
-                                <Badge className={getWorkerBadgeColor(item.worker)}>
-                                  {item.worker}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="w-[80px]">{item.count}</TableCell>
-                              <TableCell className="w-[150px]">
-                                <div className="flex gap-2">
-                                  <Button variant="outline" size="sm">
-                                    编辑
-                                  </Button>
-                                  <Button variant="outline" size="sm">
-                                    详情
-                                  </Button>
-                                </div>
-                              </TableCell>
+                      {/* 固定表头 */}
+                      <div className="sticky top-0 bg-background z-10 border-b">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/60">
+                              <TableHead className="w-[200px]">任务名称</TableHead>
+                              <TableHead className="w-[120px]">开始日期</TableHead>
+                              <TableHead className="w-[120px]">结束日期</TableHead>
+                              <TableHead className="w-[100px]">持续天数</TableHead>
+                              <TableHead className="w-[120px]">工种</TableHead>
+                              <TableHead className="w-[80px]">人数</TableHead>
+                              <TableHead className="w-[150px]">操作</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                        </Table>
+                      </div>
+                      
+                      {/* 可滚动表格内容 */}
+                      <div className="max-h-96 overflow-y-auto">
+                        <Table>
+                          <TableBody>
+                            {scheduleData.map((item) => (
+                              <TableRow key={item.id}>
+                                <TableCell className="font-medium w-[200px]">{item.task}</TableCell>
+                                <TableCell className="w-[120px]">{item.startDate}</TableCell>
+                                <TableCell className="w-[120px]">{item.endDate}</TableCell>
+                                <TableCell className="w-[100px]">{item.duration}</TableCell>
+                                <TableCell className="w-[120px]">
+                                  <Badge className={getWorkerBadgeColor(item.worker)}>
+                                    {item.worker}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="w-[80px]">{item.count}</TableCell>
+                                <TableCell className="w-[150px]">
+                                  <div className="flex gap-2">
+                                    <Button variant="outline" size="sm">
+                                      编辑
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      详情
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
                   </div>
                 </div>
