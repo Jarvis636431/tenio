@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 interface ScheduleItem {
@@ -66,6 +66,22 @@ export function GanttChart({
     };
   }, [data]);
 
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+  const contentScrollRef = useRef<HTMLDivElement>(null);
+
+  // 同步水平滚动
+  const handleHeaderScroll = () => {
+    if (headerScrollRef.current && contentScrollRef.current) {
+      contentScrollRef.current.scrollLeft = headerScrollRef.current.scrollLeft;
+    }
+  };
+
+  const handleContentScroll = () => {
+    if (headerScrollRef.current && contentScrollRef.current) {
+      headerScrollRef.current.scrollLeft = contentScrollRef.current.scrollLeft;
+    }
+  };
+
   // 生成日期标头
   const dateHeaders = Array.from({
     length: totalDays
@@ -95,7 +111,11 @@ export function GanttChart({
             </div>
             {/* 右侧时间轴标题 */}
             <div className="flex-1">
-              <div className="overflow-x-auto">
+              <div 
+                ref={headerScrollRef}
+                className="overflow-x-auto"
+                onScroll={handleHeaderScroll}
+              >
                 <div className="bg-muted/50" style={{ minWidth: `${totalDays * 80}px` }}>
                   <div className="grid gap-0 h-12" style={{
                     gridTemplateColumns: `repeat(${totalDays}, 80px)`
@@ -137,7 +157,11 @@ export function GanttChart({
                 
                 {/* 右侧甘特条区域 */}
                 <div className="flex-1">
-                  <div className="overflow-x-auto">
+                  <div 
+                    ref={index === 0 ? contentScrollRef : null}
+                    className="overflow-x-auto"
+                    onScroll={index === 0 ? handleContentScroll : undefined}
+                  >
                     <div className="relative h-16" style={{ minWidth: `${totalDays * 80}px` }}>
                       <div className="grid gap-0 h-full" style={{
                         gridTemplateColumns: `repeat(${totalDays}, 80px)`
