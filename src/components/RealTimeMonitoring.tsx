@@ -1712,15 +1712,28 @@ export function RealTimeMonitoring() {
           stats = calculateStats(displayData || data, currentConfig.isCumulative);
         }
 
-        // 动态生成图表配置
+        // 动态生成图表配置 - 修复颜色一致性问题
         let chartConfigForComponent;
         if (isOverview) {
           chartConfigForComponent = overviewChartConfigs[key as keyof typeof overviewChartConfigs] || {};
         } else {
+          // 根据当前选中的具体类型获取对应的颜色
+          let specificColor = currentConfig.color; // 默认颜色
+          
+          if (key === 'materials' && selectedMaterialType !== 'overview') {
+            specificColor = overviewColors.materials[selectedMaterialType as keyof typeof overviewColors.materials];
+          } else if (key === 'labor' && selectedLaborType !== 'overview') {
+            specificColor = overviewColors.labor[selectedLaborType as keyof typeof overviewColors.labor];
+          } else if (key === 'funding' && selectedFundingType !== 'overview') {
+            specificColor = overviewColors.funding[selectedFundingType as keyof typeof overviewColors.funding];
+          } else if (key === 'procurement' && selectedProcurementType !== 'overview') {
+            specificColor = overviewColors.procurement[selectedProcurementType as keyof typeof overviewColors.procurement];
+          }
+          
           chartConfigForComponent = {
             value: {
               label: "实际值",
-              color: currentConfig.color
+              color: specificColor
             },
             plan: {
               label: "计划值", 
@@ -1902,13 +1915,13 @@ export function RealTimeMonitoring() {
                           ) : (
                             // 单一类型模式：显示实际值和计划值线条
                             <>
-                              <Line type="monotone" dataKey="value" stroke={currentConfig.color} strokeWidth={3} dot={{
-                                fill: currentConfig.color,
+                              <Line type="monotone" dataKey="value" stroke={chartConfigForComponent.value.color} strokeWidth={3} dot={{
+                                fill: chartConfigForComponent.value.color,
                                 strokeWidth: 2,
                                 r: 4
                               }} activeDot={{
                                 r: 6,
-                                stroke: currentConfig.color,
+                                stroke: chartConfigForComponent.value.color,
                                 strokeWidth: 2
                               }} />
                               <Line type="monotone" dataKey="plan" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={{
