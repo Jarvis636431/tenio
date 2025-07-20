@@ -159,12 +159,6 @@ export function PlanOverview() {
         <div className="flex-1 overflow-auto">
           <TabsContent value="schedule" className="h-full m-0 p-6 px-0 py-0">
             <div className="w-full">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold">总进度规划表</h2>
-                <p className="text-sm text-muted-foreground">
-                  项目施工任务的详细进度规划与人员安排
-                </p>
-              </div>
               <div>
                 <div className="overflow-x-auto">
                   <div className="min-w-full">
