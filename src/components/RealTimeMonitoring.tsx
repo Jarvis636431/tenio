@@ -105,6 +105,52 @@ export function RealTimeMonitoring() {
 
         {Object.entries(chartData).map(([key, data]) => (
           <TabsContent key={key} value={key} className="space-y-4">
+            {/* 统计卡片 */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">当前值</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold" style={{ color: chartConfig[key as keyof typeof chartConfig].color }}>
+                    {data[data.length - 1]?.value.toLocaleString()}{chartConfig[key as keyof typeof chartConfig].unit}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    最新数据点
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">计划值</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-muted-foreground">
+                    {data[data.length - 1]?.plan.toLocaleString()}{chartConfig[key as keyof typeof chartConfig].unit}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    预期目标
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">完成率</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {Math.round((data[data.length - 1]?.value / data[data.length - 1]?.plan) * 100)}%
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    相对于计划
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -176,52 +222,6 @@ export function RealTimeMonitoring() {
                 </ChartContainer>
               </CardContent>
             </Card>
-
-            {/* 统计卡片 */}
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">当前值</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold" style={{ color: chartConfig[key as keyof typeof chartConfig].color }}>
-                    {data[data.length - 1]?.value.toLocaleString()}{chartConfig[key as keyof typeof chartConfig].unit}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    最新数据点
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">计划值</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-muted-foreground">
-                    {data[data.length - 1]?.plan.toLocaleString()}{chartConfig[key as keyof typeof chartConfig].unit}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    预期目标
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">完成率</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {Math.round((data[data.length - 1]?.value / data[data.length - 1]?.plan) * 100)}%
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    相对于计划
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
         ))}
       </Tabs>
