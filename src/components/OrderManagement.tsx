@@ -326,7 +326,7 @@ export function OrderManagement() {
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
                 <TableRow>
                   <TableHead className="min-w-[200px]">单号</TableHead>
                   <TableHead>图纸位置</TableHead>
