@@ -285,6 +285,7 @@ const chartData = {
     plan: 90
   }]
 };
+
 const chartConfig = {
   procurement: {
     title: "采购进度",
@@ -312,302 +313,306 @@ const chartConfig = {
   },
   materials: {
     title: "物料供应",
-    description: "每日物料供应及时率监控",
+    description: "每日物料供应量监控",
     icon: Package,
     color: "#ef4444",
-    unit: "%",
+    unit: "", // 动态单位，根据选中的材料类型确定
     isCumulative: false
   }
 };
 
-// 物料类型数据 - 修改为每日独立值，扩展到 8/17
+// 物料类型数据 - 修改为实际单位和数量，扩展到 8/17
 const materialTypesData = {
   concrete: {
     name: "混凝土",
+    unit: "m³",
     data: [{
       date: "8/1",
-      value: 85,
-      plan: 80
+      value: 120,
+      plan: 100
     }, {
       date: "8/2",
-      value: 92,
-      plan: 88
+      value: 135,
+      plan: 125
     }, {
       date: "8/3",
-      value: 78,
-      plan: 85
+      value: 95,
+      plan: 110
     }, {
       date: "8/4",
-      value: 95,
-      plan: 90
+      value: 150,
+      plan: 130
     }, {
       date: "8/5",
-      value: 88,
-      plan: 85
+      value: 125,
+      plan: 120
     }, {
       date: "8/6",
-      value: 96,
-      plan: 92
+      value: 165,
+      plan: 145
     }, {
       date: "8/7",
-      value: 89,
-      plan: 88
+      value: 110,
+      plan: 115
     }, {
       date: "8/8",
-      value: 93,
-      plan: 90
+      value: 180,
+      plan: 160
     }, {
       date: "8/9",
-      value: 87,
-      plan: 89
+      value: 140,
+      plan: 135
     }, {
       date: "8/10",
-      value: 94,
-      plan: 91
+      value: 195,
+      plan: 175
     }, {
       date: "8/11",
-      value: 90,
-      plan: 88
+      value: 155,
+      plan: 150
     }, {
       date: "8/12",
-      value: 97,
-      plan: 94
+      value: 210,
+      plan: 185
     }, {
       date: "8/13",
-      value: 91,
-      plan: 89
+      value: 170,
+      plan: 165
     }, {
       date: "8/14",
-      value: 95,
-      plan: 93
+      value: 225,
+      plan: 200
     }, {
       date: "8/15",
-      value: 88,
-      plan: 90
+      value: 185,
+      plan: 180
     }, {
       date: "8/16",
-      value: 98,
-      plan: 95
+      value: 240,
+      plan: 215
     }, {
       date: "8/17",
-      value: 92,
-      plan: 90
+      value: 200,
+      plan: 195
     }]
   },
   steel: {
     name: "钢筋",
+    unit: "t",
     data: [{
       date: "8/1",
-      value: 90,
-      plan: 85
+      value: 12,
+      plan: 10
     }, {
       date: "8/2",
-      value: 87,
-      plan: 90
+      value: 15,
+      plan: 14
     }, {
       date: "8/3",
-      value: 95,
-      plan: 88
+      value: 8,
+      plan: 12
     }, {
       date: "8/4",
-      value: 92,
-      plan: 95
+      value: 18,
+      plan: 16
     }, {
       date: "8/5",
-      value: 98,
-      plan: 92
+      value: 14,
+      plan: 15
     }, {
       date: "8/6",
-      value: 94,
-      plan: 96
+      value: 20,
+      plan: 18
     }, {
       date: "8/7",
-      value: 97,
-      plan: 94
+      value: 11,
+      plan: 13
     }, {
       date: "8/8",
-      value: 89,
-      plan: 95
+      value: 22,
+      plan: 20
     }, {
       date: "8/9",
-      value: 96,
-      plan: 91
+      value: 16,
+      plan: 17
     }, {
       date: "8/10",
-      value: 93,
-      plan: 94
+      value: 25,
+      plan: 22
     }, {
       date: "8/11",
-      value: 99,
-      plan: 96
+      value: 19,
+      plan: 18
     }, {
       date: "8/12",
-      value: 91,
-      plan: 97
+      value: 28,
+      plan: 25
     }, {
       date: "8/13",
-      value: 94,
-      plan: 92
+      value: 21,
+      plan: 20
     }, {
       date: "8/14",
-      value: 88,
-      plan: 95
+      value: 30,
+      plan: 27
     }, {
       date: "8/15",
-      value: 97,
-      plan: 90
+      value: 24,
+      plan: 22
     }, {
       date: "8/16",
-      value: 95,
-      plan: 98
+      value: 32,
+      plan: 29
     }, {
       date: "8/17",
-      value: 100,
-      plan: 96
+      value: 26,
+      plan: 25
     }]
   },
   blocks: {
     name: "空心混凝土砌块",
+    unit: "m²",
     data: [{
       date: "8/1",
-      value: 75,
-      plan: 80
+      value: 180,
+      plan: 200
     }, {
       date: "8/2",
-      value: 82,
-      plan: 78
+      value: 220,
+      plan: 210
     }, {
       date: "8/3",
-      value: 88,
-      plan: 85
+      value: 160,
+      plan: 190
     }, {
       date: "8/4",
-      value: 86,
-      plan: 88
+      value: 250,
+      plan: 230
     }, {
       date: "8/5",
-      value: 91,
-      plan: 86
+      value: 210,
+      plan: 220
     }, {
       date: "8/6",
-      value: 89,
-      plan: 90
+      value: 280,
+      plan: 260
     }, {
       date: "8/7",
-      value: 93,
-      plan: 89
+      value: 190,
+      plan: 200
     }, {
       date: "8/8",
-      value: 87,
-      plan: 92
+      value: 300,
+      plan: 280
     }, {
       date: "8/9",
-      value: 95,
-      plan: 89
+      value: 240,
+      plan: 250
     }, {
       date: "8/10",
-      value: 92,
-      plan: 93
+      value: 320,
+      plan: 300
     }, {
       date: "8/11",
-      value: 88,
-      plan: 90
+      value: 260,
+      plan: 270
     }, {
       date: "8/12",
-      value: 96,
-      plan: 93
+      value: 340,
+      plan: 320
     }, {
       date: "8/13",
-      value: 90,
-      plan: 87
+      value: 280,
+      plan: 290
     }, {
       date: "8/14",
-      value: 94,
-      plan: 92
+      value: 360,
+      plan: 340
     }, {
       date: "8/15",
-      value: 91,
-      plan: 89
+      value: 300,
+      plan: 310
     }, {
       date: "8/16",
-      value: 97,
-      plan: 94
+      value: 380,
+      plan: 360
     }, {
       date: "8/17",
-      value: 89,
-      plan: 91
+      value: 320,
+      plan: 330
     }]
   },
   mortar: {
     name: "砂浆",
+    unit: "m³",
     data: [{
       date: "8/1",
-      value: 80,
-      plan: 75
+      value: 45,
+      plan: 40
     }, {
       date: "8/2",
-      value: 85,
-      plan: 82
+      value: 52,
+      plan: 48
     }, {
       date: "8/3",
-      value: 78,
-      plan: 80
+      value: 38,
+      plan: 45
     }, {
       date: "8/4",
-      value: 92,
-      plan: 85
+      value: 58,
+      plan: 52
     }, {
       date: "8/5",
-      value: 87,
-      plan: 90
+      value: 48,
+      plan: 50
     }, {
       date: "8/6",
-      value: 94,
-      plan: 87
+      value: 62,
+      plan: 58
     }, {
       date: "8/7",
-      value: 91,
-      plan: 92
+      value: 42,
+      plan: 46
     }, {
       date: "8/8",
-      value: 88,
-      plan: 89
+      value: 68,
+      plan: 62
     }, {
       date: "8/9",
-      value: 96,
-      plan: 93
+      value: 54,
+      plan: 56
     }, {
       date: "8/10",
-      value: 90,
-      plan: 87
+      value: 72,
+      plan: 68
     }, {
       date: "8/11",
-      value: 93,
-      plan: 95
+      value: 58,
+      plan: 60
     }, {
       date: "8/12",
-      value: 89,
-      plan: 91
+      value: 78,
+      plan: 72
     }, {
       date: "8/13",
-      value: 97,
-      plan: 94
+      value: 64,
+      plan: 66
     }, {
       date: "8/14",
-      value: 92,
-      plan: 89
+      value: 82,
+      plan: 78
     }, {
       date: "8/15",
-      value: 95,
-      plan: 97
+      value: 68,
+      plan: 70
     }, {
       date: "8/16",
-      value: 88,
-      plan: 93
+      value: 86,
+      plan: 82
     }, {
       date: "8/17",
-      value: 99,
-      plan: 96
+      value: 74,
+      plan: 76
     }]
   }
 };
@@ -1585,14 +1590,17 @@ const calculateOverviewStats = (allTypesData: any, isCumulative: boolean) => {
     };
   }
 };
+
 export function RealTimeMonitoring() {
   const [activeChart, setActiveChart] = useState<keyof typeof chartData>("procurement");
-  const [selectedMaterialType, setSelectedMaterialType] = useState<keyof typeof materialTypesData | "overview">("overview");
+  const [selectedMaterialType, setSelectedMaterialType] = useState<keyof typeof materialTypesData>("concrete");
   const [selectedLaborType, setSelectedLaborType] = useState<keyof typeof laborTypesData | "overview">("overview");
   const [selectedFundingType, setSelectedFundingType] = useState<keyof typeof fundingTypesData | "overview">("overview");
   const [selectedProcurementType, setSelectedProcurementType] = useState<keyof typeof procurementTypesData | "overview">("overview");
+  
   const config = chartConfig[activeChart];
   const data = chartData[activeChart];
+  
   return <div className="p-6 space-y-6">
       <div className="space-y-1">
         <h1 className="tracking-tight text-xl font-medium">实时监测</h1>
@@ -1617,26 +1625,26 @@ export function RealTimeMonitoring() {
           typeSelector,
           isOverview = false;
         const currentConfig = chartConfig[key as keyof typeof chartConfig];
+        
         if (key === 'materials') {
-          isOverview = selectedMaterialType === 'overview';
-          if (isOverview) {
-            displayData = null;
-            currentTypeName = '总览';
-          } else {
-            displayData = materialTypesData[selectedMaterialType as keyof typeof materialTypesData].data;
-            currentTypeName = materialTypesData[selectedMaterialType as keyof typeof materialTypesData].name;
-          }
-          typeSelector = <Select value={selectedMaterialType} onValueChange={value => setSelectedMaterialType(value as keyof typeof materialTypesData | "overview")}>
+          // 物料供应：移除总览选项，默认显示具体材料类型
+          displayData = materialTypesData[selectedMaterialType].data;
+          currentTypeName = materialTypesData[selectedMaterialType].name;
+          const currentMaterial = materialTypesData[selectedMaterialType];
+          
+          typeSelector = <Select value={selectedMaterialType} onValueChange={value => setSelectedMaterialType(value as keyof typeof materialTypesData)}>
                 <SelectTrigger className="w-48 bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border">
-                  <SelectItem value="overview">总览</SelectItem>
                   {Object.entries(materialTypesData).map(([typeKey, typeData]) => <SelectItem key={typeKey} value={typeKey}>
                       {typeData.name}
                     </SelectItem>)}
                 </SelectContent>
               </Select>;
+              
+          // 更新当前配置的单位
+          currentConfig.unit = currentMaterial.unit;
         } else if (key === 'labor') {
           isOverview = selectedLaborType === 'overview';
           if (isOverview) {
@@ -1809,7 +1817,7 @@ export function RealTimeMonitoring() {
                       </span>}
                   </CardTitle>
                   <CardDescription>
-                    {isOverview ? `${currentConfig.title}各类型数据对比总览` : currentTypeName ? `${currentTypeName}每日${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应及时率'}监控` : currentConfig.description}
+                    {isOverview ? `${currentConfig.title}各类型数据对比总览` : currentTypeName ? `${currentTypeName}每日${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应量'}监控` : currentConfig.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1827,7 +1835,7 @@ export function RealTimeMonitoring() {
                           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                           <XAxis dataKey="date" className="text-muted-foreground" fontSize={12} interval={0} />
                           <YAxis className="text-muted-foreground" fontSize={12} tickFormatter={value => `${value}${currentConfig.unit}`} />
-                          <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => [`${value}${currentConfig.unit}`, isOverview ? key === 'materials' ? name === 'concrete' ? '混凝土' : name === 'steel' ? '钢筋' : name === 'blocks' ? '空心混凝土砌块' : '砂浆' : key === 'labor' ? name === 'carpenter' ? '木工' : name === 'steelworker' ? '钢筋工' : name === 'concreter' ? '混凝土工' : '电工' : key === 'funding' ? name === 'total' ? '总资金' : name === 'labor_cost' ? '人工费用' : name === 'material_cost' ? '材料费用' : name === 'equipment_cost' ? '设备费用' : '管理费用' : name === 'materials' ? '材料采购' : name === 'equipment' ? '设备采购' : name === 'subcontract' ? '分包采购' : '订单管理' : name === "value" ? "实际值" : "计划值"]} />} />
+                          <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => [`${value}${currentConfig.unit}`, isOverview ? key === 'materials' ? name === 'concrete' ? '混凝土' : name === 'steel' ? '钢筋' : name === 'blocks' ? '空心混凝土砌块' : '砂浆' : key === 'labor' ? name === 'carpenter' ? '木工' : name === 'steelworker' ? '钢筋工' : name === 'concreter' ? '混凝土工' : '电工' : key === 'funding' ? name === 'total' ? '总资金' : name === 'labor_cost' ? '人工费用' : name === 'material_cost' ? '材料费用' : name === 'equipment_cost' ? '设备费用' : '管理费用' : name === 'materials' ? '材料采购' : name === 'equipment' ? '设备采购' : name === 'subcontract' ? '分包采购' : '订单管理' : name === "value" ? "实际值" : "计划值"]} />}
                           
                           {isOverview ?
                       // 总览模式：显示所有类型的线条
