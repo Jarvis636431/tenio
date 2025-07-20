@@ -19,6 +19,10 @@ export default function NewProject() {
     const file = event.target.files?.[0] || null;
     setter(file);
   };
+
+  const handleFileDelete = (setter: (file: File | null) => void) => {
+    setter(null);
+  };
   const handleDrop = (event: React.DragEvent<HTMLDivElement>, setter: (file: File | null) => void, acceptedTypes: string[]) => {
     event.preventDefault();
     const files = event.dataTransfer.files;
@@ -86,64 +90,8 @@ export default function NewProject() {
         </p>
       </div>
 
-      {/* 第一行：三个上传卡片 */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* 中标通知书上传 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="h-5 w-5 text-primary" />
-              中标通知书
-            </CardTitle>
-            <CardDescription className="text-sm">用于识别项目城市，建筑类型，中标金额</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors" onDrop={e => handleDrop(e, setBidNotice, ['.pdf'])} onDragOver={handleDragOver}>
-                <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    {bidNotice ? bidNotice.name : "点击或拖拽上传 PDF 文件"}
-                  </p>
-                  <input type="file" accept=".pdf" onChange={e => handleFileUpload(e, setBidNotice)} className="hidden" id="bid-notice" />
-                  <Label htmlFor="bid-notice" className="cursor-pointer">
-                    <Button variant="outline" type="button">
-                      选择文件
-                    </Button>
-                  </Label>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 内部控制价 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Wrench className="h-5 w-5 text-primary" />
-              内部控制价
-            </CardTitle>
-            <CardDescription className="text-sm">设置项目的内部控制价百分比</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="control-price">控制价百分比</Label>
-                <div className="relative">
-                  <Input id="control-price" type="number" placeholder="输入百分比" value={controlPrice} onChange={e => setControlPrice(e.target.value)} className="pr-8" />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                    %
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  例如：95 表示控制价为投标价的 95%
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+      {/* 第一行：两列布局 */}
+      <div className="grid gap-6 md:grid-cols-2">
         {/* CAD 文件上传 */}
         <Card>
           <CardHeader>
@@ -162,16 +110,87 @@ export default function NewProject() {
                     {cadFile ? cadFile.name : "点击或拖拽上传 DWG 或 DXF 文件"}
                   </p>
                   <input type="file" accept=".dwg,.dxf" onChange={e => handleFileUpload(e, setCadFile)} className="hidden" id="cad-file" />
-                  <Label htmlFor="cad-file" className="cursor-pointer">
-                    <Button variant="outline" type="button">
-                      选择文件
+                  {cadFile ? (
+                    <Button variant="destructive" type="button" onClick={() => handleFileDelete(setCadFile)}>
+                      删除
                     </Button>
-                  </Label>
+                  ) : (
+                    <Label htmlFor="cad-file" className="cursor-pointer">
+                      <Button variant="outline" type="button">
+                        选择文件
+                      </Button>
+                    </Label>
+                  )}
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* 右侧列：中标通知书和内部控制价 */}
+        <div className="space-y-6">
+          {/* 中标通知书上传 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="h-5 w-5 text-primary" />
+                中标通知书
+              </CardTitle>
+              <CardDescription className="text-sm">用于识别项目城市，建筑类型，中标金额</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors" onDrop={e => handleDrop(e, setBidNotice, ['.pdf'])} onDragOver={handleDragOver}>
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      {bidNotice ? bidNotice.name : "点击或拖拽上传 PDF 文件"}
+                    </p>
+                    <input type="file" accept=".pdf" onChange={e => handleFileUpload(e, setBidNotice)} className="hidden" id="bid-notice" />
+                    {bidNotice ? (
+                      <Button variant="destructive" type="button" onClick={() => handleFileDelete(setBidNotice)}>
+                        删除
+                      </Button>
+                    ) : (
+                      <Label htmlFor="bid-notice" className="cursor-pointer">
+                        <Button variant="outline" type="button">
+                          选择文件
+                        </Button>
+                      </Label>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 内部控制价 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Wrench className="h-5 w-5 text-primary" />
+                内部控制价
+              </CardTitle>
+              <CardDescription className="text-sm">设置项目的内部控制价百分比</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="control-price">控制价百分比</Label>
+                  <div className="relative">
+                    <Input id="control-price" type="number" placeholder="输入百分比" value={controlPrice} onChange={e => setControlPrice(e.target.value)} className="pr-8" />
+                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                      %
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    例如：95 表示控制价为投标价的 95%
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* 第二行：解析按钮 */}
