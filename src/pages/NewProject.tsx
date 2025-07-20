@@ -23,6 +23,33 @@ export default function NewProject() {
     setter(file);
   };
 
+  const handleDrop = (
+    event: React.DragEvent<HTMLDivElement>,
+    setter: (file: File | null) => void,
+    acceptedTypes: string[]
+  ) => {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      // 检查文件类型
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+      if (acceptedTypes.includes(fileExtension)) {
+        setter(file);
+      } else {
+        toast({
+          title: "文件格式不支持",
+          description: `请上传 ${acceptedTypes.join(' 或 ')} 格式的文件`,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  };
+
   const handleStartAnalysis = async () => {
     if (!bidNotice || !controlPrice || !cadFile) {
       toast({
@@ -87,7 +114,11 @@ export default function NewProject() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors">
+              <div 
+                className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors"
+                onDrop={(e) => handleDrop(e, setBidNotice, ['.pdf'])}
+                onDragOver={handleDragOver}
+              >
                 <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
@@ -156,7 +187,11 @@ export default function NewProject() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors">
+              <div 
+                className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors"
+                onDrop={(e) => handleDrop(e, setCadFile, ['.dwg'])}
+                onDragOver={handleDragOver}
+              >
                 <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
