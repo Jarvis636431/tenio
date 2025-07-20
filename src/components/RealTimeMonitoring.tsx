@@ -13,7 +13,7 @@ const chartData = {
     value: 25000,
     plan: 20000
   }, {
-    date: "8/2", 
+    date: "8/2",
     value: 35000,
     plan: 30000
   }, {
@@ -1428,7 +1428,7 @@ const procurementTypesData = {
 const overviewColors = {
   materials: {
     concrete: "#ef4444",
-    steel: "#f97316", 
+    steel: "#f97316",
     blocks: "#eab308",
     mortar: "#84cc16"
   },
@@ -1461,7 +1461,7 @@ const overviewChartConfigs = {
       color: overviewColors.materials.concrete
     },
     steel: {
-      label: "钢筋", 
+      label: "钢筋",
       color: overviewColors.materials.steel
     },
     blocks: {
@@ -1566,7 +1566,10 @@ const calculateOverviewStats = (allTypesData: any, isCumulative: boolean) => {
       totalActual += typeData.data.reduce((sum: number, item: any) => sum + item.value, 0);
       totalPlan += typeData.data.reduce((sum: number, item: any) => sum + item.plan, 0);
     });
-    return { current: totalActual, plan: totalPlan };
+    return {
+      current: totalActual,
+      plan: totalPlan
+    };
   } else {
     // 即时类指标：所有类型最新值的总和
     let totalActual = 0;
@@ -1576,24 +1579,24 @@ const calculateOverviewStats = (allTypesData: any, isCumulative: boolean) => {
       totalActual += latest.value;
       totalPlan += latest.plan;
     });
-    return { current: totalActual, plan: totalPlan };
+    return {
+      current: totalActual,
+      plan: totalPlan
+    };
   }
 };
-
 export function RealTimeMonitoring() {
   const [activeChart, setActiveChart] = useState<keyof typeof chartData>("procurement");
   const [selectedMaterialType, setSelectedMaterialType] = useState<keyof typeof materialTypesData | "overview">("overview");
   const [selectedLaborType, setSelectedLaborType] = useState<keyof typeof laborTypesData | "overview">("overview");
   const [selectedFundingType, setSelectedFundingType] = useState<keyof typeof fundingTypesData | "overview">("overview");
   const [selectedProcurementType, setSelectedProcurementType] = useState<keyof typeof procurementTypesData | "overview">("overview");
-
   const config = chartConfig[activeChart];
   const data = chartData[activeChart];
-
   return <div className="p-6 space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">实时监测</h1>
-        <p className="text-muted-foreground">项目关键指标的实时监控与分析</p>
+        <h1 className="tracking-tight text-xl font-medium">实时监测</h1>
+        <p className="text-muted-foreground font-light">项目关键指标的实时监控与分析</p>
       </div>
 
       <Tabs value={activeChart} onValueChange={value => setActiveChart(value as keyof typeof chartData)} className="space-y-4">
@@ -1609,9 +1612,11 @@ export function RealTimeMonitoring() {
 
         {Object.entries(chartData).map(([key, data]) => {
         // 根据不同标签页选择对应的数据和类型
-        let displayData, currentTypeName, typeSelector, isOverview = false;
+        let displayData,
+          currentTypeName,
+          typeSelector,
+          isOverview = false;
         const currentConfig = chartConfig[key as keyof typeof chartConfig];
-        
         if (key === 'materials') {
           isOverview = selectedMaterialType === 'overview';
           if (isOverview) {
@@ -1702,11 +1707,7 @@ export function RealTimeMonitoring() {
         let stats;
         if (isOverview) {
           let allTypesData;
-          if (key === 'materials') allTypesData = materialTypesData;
-          else if (key === 'labor') allTypesData = laborTypesData;
-          else if (key === 'funding') allTypesData = fundingTypesData;
-          else if (key === 'procurement') allTypesData = procurementTypesData;
-          
+          if (key === 'materials') allTypesData = materialTypesData;else if (key === 'labor') allTypesData = laborTypesData;else if (key === 'funding') allTypesData = fundingTypesData;else if (key === 'procurement') allTypesData = procurementTypesData;
           stats = calculateOverviewStats(allTypesData, currentConfig.isCumulative);
         } else {
           stats = calculateStats(displayData || data, currentConfig.isCumulative);
@@ -1719,7 +1720,7 @@ export function RealTimeMonitoring() {
         } else {
           // 根据当前选中的具体类型获取对应的颜色
           let specificColor = currentConfig.color; // 默认颜色
-          
+
           if (key === 'materials' && selectedMaterialType !== 'overview') {
             specificColor = overviewColors.materials[selectedMaterialType as keyof typeof overviewColors.materials];
           } else if (key === 'labor' && selectedLaborType !== 'overview') {
@@ -1729,19 +1730,17 @@ export function RealTimeMonitoring() {
           } else if (key === 'procurement' && selectedProcurementType !== 'overview') {
             specificColor = overviewColors.procurement[selectedProcurementType as keyof typeof overviewColors.procurement];
           }
-          
           chartConfigForComponent = {
             value: {
               label: "实际值",
               color: specificColor
             },
             plan: {
-              label: "计划值", 
+              label: "计划值",
               color: "#94a3b8"
             }
           };
         }
-
         return <TabsContent key={key} value={key} className="space-y-4">
               {/* 类型选择器 */}
               {typeSelector && <div className="flex items-center gap-4 p-0">
@@ -1810,127 +1809,84 @@ export function RealTimeMonitoring() {
                       </span>}
                   </CardTitle>
                   <CardDescription>
-                    {isOverview ? `${currentConfig.title}各类型数据对比总览` : (currentTypeName ? `${currentTypeName}每日${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应及时率'}监控` : currentConfig.description)}
+                    {isOverview ? `${currentConfig.title}各类型数据对比总览` : currentTypeName ? `${currentTypeName}每日${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应及时率'}监控` : currentConfig.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
-                    <ChartContainer 
-                      config={chartConfigForComponent} 
-                      className="h-[400px]" 
-                      style={{
-                        minWidth: isOverview ? "800px" : `${(displayData || data).length * 80}px`
-                      }}
-                    >
+                    <ChartContainer config={chartConfigForComponent} className="h-[400px]" style={{
+                  minWidth: isOverview ? "800px" : `${(displayData || data).length * 80}px`
+                }}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart 
-                          data={isOverview ? (key === 'materials' ? materialTypesData.concrete.data : 
-                                            key === 'labor' ? laborTypesData.carpenter.data :
-                                            key === 'funding' ? fundingTypesData.total.data :
-                                            procurementTypesData.materials.data) : (displayData || data)} 
-                          margin={{
-                            top: 20,
-                            right: 20,
-                            left: 20,
-                            bottom: isOverview ? 60 : 20
-                          }}
-                        >
+                        <LineChart data={isOverview ? key === 'materials' ? materialTypesData.concrete.data : key === 'labor' ? laborTypesData.carpenter.data : key === 'funding' ? fundingTypesData.total.data : procurementTypesData.materials.data : displayData || data} margin={{
+                      top: 20,
+                      right: 20,
+                      left: 20,
+                      bottom: isOverview ? 60 : 20
+                    }}>
                           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                           <XAxis dataKey="date" className="text-muted-foreground" fontSize={12} interval={0} />
                           <YAxis className="text-muted-foreground" fontSize={12} tickFormatter={value => `${value}${currentConfig.unit}`} />
-                          <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => [`${value}${currentConfig.unit}`, 
-                            isOverview ? (
-                              key === 'materials' ? (name === 'concrete' ? '混凝土' : name === 'steel' ? '钢筋' : name === 'blocks' ? '空心混凝土砌块' : '砂浆') :
-                              key === 'labor' ? (name === 'carpenter' ? '木工' : name === 'steelworker' ? '钢筋工' : name === 'concreter' ? '混凝土工' : '电工') :
-                              key === 'funding' ? (name === 'total' ? '总资金' : name === 'labor_cost' ? '人工费用' : name === 'material_cost' ? '材料费用' : name === 'equipment_cost' ? '设备费用' : '管理费用') :
-                              (name === 'materials' ? '材料采购' : name === 'equipment' ? '设备采购' : name === 'subcontract' ? '分包采购' : '订单管理')
-                            ) : (name === "value" ? "实际值" : "计划值")
-                          ]} />} />
+                          <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => [`${value}${currentConfig.unit}`, isOverview ? key === 'materials' ? name === 'concrete' ? '混凝土' : name === 'steel' ? '钢筋' : name === 'blocks' ? '空心混凝土砌块' : '砂浆' : key === 'labor' ? name === 'carpenter' ? '木工' : name === 'steelworker' ? '钢筋工' : name === 'concreter' ? '混凝土工' : '电工' : key === 'funding' ? name === 'total' ? '总资金' : name === 'labor_cost' ? '人工费用' : name === 'material_cost' ? '材料费用' : name === 'equipment_cost' ? '设备费用' : '管理费用' : name === 'materials' ? '材料采购' : name === 'equipment' ? '设备采购' : name === 'subcontract' ? '分包采购' : '订单管理' : name === "value" ? "实际值" : "计划值"]} />} />
                           
-                          {isOverview ? (
-                            // 总览模式：显示所有类型的线条
-                            <>
-                              {key === 'materials' && Object.entries(materialTypesData).map(([typeKey, typeData]) => (
-                                <Line 
-                                  key={typeKey}
-                                  type="monotone" 
-                                  dataKey={(entry: any) => {
-                                    const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
-                                    return dataPoint ? dataPoint.value : null;
-                                  }}
-                                  stroke={overviewColors.materials[typeKey as keyof typeof overviewColors.materials]} 
-                                  strokeWidth={2}
-                                  dot={{ fill: overviewColors.materials[typeKey as keyof typeof overviewColors.materials], strokeWidth: 2, r: 3 }}
-                                  name={typeKey}
-                                />
-                              ))}
+                          {isOverview ?
+                      // 总览模式：显示所有类型的线条
+                      <>
+                              {key === 'materials' && Object.entries(materialTypesData).map(([typeKey, typeData]) => <Line key={typeKey} type="monotone" dataKey={(entry: any) => {
+                          const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
+                          return dataPoint ? dataPoint.value : null;
+                        }} stroke={overviewColors.materials[typeKey as keyof typeof overviewColors.materials]} strokeWidth={2} dot={{
+                          fill: overviewColors.materials[typeKey as keyof typeof overviewColors.materials],
+                          strokeWidth: 2,
+                          r: 3
+                        }} name={typeKey} />)}
                               
-                              {key === 'labor' && Object.entries(laborTypesData).map(([typeKey, typeData]) => (
-                                <Line 
-                                  key={typeKey}
-                                  type="monotone" 
-                                  dataKey={(entry: any) => {
-                                    const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
-                                    return dataPoint ? dataPoint.value : null;
-                                  }}
-                                  stroke={overviewColors.labor[typeKey as keyof typeof overviewColors.labor]} 
-                                  strokeWidth={2}
-                                  dot={{ fill: overviewColors.labor[typeKey as keyof typeof overviewColors.labor], strokeWidth: 2, r: 3 }}
-                                  name={typeKey}
-                                />
-                              ))}
+                              {key === 'labor' && Object.entries(laborTypesData).map(([typeKey, typeData]) => <Line key={typeKey} type="monotone" dataKey={(entry: any) => {
+                          const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
+                          return dataPoint ? dataPoint.value : null;
+                        }} stroke={overviewColors.labor[typeKey as keyof typeof overviewColors.labor]} strokeWidth={2} dot={{
+                          fill: overviewColors.labor[typeKey as keyof typeof overviewColors.labor],
+                          strokeWidth: 2,
+                          r: 3
+                        }} name={typeKey} />)}
                               
-                              {key === 'funding' && Object.entries(fundingTypesData).map(([typeKey, typeData]) => (
-                                <Line 
-                                  key={typeKey}
-                                  type="monotone" 
-                                  dataKey={(entry: any) => {
-                                    const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
-                                    return dataPoint ? dataPoint.value : null;
-                                  }}
-                                  stroke={overviewColors.funding[typeKey as keyof typeof overviewColors.funding]} 
-                                  strokeWidth={2}
-                                  dot={{ fill: overviewColors.funding[typeKey as keyof typeof overviewColors.funding], strokeWidth: 2, r: 3 }}
-                                  name={typeKey}
-                                />
-                              ))}
+                              {key === 'funding' && Object.entries(fundingTypesData).map(([typeKey, typeData]) => <Line key={typeKey} type="monotone" dataKey={(entry: any) => {
+                          const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
+                          return dataPoint ? dataPoint.value : null;
+                        }} stroke={overviewColors.funding[typeKey as keyof typeof overviewColors.funding]} strokeWidth={2} dot={{
+                          fill: overviewColors.funding[typeKey as keyof typeof overviewColors.funding],
+                          strokeWidth: 2,
+                          r: 3
+                        }} name={typeKey} />)}
                               
-                              {key === 'procurement' && Object.entries(procurementTypesData).map(([typeKey, typeData]) => (
-                                <Line 
-                                  key={typeKey}
-                                  type="monotone" 
-                                  dataKey={(entry: any) => {
-                                    const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
-                                    return dataPoint ? dataPoint.value : null;
-                                  }}
-                                  stroke={overviewColors.procurement[typeKey as keyof typeof overviewColors.procurement]} 
-                                  strokeWidth={2}
-                                  dot={{ fill: overviewColors.procurement[typeKey as keyof typeof overviewColors.procurement], strokeWidth: 2, r: 3 }}
-                                  name={typeKey}
-                                />
-                              ))}
+                              {key === 'procurement' && Object.entries(procurementTypesData).map(([typeKey, typeData]) => <Line key={typeKey} type="monotone" dataKey={(entry: any) => {
+                          const dataPoint = typeData.data.find((d: any) => d.date === entry.date);
+                          return dataPoint ? dataPoint.value : null;
+                        }} stroke={overviewColors.procurement[typeKey as keyof typeof overviewColors.procurement]} strokeWidth={2} dot={{
+                          fill: overviewColors.procurement[typeKey as keyof typeof overviewColors.procurement],
+                          strokeWidth: 2,
+                          r: 3
+                        }} name={typeKey} />)}
                               
                               <ChartLegend content={<ChartLegendContent />} />
-                            </>
-                          ) : (
-                            // 单一类型模式：显示实际值和计划值线条
-                            <>
+                            </> :
+                      // 单一类型模式：显示实际值和计划值线条
+                      <>
                               <Line type="monotone" dataKey="value" stroke={chartConfigForComponent.value.color} strokeWidth={3} dot={{
-                                fill: chartConfigForComponent.value.color,
-                                strokeWidth: 2,
-                                r: 4
-                              }} activeDot={{
-                                r: 6,
-                                stroke: chartConfigForComponent.value.color,
-                                strokeWidth: 2
-                              }} />
+                          fill: chartConfigForComponent.value.color,
+                          strokeWidth: 2,
+                          r: 4
+                        }} activeDot={{
+                          r: 6,
+                          stroke: chartConfigForComponent.value.color,
+                          strokeWidth: 2
+                        }} />
                               <Line type="monotone" dataKey="plan" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={{
-                                fill: "#94a3b8",
-                                strokeWidth: 2,
-                                r: 3
-                              }} />
-                            </>
-                          )}
+                          fill: "#94a3b8",
+                          strokeWidth: 2,
+                          r: 3
+                        }} />
+                            </>}
                         </LineChart>
                       </ResponsiveContainer>
                     </ChartContainer>
