@@ -305,7 +305,7 @@ const ChartLegendContent = React.forwardRef<
                 />
               )}
               <span className="text-xs text-muted-foreground">
-                {itemConfig?.label || item.value}
+                {itemConfig?.label || item.dataKey || item.value}
               </span>
             </div>
           )
