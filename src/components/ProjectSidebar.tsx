@@ -45,7 +45,7 @@ export function ProjectSidebar({ activeView, onViewChange }: ProjectSidebarProps
       isCollapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
-      <div className="p-4 bg-sidebar-accent/30 flex items-center justify-between">
+      <div className="p-4 flex items-center justify-between">
         {!isCollapsed && (
           <h2 className="font-semibold text-lg">办公楼建设项目</h2>
         )}
