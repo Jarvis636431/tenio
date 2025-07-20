@@ -63,7 +63,6 @@ export function AIAssistant() {
         className={`fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-50 transition-all duration-300 ${
           isOpen ? "scale-0 opacity-0" : "scale-100 opacity-100"
         }`}
-        size="icon"
       >
         <Sparkles className="w-8 h-8" />
       </Button>
