@@ -116,9 +116,7 @@ export function PlanOverview() {
         </TabsContent>
 
         <TabsContent value="gantt" className="space-y-4">
-          <div className="w-full">
-            <GanttChart data={scheduleData} />
-          </div>
+          <GanttChart data={scheduleData} />
         </TabsContent>
       </Tabs>
     </div>
