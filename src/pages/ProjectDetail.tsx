@@ -30,9 +30,9 @@ export default function ProjectDetail() {
       </div>
       
       {/* 主内容区域 */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden p-4">
         {/* 动态内容区域 */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 bg-card rounded-xl border p-6 overflow-auto shadow-sm">
           {renderContent()}
         </div>
       </div>

@@ -29,11 +29,11 @@ export function ProjectSidebar({ activeView, onViewChange }: ProjectSidebarProps
 
   return (
     <div className={cn(
-      "h-full bg-background border-r border-border transition-all duration-300 flex flex-col overflow-hidden",
+      "h-full bg-sidebar border-r border-border transition-all duration-300 flex flex-col overflow-hidden",
       isCollapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
+      <div className="p-4 bg-sidebar-accent/30 flex items-center justify-between">
         {!isCollapsed && (
           <h2 className="font-semibold text-lg">办公楼建设项目</h2>
         )}

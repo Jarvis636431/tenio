@@ -37,8 +37,8 @@ export function AppSidebar() {
     isActive: boolean;
   }) => isActive ? "bg-primary text-primary-foreground" : "hover:bg-accent";
 
-  return <Sidebar className="border-r" collapsible="icon">
-      <SidebarHeader className="border-b p-4 py-[13.5px] flex flex-row items-center justify-between">
+      return <Sidebar className="bg-sidebar border-r" collapsible="icon">
+      <SidebarHeader className="bg-sidebar-accent/50 p-4 py-[13.5px] flex flex-row items-center justify-between">
         {isCollapsed ? (
           <SidebarTrigger className="h-6 w-6 flex-shrink-0">
             <Menu className="h-4 w-4" />
@@ -72,7 +72,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarSeparator />
+        <div className="px-3 mb-2">
+          <div className="h-px bg-sidebar-border opacity-50"></div>
+        </div>
 
         <SidebarGroup>
           {!isCollapsed && <SidebarGroupLabel>项目列表</SidebarGroupLabel>}
