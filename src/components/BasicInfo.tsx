@@ -73,8 +73,8 @@ export function BasicInfo() {
   };
   return <div className="h-full overflow-auto p-6 space-y-6">
       <div className="space-y-1">
-        <h1 className="tracking-tight text-2xl font-normal">基础信息</h1>
-        <p className="text-muted-foreground font-light">项目基本信息管理和文件管理</p>
+        <h1 className="tracking-tight font-normal text-xl">基础信息</h1>
+        <p className="text-muted-foreground font-light text-base">项目基本信息管理和文件管理</p>
       </div>
 
       {/* 项目基础信息 */}
