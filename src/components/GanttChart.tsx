@@ -135,39 +135,46 @@ export function GanttChart({ data }: GanttChartProps) {
 
         <div className="overflow-x-auto">
           <div className="min-w-full">
-            {/* 甘特图容器 */}
-            <div className="grid" style={{ gridTemplateColumns: "200px 1fr" }}>
-              {/* 任务列表标题 */}
-              <div className="bg-muted/50 border-r border-b p-3 font-semibold">
-                任务名称
-              </div>
-              
-              {/* 时间轴标题 */}
-              <div className="bg-muted/50 border-b">
-                <div 
-                  className="grid gap-0 h-12"
-                  style={{ 
-                    gridTemplateColumns: `repeat(${totalDays}, 1fr)`,
-                    minWidth: `${totalDays * 40}px`
-                  }}
-                >
-                  {dateHeaders.map((header) => (
-                    <div
-                      key={header.day}
-                      className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${
-                        header.dayOfWeek === 0 || header.dayOfWeek === 6 
-                          ? 'bg-muted/70 text-muted-foreground' 
-                          : ''
-                      }`}
-                    >
-                      <div className="font-medium">{header.date}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {['日', '一', '二', '三', '四', '五', '六'][header.dayOfWeek]}
+            {/* 固定表头 */}
+            <div className="sticky top-0 bg-background z-10 border-b">
+              <div className="grid" style={{ gridTemplateColumns: "200px 1fr" }}>
+                {/* 任务列表标题 */}
+                <div className="bg-muted/50 border-r p-3 font-semibold">
+                  任务名称
+                </div>
+                
+                {/* 时间轴标题 */}
+                <div className="bg-muted/50">
+                  <div 
+                    className="grid gap-0 h-12"
+                    style={{ 
+                      gridTemplateColumns: `repeat(${totalDays}, 1fr)`,
+                      minWidth: `${totalDays * 40}px`
+                    }}
+                  >
+                    {dateHeaders.map((header) => (
+                      <div
+                        key={header.day}
+                        className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${
+                          header.dayOfWeek === 0 || header.dayOfWeek === 6 
+                            ? 'bg-muted/70 text-muted-foreground' 
+                            : ''
+                        }`}
+                      >
+                        <div className="font-medium">{header.date}</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {['日', '一', '二', '三', '四', '五', '六'][header.dayOfWeek]}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {/* 可滚动的甘特图主体 */}
+            <div className="max-h-96 overflow-y-auto">
+              <div className="grid" style={{ gridTemplateColumns: "200px 1fr" }}>
 
               {/* 甘特图主体 */}
               {timelineData.map((item, index) => (
@@ -234,6 +241,7 @@ export function GanttChart({ data }: GanttChartProps) {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           </div>
         </div>
