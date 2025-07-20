@@ -94,7 +94,7 @@ export function BasicInfo() {
       {/* 项目基础信息 */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>项目基础信息</CardTitle>
+          <h4 className="font-medium">项目基础信息</h4>
           <div className="flex gap-2">
             {isEditing ? (
               <>
