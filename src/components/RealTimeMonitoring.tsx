@@ -363,61 +363,65 @@ export function RealTimeMonitoring() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer
-                    config={{
-                      value: {
-                        label: "实际值",
-                        color: currentConfig.color,
-                      },
-                      plan: {
-                        label: "计划值",
-                        color: "#94a3b8",
-                      },
-                    }}
-                    className="h-[400px]"
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={displayData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis 
-                          dataKey="date" 
-                          className="text-muted-foreground"
-                          fontSize={12}
-                        />
-                        <YAxis 
-                          className="text-muted-foreground"
-                          fontSize={12}
-                          tickFormatter={(value) => `${value}${currentConfig.unit}`}
-                        />
-                        <ChartTooltip
-                          content={
-                            <ChartTooltipContent
-                              formatter={(value, name) => [
-                                `${value}${currentConfig.unit}`,
-                                name === "value" ? "实际值" : "计划值"
-                              ]}
-                            />
-                          }
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="value"
-                          stroke={currentConfig.color}
-                          strokeWidth={3}
-                          dot={{ fill: currentConfig.color, strokeWidth: 2, r: 4 }}
-                          activeDot={{ r: 6, stroke: currentConfig.color, strokeWidth: 2 }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="plan"
-                          stroke="#94a3b8"
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                          dot={{ fill: "#94a3b8", strokeWidth: 2, r: 3 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
+                  <div className="overflow-x-auto">
+                    <ChartContainer
+                      config={{
+                        value: {
+                          label: "实际值",
+                          color: currentConfig.color,
+                        },
+                        plan: {
+                          label: "计划值",
+                          color: "#94a3b8",
+                        },
+                      }}
+                      className="h-[400px]"
+                      style={{ minWidth: `${displayData.length * 80}px` }}
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={displayData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis 
+                            dataKey="date" 
+                            className="text-muted-foreground"
+                            fontSize={12}
+                            interval={0}
+                          />
+                          <YAxis 
+                            className="text-muted-foreground"
+                            fontSize={12}
+                            tickFormatter={(value) => `${value}${currentConfig.unit}`}
+                          />
+                          <ChartTooltip
+                            content={
+                              <ChartTooltipContent
+                                formatter={(value, name) => [
+                                  `${value}${currentConfig.unit}`,
+                                  name === "value" ? "实际值" : "计划值"
+                                ]}
+                              />
+                            }
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="value"
+                            stroke={currentConfig.color}
+                            strokeWidth={3}
+                            dot={{ fill: currentConfig.color, strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: currentConfig.color, strokeWidth: 2 }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="plan"
+                            stroke="#94a3b8"
+                            strokeWidth={2}
+                            strokeDasharray="5 5"
+                            dot={{ fill: "#94a3b8", strokeWidth: 2, r: 3 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
