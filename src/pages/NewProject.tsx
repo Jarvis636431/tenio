@@ -103,7 +103,7 @@ export default function NewProject() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors" onDrop={e => handleDrop(e, setCadFile, ['.dwg', '.dxf'])} onDragOver={handleDragOver}>
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors h-full flex flex-col justify-center" onDrop={e => handleDrop(e, setCadFile, ['.dwg', '.dxf'])} onDragOver={handleDragOver}>
                 {!cadFile && <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
