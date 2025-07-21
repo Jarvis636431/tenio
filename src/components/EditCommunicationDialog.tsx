@@ -65,7 +65,7 @@ export function EditCommunicationDialog({ open, onOpenChange, record, onEdit }: 
               <Label htmlFor="edit-coordinationType">协调类型</Label>
               <Select
                 value={formData.coordinationType}
-                onValueChange={(value) => setFormData({ ...formData, coordinationType: value })}
+                onValueChange={(value) => setFormData({ ...formData, coordinationType: value as CommunicationRecord['coordinationType'] })}
                 required
               >
                 <SelectTrigger>
