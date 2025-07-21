@@ -486,7 +486,6 @@ const materialTypesData = {
   }
 };
 
-// 劳动力工种数据
 const laborTypesData = {
   carpenter: {
     name: "木工",
@@ -778,7 +777,6 @@ const laborTypesData = {
   }
 };
 
-// 资金类型数据
 const fundingTypesData = {
   total: {
     name: "总资金",
@@ -1074,7 +1072,6 @@ const fundingTypesData = {
   }
 };
 
-// 采购类型数据
 const procurementTypesData = {
   materials: {
     name: "材料采购",
@@ -1298,7 +1295,6 @@ const procurementTypesData = {
   }
 };
 
-// 多线条图表颜色配置 - 更新物料类型颜色
 const overviewColors = {
   materials: {
     concrete_c15: "#ef4444",
@@ -1331,7 +1327,6 @@ const overviewColors = {
   }
 };
 
-// 总览模式的中文图表配置，颜色与overviewColors保持一致
 const overviewChartConfigs = {
   materials: {
     concrete_c15: {
@@ -1427,7 +1422,6 @@ const overviewChartConfigs = {
   }
 };
 
-// 生成总览数据的函数
 const generateOverviewData = (typesData: any) => {
   const firstDataSet = Object.values(typesData)[0] as any;
   const dates = firstDataSet.data.map((item: any) => item.date);
@@ -1446,7 +1440,6 @@ const generateOverviewData = (typesData: any) => {
   });
 };
 
-// 计算统计值的辅助函数
 const calculateStats = (data: Array<{
   value: number;
   plan: number;
@@ -1469,7 +1462,6 @@ const calculateStats = (data: Array<{
   }
 };
 
-// 计算总览模式的统计值
 const calculateOverviewStats = (allTypesData: any, isCumulative: boolean) => {
   if (isCumulative) {
     // 累积类指标：所有类型的总和
@@ -1663,9 +1655,6 @@ export function RealTimeMonitoring() {
           };
         }
         
-        // 确定线条类型：物料供应模块使用linear，其他使用monotone
-        const lineType = key === 'materials' ? 'linear' : 'monotone';
-        
         return <TabsContent key={key} value={key} className="space-y-4">
               {/* 类型选择器 */}
               {typeSelector && <div className="flex items-center gap-4 p-0">
@@ -1759,7 +1748,7 @@ export function RealTimeMonitoring() {
                             Object.entries(chartConfigForComponent).map(([dataKey, config]: [string, any]) => (
                               <Line 
                                 key={dataKey}
-                                type={lineType}
+                                type="linear"
                                 dataKey={dataKey} 
                                 stroke={config.color} 
                                 strokeWidth={2} 
@@ -1775,7 +1764,7 @@ export function RealTimeMonitoring() {
                             // 非总览模式：渲染实际值和计划值两条线
                             <>
                               <Line 
-                                type={lineType}
+                                type="linear"
                                 dataKey="value" 
                                 stroke={chartConfigForComponent?.value?.color || "#ef4444"} 
                                 strokeWidth={2} 
@@ -1787,7 +1776,7 @@ export function RealTimeMonitoring() {
                                 name="实际值" 
                               />
                               <Line 
-                                type={lineType}
+                                type="linear"
                                 dataKey="plan" 
                                 stroke="#94a3b8" 
                                 strokeWidth={2} 
