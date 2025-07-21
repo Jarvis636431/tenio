@@ -410,8 +410,7 @@ export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: Craft
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="text-yellow-500">{getLevelDisplay(craftsman.level)}</span>
-                    <span className="ml-2 text-sm text-muted-foreground">{craftsman.level}级</span>
+                    <span className="text-sm text-muted-foreground">{craftsman.level}级</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
