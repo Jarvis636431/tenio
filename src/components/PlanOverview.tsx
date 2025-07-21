@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, BarChart3, DollarSign, Package, Users, Wrench } from "lucide-react";
+import { Calendar, BarChart3, DollarSign, Package, Users, Wrench, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,6 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { GanttChart } from "@/components/GanttChart";
+
+interface PlanOverviewProps {
+  showExpandButton?: boolean;
+  onExpandSidebar?: () => void;
+}
 
 // 扩展的进度数据，包含费用信息
 const scheduleData = [{
@@ -248,6 +253,7 @@ const scheduleData = [{
     equipmentDesc: "高空泵送设备"
   }
 }];
+
 const getWorkerBadgeColor = (worker: string) => {
   const colors: {
     [key: string]: string;
@@ -260,22 +266,38 @@ const getWorkerBadgeColor = (worker: string) => {
   };
   return colors[worker] || "bg-gray-100 text-gray-800";
 };
+
 const formatCurrency = (amount: number) => {
   return `¥${amount.toLocaleString()}`;
 };
-export function PlanOverview() {
+
+export function PlanOverview({ showExpandButton = false, onExpandSidebar }: PlanOverviewProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<typeof scheduleData[0] | null>(null);
+
   const handleViewDetails = (task: typeof scheduleData[0]) => {
     setSelectedTask(task);
     setIsSheetOpen(true);
   };
+
   return <div className="h-full flex flex-col p-6">
       <Tabs defaultValue="schedule" className="h-full flex flex-col">
         {/* 固定在顶部的部分 */}
         <div className="shrink-0 space-y-6">
           <div className="space-y-1">
-            <h1 className="tracking-tight text-xl font-medium">计划总览</h1>
+            <div className="flex items-center gap-2">
+              {showExpandButton && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onExpandSidebar}
+                  className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
+              <h1 className="tracking-tight text-xl font-medium">计划总览</h1>
+            </div>
             <p className="text-muted-foreground font-light">项目施工进度规划与时间轴视图</p>
           </div>
 

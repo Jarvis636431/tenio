@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, RefreshCw, FileText } from "lucide-react";
+import { Save, RefreshCw, FileText, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +29,11 @@ interface UploadedFile {
   parsed: boolean;
 }
 
+interface BasicInfoProps {
+  showExpandButton?: boolean;
+  onExpandSidebar?: () => void;
+}
+
 const defaultFormValues = {
   city: "上海市",
   buildingType: "办公楼",
@@ -38,7 +42,7 @@ const defaultFormValues = {
   controlPrice: 23500000
 };
 
-export function BasicInfo() {
+export function BasicInfo({ showExpandButton = false, onExpandSidebar }: BasicInfoProps) {
   const [savedValues, setSavedValues] = useState<BasicInfoFormData>(defaultFormValues);
   const [hasChanges, setHasChanges] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([{
@@ -101,7 +105,19 @@ export function BasicInfo() {
   return (
     <div className="h-full overflow-auto p-6 space-y-6">
       <div className="space-y-1">
-        <h1 className="tracking-tight text-xl font-medium">基础信息</h1>
+        <div className="flex items-center gap-2">
+          {showExpandButton && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onExpandSidebar}
+              className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+          <h1 className="tracking-tight text-xl font-medium">基础信息</h1>
+        </div>
         <p className="text-muted-foreground font-light text-base">项目基本信息管理和文件管理</p>
       </div>
 

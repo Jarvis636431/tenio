@@ -1,8 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ProjectSidebar } from "@/components/ProjectSidebar";
 import { BasicInfo } from "@/components/BasicInfo";
 import { PlanOverview } from "@/components/PlanOverview";
@@ -23,32 +21,22 @@ export default function ProjectDetail() {
   }, [searchParams]);
 
   const renderContent = () => {
-    switch (activeView) {
-      case "basic-info":
-        return <BasicInfo />;
-      case "plan-overview":
-        return <PlanOverview />;
-      case "real-time-monitoring":
-        return <RealTimeMonitoring />;
-      case "order-management":
-        return <OrderManagement />;
-      default:
-        return <BasicInfo />;
-    }
-  };
+    const commonProps = {
+      showExpandButton: isSidebarCollapsed,
+      onExpandSidebar: () => setIsSidebarCollapsed(false)
+    };
 
-  const getContentTitle = () => {
     switch (activeView) {
       case "basic-info":
-        return "基础信息";
+        return <BasicInfo {...commonProps} />;
       case "plan-overview":
-        return "计划总览";
+        return <PlanOverview {...commonProps} />;
       case "real-time-monitoring":
-        return "实时监测";
+        return <RealTimeMonitoring {...commonProps} />;
       case "order-management":
-        return "订单管理";
+        return <OrderManagement {...commonProps} />;
       default:
-        return "基础信息";
+        return <BasicInfo {...commonProps} />;
     }
   };
 
@@ -66,21 +54,6 @@ export default function ProjectDetail() {
         
         {/* 主内容区域 */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* 内容标题区域 - 当侧边栏收起时显示展开按钮 */}
-          {isSidebarCollapsed && (
-            <div className="px-6 py-4 border-b border-border/50 flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setIsSidebarCollapsed(false)}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <h2 className="text-lg font-normal">{getContentTitle()}</h2>
-            </div>
-          )}
-          
           {/* 动态内容区域 */}
           <div className="flex-1 overflow-auto">
             {renderContent()}
