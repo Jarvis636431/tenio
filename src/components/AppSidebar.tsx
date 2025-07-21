@@ -32,7 +32,7 @@ export function AppSidebar() {
   
   const isActive = (path: string) => currentPath === path;
 
-  return <Sidebar className="bg-sidebar border-r shadow-lg w-64 h-full" collapsible="offcanvas">
+  return <Sidebar className="bg-sidebar border-r" collapsible="icon">
     <SidebarHeader className={`p-4 py-[13.5px] flex flex-row items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
       {isCollapsed ? (
         <SidebarTrigger className="h-6 w-6 flex-shrink-0">
