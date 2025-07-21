@@ -104,7 +104,6 @@ export function DataEntryForm({
   subType: initialSubType
 }: DataEntryFormProps) {
   const { toast } = useToast();
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory || "");
   const [selectedSubType, setSelectedSubType] = useState<string>(initialSubType || "");
   const [currentUnit, setCurrentUnit] = useState<string>(unit);
   
@@ -120,10 +119,10 @@ export function DataEntryForm({
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     const formattedDate = format(values.date, "M/d");
-    const finalCategory = showCategorySelector ? selectedCategory : initialCategory;
+    const finalCategory = initialCategory;
     const finalSubType = showCategorySelector ? selectedSubType : initialSubType;
-    const finalTitle = showCategorySelector 
-      ? categorySubTypeMap[finalCategory as keyof typeof categorySubTypeMap]?.subTypes[finalSubType as keyof any]?.name || title
+    const finalTitle = showCategorySelector && finalSubType && initialCategory
+      ? categorySubTypeMap[initialCategory as keyof typeof categorySubTypeMap]?.subTypes[finalSubType as keyof any]?.name || title
       : title;
     
     onSubmit({
@@ -140,21 +139,14 @@ export function DataEntryForm({
     });
     
     form.reset();
-    setSelectedCategory("");
     setSelectedSubType("");
     onOpenChange(false);
   };
 
-  const handleCategoryChange = (value: string) => {
-    setSelectedCategory(value);
-    setSelectedSubType("");
-    setCurrentUnit("");
-  };
-
   const handleSubTypeChange = (value: string) => {
     setSelectedSubType(value);
-    if (selectedCategory) {
-      const subTypeInfo = categorySubTypeMap[selectedCategory as keyof typeof categorySubTypeMap]?.subTypes[value as keyof any];
+    if (initialCategory) {
+      const subTypeInfo = categorySubTypeMap[initialCategory as keyof typeof categorySubTypeMap]?.subTypes[value as keyof any];
       if (subTypeInfo) {
         setCurrentUnit(subTypeInfo.unit);
       }
@@ -162,8 +154,13 @@ export function DataEntryForm({
   };
 
   const getCurrentSubTypes = () => {
-    if (!selectedCategory) return {};
-    return categorySubTypeMap[selectedCategory as keyof typeof categorySubTypeMap]?.subTypes || {};
+    if (!initialCategory) return {};
+    return categorySubTypeMap[initialCategory as keyof typeof categorySubTypeMap]?.subTypes || {};
+  };
+
+  const getCategoryName = () => {
+    if (!initialCategory) return "";
+    return categorySubTypeMap[initialCategory as keyof typeof categorySubTypeMap]?.name || "";
   };
 
   return (
@@ -171,15 +168,32 @@ export function DataEntryForm({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {showCategorySelector ? "录入监测数据" : `录入${title}数据`}
+            {showCategorySelector ? `录入${getCategoryName()}数据` : `录入${title}数据`}
           </DialogTitle>
           <DialogDescription>
-            {showCategorySelector ? "请选择类别和具体类型，然后录入实际监测数据" : description}
+            {showCategorySelector ? `请选择具体类型，然后录入${getCategoryName()}的实际监测数据` : description}
           </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            {showCategorySelector && initialCategory && (
+              <FormItem>
+                <FormLabel>具体类型</FormLabel>
+                <Select value={selectedSubType} onValueChange={handleSubTypeChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="请选择具体类型" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border">
+                    {Object.entries(getCurrentSubTypes()).map(([key, subType]) => (
+                      <SelectItem key={key} value={key}>
+                        {(subType as { name: string; unit: string }).name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
 
             <FormField
               control={form.control}
@@ -237,7 +251,7 @@ export function DataEntryForm({
                       placeholder={`请输入实际值`}
                       {...field}
                       onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      disabled={showCategorySelector && (!selectedCategory || !selectedSubType)}
+                      disabled={showCategorySelector && !selectedSubType}
                     />
                   </FormControl>
                   <FormMessage />
@@ -276,7 +290,7 @@ export function DataEntryForm({
               </Button>
               <Button 
                 type="submit"
-                disabled={showCategorySelector && (!selectedCategory || !selectedSubType)}
+                disabled={showCategorySelector && !selectedSubType}
               >
                 确认录入
               </Button>
