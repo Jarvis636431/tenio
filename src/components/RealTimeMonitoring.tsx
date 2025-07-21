@@ -1462,6 +1462,16 @@ const calculateStats = (data: Array<{
   }
 };
 
+// 新增：计算物料数据点总和的函数
+const calculateMaterialStats = (data: Array<{ value: number; plan: number; }>) => {
+  const totalActual = data.reduce((sum, item) => sum + item.value, 0);
+  const totalPlan = data.reduce((sum, item) => sum + item.plan, 0);
+  return {
+    current: totalActual,
+    plan: totalPlan
+  };
+};
+
 const calculateOverviewStats = (allTypesData: any, isCumulative: boolean) => {
   if (isCumulative) {
     // 累积类指标：所有类型的总和
@@ -1635,9 +1645,11 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
           typeSelector = null;
         }
 
-        // 计算统计值
+        // 计算统计值 - 针对物料使用新的计算函数
         let stats;
-        if (isOverview) {
+        if (key === 'materials') {
+          stats = calculateMaterialStats(displayData || data);
+        } else if (isOverview) {
           let allTypesData;
           if (key === 'labor') allTypesData = laborTypesData;else if (key === 'funding') allTypesData = fundingTypesData;else if (key === 'procurement') allTypesData = procurementTypesData;
           stats = calculateOverviewStats(allTypesData, currentConfig.isCumulative);
@@ -1691,7 +1703,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                 <Card className="h-20">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 py-3">
                     <CardTitle className="text-sm font-medium">
-                      {currentConfig.isCumulative ? "累计实际值" : "当前值"}
+                      {key === 'materials' ? "总实际值" : currentConfig.isCumulative ? "累计实际值" : "当前值"}
                     </CardTitle>
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
@@ -1706,7 +1718,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                 <Card className="h-20">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 py-3">
                     <CardTitle className="text-sm font-medium">
-                      {currentConfig.isCumulative ? "累计计划值" : "计划值"}
+                      {key === 'materials' ? "总计划值" : currentConfig.isCumulative ? "累计计划值" : "计划值"}
                     </CardTitle>
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
