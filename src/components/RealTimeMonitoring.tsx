@@ -8,282 +8,290 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 
 // 修改为每日独立值数据 - 扩展到项目结束日期 8/17
 const chartData = {
-  procurement: [{
-    date: "8/1",
-    value: 25000,
-    plan: 20000
-  }, {
-    date: "8/2",
-    value: 35000,
-    plan: 30000
-  }, {
-    date: "8/3",
-    value: 28000,
-    plan: 25000
-  }, {
-    date: "8/4",
-    value: 42000,
-    plan: 35000
-  }, {
-    date: "8/5",
-    value: 38000,
-    plan: 40000
-  }, {
-    date: "8/6",
-    value: 45000,
-    plan: 42000
-  }, {
-    date: "8/7",
-    value: 32000,
-    plan: 35000
-  }, {
-    date: "8/8",
-    value: 48000,
-    plan: 45000
-  }, {
-    date: "8/9",
-    value: 36000,
-    plan: 38000
-  }, {
-    date: "8/10",
-    value: 52000,
-    plan: 48000
-  }, {
-    date: "8/11",
-    value: 41000,
-    plan: 42000
-  }, {
-    date: "8/12",
-    value: 47000,
-    plan: 45000
-  }, {
-    date: "8/13",
-    value: 39000,
-    plan: 40000
-  }, {
-    date: "8/14",
-    value: 44000,
-    plan: 42000
-  }, {
-    date: "8/15",
-    value: 36000,
-    plan: 38000
-  }, {
-    date: "8/16",
-    value: 49000,
-    plan: 46000
-  }, {
-    date: "8/17",
-    value: 43000,
-    plan: 45000
-  }],
-  labor: [{
-    date: "8/1",
-    value: 12,
-    plan: 10
-  }, {
-    date: "8/2",
-    value: 14,
-    plan: 12
-  }, {
-    date: "8/3",
-    value: 11,
-    plan: 13
-  }, {
-    date: "8/4",
-    value: 15,
-    plan: 14
-  }, {
-    date: "8/5",
-    value: 13,
-    plan: 12
-  }, {
-    date: "8/6",
-    value: 16,
-    plan: 15
-  }, {
-    date: "8/7",
-    value: 14,
-    plan: 13
-  }, {
-    date: "8/8",
-    value: 17,
-    plan: 16
-  }, {
-    date: "8/9",
-    value: 15,
-    plan: 14
-  }, {
-    date: "8/10",
-    value: 18,
-    plan: 17
-  }, {
-    date: "8/11",
-    value: 16,
-    plan: 15
-  }, {
-    date: "8/12",
-    value: 19,
-    plan: 18
-  }, {
-    date: "8/13",
-    value: 17,
-    plan: 16
-  }, {
-    date: "8/14",
-    value: 20,
-    plan: 19
-  }, {
-    date: "8/15",
-    value: 18,
-    plan: 17
-  }, {
-    date: "8/16",
-    value: 21,
-    plan: 20
-  }, {
-    date: "8/17",
-    value: 19,
-    plan: 18
-  }],
-  funding: [{
-    date: "8/1",
-    value: 120000,
-    plan: 100000
-  }, {
-    date: "8/2",
-    value: 150000,
-    plan: 140000
-  }, {
-    date: "8/3",
-    value: 95000,
-    plan: 110000
-  }, {
-    date: "8/4",
-    value: 180000,
-    plan: 160000
-  }, {
-    date: "8/5",
-    value: 135000,
-    plan: 145000
-  }, {
-    date: "8/6",
-    value: 165000,
-    plan: 155000
-  }, {
-    date: "8/7",
-    value: 110000,
-    plan: 125000
-  }, {
-    date: "8/8",
-    value: 190000,
-    plan: 175000
-  }, {
-    date: "8/9",
-    value: 145000,
-    plan: 150000
-  }, {
-    date: "8/10",
-    value: 175000,
-    plan: 165000
-  }, {
-    date: "8/11",
-    value: 125000,
-    plan: 135000
-  }, {
-    date: "8/12",
-    value: 185000,
-    plan: 170000
-  }, {
-    date: "8/13",
-    value: 155000,
-    plan: 160000
-  }, {
-    date: "8/14",
-    value: 195000,
-    plan: 180000
-  }, {
-    date: "8/15",
-    value: 140000,
-    plan: 150000
-  }, {
-    date: "8/16",
-    value: 200000,
-    plan: 185000
-  }, {
-    date: "8/17",
-    value: 160000,
-    plan: 165000
-  }],
-  materials: [{
-    date: "8/1",
-    value: 85,
-    plan: 80
-  }, {
-    date: "8/2",
-    value: 92,
-    plan: 88
-  }, {
-    date: "8/3",
-    value: 78,
-    plan: 85
-  }, {
-    date: "8/4",
-    value: 95,
-    plan: 90
-  }, {
-    date: "8/5",
-    value: 88,
-    plan: 85
-  }, {
-    date: "8/6",
-    value: 96,
-    plan: 92
-  }, {
-    date: "8/7",
-    value: 89,
-    plan: 88
-  }, {
-    date: "8/8",
-    value: 93,
-    plan: 90
-  }, {
-    date: "8/9",
-    value: 87,
-    plan: 89
-  }, {
-    date: "8/10",
-    value: 94,
-    plan: 91
-  }, {
-    date: "8/11",
-    value: 90,
-    plan: 88
-  }, {
-    date: "8/12",
-    value: 97,
-    plan: 94
-  }, {
-    date: "8/13",
-    value: 91,
-    plan: 89
-  }, {
-    date: "8/14",
-    value: 95,
-    plan: 93
-  }, {
-    date: "8/15",
-    value: 88,
-    plan: 90
-  }, {
-    date: "8/16",
-    value: 98,
-    plan: 95
-  }, {
-    date: "8/17",
-    value: 92,
-    plan: 90
-  }]
+  procurement: [
+    {
+      date: "8/1",
+      value: 25000,
+      plan: 20000
+    }, {
+      date: "8/2",
+      value: 35000,
+      plan: 30000
+    }, {
+      date: "8/3",
+      value: 28000,
+      plan: 25000
+    }, {
+      date: "8/4",
+      value: 42000,
+      plan: 35000
+    }, {
+      date: "8/5",
+      value: 38000,
+      plan: 40000
+    }, {
+      date: "8/6",
+      value: 45000,
+      plan: 42000
+    }, {
+      date: "8/7",
+      value: 32000,
+      plan: 35000
+    }, {
+      date: "8/8",
+      value: 48000,
+      plan: 45000
+    }, {
+      date: "8/9",
+      value: 36000,
+      plan: 38000
+    }, {
+      date: "8/10",
+      value: 52000,
+      plan: 48000
+    }, {
+      date: "8/11",
+      value: 41000,
+      plan: 42000
+    }, {
+      date: "8/12",
+      value: 47000,
+      plan: 45000
+    }, {
+      date: "8/13",
+      value: 39000,
+      plan: 40000
+    }, {
+      date: "8/14",
+      value: 44000,
+      plan: 42000
+    }, {
+      date: "8/15",
+      value: 36000,
+      plan: 38000
+    }, {
+      date: "8/16",
+      value: 49000,
+      plan: 46000
+    }, {
+      date: "8/17",
+      value: 43000,
+      plan: 45000
+    }
+  ],
+  labor: [
+    {
+      date: "8/1",
+      value: 12,
+      plan: 10
+    }, {
+      date: "8/2",
+      value: 14,
+      plan: 12
+    }, {
+      date: "8/3",
+      value: 11,
+      plan: 13
+    }, {
+      date: "8/4",
+      value: 15,
+      plan: 14
+    }, {
+      date: "8/5",
+      value: 13,
+      plan: 12
+    }, {
+      date: "8/6",
+      value: 16,
+      plan: 15
+    }, {
+      date: "8/7",
+      value: 14,
+      plan: 13
+    }, {
+      date: "8/8",
+      value: 17,
+      plan: 16
+    }, {
+      date: "8/9",
+      value: 15,
+      plan: 14
+    }, {
+      date: "8/10",
+      value: 18,
+      plan: 17
+    }, {
+      date: "8/11",
+      value: 16,
+      plan: 15
+    }, {
+      date: "8/12",
+      value: 19,
+      plan: 18
+    }, {
+      date: "8/13",
+      value: 17,
+      plan: 16
+    }, {
+      date: "8/14",
+      value: 20,
+      plan: 19
+    }, {
+      date: "8/15",
+      value: 18,
+      plan: 17
+    }, {
+      date: "8/16",
+      value: 21,
+      plan: 20
+    }, {
+      date: "8/17",
+      value: 19,
+      plan: 18
+    }
+  ],
+  funding: [
+    {
+      date: "8/1",
+      value: 120000,
+      plan: 100000
+    }, {
+      date: "8/2",
+      value: 150000,
+      plan: 140000
+    }, {
+      date: "8/3",
+      value: 95000,
+      plan: 110000
+    }, {
+      date: "8/4",
+      value: 180000,
+      plan: 160000
+    }, {
+      date: "8/5",
+      value: 135000,
+      plan: 145000
+    }, {
+      date: "8/6",
+      value: 165000,
+      plan: 155000
+    }, {
+      date: "8/7",
+      value: 110000,
+      plan: 125000
+    }, {
+      date: "8/8",
+      value: 190000,
+      plan: 175000
+    }, {
+      date: "8/9",
+      value: 145000,
+      plan: 150000
+    }, {
+      date: "8/10",
+      value: 175000,
+      plan: 165000
+    }, {
+      date: "8/11",
+      value: 125000,
+      plan: 135000
+    }, {
+      date: "8/12",
+      value: 185000,
+      plan: 170000
+    }, {
+      date: "8/13",
+      value: 155000,
+      plan: 160000
+    }, {
+      date: "8/14",
+      value: 195000,
+      plan: 180000
+    }, {
+      date: "8/15",
+      value: 140000,
+      plan: 150000
+    }, {
+      date: "8/16",
+      value: 200000,
+      plan: 185000
+    }, {
+      date: "8/17",
+      value: 160000,
+      plan: 165000
+    }
+  ],
+  materials: [
+    {
+      date: "8/1",
+      value: 85,
+      plan: 80
+    }, {
+      date: "8/2",
+      value: 92,
+      plan: 88
+    }, {
+      date: "8/3",
+      value: 78,
+      plan: 85
+    }, {
+      date: "8/4",
+      value: 95,
+      plan: 90
+    }, {
+      date: "8/5",
+      value: 88,
+      plan: 85
+    }, {
+      date: "8/6",
+      value: 96,
+      plan: 92
+    }, {
+      date: "8/7",
+      value: 89,
+      plan: 88
+    }, {
+      date: "8/8",
+      value: 93,
+      plan: 90
+    }, {
+      date: "8/9",
+      value: 87,
+      plan: 89
+    }, {
+      date: "8/10",
+      value: 94,
+      plan: 91
+    }, {
+      date: "8/11",
+      value: 90,
+      plan: 88
+    }, {
+      date: "8/12",
+      value: 97,
+      plan: 94
+    }, {
+      date: "8/13",
+      value: 91,
+      plan: 89
+    }, {
+      date: "8/14",
+      value: 95,
+      plan: 93
+    }, {
+      date: "8/15",
+      value: 88,
+      plan: 90
+    }, {
+      date: "8/16",
+      value: 98,
+      plan: 95
+    }, {
+      date: "8/17",
+      value: 92,
+      plan: 90
+    }
+  ]
 };
 
 const chartConfig = {
@@ -313,7 +321,7 @@ const chartConfig = {
   },
   materials: {
     title: "物料供应",
-    description: "每日物料供应量监控",
+    description: "按实际进货日期的物料供应量监控",
     icon: Package,
     color: "#ef4444",
     unit: "", // 动态单位，根据选中的材料类型确定
@@ -321,299 +329,160 @@ const chartConfig = {
   }
 };
 
-// 物料类型数据 - 修改为实际单位和数量，扩展到 8/17
+// 物料类型数据 - 按实际进货日期设置稀疏数据点
 const materialTypesData = {
-  concrete: {
-    name: "混凝土",
+  concrete_c15: {
+    name: "C15混凝土",
     unit: "m³",
-    data: [{
-      date: "8/1",
-      value: 120,
-      plan: 100
-    }, {
-      date: "8/2",
-      value: 135,
-      plan: 125
-    }, {
-      date: "8/3",
-      value: 95,
-      plan: 110
-    }, {
-      date: "8/4",
-      value: 150,
-      plan: 130
-    }, {
-      date: "8/5",
-      value: 125,
-      plan: 120
-    }, {
-      date: "8/6",
-      value: 165,
-      plan: 145
-    }, {
-      date: "8/7",
-      value: 110,
-      plan: 115
-    }, {
-      date: "8/8",
-      value: 180,
-      plan: 160
-    }, {
-      date: "8/9",
-      value: 140,
-      plan: 135
-    }, {
-      date: "8/10",
-      value: 195,
-      plan: 175
-    }, {
-      date: "8/11",
-      value: 155,
-      plan: 150
-    }, {
-      date: "8/12",
-      value: 210,
-      plan: 185
-    }, {
-      date: "8/13",
-      value: 170,
-      plan: 165
-    }, {
-      date: "8/14",
-      value: 225,
-      plan: 200
-    }, {
-      date: "8/15",
-      value: 185,
-      plan: 180
-    }, {
-      date: "8/16",
-      value: 240,
-      plan: 215
-    }, {
-      date: "8/17",
-      value: 200,
-      plan: 195
-    }]
+    data: [
+      {
+        date: "8/1",
+        value: 1.5,
+        plan: 1.2
+      },
+      {
+        date: "8/6",
+        value: 1.8,
+        plan: 1.6
+      }
+    ]
   },
-  steel: {
-    name: "钢筋",
+  concrete_c20: {
+    name: "C20混凝土", 
+    unit: "m³",
+    data: [
+      {
+        date: "8/1",
+        value: 2.8,
+        plan: 2.5
+      },
+      {
+        date: "8/6",
+        value: 3.2,
+        plan: 3.0
+      },
+      {
+        date: "8/14",
+        value: 2.5,
+        plan: 2.8
+      }
+    ]
+  },
+  concrete_c25: {
+    name: "C25混凝土",
+    unit: "m³", 
+    data: [
+      {
+        date: "8/5",
+        value: 2.2,
+        plan: 2.0
+      },
+      {
+        date: "8/6",
+        value: 1.8,
+        plan: 2.1
+      },
+      {
+        date: "8/14",
+        value: 2.0,
+        plan: 1.9
+      }
+    ]
+  },
+  steel_d12: {
+    name: "钢筋D12",
     unit: "t",
-    data: [{
-      date: "8/1",
-      value: 12,
-      plan: 10
-    }, {
-      date: "8/2",
-      value: 15,
-      plan: 14
-    }, {
-      date: "8/3",
-      value: 8,
-      plan: 12
-    }, {
-      date: "8/4",
-      value: 18,
-      plan: 16
-    }, {
-      date: "8/5",
-      value: 14,
-      plan: 15
-    }, {
-      date: "8/6",
-      value: 20,
-      plan: 18
-    }, {
-      date: "8/7",
-      value: 11,
-      plan: 13
-    }, {
-      date: "8/8",
-      value: 22,
-      plan: 20
-    }, {
-      date: "8/9",
-      value: 16,
-      plan: 17
-    }, {
-      date: "8/10",
-      value: 25,
-      plan: 22
-    }, {
-      date: "8/11",
-      value: 19,
-      plan: 18
-    }, {
-      date: "8/12",
-      value: 28,
-      plan: 25
-    }, {
-      date: "8/13",
-      value: 21,
-      plan: 20
-    }, {
-      date: "8/14",
-      value: 30,
-      plan: 27
-    }, {
-      date: "8/15",
-      value: 24,
-      plan: 22
-    }, {
-      date: "8/16",
-      value: 32,
-      plan: 29
-    }, {
-      date: "8/17",
-      value: 26,
-      plan: 25
-    }]
+    data: [
+      {
+        date: "8/1",
+        value: 3.5,
+        plan: 3.2
+      },
+      {
+        date: "8/10",
+        value: 4.2,
+        plan: 3.8
+      }
+    ]
+  },
+  steel_d16: {
+    name: "钢筋D16",
+    unit: "t",
+    data: [
+      {
+        date: "8/4",
+        value: 1.2,
+        plan: 1.0
+      },
+      {
+        date: "8/13",
+        value: 0.8,
+        plan: 1.1
+      }
+    ]
+  },
+  steel_d18: {
+    name: "钢筋D18",
+    unit: "t",
+    data: [
+      {
+        date: "8/4",
+        value: 0.3,
+        plan: 0.4
+      }
+    ]
   },
   blocks: {
     name: "空心混凝土砌块",
     unit: "m²",
-    data: [{
-      date: "8/1",
-      value: 180,
-      plan: 200
-    }, {
-      date: "8/2",
-      value: 220,
-      plan: 210
-    }, {
-      date: "8/3",
-      value: 160,
-      plan: 190
-    }, {
-      date: "8/4",
-      value: 250,
-      plan: 230
-    }, {
-      date: "8/5",
-      value: 210,
-      plan: 220
-    }, {
-      date: "8/6",
-      value: 280,
-      plan: 260
-    }, {
-      date: "8/7",
-      value: 190,
-      plan: 200
-    }, {
-      date: "8/8",
-      value: 300,
-      plan: 280
-    }, {
-      date: "8/9",
-      value: 240,
-      plan: 250
-    }, {
-      date: "8/10",
-      value: 320,
-      plan: 300
-    }, {
-      date: "8/11",
-      value: 260,
-      plan: 270
-    }, {
-      date: "8/12",
-      value: 340,
-      plan: 320
-    }, {
-      date: "8/13",
-      value: 280,
-      plan: 290
-    }, {
-      date: "8/14",
-      value: 360,
-      plan: 340
-    }, {
-      date: "8/15",
-      value: 300,
-      plan: 310
-    }, {
-      date: "8/16",
-      value: 380,
-      plan: 360
-    }, {
-      date: "8/17",
-      value: 320,
-      plan: 330
-    }]
+    data: [
+      {
+        date: "8/2",
+        value: 220,
+        plan: 210
+      },
+      {
+        date: "8/5",
+        value: 280,
+        plan: 260
+      },
+      {
+        date: "8/9",
+        value: 320,
+        plan: 300
+      },
+      {
+        date: "8/12",
+        value: 340,
+        plan: 320
+      }
+    ]
   },
   mortar: {
     name: "砂浆",
     unit: "m³",
-    data: [{
-      date: "8/1",
-      value: 45,
-      plan: 40
-    }, {
-      date: "8/2",
-      value: 52,
-      plan: 48
-    }, {
-      date: "8/3",
-      value: 38,
-      plan: 45
-    }, {
-      date: "8/4",
-      value: 58,
-      plan: 52
-    }, {
-      date: "8/5",
-      value: 48,
-      plan: 50
-    }, {
-      date: "8/6",
-      value: 62,
-      plan: 58
-    }, {
-      date: "8/7",
-      value: 42,
-      plan: 46
-    }, {
-      date: "8/8",
-      value: 68,
-      plan: 62
-    }, {
-      date: "8/9",
-      value: 54,
-      plan: 56
-    }, {
-      date: "8/10",
-      value: 72,
-      plan: 68
-    }, {
-      date: "8/11",
-      value: 58,
-      plan: 60
-    }, {
-      date: "8/12",
-      value: 78,
-      plan: 72
-    }, {
-      date: "8/13",
-      value: 64,
-      plan: 66
-    }, {
-      date: "8/14",
-      value: 82,
-      plan: 78
-    }, {
-      date: "8/15",
-      value: 68,
-      plan: 70
-    }, {
-      date: "8/16",
-      value: 86,
-      plan: 82
-    }, {
-      date: "8/17",
-      value: 74,
-      plan: 76
-    }]
+    data: [
+      {
+        date: "8/1",
+        value: 45,
+        plan: 40
+      },
+      {
+        date: "8/5",
+        value: 62,
+        plan: 58
+      },
+      {
+        date: "8/10",
+        value: 72,
+        plan: 68
+      },
+      {
+        date: "8/14",
+        value: 82,
+        plan: 78
+      }
+    ]
   }
 };
 
@@ -1429,13 +1298,17 @@ const procurementTypesData = {
   }
 };
 
-// 多线条图表颜色配置
+// 多线条图表颜色配置 - 更新物料类型颜色
 const overviewColors = {
   materials: {
-    concrete: "#ef4444",
-    steel: "#f97316",
-    blocks: "#eab308",
-    mortar: "#84cc16"
+    concrete_c15: "#ef4444",
+    concrete_c20: "#f97316", 
+    concrete_c25: "#eab308",
+    steel_d12: "#84cc16",
+    steel_d16: "#10b981",
+    steel_d18: "#06b6d4",
+    blocks: "#8b5cf6",
+    mortar: "#ec4899"
   },
   labor: {
     carpenter: "#10b981",
@@ -1461,13 +1334,29 @@ const overviewColors = {
 // 总览模式的中文图表配置，颜色与overviewColors保持一致
 const overviewChartConfigs = {
   materials: {
-    concrete: {
-      label: "混凝土",
-      color: overviewColors.materials.concrete
+    concrete_c15: {
+      label: "C15混凝土",
+      color: overviewColors.materials.concrete_c15
     },
-    steel: {
-      label: "钢筋",
-      color: overviewColors.materials.steel
+    concrete_c20: {
+      label: "C20混凝土", 
+      color: overviewColors.materials.concrete_c20
+    },
+    concrete_c25: {
+      label: "C25混凝土",
+      color: overviewColors.materials.concrete_c25
+    },
+    steel_d12: {
+      label: "钢筋D12",
+      color: overviewColors.materials.steel_d12
+    },
+    steel_d16: {
+      label: "钢筋D16",
+      color: overviewColors.materials.steel_d16
+    },
+    steel_d18: {
+      label: "钢筋D18",
+      color: overviewColors.materials.steel_d18
     },
     blocks: {
       label: "空心混凝土砌块",
@@ -1612,7 +1501,7 @@ const calculateOverviewStats = (allTypesData: any, isCumulative: boolean) => {
 
 export function RealTimeMonitoring() {
   const [activeChart, setActiveChart] = useState<keyof typeof chartData>("procurement");
-  const [selectedMaterialType, setSelectedMaterialType] = useState<keyof typeof materialTypesData>("concrete");
+  const [selectedMaterialType, setSelectedMaterialType] = useState<keyof typeof materialTypesData>("concrete_c20");
   const [selectedLaborType, setSelectedLaborType] = useState<keyof typeof laborTypesData | "overview">("overview");
   const [selectedFundingType, setSelectedFundingType] = useState<keyof typeof fundingTypesData | "overview">("overview");
   const [selectedProcurementType, setSelectedProcurementType] = useState<keyof typeof procurementTypesData | "overview">("overview");
@@ -1656,9 +1545,14 @@ export function RealTimeMonitoring() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border">
-                  {Object.entries(materialTypesData).map(([typeKey, typeData]) => <SelectItem key={typeKey} value={typeKey}>
-                      {typeData.name}
-                    </SelectItem>)}
+                  <SelectItem value="concrete_c15">C15混凝土</SelectItem>
+                  <SelectItem value="concrete_c20">C20混凝土</SelectItem>
+                  <SelectItem value="concrete_c25">C25混凝土</SelectItem>
+                  <SelectItem value="steel_d12">钢筋D12</SelectItem>
+                  <SelectItem value="steel_d16">钢筋D16</SelectItem>
+                  <SelectItem value="steel_d18">钢筋D18</SelectItem>
+                  <SelectItem value="blocks">空心混凝土砌块</SelectItem>
+                  <SelectItem value="mortar">砂浆</SelectItem>
                 </SelectContent>
               </Select>;
               
@@ -1768,6 +1662,10 @@ export function RealTimeMonitoring() {
             }
           };
         }
+        
+        // 确定线条类型：物料供应模块使用linear，其他使用monotone
+        const lineType = key === 'materials' ? 'linear' : 'monotone';
+        
         return <TabsContent key={key} value={key} className="space-y-4">
               {/* 类型选择器 */}
               {typeSelector && <div className="flex items-center gap-4 p-0">
@@ -1836,7 +1734,7 @@ export function RealTimeMonitoring() {
                       </span>}
                   </CardTitle>
                   <CardDescription>
-                    {isOverview ? `${currentConfig.title}各类型数据对比总览` : currentTypeName ? `${currentTypeName}每日${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应量'}监控` : currentConfig.description}
+                    {isOverview ? `${currentConfig.title}各类型数据对比总览` : currentTypeName ? `${currentTypeName}${key === 'materials' ? '按实际进货日期的' : '每日'}${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应量'}监控` : currentConfig.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1861,7 +1759,7 @@ export function RealTimeMonitoring() {
                             Object.entries(chartConfigForComponent).map(([dataKey, config]: [string, any]) => (
                               <Line 
                                 key={dataKey}
-                                type="monotone" 
+                                type={lineType}
                                 dataKey={dataKey} 
                                 stroke={config.color} 
                                 strokeWidth={2} 
@@ -1877,7 +1775,7 @@ export function RealTimeMonitoring() {
                             // 非总览模式：渲染实际值和计划值两条线
                             <>
                               <Line 
-                                type="monotone" 
+                                type={lineType}
                                 dataKey="value" 
                                 stroke={chartConfigForComponent?.value?.color || "#ef4444"} 
                                 strokeWidth={2} 
@@ -1889,7 +1787,7 @@ export function RealTimeMonitoring() {
                                 name="实际值" 
                               />
                               <Line 
-                                type="monotone" 
+                                type={lineType}
                                 dataKey="plan" 
                                 stroke="#94a3b8" 
                                 strokeWidth={2} 
