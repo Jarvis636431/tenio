@@ -1,7 +1,7 @@
 
 import { NavLink, useLocation } from "react-router-dom";
-import { FolderPlus, Settings, Building2, PlusCircle, Menu } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarSeparator, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { PlusCircle, Settings, Building2, Menu } from "lucide-react";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 
 const mainMenuItems = [{
   title: "新建项目",
@@ -31,86 +31,84 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed";
   
   const isActive = (path: string) => currentPath === path;
-  const getNavCls = ({
-    isActive
-  }: {
-    isActive: boolean;
-  }) => isActive ? "!bg-white !text-black !font-bold" : "hover:bg-accent";
 
-      return <Sidebar className="bg-sidebar border-r" collapsible="icon">
-      <SidebarHeader className="p-4 py-[13.5px] flex flex-row items-center justify-between">
-        {isCollapsed ? (
+  return <Sidebar className="bg-sidebar border-r" collapsible="icon">
+    <SidebarHeader className="p-4 py-[13.5px] flex flex-row items-center justify-between">
+      {isCollapsed ? (
+        <SidebarTrigger className="h-6 w-6 flex-shrink-0">
+          <Menu className="h-4 w-4" />
+        </SidebarTrigger>
+      ) : (
+        <>
+          <div className="flex items-center space-x-2">
+            <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
+            <h1 className="text-lg font-bold text-primary">天友智管平台</h1>
+          </div>
           <SidebarTrigger className="h-6 w-6 flex-shrink-0">
             <Menu className="h-4 w-4" />
           </SidebarTrigger>
-        ) : (
-          <>
-            <div className="flex items-center space-x-2">
-              <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
-              <h1 className="text-lg font-bold text-primary">天友智管平台</h1>
-            </div>
-            <SidebarTrigger className="h-6 w-6 flex-shrink-0">
-              <Menu className="h-4 w-4" />
-            </SidebarTrigger>
-          </>
-        )}
-      </SidebarHeader>
+        </>
+      )}
+    </SidebarHeader>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainMenuItems.map(item => <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={isActive(item.url)}
-                    style={isActive(item.url) ? {
-                      '--sidebar-accent': 'hsl(0 0% 100%)',
-                      '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                      backgroundColor: 'white',
-                      color: 'black',
-                      fontWeight: 'bold'
-                    } as any : {}}
-                  >
-                    <NavLink to={item.url}>
-                      <item.icon className="h-4 w-4 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {mainMenuItems.map(item => <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton 
+                  asChild 
+                  isActive={isActive(item.url)}
+                  style={isActive(item.url) ? {
+                    '--sidebar-accent': 'hsl(0 0% 100%)',
+                    '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
+                    backgroundColor: 'white',
+                    color: 'black',
+                    fontWeight: 'bold'
+                  } as any : {}}
+                >
+                  <NavLink to={item.url}>
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    {!isCollapsed && <span>{item.title}</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>)}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
 
-        <div className="px-3 mb-2">
-          <div className="h-px bg-sidebar-border opacity-50"></div>
-        </div>
+      {!isCollapsed && (
+        <>
+          <div className="px-3 mb-2">
+            <div className="h-px bg-sidebar-border opacity-50"></div>
+          </div>
 
-        <SidebarGroup>
-          {!isCollapsed && <SidebarGroupLabel>项目列表</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {projects.map(project => <SidebarMenuItem key={project.id}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={isActive(project.url)}
-                    style={isActive(project.url) ? {
-                      '--sidebar-accent': 'hsl(0 0% 100%)',
-                      '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                      backgroundColor: 'white',
-                      color: 'black',
-                      fontWeight: 'bold'
-                    } as any : {}}
-                  >
-                    <NavLink to={project.url}>
-                      <FolderPlus className="h-4 w-4 flex-shrink-0" />
-                      {!isCollapsed && <span>{project.name}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>;
+          <SidebarGroup>
+            <SidebarGroupLabel>项目列表</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {projects.map(project => <SidebarMenuItem key={project.id}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={isActive(project.url)}
+                      style={isActive(project.url) ? {
+                        '--sidebar-accent': 'hsl(0 0% 100%)',
+                        '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
+                        backgroundColor: 'white',
+                        color: 'black',
+                        fontWeight: 'bold'
+                      } as any : {}}
+                    >
+                      <NavLink to={project.url}>
+                        <span>{project.name}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </>
+      )}
+    </SidebarContent>
+  </Sidebar>;
 }
