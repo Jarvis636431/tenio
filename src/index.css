@@ -1,4 +1,5 @@
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -123,66 +124,121 @@ All colors MUST be HSL.
   }
 }
 
-/* Global font size adjustments - reduce all text by one size level (excluding body) */
+/* Font weight adjustments for large text only (text-lg and above) */
 @layer utilities {
-  :not(body) .text-xs {
-    font-size: 0.75rem; /* 12px - keep as smallest */
-    line-height: 1rem;
-  }
-  
-  :not(body) .text-sm {
-    font-size: 0.75rem; /* 12px - reduced from 14px */
-    line-height: 1rem;
-  }
-  
-  :not(body) .text-base {
-    font-size: 0.875rem; /* 14px - reduced from 16px */
-    line-height: 1.25rem;
-  }
-  
-  :not(body) .text-lg {
-    font-size: 1rem; /* 16px - reduced from 18px */
-    line-height: 1.5rem;
-  }
-  
-  :not(body) .text-xl {
-    font-size: 1.125rem; /* 18px - reduced from 20px */
-    line-height: 1.75rem;
-  }
-  
-  :not(body) .text-2xl {
-    font-size: 1.25rem; /* 20px - reduced from 24px */
-    line-height: 1.75rem;
-  }
-  
-  :not(body) .text-3xl {
-    font-size: 1.5rem; /* 24px - reduced from 30px */
-    line-height: 2rem;
-  }
-  
-  :not(body) .text-4xl {
-    font-size: 1.875rem; /* 30px - reduced from 36px */
-    line-height: 2.25rem;
-  }
-  
-  /* Global font weight adjustments - reduce all weights by one level (excluding body) */
-  :not(body) .font-light {
+  /* text-lg adjustments */
+  .text-lg.font-light {
     font-weight: 200; /* extralight - reduced from light(300) */
   }
   
-  :not(body) .font-normal {
+  .text-lg.font-normal {
     font-weight: 300; /* light - reduced from normal(400) */
   }
   
-  :not(body) .font-medium {
+  .text-lg.font-medium {
     font-weight: 400; /* normal - reduced from medium(500) */
   }
   
-  :not(body) .font-semibold {
+  .text-lg.font-semibold {
     font-weight: 500; /* medium - reduced from semibold(600) */
   }
   
-  :not(body) .font-bold {
+  .text-lg.font-bold {
     font-weight: 600; /* semibold - reduced from bold(700) */
   }
+
+  /* text-xl adjustments */
+  .text-xl.font-light {
+    font-weight: 200;
+  }
+  
+  .text-xl.font-normal {
+    font-weight: 300;
+  }
+  
+  .text-xl.font-medium {
+    font-weight: 400;
+  }
+  
+  .text-xl.font-semibold {
+    font-weight: 500;
+  }
+  
+  .text-xl.font-bold {
+    font-weight: 600;
+  }
+
+  /* text-2xl adjustments */
+  .text-2xl.font-light {
+    font-weight: 200;
+  }
+  
+  .text-2xl.font-normal {
+    font-weight: 300;
+  }
+  
+  .text-2xl.font-medium {
+    font-weight: 400;
+  }
+  
+  .text-2xl.font-semibold {
+    font-weight: 500;
+  }
+  
+  .text-2xl.font-bold {
+    font-weight: 600;
+  }
+
+  /* text-3xl adjustments */
+  .text-3xl.font-light {
+    font-weight: 200;
+  }
+  
+  .text-3xl.font-normal {
+    font-weight: 300;
+  }
+  
+  .text-3xl.font-medium {
+    font-weight: 400;
+  }
+  
+  .text-3xl.font-semibold {
+    font-weight: 500;
+  }
+  
+  .text-3xl.font-bold {
+    font-weight: 600;
+  }
+
+  /* text-4xl and larger adjustments */
+  .text-4xl.font-light,
+  .text-5xl.font-light,
+  .text-6xl.font-light {
+    font-weight: 200;
+  }
+  
+  .text-4xl.font-normal,
+  .text-5xl.font-normal,
+  .text-6xl.font-normal {
+    font-weight: 300;
+  }
+  
+  .text-4xl.font-medium,
+  .text-5xl.font-medium,
+  .text-6xl.font-medium {
+    font-weight: 400;
+  }
+  
+  .text-4xl.font-semibold,
+  .text-5xl.font-semibold,
+  .text-6xl.font-semibold {
+    font-weight: 500;
+  }
+  
+  .text-4xl.font-bold,
+  .text-5xl.font-bold,
+  .text-6xl.font-bold {
+    font-weight: 600;
+  }
 }
+
