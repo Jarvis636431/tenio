@@ -40,7 +40,7 @@ export function ProjectSidebar({
   }
   return <div className="w-64 h-full bg-transparent transition-all duration-300 flex flex-col overflow-hidden border-r border-border/50">
       {/* Header - 按钮在标题左侧，更明显的布局 */}
-      <div className="p-4 flex items-center gap-2">
+      <div className="p-4 flex items-center gap-2 px-[12px] py-[22px]">
         <Button variant="ghost" size="sm" onClick={onToggleCollapse} className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted">
           <ChevronLeft className="h-4 w-4" />
         </Button>
