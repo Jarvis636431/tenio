@@ -2,6 +2,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { PlusCircle, Settings, Building2, Menu } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const mainMenuItems = [{
   title: "新建项目",
@@ -36,24 +37,30 @@ export function AppSidebar() {
   const shouldShowFullContent = !isCollapsed || (hoverMode && isHoverExpanded);
   const shouldShowTooltip = isCollapsed && hoverMode && !isHoverExpanded;
 
-  return <Sidebar className="bg-sidebar border-r" collapsible="icon">
-    <SidebarHeader className={`p-4 py-[13.5px] flex flex-row items-center ${shouldShowFullContent ? 'justify-between' : 'justify-center'}`}>
-      {shouldShowFullContent ? (
-        <>
-          <div className="flex items-center space-x-2">
-            <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
-            <h1 className="text-lg font-bold text-primary">天友智管平台</h1>
-          </div>
-          <SidebarTrigger className="h-6 w-6 flex-shrink-0">
-            <Menu className="h-4 w-4" />
-          </SidebarTrigger>
-        </>
-      ) : (
-        <SidebarTrigger className="h-6 w-6 flex-shrink-0" tooltip="展开侧边栏">
-          <Building2 className="h-4 w-4 text-primary" />
-        </SidebarTrigger>
-      )}
-    </SidebarHeader>
+  return <TooltipProvider>
+    <Sidebar className="bg-sidebar border-r" collapsible="icon">
+      <SidebarHeader className={`p-4 py-[13.5px] flex flex-row items-center ${shouldShowFullContent ? 'justify-between' : 'justify-center'}`}>
+        {shouldShowFullContent ? (
+          <>
+            <div className="flex items-center space-x-2">
+              <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
+              <h1 className="text-lg font-bold text-primary">天友智管平台</h1>
+            </div>
+            <SidebarTrigger className="h-6 w-6 flex-shrink-0">
+              <Menu className="h-4 w-4" />
+            </SidebarTrigger>
+          </>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SidebarTrigger className="h-6 w-6 flex-shrink-0">
+                <Building2 className="h-4 w-4 text-primary" />
+              </SidebarTrigger>
+            </TooltipTrigger>
+            <TooltipContent>展开侧边栏</TooltipContent>
+          </Tooltip>
+        )}
+      </SidebarHeader>
 
     <SidebarContent>
       <SidebarGroup>
