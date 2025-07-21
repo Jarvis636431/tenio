@@ -6,6 +6,7 @@ import { BasicInfo } from "@/components/BasicInfo";
 import { PlanOverview } from "@/components/PlanOverview";
 import { RealTimeMonitoring } from "@/components/RealTimeMonitoring";
 import { OrderManagement } from "@/components/OrderManagement";
+import { CraftsmanManagement } from "@/components/CraftsmanManagement";
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -35,6 +36,8 @@ export default function ProjectDetail() {
         return <RealTimeMonitoring {...commonProps} />;
       case "order-management":
         return <OrderManagement {...commonProps} />;
+      case "craftsman-management":
+        return <CraftsmanManagement {...commonProps} />;
       default:
         return <BasicInfo {...commonProps} />;
     }

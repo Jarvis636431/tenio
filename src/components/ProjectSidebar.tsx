@@ -1,12 +1,15 @@
-import { Calendar, BarChart3, Activity, TrendingUp, ChevronLeft, ChevronRight, Info, ShoppingCart } from "lucide-react";
+
+import { Calendar, BarChart3, Activity, TrendingUp, ChevronLeft, ChevronRight, Info, ShoppingCart, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
 interface ProjectSidebarProps {
   activeView: string;
   onViewChange: (view: string) => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
 }
+
 const menuItems = [{
   id: "basic-info",
   label: "基础信息",
@@ -27,7 +30,13 @@ const menuItems = [{
   label: "订单管理",
   icon: ShoppingCart,
   description: "采购订单和供应商管理"
+}, {
+  id: "craftsman-management",
+  label: "工匠管理",
+  icon: Users,
+  description: "工匠信息和资格认证管理"
 }];
+
 export function ProjectSidebar({
   activeView,
   onViewChange,
@@ -38,7 +47,9 @@ export function ProjectSidebar({
   if (isCollapsed) {
     return null;
   }
-  return <div className="w-64 h-full bg-transparent transition-all duration-300 flex flex-col overflow-hidden border-r border-border/50">
+
+  return (
+    <div className="w-64 h-full bg-transparent transition-all duration-300 flex flex-col overflow-hidden border-r border-border/50">
       {/* Header - 按钮在标题左侧，更明显的布局 */}
       <div className="p-4 flex items-center gap-2 px-[12px] py-[22px]">
         <Button variant="ghost" size="sm" onClick={onToggleCollapse} className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted">
@@ -51,19 +62,30 @@ export function ProjectSidebar({
       <nav className="flex-1 p-2">
         <ul className="space-y-2">
           {menuItems.map(item => {
-          const Icon = item.icon;
-          const isActive = activeView === item.id;
-          return <li key={item.id}>
-                <button onClick={() => onViewChange(item.id)} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors", isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground")}>
+            const Icon = item.icon;
+            const isActive = activeView === item.id;
+            return (
+              <li key={item.id}>
+                <button 
+                  onClick={() => onViewChange(item.id)} 
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                    isActive 
+                      ? "bg-primary text-primary-foreground" 
+                      : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                  )}
+                >
                   <Icon className="h-4 w-4 shrink-0" />
                   <div className="flex flex-col items-start">
                     <span className="font-medium">{item.label}</span>
                     <span className="text-xs opacity-70 text-left">{item.description}</span>
                   </div>
                 </button>
-              </li>;
-        })}
+              </li>
+            );
+          })}
         </ul>
       </nav>
-    </div>;
+    </div>
+  );
 }
