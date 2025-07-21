@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Download, Calendar, Filter } from "lucide-react";
+import { Search, Plus, Download, Calendar, Filter, ChevronRight } from "lucide-react";
 interface OrderItem {
   id: number;
   orderNumber: string;
@@ -118,7 +118,12 @@ const mockOrders: OrderItem[] = [{
   bidPrice: 2000,
   quotaPrice: 1480
 }];
-export function OrderManagement() {
+interface OrderManagementProps {
+  showExpandButton?: boolean;
+  onExpandSidebar?: () => void;
+}
+
+export function OrderManagement({ showExpandButton = false, onExpandSidebar }: OrderManagementProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [jobFilter, setJobFilter] = useState("all");
   const [sortBy, setSortBy] = useState("startDate");
@@ -186,7 +191,19 @@ export function OrderManagement() {
   };
   return <div className="h-full overflow-auto p-6 space-y-6">
       <div className="space-y-1">
-        <h1 className="tracking-tight text-xl font-medium">订单管理</h1>
+        <div className="flex items-center gap-2">
+          {showExpandButton && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onExpandSidebar}
+              className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+          <h1 className="tracking-tight text-xl font-medium">订单管理</h1>
+        </div>
         <p className="text-muted-foreground font-light text-base">采购订单和供应商管理</p>
       </div>
 

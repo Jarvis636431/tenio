@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Activity, ShoppingCart, Users, DollarSign, Package } from "lucide-react";
+import { Activity, ShoppingCart, Users, DollarSign, Package, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1491,7 +1491,14 @@ const calculateOverviewStats = (allTypesData: any, isCumulative: boolean) => {
   }
 };
 
-export function RealTimeMonitoring() {
+import { Button } from "@/components/ui/button";
+
+interface RealTimeMonitoringProps {
+  showExpandButton?: boolean;
+  onExpandSidebar?: () => void;
+}
+
+export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }: RealTimeMonitoringProps) {
   const [activeChart, setActiveChart] = useState<keyof typeof chartData>("procurement");
   const [selectedMaterialType, setSelectedMaterialType] = useState<keyof typeof materialTypesData>("concrete_c20");
   const [selectedLaborType, setSelectedLaborType] = useState<keyof typeof laborTypesData | "overview">("overview");
@@ -1501,10 +1508,22 @@ export function RealTimeMonitoring() {
   const config = chartConfig[activeChart];
   const data = chartData[activeChart];
   
-  return <div className="p-6 space-y-6">
+  return <div className="h-full overflow-auto p-6 space-y-6">
       <div className="space-y-1">
-        <h1 className="tracking-tight text-xl font-medium">实时监测</h1>
-        <p className="text-muted-foreground font-light">项目关键指标的实时监控与分析</p>
+        <div className="flex items-center gap-2">
+          {showExpandButton && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onExpandSidebar}
+              className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+          <h1 className="tracking-tight text-xl font-medium">实时监测</h1>
+        </div>
+        <p className="text-muted-foreground font-light text-base">项目关键指标的实时监控与分析</p>
       </div>
 
       <Tabs value={activeChart} onValueChange={value => setActiveChart(value as keyof typeof chartData)} className="space-y-4">
