@@ -67,23 +67,46 @@ export function AppSidebar() {
         <SidebarGroupContent>
           <SidebarMenu>
             {mainMenuItems.map(item => <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton 
-                  asChild 
-                  isActive={isActive(item.url)}
-                  tooltip={shouldShowTooltip ? item.title : undefined}
-                  style={isActive(item.url) ? {
-                    '--sidebar-accent': 'hsl(0 0% 100%)',
-                    '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                    backgroundColor: 'white',
-                    color: 'black',
-                    fontWeight: 'bold'
-                  } as any : {}}
-                >
-                  <NavLink to={item.url}>
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
-                    {shouldShowFullContent && <span>{item.title}</span>}
-                  </NavLink>
-                </SidebarMenuButton>
+                {shouldShowTooltip ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isActive(item.url)}
+                        style={isActive(item.url) ? {
+                          '--sidebar-accent': 'hsl(0 0% 100%)',
+                          '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
+                          backgroundColor: 'white',
+                          color: 'black',
+                          fontWeight: 'bold'
+                        } as any : {}}
+                      >
+                        <NavLink to={item.url}>
+                          <item.icon className="h-4 w-4 flex-shrink-0" />
+                          {shouldShowFullContent && <span>{item.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </TooltipTrigger>
+                    <TooltipContent>{item.title}</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={isActive(item.url)}
+                    style={isActive(item.url) ? {
+                      '--sidebar-accent': 'hsl(0 0% 100%)',
+                      '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
+                      backgroundColor: 'white',
+                      color: 'black',
+                      fontWeight: 'bold'
+                    } as any : {}}
+                  >
+                    <NavLink to={item.url}>
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      {shouldShowFullContent && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                )}
               </SidebarMenuItem>)}
           </SidebarMenu>
         </SidebarGroupContent>
@@ -122,5 +145,6 @@ export function AppSidebar() {
         </>
       )}
     </SidebarContent>
-  </Sidebar>;
+  </Sidebar>
+  </TooltipProvider>;
 }
