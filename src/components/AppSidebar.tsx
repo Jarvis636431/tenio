@@ -27,18 +27,18 @@ const projects = [{
 export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
-  const { state } = useSidebar();
+  const { state, hoverMode, isHoverExpanded } = useSidebar();
   const isCollapsed = state === "collapsed";
   
   const isActive = (path: string) => currentPath === path;
 
+  // 在hover模式且收起状态下显示icon，在hover展开或固定展开时显示完整内容
+  const shouldShowFullContent = !isCollapsed || (hoverMode && isHoverExpanded);
+  const shouldShowTooltip = isCollapsed && hoverMode && !isHoverExpanded;
+
   return <Sidebar className="bg-sidebar border-r" collapsible="icon">
-    <SidebarHeader className={`p-4 py-[13.5px] flex flex-row items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-      {isCollapsed ? (
-        <SidebarTrigger className="h-6 w-6 flex-shrink-0">
-          <Menu className="h-4 w-4" />
-        </SidebarTrigger>
-      ) : (
+    <SidebarHeader className={`p-4 py-[13.5px] flex flex-row items-center ${shouldShowFullContent ? 'justify-between' : 'justify-center'}`}>
+      {shouldShowFullContent ? (
         <>
           <div className="flex items-center space-x-2">
             <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
@@ -48,6 +48,10 @@ export function AppSidebar() {
             <Menu className="h-4 w-4" />
           </SidebarTrigger>
         </>
+      ) : (
+        <SidebarTrigger className="h-6 w-6 flex-shrink-0" tooltip="展开侧边栏">
+          <Building2 className="h-4 w-4 text-primary" />
+        </SidebarTrigger>
       )}
     </SidebarHeader>
 
@@ -59,6 +63,7 @@ export function AppSidebar() {
                 <SidebarMenuButton 
                   asChild 
                   isActive={isActive(item.url)}
+                  tooltip={shouldShowTooltip ? item.title : undefined}
                   style={isActive(item.url) ? {
                     '--sidebar-accent': 'hsl(0 0% 100%)',
                     '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
@@ -69,7 +74,7 @@ export function AppSidebar() {
                 >
                   <NavLink to={item.url}>
                     <item.icon className="h-4 w-4 flex-shrink-0" />
-                    {!isCollapsed && <span>{item.title}</span>}
+                    {shouldShowFullContent && <span>{item.title}</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>)}
@@ -77,7 +82,7 @@ export function AppSidebar() {
         </SidebarGroupContent>
       </SidebarGroup>
 
-      {!isCollapsed && (
+      {shouldShowFullContent && (
         <>
           <div className="px-3 mb-2">
             <div className="h-px bg-sidebar-border opacity-50"></div>
