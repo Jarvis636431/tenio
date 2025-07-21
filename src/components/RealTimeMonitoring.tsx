@@ -1524,6 +1524,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
     title: string;
     unit: string;
     description: string;
+    isOverview: boolean;
   } | null>(null);
 
   const { addDataEntry, getDataEntries, mergeWithDefaultData } = useDataEntry();
@@ -1532,25 +1533,39 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
   const data = chartData[activeChart];
 
   // 处理数据录入
-  const handleDataEntry = (category: string, type: string, title: string, unit: string) => {
+  const handleDataEntry = (category: string, type: string, title: string, unit: string, isOverview: boolean = false) => {
     setCurrentEntryContext({
       category,
       type,
       title,
       unit,
-      description: `录入${title}的实际监测数据`,
+      description: isOverview ? "选择类别和类型录入监测数据" : `录入${title}的实际监测数据`,
+      isOverview,
     });
     setIsDataEntryOpen(true);
   };
 
   // 提交数据录入
-  const handleDataEntrySubmit = (entryData: { date: string; value: number; notes?: string }) => {
+  const handleDataEntrySubmit = (entryData: { 
+    date: string; 
+    value: number; 
+    notes?: string;
+    category?: string;
+    subType?: string;
+  }) => {
     if (!currentEntryContext) return;
     
+    const finalCategory = entryData.category || currentEntryContext.category;
+    const finalType = entryData.subType || currentEntryContext.type;
+    
     addDataEntry(
-      currentEntryContext.category,
-      currentEntryContext.type,
-      entryData
+      finalCategory,
+      finalType,
+      {
+        date: entryData.date,
+        value: entryData.value,
+        notes: entryData.notes,
+      }
     );
   };
 
@@ -1744,17 +1759,21 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                     {typeSelector}
                   </div>}
                 
-                {/* 数据录入按钮 - 仅在非总览模式下显示 */}
-                {!isOverview && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      let category = key;
-                      let type = '';
-                      let title = '';
-                      let unit = currentConfig.unit;
-                      
+                {/* 数据录入按钮 - 现在在总览和非总览模式下都显示 */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    let category = key;
+                    let type = '';
+                    let title = '';
+                    let unit = currentConfig.unit;
+                    
+                    if (isOverview) {
+                      // 总览模式：传递类别信息，让用户在表单中选择具体类型
+                      handleDataEntry(category, '', currentConfig.title, unit, true);
+                    } else {
+                      // 非总览模式：使用当前选中的具体类型
                       if (key === 'materials') {
                         type = selectedMaterialType;
                         title = materialTypesData[selectedMaterialType].name;
@@ -1770,14 +1789,14 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                         title = procurementTypesData[selectedProcurementType as keyof typeof procurementTypesData].name;
                       }
                       
-                      handleDataEntry(category, type, title, unit);
-                    }}
-                    className="gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    录入数据
-                  </Button>
-                )}
+                      handleDataEntry(category, type, title, unit, false);
+                    }
+                  }}
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  录入数据
+                </Button>
               </div>
 
               {/* 统计卡片 */}
@@ -1930,6 +1949,9 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
           title={currentEntryContext.title}
           unit={currentEntryContext.unit}
           description={currentEntryContext.description}
+          showCategorySelector={currentEntryContext.isOverview}
+          category={currentEntryContext.category}
+          subType={currentEntryContext.type}
         />
       )}
     </div>;
