@@ -1,5 +1,5 @@
 
-import { Calendar, BarChart3, Activity, TrendingUp, ChevronLeft, ChevronRight, Info, ShoppingCart, Users } from "lucide-react";
+import { Calendar, BarChart3, Activity, TrendingUp, ChevronLeft, ChevronRight, Info, ShoppingCart, Users, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +35,11 @@ const menuItems = [{
   label: "工匠管理",
   icon: Users,
   description: "工匠信息和资格认证管理"
+}, {
+  id: "communication-collaboration",
+  label: "沟通协作",
+  icon: MessageSquare,
+  description: "项目变更历史记录和协调沟通"
 }];
 
 export function ProjectSidebar({

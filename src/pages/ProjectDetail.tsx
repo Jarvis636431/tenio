@@ -7,6 +7,7 @@ import { PlanOverview } from "@/components/PlanOverview";
 import { RealTimeMonitoring } from "@/components/RealTimeMonitoring";
 import { OrderManagement } from "@/components/OrderManagement";
 import { CraftsmanManagement } from "@/components/CraftsmanManagement";
+import { CommunicationCollaboration } from "@/components/CommunicationCollaboration";
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -38,6 +39,8 @@ export default function ProjectDetail() {
         return <OrderManagement {...commonProps} />;
       case "craftsman-management":
         return <CraftsmanManagement {...commonProps} />;
+      case "communication-collaboration":
+        return <CommunicationCollaboration {...commonProps} />;
       default:
         return <BasicInfo {...commonProps} />;
     }
