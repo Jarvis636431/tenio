@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Users, UserCheck, Award, Clock, Search, Upload, Edit, Menu, X } from "lucide-react";
 import { CertificationDialog } from "@/components/CertificationDialog";
@@ -319,17 +320,18 @@ export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: Craft
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
-            <select
-              value={tradeFilter}
-              onChange={(e) => setTradeFilter(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            >
-              <option value="all">全部工种</option>
-              <option value="木工">木工</option>
-              <option value="电工">电工</option>
-              <option value="钢筋工">钢筋工</option>
-              <option value="混凝土工">混凝土工</option>
-            </select>
+            <Select value={tradeFilter} onValueChange={setTradeFilter}>
+              <SelectTrigger className="w-48 bg-background">
+                <SelectValue placeholder="筛选工种" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border">
+                <SelectItem value="all">全部工种</SelectItem>
+                <SelectItem value="木工">木工</SelectItem>
+                <SelectItem value="电工">电工</SelectItem>
+                <SelectItem value="钢筋工">钢筋工</SelectItem>
+                <SelectItem value="混凝土工">混凝土工</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="flex gap-2">
