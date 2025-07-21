@@ -208,7 +208,7 @@ export function DataEntryForm({
                       <SelectContent>
                         {Object.entries(getCurrentSubTypes()).map(([key, subType]) => (
                           <SelectItem key={key} value={key}>
-                            {subType.name}
+                            {(subType as { name: string; unit: string }).name}
                           </SelectItem>
                         ))}
                       </SelectContent>
