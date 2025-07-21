@@ -1,28 +1,24 @@
 
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, UserCheck, Award, Clock, Search, Filter, Menu } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Users, UserCheck, Award, Clock, Search, Upload, Edit, Menu, X } from "lucide-react";
 import { CertificationDialog } from "@/components/CertificationDialog";
 import { EntryExitDialog } from "@/components/EntryExitDialog";
 import { ContractDialog } from "@/components/ContractDialog";
+import { EditCraftsmanDialog } from "@/components/EditCraftsmanDialog";
+import { ImportCraftsmanDialog } from "@/components/ImportCraftsmanDialog";
+import { BatchOperationDialog } from "@/components/BatchOperationDialog";
+import { ExportDropdown } from "@/components/ExportDropdown";
+import { useToast } from "@/hooks/use-toast";
+import type { Craftsman } from "@/types/craftsman";
 
-interface Craftsman {
-  id: number;
-  name: string;
-  trade: string;
-  level: 1 | 2 | 3 | 4;
-  status: 'active' | 'inactive';
-  contractStatus: string;
-  certificationStatus: string;
-  avatar?: string;
-  gender: string;
-  age: number;
-  bio: string;
-  phone: string;
-  entryCount: number;
+interface CraftsmanManagementProps {
+  showExpandButton?: boolean;
+  onExpandSidebar?: () => void;
 }
 
 const mockCraftsmen: Craftsman[] = [
@@ -34,11 +30,15 @@ const mockCraftsmen: Craftsman[] = [
     status: 'active',
     contractStatus: "已签署",
     certificationStatus: "已认证",
+    avatar: undefined,
     gender: "男",
     age: 35,
     bio: "拥有15年木工经验，擅长各类木制结构施工和精细木工工艺。",
     phone: "138****1234",
-    entryCount: 23
+    entryCount: 23,
+    createdAt: "2024-01-15T08:00:00Z",
+    updatedAt: "2024-07-20T16:30:00Z",
+    remarks: "技术骨干，工作认真负责"
   },
   {
     id: 2,
@@ -48,11 +48,14 @@ const mockCraftsmen: Craftsman[] = [
     status: 'active',
     contractStatus: "已签署",
     certificationStatus: "已认证",
+    avatar: undefined,
     gender: "男",
     age: 42,
     bio: "资深电工，持有高级电工证书，专业从事建筑电气安装和维护。",
     phone: "139****5678",
-    entryCount: 31
+    entryCount: 31,
+    createdAt: "2024-01-10T08:00:00Z",
+    updatedAt: "2024-07-20T16:30:00Z"
   },
   {
     id: 3,
@@ -62,11 +65,14 @@ const mockCraftsmen: Craftsman[] = [
     status: 'active',
     contractStatus: "已签署",
     certificationStatus: "待认证",
+    avatar: undefined,
     gender: "男",
     age: 28,
     bio: "钢筋绑扎和焊接技术熟练，有多个大型项目施工经验。",
     phone: "137****9012",
-    entryCount: 18
+    entryCount: 18,
+    createdAt: "2024-02-01T08:00:00Z",
+    updatedAt: "2024-07-20T16:30:00Z"
   },
   {
     id: 4,
@@ -76,11 +82,14 @@ const mockCraftsmen: Craftsman[] = [
     status: 'inactive',
     contractStatus: "已签署",
     certificationStatus: "已认证",
+    avatar: undefined,
     gender: "男",
     age: 39,
     bio: "混凝土浇筑和养护专家，确保工程质量符合标准。",
     phone: "136****3456",
-    entryCount: 15
+    entryCount: 15,
+    createdAt: "2024-01-20T08:00:00Z",
+    updatedAt: "2024-07-20T16:30:00Z"
   },
   {
     id: 5,
@@ -90,41 +99,50 @@ const mockCraftsmen: Craftsman[] = [
     status: 'active',
     contractStatus: "待签署",
     certificationStatus: "已认证",
+    avatar: undefined,
     gender: "男",
     age: 24,
     bio: "新入职木工，学习能力强，积极上进。",
     phone: "135****7890",
-    entryCount: 8
+    entryCount: 8,
+    createdAt: "2024-03-01T08:00:00Z",
+    updatedAt: "2024-07-20T16:30:00Z"
   }
 ];
 
-interface CraftsmanManagementProps {
-  showExpandButton?: boolean;
-  onExpandSidebar?: () => void;
-}
-
 export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: CraftsmanManagementProps) {
+  const { toast } = useToast();
+  const [craftsmen, setCraftsmen] = useState<Craftsman[]>(mockCraftsmen);
   const [selectedCraftsman, setSelectedCraftsman] = useState<Craftsman | null>(null);
   const [certificationDialogOpen, setCertificationDialogOpen] = useState(false);
   const [entryExitDialogOpen, setEntryExitDialogOpen] = useState(false);
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [batchOperation, setBatchOperation] = useState<'outbound' | 'delete'>('outbound');
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeFilter, setTradeFilter] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const filteredCraftsmen = useMemo(() => {
-    return mockCraftsmen.filter(craftsman => {
+    return craftsmen.filter(craftsman => {
       const matchesSearch = craftsman.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            craftsman.trade.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesTrade = tradeFilter === "all" || craftsman.trade === tradeFilter;
       return matchesSearch && matchesTrade;
     });
-  }, [searchTerm, tradeFilter]);
+  }, [craftsmen, searchTerm, tradeFilter]);
+
+  const selectedCraftsmen = useMemo(() => {
+    return craftsmen.filter(craftsman => selectedIds.includes(craftsman.id));
+  }, [craftsmen, selectedIds]);
 
   const stats = useMemo(() => {
-    const totalCraftsmen = mockCraftsmen.length;
-    const activeCraftsmen = mockCraftsmen.filter(c => c.status === 'active').length;
-    const certifiedCraftsmen = mockCraftsmen.filter(c => c.certificationStatus === '已认证').length;
-    const certificationRate = Math.round((certifiedCraftsmen / totalCraftsmen) * 100);
+    const totalCraftsmen = craftsmen.length;
+    const activeCraftsmen = craftsmen.filter(c => c.status === 'active').length;
+    const certifiedCraftsmen = craftsmen.filter(c => c.certificationStatus === '已认证').length;
+    const certificationRate = totalCraftsmen > 0 ? Math.round((certifiedCraftsmen / totalCraftsmen) * 100) : 0;
     
     return {
       total: totalCraftsmen,
@@ -132,7 +150,62 @@ export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: Craft
       certified: certifiedCraftsmen,
       certificationRate
     };
-  }, []);
+  }, [craftsmen]);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredCraftsmen.map(c => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (craftsmanId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, craftsmanId]);
+    } else {
+      setSelectedIds(prev => prev.filter(id => id !== craftsmanId));
+    }
+  };
+
+  const handleEdit = (craftsman: Craftsman) => {
+    setSelectedCraftsman(craftsman);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveCraftsman = (updatedCraftsman: Craftsman) => {
+    setCraftsmen(prev => prev.map(c => c.id === updatedCraftsman.id ? updatedCraftsman : c));
+  };
+
+  const handleImport = (newCraftsmen: Craftsman[]) => {
+    setCraftsmen(prev => [...prev, ...newCraftsmen]);
+  };
+
+  const handleBatchOperation = (operation: 'outbound' | 'delete') => {
+    if (selectedIds.length === 0) {
+      toast({
+        title: "请选择工匠",
+        description: "请先选择要操作的工匠",
+        variant: "destructive",
+      });
+      return;
+    }
+    setBatchOperation(operation);
+    setBatchDialogOpen(true);
+  };
+
+  const handleBatchConfirm = (craftsmen: Craftsman[], remarks?: string) => {
+    if (batchOperation === 'delete') {
+      setCraftsmen(prev => prev.filter(c => !selectedIds.includes(c.id)));
+    } else if (batchOperation === 'outbound') {
+      setCraftsmen(prev => prev.map(c => 
+        selectedIds.includes(c.id) 
+          ? { ...c, status: 'departed' as const, remarks: remarks || c.remarks, updatedAt: new Date().toISOString() }
+          : c
+      ));
+    }
+    setSelectedIds([]);
+  };
 
   const getTradeColor = (trade: string) => {
     switch (trade) {
@@ -148,20 +221,8 @@ export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: Craft
     return "★".repeat(level) + "☆".repeat(4 - level);
   };
 
-  const handleViewCertification = (craftsman: Craftsman) => {
-    setSelectedCraftsman(craftsman);
-    setCertificationDialogOpen(true);
-  };
-
-  const handleViewEntryExit = (craftsman: Craftsman) => {
-    setSelectedCraftsman(craftsman);
-    setEntryExitDialogOpen(true);
-  };
-
-  const handleViewContract = (craftsman: Craftsman) => {
-    setSelectedCraftsman(craftsman);
-    setContractDialogOpen(true);
-  };
+  const allSelected = filteredCraftsmen.length > 0 && filteredCraftsmen.every(c => selectedIds.includes(c.id));
+  const someSelected = selectedIds.length > 0;
 
   return (
     <div className="h-full flex flex-col">
@@ -179,8 +240,8 @@ export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: Craft
             </Button>
           )}
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">工匠管理</h1>
-            <p className="text-muted-foreground text-sm">管理工匠信息、资格认证和进出场记录</p>
+            <h1 className="text-xl font-medium tracking-tight">工匠管理</h1>
+            <p className="text-muted-foreground font-light text-base">管理工匠信息、资格认证和进出场记录</p>
           </div>
         </div>
       </div>
@@ -245,36 +306,82 @@ export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: Craft
           </Card>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="搜索工匠姓名或工种..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        {/* Toolbar */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex gap-4 flex-1">
+            <div className="flex-1 relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="搜索工匠姓名或工种..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            </div>
+            <select
+              value={tradeFilter}
+              onChange={(e) => setTradeFilter(e.target.value)}
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+              <option value="all">全部工种</option>
+              <option value="木工">木工</option>
+              <option value="电工">电工</option>
+              <option value="钢筋工">钢筋工</option>
+              <option value="混凝土工">混凝土工</option>
+            </select>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              批量导入
+            </Button>
+            <ExportDropdown 
+              allCraftsmen={craftsmen}
+              filteredCraftsmen={filteredCraftsmen}
+              selectedCraftsmen={selectedCraftsmen}
             />
           </div>
-          <select
-            value={tradeFilter}
-            onChange={(e) => setTradeFilter(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="all">全部工种</option>
-            <option value="木工">木工</option>
-            <option value="电工">电工</option>
-            <option value="钢筋工">钢筋工</option>
-            <option value="混凝土工">混凝土工</option>
-          </select>
         </div>
+
+        {/* Batch Operations Toolbar */}
+        {selectedIds.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium">
+                  已选中 {selectedIds.length} 名工匠
+                </span>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => handleBatchOperation('outbound')}>
+                    批量出库
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleBatchOperation('delete')}>
+                    批量删除
+                  </Button>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
+                <X className="h-4 w-4 mr-2" />
+                取消选择
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Table */}
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={handleSelectAll}
+                    aria-label="全选"
+                  />
+                </TableHead>
                 <TableHead>姓名</TableHead>
                 <TableHead>工种</TableHead>
                 <TableHead>等级</TableHead>
@@ -287,6 +394,13 @@ export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: Craft
             <TableBody>
               {filteredCraftsmen.map((craftsman) => (
                 <TableRow key={craftsman.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.includes(craftsman.id)}
+                      onCheckedChange={(checked) => handleSelectOne(craftsman.id, checked as boolean)}
+                      aria-label={`选择${craftsman.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{craftsman.name}</TableCell>
                   <TableCell>
                     <Badge variant="secondary" className={getTradeColor(craftsman.trade)}>
@@ -299,8 +413,14 @@ export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: Craft
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${craftsman.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <span className="text-sm">{craftsman.status === 'active' ? '在场' : '离场'}</span>
+                      <div className={`w-2 h-2 rounded-full ${
+                        craftsman.status === 'active' ? 'bg-green-500' : 
+                        craftsman.status === 'departed' ? 'bg-orange-500' : 'bg-gray-400'
+                      }`} />
+                      <span className="text-sm">
+                        {craftsman.status === 'active' ? '在场' : 
+                         craftsman.status === 'departed' ? '已出库' : '离场'}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -313,25 +433,41 @@ export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: Craft
                   </TableCell>
                   <TableCell>{craftsman.entryCount}</TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleViewContract(craftsman)}
+                        onClick={() => handleEdit(craftsman)}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCraftsman(craftsman);
+                          setContractDialogOpen(true);
+                        }}
                       >
                         合同
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleViewCertification(craftsman)}
+                        onClick={() => {
+                          setSelectedCraftsman(craftsman);
+                          setCertificationDialogOpen(true);
+                        }}
                       >
                         资格认证
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleViewEntryExit(craftsman)}
+                        onClick={() => {
+                          setSelectedCraftsman(craftsman);
+                          setEntryExitDialogOpen(true);
+                        }}
                       >
                         进出场记录
                       </Button>
@@ -362,8 +498,28 @@ export function CraftsmanManagement({ showExpandButton, onExpandSidebar }: Craft
             onOpenChange={setContractDialogOpen}
             craftsman={selectedCraftsman}
           />
+          <EditCraftsmanDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            craftsman={selectedCraftsman}
+            onSave={handleSaveCraftsman}
+          />
         </>
       )}
+
+      <ImportCraftsmanDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImport={handleImport}
+      />
+
+      <BatchOperationDialog
+        open={batchDialogOpen}
+        onOpenChange={setBatchDialogOpen}
+        selectedCraftsmen={selectedCraftsmen}
+        operation={batchOperation}
+        onConfirm={handleBatchConfirm}
+      />
     </div>
   );
 }
