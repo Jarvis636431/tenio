@@ -230,7 +230,9 @@ export function CraftsmanManagement({
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">总工匠数</p>
                   <p className="text-2xl font-bold">{stats.total}</p>
