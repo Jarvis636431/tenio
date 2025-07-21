@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Activity, ShoppingCart, Users, DollarSign, Package, ChevronRight } from "lucide-react";
+import { Activity, ShoppingCart, Users, DollarSign, Package, ChevronRight, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { Button } from "@/components/ui/button";
+import { DataEntryForm } from "@/components/DataEntryForm";
+import { useDataEntry } from "@/hooks/useDataEntry";
 
 // 修改为每日独立值数据 - 扩展到项目结束日期 8/17
 const chartData = {
@@ -1501,8 +1504,6 @@ const calculateOverviewStats = (allTypesData: any, isCumulative: boolean) => {
   }
 };
 
-import { Button } from "@/components/ui/button";
-
 interface RealTimeMonitoringProps {
   showExpandButton?: boolean;
   onExpandSidebar?: () => void;
@@ -1515,8 +1516,49 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
   const [selectedFundingType, setSelectedFundingType] = useState<keyof typeof fundingTypesData | "overview">("overview");
   const [selectedProcurementType, setSelectedProcurementType] = useState<keyof typeof procurementTypesData | "overview">("overview");
   
+  // 数据录入相关状态
+  const [isDataEntryOpen, setIsDataEntryOpen] = useState(false);
+  const [currentEntryContext, setCurrentEntryContext] = useState<{
+    category: string;
+    type: string;
+    title: string;
+    unit: string;
+    description: string;
+  } | null>(null);
+
+  const { addDataEntry, getDataEntries, mergeWithDefaultData } = useDataEntry();
+  
   const config = chartConfig[activeChart];
   const data = chartData[activeChart];
+
+  // 处理数据录入
+  const handleDataEntry = (category: string, type: string, title: string, unit: string) => {
+    setCurrentEntryContext({
+      category,
+      type,
+      title,
+      unit,
+      description: `录入${title}的实际监测数据`,
+    });
+    setIsDataEntryOpen(true);
+  };
+
+  // 提交数据录入
+  const handleDataEntrySubmit = (entryData: { date: string; value: number; notes?: string }) => {
+    if (!currentEntryContext) return;
+    
+    addDataEntry(
+      currentEntryContext.category,
+      currentEntryContext.type,
+      entryData
+    );
+  };
+
+  // 获取合并后的显示数据
+  const getMergedDisplayData = (category: string, type: string, defaultData: any[]) => {
+    const userEntries = getDataEntries(category, type);
+    return mergeWithDefaultData(defaultData, userEntries);
+  };
   
   return <div className="h-full overflow-auto p-6 space-y-6">
       <div className="space-y-1">
@@ -1561,6 +1603,9 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
           currentTypeName = materialTypesData[selectedMaterialType].name;
           const currentMaterial = materialTypesData[selectedMaterialType];
           
+          // 合并用户录入数据
+          displayData = getMergedDisplayData('materials', selectedMaterialType, displayData);
+          
           typeSelector = <Select value={selectedMaterialType} onValueChange={value => setSelectedMaterialType(value as keyof typeof materialTypesData)}>
                 <SelectTrigger className="w-48 bg-background">
                   <SelectValue />
@@ -1583,9 +1628,9 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
           isOverview = selectedLaborType === 'overview';
           if (isOverview) {
             displayData = generateOverviewData(laborTypesData);
-            currentTypeName = '总览';
           } else {
             displayData = laborTypesData[selectedLaborType as keyof typeof laborTypesData].data;
+            displayData = getMergedDisplayData('labor', selectedLaborType as string, displayData);
             currentTypeName = laborTypesData[selectedLaborType as keyof typeof laborTypesData].name;
           }
           typeSelector = <Select value={selectedLaborType} onValueChange={value => setSelectedLaborType(value as keyof typeof laborTypesData | "overview")}>
@@ -1603,9 +1648,9 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
           isOverview = selectedFundingType === 'overview';
           if (isOverview) {
             displayData = generateOverviewData(fundingTypesData);
-            currentTypeName = '总览';
           } else {
             displayData = fundingTypesData[selectedFundingType as keyof typeof fundingTypesData].data;
+            displayData = getMergedDisplayData('funding', selectedFundingType as string, displayData);
             currentTypeName = fundingTypesData[selectedFundingType as keyof typeof fundingTypesData].name;
           }
           typeSelector = <Select value={selectedFundingType} onValueChange={value => setSelectedFundingType(value as keyof typeof fundingTypesData | "overview")}>
@@ -1623,9 +1668,9 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
           isOverview = selectedProcurementType === 'overview';
           if (isOverview) {
             displayData = generateOverviewData(procurementTypesData);
-            currentTypeName = '总览';
           } else {
             displayData = procurementTypesData[selectedProcurementType as keyof typeof procurementTypesData].data;
+            displayData = getMergedDisplayData('procurement', selectedProcurementType as string, displayData);
             currentTypeName = procurementTypesData[selectedProcurementType as keyof typeof procurementTypesData].name;
           }
           typeSelector = <Select value={selectedProcurementType} onValueChange={value => setSelectedProcurementType(value as keyof typeof procurementTypesData | "overview")}>
@@ -1687,16 +1732,53 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
         }
         
         return <TabsContent key={key} value={key} className="space-y-4">
-              {/* 类型选择器 */}
-              {typeSelector && <div className="flex items-center gap-4 p-0">
-                  <span className="text-sm font-medium">
-                    {key === 'materials' && '物料类型:'}
-                    {key === 'labor' && '工种类型:'}
-                    {key === 'funding' && '资金类型:'}
-                    {key === 'procurement' && '采购类型:'}
-                  </span>
-                  {typeSelector}
-                </div>}
+              {/* 类型选择器和数据录入按钮 */}
+              <div className="flex items-center justify-between">
+                {typeSelector && <div className="flex items-center gap-4 p-0">
+                    <span className="text-sm font-medium">
+                      {key === 'materials' && '物料类型:'}
+                      {key === 'labor' && '工种类型:'}
+                      {key === 'funding' && '资金类型:'}
+                      {key === 'procurement' && '采购类型:'}
+                    </span>
+                    {typeSelector}
+                  </div>}
+                
+                {/* 数据录入按钮 - 仅在非总览模式下显示 */}
+                {!isOverview && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      let category = key;
+                      let type = '';
+                      let title = '';
+                      let unit = currentConfig.unit;
+                      
+                      if (key === 'materials') {
+                        type = selectedMaterialType;
+                        title = materialTypesData[selectedMaterialType].name;
+                        unit = materialTypesData[selectedMaterialType].unit;
+                      } else if (key === 'labor') {
+                        type = selectedLaborType as string;
+                        title = laborTypesData[selectedLaborType as keyof typeof laborTypesData].name;
+                      } else if (key === 'funding') {
+                        type = selectedFundingType as string;
+                        title = fundingTypesData[selectedFundingType as keyof typeof fundingTypesData].name;
+                      } else if (key === 'procurement') {
+                        type = selectedProcurementType as string;
+                        title = procurementTypesData[selectedProcurementType as keyof typeof procurementTypesData].name;
+                      }
+                      
+                      handleDataEntry(category, type, title, unit);
+                    }}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    录入数据
+                  </Button>
+                )}
+              </div>
 
               {/* 统计卡片 */}
               <div className="grid gap-3 md:grid-cols-3 mb-4">
@@ -1799,10 +1881,18 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                                 dataKey="value" 
                                 stroke={chartConfigForComponent?.value?.color || "#ef4444"} 
                                 strokeWidth={2} 
-                                dot={{
-                                  fill: chartConfigForComponent?.value?.color || "#ef4444",
-                                  strokeWidth: 2,
-                                  r: 3
+                                dot={(props: any) => {
+                                  const isUserEntry = displayData?.[props.payload?.index]?.isUserEntry;
+                                  return (
+                                    <circle
+                                      cx={props.cx}
+                                      cy={props.cy}
+                                      r={isUserEntry ? 5 : 3}
+                                      fill={chartConfigForComponent?.value?.color || "#ef4444"}
+                                      stroke={isUserEntry ? "#ffffff" : chartConfigForComponent?.value?.color || "#ef4444"}
+                                      strokeWidth={isUserEntry ? 2 : 2}
+                                    />
+                                  );
                                 }} 
                                 name="实际值" 
                               />
@@ -1830,5 +1920,17 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
             </TabsContent>;
       })}
       </Tabs>
+
+      {/* 数据录入表单 */}
+      {currentEntryContext && (
+        <DataEntryForm
+          open={isDataEntryOpen}
+          onOpenChange={setIsDataEntryOpen}
+          onSubmit={handleDataEntrySubmit}
+          title={currentEntryContext.title}
+          unit={currentEntryContext.unit}
+          description={currentEntryContext.description}
+        />
+      )}
     </div>;
 }
