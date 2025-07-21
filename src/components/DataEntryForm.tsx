@@ -180,43 +180,6 @@ export function DataEntryForm({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            {showCategorySelector && (
-              <>
-                <FormItem>
-                  <FormLabel>类别</FormLabel>
-                  <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="请选择类别" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(categorySubTypeMap).map(([key, category]) => (
-                        <SelectItem key={key} value={key}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-
-                {selectedCategory && (
-                  <FormItem>
-                    <FormLabel>具体类型</FormLabel>
-                    <Select value={selectedSubType} onValueChange={handleSubTypeChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="请选择具体类型" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(getCurrentSubTypes()).map(([key, subType]) => (
-                          <SelectItem key={key} value={key}>
-                            {(subType as { name: string; unit: string }).name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              </>
-            )}
 
             <FormField
               control={form.control}
