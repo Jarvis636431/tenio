@@ -152,7 +152,7 @@ export function AppSidebar() {
                     fontWeight: 'bold'
                   } as any : {}}>
                             <NavLink to={projectUrl}>
-                              
+                              <Icon className="h-4 w-4 flex-shrink-0" />
                               <span>{item.label}</span>
                             </NavLink>
                           </SidebarMenuButton>}
