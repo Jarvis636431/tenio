@@ -58,7 +58,7 @@ export default function ProjectManagement() {
   const handleProjectClick = (projectId: number) => {
     navigate(`/project/${projectId}`);
   };
-  return <div className="h-full p-6">
+  return <div className="h-full p-6 py-[8px] px-[8px]">
       <div className="w-full bg-card rounded-xl shadow-sm p-6 space-y-6">
       <div className="space-y-2">
         <h1 className="font-bold tracking-tight text-2xl">项目管理</h1>
