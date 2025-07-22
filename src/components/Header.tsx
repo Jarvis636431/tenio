@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export function Header() {
-  return <header className="h-14 flex items-center justify-between z-50 px-[24px] rounded-none bg-gray-50">
+  return <header className="h-14 flex items-center justify-between z-50 px-[24px] rounded-none bg-white">
       {/* 左侧品牌区域 */}
       <div className="flex items-center space-x-3 mx-0">
         <Building2 className="h-8 w-8 text-primary mx-0" />
