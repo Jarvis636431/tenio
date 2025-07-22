@@ -67,7 +67,7 @@ export function AppSidebar() {
       <Sidebar className="bg-sidebar" collapsible="icon">
         
 
-        <SidebarContent className="py-[60px] bg-white">
+        <SidebarContent className="py-[60px] bg-transparent">
           {/* 主导航 */}
           <SidebarGroup>
             <SidebarGroupContent>
