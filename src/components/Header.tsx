@@ -5,8 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export function Header() {
   return <header className="h-14 border-b border-border flex items-center justify-between z-50 px-[24px] rounded-none bg-white">
       {/* 左侧品牌区域 */}
-      <div className="flex items-center space-x-3">
-        <Building2 className="h-8 w-8 text-primary mx-[9px]" />
+      <div className="flex items-center space-x-3 mx-0">
+        <Building2 className="h-8 w-8 text-primary mx-0" />
         <h1 className="text-lg font-semibold text-slate-700">天友智管平台</h1>
       </div>
 
