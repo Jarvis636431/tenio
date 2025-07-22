@@ -1,3 +1,4 @@
+
 import { NavLink, useLocation, useParams } from "react-router-dom";
 import { PlusCircle, Settings, Building2, Menu, Home, Calendar, BarChart3, Activity, ShoppingCart, Users, MessageSquare, Info } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
@@ -56,7 +57,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { id } = useParams();
   const currentPath = location.pathname;
-  const { state, hoverMode, isHoverExpanded } = useSidebar();
+  const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   
   const isActive = (path: string) => currentPath === path;
@@ -72,15 +73,11 @@ export function AppSidebar() {
     return isProjectRoute && getActiveProjectView() === viewId;
   };
 
-  // 在hover模式且收起状态下显示icon，在hover展开或固定展开时显示完整内容
-  const shouldShowFullContent = !isCollapsed || (hoverMode && isHoverExpanded);
-  const shouldShowTooltip = isCollapsed && hoverMode && !isHoverExpanded;
-
   return (
     <TooltipProvider>
       <Sidebar className="bg-sidebar border-r" collapsible="icon">
-        <SidebarHeader className={`p-4 py-[13.5px] flex flex-row items-center ${shouldShowFullContent ? 'justify-between' : 'justify-center'}`}>
-          {shouldShowFullContent ? (
+        <SidebarHeader className={`p-4 py-[13.5px] flex flex-row items-center ${!isCollapsed ? 'justify-between' : 'justify-center'}`}>
+          {!isCollapsed ? (
             <>
               <div className="flex items-center space-x-2">
                 <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
@@ -109,7 +106,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 {mainMenuItems.map(item => (
                   <SidebarMenuItem key={item.title}>
-                    {shouldShowTooltip ? (
+                    {isCollapsed ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <SidebarMenuButton 
@@ -125,7 +122,6 @@ export function AppSidebar() {
                           >
                             <NavLink to={item.url}>
                               <item.icon className="h-4 w-4 flex-shrink-0" />
-                              {shouldShowFullContent && <span>{item.title}</span>}
                             </NavLink>
                           </SidebarMenuButton>
                         </TooltipTrigger>
@@ -145,7 +141,7 @@ export function AppSidebar() {
                       >
                         <NavLink to={item.url}>
                           <item.icon className="h-4 w-4 flex-shrink-0" />
-                          {shouldShowFullContent && <span>{item.title}</span>}
+                          <span>{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
                     )}
@@ -164,23 +160,44 @@ export function AppSidebar() {
           <SidebarGroup>
             <SidebarGroupContent>
               <div className="px-2">
-                <ProjectSelector isCollapsed={!shouldShowFullContent} />
+                <ProjectSelector isCollapsed={isCollapsed} />
               </div>
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* 项目内导航 */}
+          {/* 项目内导航 - 始终显示在项目页面 */}
           {isProjectRoute && id && (
-            <>
-              <SidebarGroup>
-                <SidebarGroupLabel>项目导航</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {projectMenuItems.map(item => {
-                      const Icon = item.icon;
-                      const isActiveView = isProjectViewActive(item.id);
-                      return (
-                        <SidebarMenuItem key={item.id}>
+            <SidebarGroup>
+              {!isCollapsed && <SidebarGroupLabel>项目导航</SidebarGroupLabel>}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {projectMenuItems.map(item => {
+                    const Icon = item.icon;
+                    const isActiveView = isProjectViewActive(item.id);
+                    return (
+                      <SidebarMenuItem key={item.id}>
+                        {isCollapsed ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <SidebarMenuButton 
+                                asChild
+                                isActive={isActiveView}
+                                style={isActiveView ? {
+                                  '--sidebar-accent': 'hsl(0 0% 100%)',
+                                  '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
+                                  backgroundColor: 'white',
+                                  color: 'black',
+                                  fontWeight: 'bold'
+                                } as any : {}}
+                              >
+                                <NavLink to={`/project/${id}?view=${item.id}`}>
+                                  <Icon className="h-4 w-4 flex-shrink-0" />
+                                </NavLink>
+                              </SidebarMenuButton>
+                            </TooltipTrigger>
+                            <TooltipContent>{item.label}</TooltipContent>
+                          </Tooltip>
+                        ) : (
                           <SidebarMenuButton 
                             asChild
                             isActive={isActiveView}
@@ -197,19 +214,19 @@ export function AppSidebar() {
                               <span>{item.label}</span>
                             </NavLink>
                           </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </>
+                        )}
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
           )}
         </SidebarContent>
 
         {/* 底部新建项目按钮 */}
         <SidebarFooter className="p-2">
-          {shouldShowFullContent ? (
+          {!isCollapsed ? (
             <Button 
               asChild
               className="w-full justify-start"
