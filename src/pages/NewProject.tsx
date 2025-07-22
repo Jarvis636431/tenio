@@ -78,7 +78,7 @@ export default function NewProject() {
       <div className="w-full bg-card rounded-xl p-6 space-y-6 h-full flex flex-col">
         <div className="space-y-2">
           <h1 className="tracking-tight text-xl font-medium">新建项目</h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-base font-light">
             上传项目文件并设置基础信息以开始项目管理
           </p>
         </div>
