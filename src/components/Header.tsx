@@ -3,23 +3,23 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export function Header() {
-  return <header className="h-14 bg-background border-b border-border flex items-center justify-between px-6 z-50">
+  return <header className="h-14 border-b border-border flex items-center justify-between z-50 px-[24px] rounded-none bg-white">
       {/* 左侧品牌区域 */}
       <div className="flex items-center space-x-3">
-        <Building2 className="h-8 w-8 text-primary" />
+        <Building2 className="h-8 w-8 text-primary mx-[9px]" />
         <h1 className="text-lg font-semibold text-slate-700">天友智管平台</h1>
       </div>
 
       {/* 右侧操作区域 */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4 px-0 mx-[27px]">
         {/* 消息通知 */}
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative mx-0">
           <Bell className="h-5 w-5" />
           <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs"></span>
         </Button>
 
         {/* 帮助中心 */}
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="mx-0">
           <HelpCircle className="h-5 w-5" />
         </Button>
 
