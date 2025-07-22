@@ -1,21 +1,13 @@
-
 import { Building2, Bell, HelpCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
 export function Header() {
-  return (
-    <header className="h-14 bg-background border-b border-border flex items-center justify-between px-6 z-50">
+  return <header className="h-14 bg-background border-b border-border flex items-center justify-between px-6 z-50">
       {/* 左侧品牌区域 */}
       <div className="flex items-center space-x-3">
         <Building2 className="h-8 w-8 text-primary" />
-        <h1 className="text-xl font-bold text-foreground">天友智管平台</h1>
+        <h1 className="text-lg font-semibold text-slate-700">天友智管平台</h1>
       </div>
 
       {/* 右侧操作区域 */}
@@ -57,6 +49,5 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </header>
-  );
+    </header>;
 }
