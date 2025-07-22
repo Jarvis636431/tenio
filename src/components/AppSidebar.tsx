@@ -57,7 +57,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { id } = useParams();
   const currentPath = location.pathname;
-  const { state } = useSidebar();
+  const { state } = useSidebar(); // 只获取基础状态
   const isCollapsed = state === "collapsed";
   
   const isActive = (path: string) => currentPath === path;

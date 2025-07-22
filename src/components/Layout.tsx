@@ -10,7 +10,8 @@ interface LayoutProps {
 export function Layout({
   children
 }: LayoutProps) {
-  return <SidebarProvider>
+  return (
+    <SidebarProvider defaultOpen={true}>
       <div className="h-screen flex w-full bg-background overflow-hidden">
         <AppSidebar />
         <main className="flex-1 overflow-hidden">
@@ -18,5 +19,6 @@ export function Layout({
         </main>
         <AIAssistant />
       </div>
-    </SidebarProvider>;
+    </SidebarProvider>
+  );
 }

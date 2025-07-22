@@ -32,11 +32,6 @@ type SidebarContext = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
-  hoverMode: boolean
-  setHoverMode: (hoverMode: boolean) => void
-  isHovering: boolean
-  setIsHovering: (isHovering: boolean) => void
-  isHoverExpanded: boolean
 }
 
 const SidebarContext = React.createContext<SidebarContext | null>(null)
@@ -60,7 +55,7 @@ const SidebarProvider = React.forwardRef<
 >(
   (
     {
-      defaultOpen = false,
+      defaultOpen = true,
       open: openProp,
       onOpenChange: setOpenProp,
       className,
@@ -72,8 +67,6 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
-    const [hoverMode, setHoverMode] = React.useState(true)
-    const [isHovering, setIsHovering] = React.useState(false)
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
@@ -94,22 +87,13 @@ const SidebarProvider = React.forwardRef<
       [setOpenProp, open]
     )
 
-    // Helper to toggle the sidebar with mode switching
+    // Helper to toggle the sidebar
     const toggleSidebar = React.useCallback(() => {
       if (isMobile) {
         return setOpenMobile((open) => !open)
       }
-
-      if (hoverMode) {
-        // 从hover模式切换到固定展开模式
-        setHoverMode(false)
-        setOpen(true)
-      } else {
-        // 从固定展开模式切换回hover模式
-        setHoverMode(true)
-        setOpen(false)
-      }
-    }, [isMobile, setOpen, hoverMode, setHoverMode])
+      setOpen((open) => !open)
+    }, [isMobile, setOpen])
 
     // Adds a keyboard shortcut to toggle the sidebar.
     React.useEffect(() => {
@@ -127,13 +111,9 @@ const SidebarProvider = React.forwardRef<
       return () => window.removeEventListener("keydown", handleKeyDown)
     }, [toggleSidebar])
 
-    // 计算是否应该显示展开状态
-    const isHoverExpanded = hoverMode && isHovering
-    const actualExpanded = !hoverMode ? open : isHoverExpanded
-
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
-    const state = actualExpanded ? "expanded" : "collapsed"
+    const state = open ? "expanded" : "collapsed"
 
     const contextValue = React.useMemo<SidebarContext>(
       () => ({
@@ -144,13 +124,8 @@ const SidebarProvider = React.forwardRef<
         openMobile,
         setOpenMobile,
         toggleSidebar,
-        hoverMode,
-        setHoverMode,
-        isHovering,
-        setIsHovering,
-        isHoverExpanded,
       }),
-      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, hoverMode, setHoverMode, isHovering, setIsHovering, isHoverExpanded]
+      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
     )
 
     return (
@@ -199,20 +174,7 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile, hoverMode, isHovering, setIsHovering, isHoverExpanded } = useSidebar()
-
-    // 处理hover事件
-    const handleMouseEnter = React.useCallback(() => {
-      if (hoverMode && !isMobile) {
-        setIsHovering(true)
-      }
-    }, [hoverMode, isMobile, setIsHovering])
-
-    const handleMouseLeave = React.useCallback(() => {
-      if (hoverMode && !isMobile) {
-        setIsHovering(false)
-      }
-    }, [hoverMode, isMobile, setIsHovering])
+    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
     if (collapsible === "none") {
       return (
@@ -257,25 +219,17 @@ const Sidebar = React.forwardRef<
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
-        data-hover-mode={hoverMode}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
       >
         {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cn(
             "duration-200 relative h-svh transition-[width] ease-linear",
-            // hover模式下始终保持icon宽度，固定模式下根据状态调整
-            hoverMode 
-              ? "w-[--sidebar-width-icon]"
-              : cn(
-                  "w-[--sidebar-width]",
-                  "group-data-[collapsible=offcanvas]:w-0",
-                  "group-data-[side=right]:rotate-180",
-                  variant === "floating" || variant === "inset"
-                    ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
-                    : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]"
-                ),
+            "w-[--sidebar-width]",
+            "group-data-[collapsible=offcanvas]:w-0",
+            "group-data-[side=right]:rotate-180",
+            variant === "floating" || variant === "inset"
+              ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
+              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]",
             "bg-transparent"
           )}
         />
@@ -285,30 +239,18 @@ const Sidebar = React.forwardRef<
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-            // hover模式和固定模式的不同样式
-            hoverMode 
-              ? cn(
-                  "w-[--sidebar-width-icon]",
-                  isHoverExpanded && "w-[--sidebar-width] shadow-lg z-50"
-                )
-              : cn(
-                  "w-[--sidebar-width]",
-                  "group-data-[collapsible=offcanvas]:w-0",
-                  variant === "floating" || variant === "inset"
-                    ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
-                    : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l"
-                ),
+            "w-[--sidebar-width]",
+            "group-data-[collapsible=offcanvas]:w-0",
+            variant === "floating" || variant === "inset"
+              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
+              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
             className
           )}
           {...props}
         >
           <div
             data-sidebar="sidebar"
-            className={cn(
-              "flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow",
-              // hover模式展开时添加边框
-              hoverMode && isHoverExpanded && "border-r border-sidebar-border"
-            )}
+            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
           >
             {children}
           </div>
