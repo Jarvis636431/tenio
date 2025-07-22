@@ -33,14 +33,14 @@ export function ProjectSelector({
       {/* 项目下拉选择器 */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="flex-1 justify-between h-9 px-3 font-normal border border-border">
+          <Button variant="outline" className="flex-1 justify-between h-9 px-3 font-normal border border-border bg-card">
             <span className="truncate">
               {currentProject?.name || "选择项目"}
             </span>
             <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 px-[4px]">
+        <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] px-[4px] bg-card">
           {projects.map(project => <DropdownMenuItem key={project.id} onClick={() => handleProjectSelect(project.id)} className={cn("cursor-pointer", project.id === currentProject?.id && "bg-accent")}>
               {project.name}
               {project.id === currentProject?.id && <span className="ml-auto text-xs">✓</span>}
@@ -48,11 +48,16 @@ export function ProjectSelector({
           {projects.length === 0 && <DropdownMenuItem disabled>
               暂无项目
             </DropdownMenuItem>}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleNewProject} className="cursor-pointer">
+            <Plus className="mr-2 h-4 w-4" />
+            新建项目
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {/* 新建项目按钮 */}
-      <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0" onClick={handleNewProject}>
+      <Button variant="default" size="icon" className="h-9 w-9 flex-shrink-0 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleNewProject}>
         <Plus className="h-4 w-4" />
       </Button>
     </div>;

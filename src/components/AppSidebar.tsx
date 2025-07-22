@@ -64,7 +64,7 @@ export function AppSidebar() {
   // 项目导航是否应该显示：只要有当前项目就显示
   const shouldShowProjectNavigation = !!currentProject;
   return <TooltipProvider>
-      <Sidebar className="bg-sidebar border-r" collapsible="icon">
+      <Sidebar className="bg-sidebar" collapsible="icon">
         
 
         <SidebarContent className="py-[60px] bg-transparent">

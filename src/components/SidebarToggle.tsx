@@ -11,10 +11,11 @@ export function SidebarToggle() {
     <Button
       variant="outline"
       size="icon"
-      className="absolute top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-background border-border shadow-md hover:shadow-lg transition-all duration-200"
+      className="absolute z-10 h-8 w-8 rounded-full bg-background border-border shadow-md hover:shadow-lg transition-all duration-200"
       style={{
         left: isCollapsed ? "3rem" : "16rem",
-        transform: "translate(-50%, -50%)",
+        top: "120px",
+        transform: "translateX(-50%)",
       }}
       onClick={toggleSidebar}
     >
