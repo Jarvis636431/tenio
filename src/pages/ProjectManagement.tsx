@@ -61,26 +61,24 @@ export default function ProjectManagement() {
   return <div className="h-full p-6 py-[8px] px-[8px]">
       <div className="w-full bg-card rounded-xl shadow-sm p-6 space-y-6">
       <div className="space-y-2">
-        <h1 className="font-bold tracking-tight text-2xl">项目管理</h1>
-        <p className="text-muted-foreground text-sm">
+        <h1 className="tracking-tight font-medium text-xl">项目管理</h1>
+        <p className="text-muted-foreground font-light text-base">
           管理您的施工项目，上传CAD图纸自动生成进度表
         </p>
       </div>
 
       <div className="space-y-4">
         {projects.map(project => <Card key={project.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleProjectClick(project.id)}>
-            <CardContent className="p-6">
+            <CardContent className="p-6 px-[16px] py-[16px]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-muted rounded-lg">
-                    <FileText className="h-6 w-6 text-muted-foreground" />
-                  </div>
+                  
                   
                   <div className="space-y-1">
-                    <h3 className="text-lg font-semibold">{project.name}</h3>
+                    <h3 className="font-normal text-base">{project.name}</h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
-                      <span>创建于 {project.createdAt}</span>
+                      <span className="font-light text-sm">创建于 {project.createdAt}</span>
                     </div>
                   </div>
                 </div>
