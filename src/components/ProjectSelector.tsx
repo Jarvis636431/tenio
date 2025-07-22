@@ -41,8 +41,6 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent side="right" align="start" className="w-56">
-          <div className="px-2 py-1.5 text-sm font-semibold">选择项目</div>
-          <DropdownMenuSeparator />
           {projects.map((project) => (
             <DropdownMenuItem
               key={project.id}
@@ -76,15 +74,13 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
           <div className="flex items-center space-x-2">
             <Building2 className="h-4 w-4" />
             <span className="truncate">
-              {currentProject?.name || "选择项目"}
+              {currentProject?.name || "暂无项目"}
             </span>
           </div>
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
-        <div className="px-2 py-1.5 text-sm font-semibold">选择项目</div>
-        <DropdownMenuSeparator />
         {projects.map((project) => (
           <DropdownMenuItem
             key={project.id}
