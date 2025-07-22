@@ -166,10 +166,7 @@ export function AppSidebar() {
         {/* 底部新建项目按钮 */}
         <SidebarFooter className="p-2">
           {!isCollapsed ? <Button asChild className="w-full justify-start" variant="outline">
-              <NavLink to="/new-project">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                新建项目
-              </NavLink>
+              
             </Button> : <Tooltip>
               <TooltipTrigger asChild>
                 <Button asChild size="icon" variant="outline" className="w-8 h-8 mx-auto">
