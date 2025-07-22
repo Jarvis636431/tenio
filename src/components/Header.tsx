@@ -11,7 +11,7 @@ export function Header() {
       </div>
 
       {/* 右侧操作区域 */}
-      <div className="flex items-center space-x-4 px-0 mx-[27px]">
+      <div className="flex items-center space-x-4 px-0 mx-0 py-[20px] my-0">
         {/* 消息通知 */}
         <Button variant="ghost" size="icon" className="relative mx-0">
           <Bell className="h-5 w-5" />
