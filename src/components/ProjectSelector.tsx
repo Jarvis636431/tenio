@@ -1,5 +1,5 @@
 
-import { ChevronDown, Building2, Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,14 +33,25 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
   };
 
   if (isCollapsed) {
-    return (
+    return null;
+  }
+
+  return (
+    <div className="flex items-center space-x-2">
+      {/* 项目下拉选择器 */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-10 w-10">
-            <Building2 className="h-4 w-4" />
+          <Button 
+            variant="outline" 
+            className="flex-1 justify-between h-9 px-3 font-normal border border-border"
+          >
+            <span className="truncate">
+              {currentProject?.name || "选择项目"}
+            </span>
+            <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="start" className="w-56">
+        <DropdownMenuContent className="w-56">
           {projects.map((project) => (
             <DropdownMenuItem
               key={project.id}
@@ -50,59 +61,29 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
                 project.id === currentProject?.id && "bg-accent"
               )}
             >
-              <Building2 className="mr-2 h-4 w-4" />
               {project.name}
+              {project.id === currentProject?.id && (
+                <span className="ml-auto text-xs">✓</span>
+              )}
             </DropdownMenuItem>
           ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleNewProject} className="cursor-pointer">
-            <Plus className="mr-2 h-4 w-4" />
-            新建项目
-          </DropdownMenuItem>
+          {projects.length === 0 && (
+            <DropdownMenuItem disabled>
+              暂无项目
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
-    );
-  }
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          className="w-full justify-between h-10 px-3 font-normal"
-        >
-          <div className="flex items-center space-x-2">
-            <Building2 className="h-4 w-4" />
-            <span className="truncate">
-              {currentProject?.name || "暂无项目"}
-            </span>
-          </div>
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
-        {projects.map((project) => (
-          <DropdownMenuItem
-            key={project.id}
-            onClick={() => handleProjectSelect(project.id)}
-            className={cn(
-              "cursor-pointer",
-              project.id === currentProject?.id && "bg-accent"
-            )}
-          >
-            <Building2 className="mr-2 h-4 w-4" />
-            {project.name}
-            {project.id === currentProject?.id && (
-              <span className="ml-auto text-xs">✓</span>
-            )}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleNewProject} className="cursor-pointer">
-          <Plus className="mr-2 h-4 w-4" />
-          新建项目
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      {/* 新建项目按钮 */}
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-9 w-9 flex-shrink-0"
+        onClick={handleNewProject}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+    </div>
   );
 }

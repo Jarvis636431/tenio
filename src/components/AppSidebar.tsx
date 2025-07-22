@@ -1,9 +1,8 @@
 
 import { NavLink, useLocation } from "react-router-dom";
-import { PlusCircle, Settings, Home, Calendar, BarChart3, Activity, ShoppingCart, Users, MessageSquare, Info } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
+import { Settings, Home, Calendar, Activity, ShoppingCart, Users, MessageSquare, Info } from "lucide-react";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
 import { ProjectSelector } from "@/components/ProjectSelector";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -68,7 +67,7 @@ export function AppSidebar() {
   return (
     <TooltipProvider>
       <Sidebar className="bg-sidebar border-r" collapsible="icon">
-        <SidebarContent className="pt-4">
+        <SidebarContent className="pt-8">
           {/* 主导航 */}
           <SidebarGroup>
             <SidebarGroupContent>
@@ -181,29 +180,6 @@ export function AppSidebar() {
             </SidebarGroup>
           )}
         </SidebarContent>
-
-        {/* 底部新建项目按钮 */}
-        <SidebarFooter className="p-2">
-          {!isCollapsed ? (
-            <Button asChild className="w-full justify-start" variant="outline">
-              <NavLink to="/new-project">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                新建项目
-              </NavLink>
-            </Button>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button asChild size="icon" variant="outline" className="w-8 h-8 mx-auto">
-                  <NavLink to="/new-project">
-                    <PlusCircle className="h-4 w-4" />
-                  </NavLink>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">新建项目</TooltipContent>
-            </Tooltip>
-          )}
-        </SidebarFooter>
       </Sidebar>
     </TooltipProvider>
   );
