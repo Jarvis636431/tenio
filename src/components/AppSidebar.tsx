@@ -1,4 +1,3 @@
-
 import { NavLink, useLocation, useParams } from "react-router-dom";
 import { PlusCircle, Settings, Building2, Menu, Home, Calendar, BarChart3, Activity, ShoppingCart, Users, MessageSquare, Info } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
@@ -171,7 +170,7 @@ export function AppSidebar() {
           </SidebarGroup>
 
           {/* 项目内导航 */}
-          {shouldShowFullContent && isProjectRoute && id && (
+          {isProjectRoute && id && (
             <>
               <SidebarGroup>
                 <SidebarGroupLabel>项目导航</SidebarGroupLabel>
