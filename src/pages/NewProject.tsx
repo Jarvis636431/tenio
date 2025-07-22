@@ -74,7 +74,7 @@ export default function NewProject() {
       setIsCreating(false);
     }
   };
-  return <div className="h-full p-6 py-[8px] px-[8px]">
+  return <div className="h-full p-6 bg-white py-0 px-0">
       <div className="w-full bg-card rounded-xl p-6 space-y-6 h-full flex flex-col">
         <div className="space-y-2">
           <h1 className="tracking-tight text-xl font-medium">新建项目</h1>
