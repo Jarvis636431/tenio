@@ -1,6 +1,7 @@
+
 import { NavLink, useLocation } from "react-router-dom";
 import { PlusCircle, Settings, Building2, Menu, Home, Calendar, BarChart3, Activity, ShoppingCart, Users, MessageSquare, Info } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { ProjectSelector } from "@/components/ProjectSelector";
@@ -55,8 +56,9 @@ const projectMenuItems = [
 export function AppSidebar() {
   const location = useLocation();
   const { currentProject } = useProject();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
   const currentPath = location.pathname;
-  const isCollapsed = false; // 简化状态管理，等待后续优化
   
   const isActive = (path: string) => currentPath === path;
   const isProjectRoute = currentPath.startsWith('/project/');
@@ -77,26 +79,21 @@ export function AppSidebar() {
   return (
     <TooltipProvider>
       <Sidebar className="bg-sidebar border-r" collapsible="icon">
-        <SidebarHeader className={`p-4 py-[13.5px] flex flex-row items-center ${!isCollapsed ? 'justify-between' : 'justify-center'}`}>
+        <SidebarHeader className="p-4 py-[13.5px] flex flex-row items-center justify-center">
           {!isCollapsed ? (
             <>
               <div className="flex items-center space-x-2">
                 <Building2 className="h-6 w-6 text-primary flex-shrink-0" />
                 <h1 className="text-lg font-bold text-primary">天友智管平台</h1>
               </div>
-              <SidebarTrigger className="h-6 w-6 flex-shrink-0">
+              <SidebarTrigger className="h-6 w-6 flex-shrink-0 ml-auto">
                 <Menu className="h-4 w-4" />
               </SidebarTrigger>
             </>
           ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <SidebarTrigger className="h-6 w-6 flex-shrink-0">
-                  <Building2 className="h-4 w-4 text-primary" />
-                </SidebarTrigger>
-              </TooltipTrigger>
-              <TooltipContent>展开侧边栏</TooltipContent>
-            </Tooltip>
+            <SidebarTrigger className="h-6 w-6 flex-shrink-0">
+              <Menu className="h-4 w-4" />
+            </SidebarTrigger>
           )}
         </SidebarHeader>
 
@@ -126,7 +123,7 @@ export function AppSidebar() {
                             </NavLink>
                           </SidebarMenuButton>
                         </TooltipTrigger>
-                        <TooltipContent>{item.title}</TooltipContent>
+                        <TooltipContent side="right">{item.title}</TooltipContent>
                       </Tooltip>
                     ) : (
                       <SidebarMenuButton 
@@ -152,19 +149,23 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* 分割线 */}
-          <div className="px-3 mb-2">
-            <div className="h-px bg-sidebar-border opacity-50"></div>
-          </div>
+          {/* 分割线 - 收起状态下隐藏 */}
+          {!isCollapsed && (
+            <div className="px-3 mb-2">
+              <div className="h-px bg-sidebar-border opacity-50"></div>
+            </div>
+          )}
 
-          {/* 项目选择器 */}
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <div className="px-2">
-                <ProjectSelector isCollapsed={isCollapsed} />
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {/* 项目选择器 - 收起状态下隐藏 */}
+          {!isCollapsed && (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <div className="px-2">
+                  <ProjectSelector isCollapsed={isCollapsed} />
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
 
           {/* 项目内导航 - 当有选中项目时常驻显示 */}
           {shouldShowProjectNavigation && (
@@ -198,7 +199,7 @@ export function AppSidebar() {
                                 </NavLink>
                               </SidebarMenuButton>
                             </TooltipTrigger>
-                            <TooltipContent>{item.label}</TooltipContent>
+                            <TooltipContent side="right">{item.label}</TooltipContent>
                           </Tooltip>
                         ) : (
                           <SidebarMenuButton 
@@ -247,14 +248,14 @@ export function AppSidebar() {
                   asChild
                   size="icon"
                   variant="outline"
-                  className="w-10 h-10"
+                  className="w-8 h-8 mx-auto"
                 >
                   <NavLink to="/new-project">
                     <PlusCircle className="h-4 w-4" />
                   </NavLink>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>新建项目</TooltipContent>
+              <TooltipContent side="right">新建项目</TooltipContent>
             </Tooltip>
           )}
         </SidebarFooter>
