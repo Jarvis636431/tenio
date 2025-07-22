@@ -1,11 +1,10 @@
-
-import { NavLink, useLocation, useParams } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { PlusCircle, Settings, Building2, Menu, Home, Calendar, BarChart3, Activity, ShoppingCart, Users, MessageSquare, Info } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { ProjectSelector } from "@/components/ProjectSelector";
-import { cn } from "@/lib/utils";
+import { useProject } from "@/contexts/ProjectContext";
 
 const mainMenuItems = [
   {
@@ -55,10 +54,9 @@ const projectMenuItems = [
 
 export function AppSidebar() {
   const location = useLocation();
-  const { id } = useParams();
+  const { currentProject } = useProject();
   const currentPath = location.pathname;
-  const { state } = useSidebar(); // 只获取基础状态
-  const isCollapsed = state === "collapsed";
+  const isCollapsed = false; // 简化状态管理，等待后续优化
   
   const isActive = (path: string) => currentPath === path;
   const isProjectRoute = currentPath.startsWith('/project/');
@@ -72,6 +70,9 @@ export function AppSidebar() {
   const isProjectViewActive = (viewId: string) => {
     return isProjectRoute && getActiveProjectView() === viewId;
   };
+
+  // 项目导航是否应该显示：只要有当前项目就显示
+  const shouldShowProjectNavigation = !!currentProject;
 
   return (
     <TooltipProvider>
@@ -165,8 +166,8 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* 项目内导航 - 始终显示在项目页面 */}
-          {isProjectRoute && id && (
+          {/* 项目内导航 - 当有选中项目时常驻显示 */}
+          {shouldShowProjectNavigation && (
             <SidebarGroup>
               {!isCollapsed && <SidebarGroupLabel>项目导航</SidebarGroupLabel>}
               <SidebarGroupContent>
@@ -174,6 +175,8 @@ export function AppSidebar() {
                   {projectMenuItems.map(item => {
                     const Icon = item.icon;
                     const isActiveView = isProjectViewActive(item.id);
+                    const projectUrl = `/project/${currentProject.id}?view=${item.id}`;
+                    
                     return (
                       <SidebarMenuItem key={item.id}>
                         {isCollapsed ? (
@@ -190,7 +193,7 @@ export function AppSidebar() {
                                   fontWeight: 'bold'
                                 } as any : {}}
                               >
-                                <NavLink to={`/project/${id}?view=${item.id}`}>
+                                <NavLink to={projectUrl}>
                                   <Icon className="h-4 w-4 flex-shrink-0" />
                                 </NavLink>
                               </SidebarMenuButton>
@@ -209,7 +212,7 @@ export function AppSidebar() {
                               fontWeight: 'bold'
                             } as any : {}}
                           >
-                            <NavLink to={`/project/${id}?view=${item.id}`}>
+                            <NavLink to={projectUrl}>
                               <Icon className="h-4 w-4 flex-shrink-0" />
                               <span>{item.label}</span>
                             </NavLink>

@@ -8,20 +8,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-
-// 模拟项目数据
-const projects = [
-  {
-    id: "1",
-    name: "办公楼建设项目"
-  },
-  {
-    id: "2", 
-    name: "项目 2"
-  }
-];
+import { useProject } from "@/contexts/ProjectContext";
 
 interface ProjectSelectorProps {
   isCollapsed?: boolean;
@@ -29,12 +18,14 @@ interface ProjectSelectorProps {
 
 export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
   const navigate = useNavigate();
-  const { id } = useParams();
-  
-  const currentProject = projects.find(p => p.id === id) || projects[0];
+  const { currentProject, projects, setCurrentProject } = useProject();
 
   const handleProjectSelect = (projectId: string) => {
-    navigate(`/project/${projectId}`);
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      setCurrentProject(project);
+      navigate(`/project/${projectId}`);
+    }
   };
 
   const handleNewProject = () => {
@@ -84,7 +75,9 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
         >
           <div className="flex items-center space-x-2">
             <Building2 className="h-4 w-4" />
-            <span className="truncate">{currentProject?.name}</span>
+            <span className="truncate">
+              {currentProject?.name || "选择项目"}
+            </span>
           </div>
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
