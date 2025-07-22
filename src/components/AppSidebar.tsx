@@ -95,9 +95,9 @@ export function AppSidebar() {
                   color: 'black',
                   fontWeight: 'bold'
                 } as any : {}}>
-                        <NavLink to={item.url}>
+                        <NavLink to={item.url} className="my-0 py-[16px]">
                           <item.icon className="h-4 w-4 flex-shrink-0" />
-                          <span>{item.title}</span>
+                          <span className="text-base font-light">{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>}
                   </SidebarMenuItem>)}
@@ -113,14 +113,14 @@ export function AppSidebar() {
           {/* 项目选择器 - 收起状态下隐藏 */}
           {!isCollapsed && <SidebarGroup className="py-0 my-0 px-0 mx-[4px]">
               <SidebarGroupContent>
-                <div className="px-2">
+                <div className="px-[12px] bg-transparent">
                   <ProjectSelector isCollapsed={isCollapsed} />
                 </div>
               </SidebarGroupContent>
             </SidebarGroup>}
 
           {/* 项目内导航 - 当有选中项目时常驻显示 */}
-          {shouldShowProjectNavigation && <SidebarGroup>
+          {shouldShowProjectNavigation && <SidebarGroup className="my-0 py-0">
               {!isCollapsed}
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -151,9 +151,9 @@ export function AppSidebar() {
                     color: 'black',
                     fontWeight: 'bold'
                   } as any : {}}>
-                            <NavLink to={projectUrl}>
+                            <NavLink to={projectUrl} className="my-0 py-[16px]">
                               <Icon className="h-4 w-4 flex-shrink-0" />
-                              <span>{item.label}</span>
+                              <span className="text-base font-light">{item.label}</span>
                             </NavLink>
                           </SidebarMenuButton>}
                       </SidebarMenuItem>;
