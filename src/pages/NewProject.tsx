@@ -6,24 +6,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-
 export default function NewProject() {
   const [bidNotice, setBidNotice] = useState<File | null>(null);
   const [controlPrice, setControlPrice] = useState("");
   const [cadFile, setCadFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
-
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, setter: (file: File | null) => void) => {
     const file = event.target.files?.[0] || null;
     setter(file);
   };
-
   const handleFileDelete = (setter: (file: File | null) => void) => {
     setter(null);
   };
-
   const handleDrop = (event: React.DragEvent<HTMLDivElement>, setter: (file: File | null) => void, acceptedTypes: string[]) => {
     event.preventDefault();
     const files = event.dataTransfer.files;
@@ -41,11 +39,9 @@ export default function NewProject() {
       }
     }
   };
-
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
   };
-
   const handleStartAnalysis = async () => {
     if (!bidNotice || !controlPrice || !cadFile) {
       toast({
@@ -78,9 +74,7 @@ export default function NewProject() {
       setIsCreating(false);
     }
   };
-
-  return (
-    <div className="h-full p-6">
+  return <div className="h-full p-6 py-[8px] px-[8px]">
       <div className="w-full bg-card rounded-xl p-6 space-y-6 h-full flex flex-col">
         <div className="space-y-2">
           <h1 className="font-bold tracking-tight text-2xl">新建项目</h1>
@@ -109,17 +103,13 @@ export default function NewProject() {
                       {cadFile ? cadFile.name : "点击或拖拽上传 DWG 或 DXF 文件"}
                     </p>
                     <input type="file" accept=".dwg,.dxf" onChange={e => handleFileUpload(e, setCadFile)} className="hidden" id="cad-file" />
-                    {cadFile ? (
-                      <Button variant="destructive" type="button" onClick={() => handleFileDelete(setCadFile)}>
+                    {cadFile ? <Button variant="destructive" type="button" onClick={() => handleFileDelete(setCadFile)}>
                         删除
-                      </Button>
-                    ) : (
-                      <Label htmlFor="cad-file" className="cursor-pointer">
+                      </Button> : <Label htmlFor="cad-file" className="cursor-pointer">
                         <Button variant="outline" type="button">
                           选择文件
                         </Button>
-                      </Label>
-                    )}
+                      </Label>}
                   </div>
                 </div>
               </div>
@@ -146,17 +136,13 @@ export default function NewProject() {
                         {bidNotice ? bidNotice.name : "点击或拖拽上传 PDF 文件"}
                       </p>
                       <input type="file" accept=".pdf" onChange={e => handleFileUpload(e, setBidNotice)} className="hidden" id="bid-notice" />
-                      {bidNotice ? (
-                        <Button variant="destructive" type="button" onClick={() => handleFileDelete(setBidNotice)}>
+                      {bidNotice ? <Button variant="destructive" type="button" onClick={() => handleFileDelete(setBidNotice)}>
                           删除
-                        </Button>
-                      ) : (
-                        <Label htmlFor="bid-notice" className="cursor-pointer">
+                        </Button> : <Label htmlFor="bid-notice" className="cursor-pointer">
                           <Button variant="outline" type="button">
                             选择文件
                           </Button>
-                        </Label>
-                      )}
+                        </Label>}
                     </div>
                   </div>
                 </div>
@@ -203,6 +189,5 @@ export default function NewProject() {
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
