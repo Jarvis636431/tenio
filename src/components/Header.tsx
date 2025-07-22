@@ -7,7 +7,7 @@ export function Header() {
       {/* 左侧品牌区域 */}
       <div className="flex items-center space-x-3 mx-0">
         <Building2 className="h-8 w-8 text-primary mx-0" />
-        <h1 className="text-lg font-semibold text-slate-700">天友智管平台</h1>
+        <h1 className="text-lg font-semibold text-slate-700">A.PM 智慧建管理</h1>
       </div>
 
       {/* 右侧操作区域 */}
