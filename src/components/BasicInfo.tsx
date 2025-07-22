@@ -104,7 +104,7 @@ export function BasicInfo({
       </div>
 
       {/* 项目基础信息 */}
-      <Card>
+      <Card className="border-none shadow-none">
         <CardContent className="py-[16px]">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -191,7 +191,7 @@ export function BasicInfo({
               </div>
 
               {/* 条件渲染保存按钮 */}
-              {hasChanges && <div className="pt-4 border-t">
+              {hasChanges && <div className="pt-4">
                   <Button type="submit" className="w-full">
                     <Save className="h-4 w-4 mr-2" />
                     保存更改
@@ -201,9 +201,9 @@ export function BasicInfo({
           </Form>
 
           {/* 项目文件列表 */}
-          <div className="mt-6 pt-6 border-t">
+          <div className="mt-6 pt-6">
             <div className="space-y-4">
-              {uploadedFiles.map(file => <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg">
+              {uploadedFiles.map(file => <div key={file.id} className="flex items-center justify-between p-3">
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-muted-foreground" />
                     <div>
@@ -224,7 +224,7 @@ export function BasicInfo({
           </div>
 
           {/* 重新生成施工计划按钮 */}
-          <div className="mt-6 pt-6 border-t">
+          <div className="mt-6 pt-6">
             <Button onClick={regeneratePlan} className="w-full" disabled={hasChanges}>
               <RefreshCw className="h-4 w-4 mr-2" />
               {hasChanges ? "请先保存更改" : "重新生成施工计划"}
