@@ -90,7 +90,7 @@ export function AppSidebar() {
                             } as any : {}}
                           >
                             <NavLink to={item.url}>
-                              <item.icon className="h-4 w-4 flex-shrink-0" />
+                              <item.icon className="h-4 w-4 flex-shrink-0 text-slate-400" strokeWidth={1.5} />
                             </NavLink>
                           </SidebarMenuButton>
                         </TooltipTrigger>
@@ -109,7 +109,7 @@ export function AppSidebar() {
                         } as any : {}}
                       >
                         <NavLink to={item.url} className="my-0 py-[16px]">
-                          <item.icon className="h-4 w-4 flex-shrink-0" />
+                          <item.icon className="h-4 w-4 flex-shrink-0 text-slate-400" strokeWidth={1.5} />
                           <span className="text-base font-light">{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
@@ -166,7 +166,7 @@ export function AppSidebar() {
                                 } as any : {}}
                               >
                                 <NavLink to={projectUrl}>
-                                  <Icon className="h-4 w-4 flex-shrink-0" />
+                                  <Icon className="h-4 w-4 flex-shrink-0 text-slate-400" strokeWidth={1.5} />
                                 </NavLink>
                               </SidebarMenuButton>
                             </TooltipTrigger>
@@ -185,7 +185,7 @@ export function AppSidebar() {
                             } as any : {}}
                           >
                             <NavLink to={projectUrl} className="my-0 py-[16px]">
-                              <Icon className="h-4 w-4 flex-shrink-0" />
+                              <Icon className="h-4 w-4 flex-shrink-0 text-slate-400" strokeWidth={1.5} />
                               <span className="text-base font-light">{item.label}</span>
                             </NavLink>
                           </SidebarMenuButton>
