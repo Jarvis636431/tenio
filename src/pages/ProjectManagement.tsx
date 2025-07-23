@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,8 +42,10 @@ const projects = [{
   orderCount: 15,
   status: "进行中"
 }];
+
 export default function ProjectManagement() {
   const navigate = useNavigate();
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case "已完成":
@@ -55,25 +58,32 @@ export default function ProjectManagement() {
         return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
   };
+  
   const handleProjectClick = (projectId: number) => {
     navigate(`/project/${projectId}`);
   };
-  return <div className="h-full p-6 py-[8px] px-[8px]">
-      <div className="w-full bg-card rounded-xl shadow-sm p-6 space-y-6">
-      <div className="space-y-2">
+  
+  return (
+    <div className="h-full p-6 py-[8px] px-[8px]">
+      {/* 标题区域 - 移到白色卡片外面 */}
+      <div className="space-y-2 mb-6">
         <h1 className="tracking-tight font-medium text-xl">项目管理</h1>
         <p className="text-muted-foreground font-light text-base">
           管理您的施工项目，上传CAD图纸自动生成进度表
         </p>
       </div>
 
-      <div className="space-y-4">
-        {projects.map(project => <Card key={project.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleProjectClick(project.id)}>
+      {/* 内容区域 - 白色卡片 */}
+      <div className="w-full bg-card rounded-xl p-6 space-y-4">
+        {projects.map(project => (
+          <Card 
+            key={project.id} 
+            className="cursor-pointer hover:shadow-md transition-shadow" 
+            onClick={() => handleProjectClick(project.id)}
+          >
             <CardContent className="p-6 px-[16px] py-[16px]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  
-                  
                   <div className="space-y-1">
                     <h3 className="font-normal text-base">{project.name}</h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -101,8 +111,9 @@ export default function ProjectManagement() {
                 </div>
               </div>
             </CardContent>
-          </Card>)}
+          </Card>
+        ))}
       </div>
-      </div>
-    </div>;
+    </div>
+  );
 }
