@@ -23,7 +23,7 @@ export function Layout({
             {/* 侧边栏分割线上的展开收起按钮 */}
             <SidebarToggle />
             
-            <main className="flex-1 overflow-hidden px-[8px] py-[8px] rounded-tl-[16px] border-l-0">
+            <main className="flex-1 overflow-hidden rounded-tl-[16px] px-[16px] py-[16px]">
               {children}
             </main>
             
