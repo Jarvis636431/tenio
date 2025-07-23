@@ -104,7 +104,7 @@ export function AppSidebar() {
                     {isCollapsed ? <Tooltip>
                         <TooltipTrigger asChild>
                           <SidebarMenuButton asChild isActive={isActive(item.url)} className={isActive(item.url) ? "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}>
-                            <NavLink to={item.url}>
+                            <NavLink to={item.url} className="px-[8px]">
                               <item.icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
                             </NavLink>
                           </SidebarMenuButton>
