@@ -181,9 +181,13 @@ export function AppSidebar() {
 
           {/* 项目内导航 - 当有选中项目时常驻显示 */}
           {shouldShowProjectNavigation && (
-            <SidebarGroup className="my-0 py-0">
-              {!isCollapsed}
-              <SidebarGroupContent>
+            <SidebarGroup className="my-0 py-0 bg-muted/30 rounded-lg mx-2 mb-2">
+              {!isCollapsed && (
+                <SidebarGroupLabel className="text-xs text-muted-foreground px-3 pt-2 pb-1">
+                  项目模块
+                </SidebarGroupLabel>
+              )}
+              <SidebarGroupContent className="pb-2">
                 <SidebarMenu>
                   {projectMenuItems.map(item => {
                     const Icon = item.icon;
@@ -199,12 +203,12 @@ export function AppSidebar() {
                                 asChild 
                                 isActive={isActiveView}
                                 className={isActiveView ? 
-                                  "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : 
-                                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                  "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))] mx-1" : 
+                                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground mx-1"
                                 }
                               >
                                 <NavLink to={projectUrl}>
-                                  <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
+                                  <Icon className="h-3.5 w-3.5 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
                                 </NavLink>
                               </SidebarMenuButton>
                             </TooltipTrigger>
@@ -215,13 +219,13 @@ export function AppSidebar() {
                             asChild 
                             isActive={isActiveView}
                             className={isActiveView ? 
-                              "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : 
-                              "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                              "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))] mx-1" : 
+                              "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground mx-1"
                             }
                           >
-                            <NavLink to={projectUrl} className="my-0 py-[16px]">
-                              <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
-                              <span className={`text-base ${isActiveView ? 'font-medium' : 'font-light'}`}>
+                            <NavLink to={projectUrl} className="my-0 py-[12px] pl-6">
+                              <Icon className="h-3.5 w-3.5 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
+                              <span className={`text-sm ${isActiveView ? 'font-medium' : 'font-normal'}`}>
                                 {item.label}
                               </span>
                             </NavLink>
