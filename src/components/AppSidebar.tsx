@@ -67,7 +67,7 @@ export function AppSidebar() {
 
   return (
     <TooltipProvider>
-      <Sidebar className="bg-sidebar shadow-sm" collapsible="icon">
+      <Sidebar className="bg-sidebar shadow-[2px_0_8px_rgba(0,0,0,0.06)]" collapsible="icon">
         <SidebarContent className="py-[60px] bg-white">
           {/* 主导航 */}
           <SidebarGroup>
