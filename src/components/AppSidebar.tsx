@@ -120,39 +120,27 @@ export function AppSidebar() {
                     {isCollapsed ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <SidebarMenuButton 
-                            asChild 
-                            isActive={isActive(item.url)} 
-                            style={isActive(item.url) ? {
-                              '--sidebar-accent': 'hsl(0 0% 100%)',
-                              '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                              backgroundColor: 'white',
-                              color: 'black',
-                              fontWeight: 'bold'
-                            } as any : {}}
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isActive(item.url)}
+                        className={isActive(item.url) ? "bg-sidebar-active-bg text-sidebar-active-fg font-medium shadow-sm" : "hover:bg-sidebar-hover-bg"}
                           >
                             <NavLink to={item.url}>
-                              <item.icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
+                              <item.icon className={`h-4 w-4 flex-shrink-0 ${isActive(item.url) ? 'text-sidebar-active-fg' : 'text-slate-600'}`} strokeWidth={1.5} />
                             </NavLink>
                           </SidebarMenuButton>
                         </TooltipTrigger>
                         <TooltipContent side="right">{item.title}</TooltipContent>
                       </Tooltip>
                     ) : (
-                      <SidebarMenuButton 
-                        asChild 
-                        isActive={isActive(item.url)} 
-                        style={isActive(item.url) ? {
-                          '--sidebar-accent': 'hsl(0 0% 100%)',
-                          '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                          backgroundColor: 'white',
-                          color: 'black',
-                          fontWeight: 'bold'
-                        } as any : {}}
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={isActive(item.url)}
+                      className={isActive(item.url) ? "bg-sidebar-active-bg text-sidebar-active-fg font-medium shadow-sm" : "hover:bg-sidebar-hover-bg"}
                       >
                         <NavLink to={item.url} className="my-0 py-[16px]">
-                          <item.icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
-                          <span className="text-base font-light">{item.title}</span>
+                          <item.icon className={`h-4 w-4 flex-shrink-0 ${isActive(item.url) ? 'text-sidebar-active-fg' : 'text-slate-600'}`} strokeWidth={1.5} />
+                          <span className={`text-base ${isActive(item.url) ? 'font-medium text-sidebar-active-fg' : 'font-light'}`}>{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
                     )}
@@ -196,39 +184,27 @@ export function AppSidebar() {
                         {isCollapsed ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <SidebarMenuButton 
-                                asChild 
-                                isActive={isActiveView} 
-                                style={isActiveView ? {
-                                  '--sidebar-accent': 'hsl(0 0% 100%)',
-                                  '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                                  backgroundColor: 'white',
-                                  color: 'black',
-                                  fontWeight: 'bold'
-                                } as any : {}}
+                            <SidebarMenuButton 
+                              asChild 
+                              isActive={isActiveView}
+                              className={isActiveView ? "bg-sidebar-active-bg text-sidebar-active-fg font-medium shadow-sm" : "hover:bg-sidebar-hover-bg"}
                               >
-                                <NavLink to={projectUrl}>
-                                  <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
+                              <NavLink to={projectUrl}>
+                                <Icon className={`h-4 w-4 flex-shrink-0 ${isActiveView ? 'text-sidebar-active-fg' : 'text-slate-600'}`} strokeWidth={1.5} />
                                 </NavLink>
                               </SidebarMenuButton>
                             </TooltipTrigger>
                             <TooltipContent side="right">{item.label}</TooltipContent>
                           </Tooltip>
                         ) : (
-                          <SidebarMenuButton 
-                            asChild 
-                            isActive={isActiveView} 
-                            style={isActiveView ? {
-                              '--sidebar-accent': 'hsl(0 0% 100%)',
-                              '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                              backgroundColor: 'white',
-                              color: 'black',
-                              fontWeight: 'bold'
-                            } as any : {}}
+                        <SidebarMenuButton 
+                          asChild 
+                          isActive={isActiveView}
+                          className={isActiveView ? "bg-sidebar-active-bg text-sidebar-active-fg font-medium shadow-sm" : "hover:bg-sidebar-hover-bg"}
                           >
-                            <NavLink to={projectUrl} className="my-0 py-[16px]">
-                              <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
-                              <span className="text-base font-light">{item.label}</span>
+                          <NavLink to={projectUrl} className="my-0 py-[16px]">
+                            <Icon className={`h-4 w-4 flex-shrink-0 ${isActiveView ? 'text-sidebar-active-fg' : 'text-slate-600'}`} strokeWidth={1.5} />
+                            <span className={`text-base ${isActiveView ? 'font-medium text-sidebar-active-fg' : 'font-light'}`}>{item.label}</span>
                             </NavLink>
                           </SidebarMenuButton>
                         )}

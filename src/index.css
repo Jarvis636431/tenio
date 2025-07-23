@@ -66,13 +66,18 @@ All colors MUST be HSL.
 
     --sidebar-primary-foreground: 0 0% 98%;
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 204 94% 38%;
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-accent-foreground: 0 0% 98%;
 
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Custom sidebar states */
+    --sidebar-active-bg: 204 94% 38%;
+    --sidebar-active-fg: 0 0% 98%;
+    --sidebar-hover-bg: 204 100% 95%;
   }
 
   .dark {
