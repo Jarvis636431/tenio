@@ -1,11 +1,12 @@
 
 import { NavLink, useLocation } from "react-router-dom";
-import { PlusCircle, Settings, Building2, Menu, Home, Calendar, BarChart3, Activity, ShoppingCart, Users, MessageSquare, Info } from "lucide-react";
+import { PlusCircle, Settings, Building2, Menu, Home, Calendar, BarChart3, Activity, ShoppingCart, Users, MessageSquare, Info, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { ProjectSelector } from "@/components/ProjectSelector";
 import { useProject } from "@/contexts/ProjectContext";
+import { useNavigate } from "react-router-dom";
 
 const mainMenuItems = [{
   title: "主页",
@@ -45,11 +46,20 @@ const projectMenuItems = [{
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { currentProject } = useProject();
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const currentPath = location.pathname;
-  const isActive = (path: string) => currentPath === path;
+  
+  // 修复主页选中态逻辑
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return currentPath === "/" || currentPath === "/new-project";
+    }
+    return currentPath === path;
+  };
+  
   const isProjectRoute = currentPath.startsWith('/project/');
 
   // 获取当前项目内的活跃视图
@@ -65,10 +75,42 @@ export function AppSidebar() {
   // 项目导航是否应该显示：只要有当前项目就显示
   const shouldShowProjectNavigation = !!currentProject;
 
+  const handleNewProject = () => {
+    navigate("/new-project");
+  };
+
   return (
     <TooltipProvider>
       <Sidebar className="shadow-[2px_0_8px_rgba(0,0,0,0.06)] border-r-0" collapsible="icon">
         <SidebarContent className="py-[60px] bg-white">
+          {/* 顶部新建项目按钮 */}
+          <SidebarHeader className="px-3 pb-0">
+            {isCollapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="default" 
+                    size="icon" 
+                    className="w-8 h-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={handleNewProject}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">新建项目</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button 
+                variant="default" 
+                className="w-full justify-start h-9 bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={handleNewProject}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                新建项目
+              </Button>
+            )}
+          </SidebarHeader>
+
           {/* 主导航 */}
           <SidebarGroup>
             <SidebarGroupContent>
@@ -90,7 +132,7 @@ export function AppSidebar() {
                             } as any : {}}
                           >
                             <NavLink to={item.url}>
-                              <item.icon className="h-4 w-4 flex-shrink-0 text-slate-400" strokeWidth={1.5} />
+                              <item.icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
                             </NavLink>
                           </SidebarMenuButton>
                         </TooltipTrigger>
@@ -109,7 +151,7 @@ export function AppSidebar() {
                         } as any : {}}
                       >
                         <NavLink to={item.url} className="my-0 py-[16px]">
-                          <item.icon className="h-4 w-4 flex-shrink-0 text-slate-400" strokeWidth={1.5} />
+                          <item.icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
                           <span className="text-base font-light">{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
@@ -166,7 +208,7 @@ export function AppSidebar() {
                                 } as any : {}}
                               >
                                 <NavLink to={projectUrl}>
-                                  <Icon className="h-4 w-4 flex-shrink-0 text-slate-400" strokeWidth={1.5} />
+                                  <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
                                 </NavLink>
                               </SidebarMenuButton>
                             </TooltipTrigger>
@@ -185,7 +227,7 @@ export function AppSidebar() {
                             } as any : {}}
                           >
                             <NavLink to={projectUrl} className="my-0 py-[16px]">
-                              <Icon className="h-4 w-4 flex-shrink-0 text-slate-400" strokeWidth={1.5} />
+                              <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
                               <span className="text-base font-light">{item.label}</span>
                             </NavLink>
                           </SidebarMenuButton>
@@ -198,9 +240,6 @@ export function AppSidebar() {
             </SidebarGroup>
           )}
         </SidebarContent>
-
-        {/* 底部新建项目按钮 */}
-        
       </Sidebar>
     </TooltipProvider>
   );

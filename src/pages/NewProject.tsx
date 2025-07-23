@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+
 export default function NewProject() {
   const [bidNotice, setBidNotice] = useState<File | null>(null);
   const [controlPrice, setControlPrice] = useState("");
@@ -15,13 +16,16 @@ export default function NewProject() {
     toast
   } = useToast();
   const navigate = useNavigate();
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, setter: (file: File | null) => void) => {
     const file = event.target.files?.[0] || null;
     setter(file);
   };
+
   const handleFileDelete = (setter: (file: File | null) => void) => {
     setter(null);
   };
+
   const handleDrop = (event: React.DragEvent<HTMLDivElement>, setter: (file: File | null) => void, acceptedTypes: string[]) => {
     event.preventDefault();
     const files = event.dataTransfer.files;
@@ -39,9 +43,11 @@ export default function NewProject() {
       }
     }
   };
+
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
   };
+
   const handleStartAnalysis = async () => {
     if (!bidNotice || !controlPrice || !cadFile) {
       toast({
@@ -74,6 +80,7 @@ export default function NewProject() {
       setIsCreating(false);
     }
   };
+
   return <div className="h-full p-6 py-[8px] px-[8px]">
       <div className="space-y-2 mb-6">
         <h1 className="tracking-tight text-xl font-medium">新建项目</h1>
