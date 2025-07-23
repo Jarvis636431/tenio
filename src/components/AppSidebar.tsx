@@ -1,4 +1,3 @@
-
 import { NavLink, useLocation } from "react-router-dom";
 import { PlusCircle, Settings, Building2, Menu, Home, Calendar, BarChart3, Activity, ShoppingCart, Users, MessageSquare, Info, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
@@ -122,14 +121,11 @@ export function AppSidebar() {
                         <TooltipTrigger asChild>
                           <SidebarMenuButton 
                             asChild 
-                            isActive={isActive(item.url)} 
-                            style={isActive(item.url) ? {
-                              '--sidebar-accent': 'hsl(0 0% 100%)',
-                              '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                              backgroundColor: 'white',
-                              color: 'black',
-                              fontWeight: 'bold'
-                            } as any : {}}
+                            isActive={isActive(item.url)}
+                            className={isActive(item.url) ? 
+                              "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : 
+                              "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            }
                           >
                             <NavLink to={item.url}>
                               <item.icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
@@ -141,18 +137,17 @@ export function AppSidebar() {
                     ) : (
                       <SidebarMenuButton 
                         asChild 
-                        isActive={isActive(item.url)} 
-                        style={isActive(item.url) ? {
-                          '--sidebar-accent': 'hsl(0 0% 100%)',
-                          '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                          backgroundColor: 'white',
-                          color: 'black',
-                          fontWeight: 'bold'
-                        } as any : {}}
+                        isActive={isActive(item.url)}
+                        className={isActive(item.url) ? 
+                          "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : 
+                          "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                        }
                       >
                         <NavLink to={item.url} className="my-0 py-[16px]">
                           <item.icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
-                          <span className="text-base font-light">{item.title}</span>
+                          <span className={`text-base ${isActive(item.url) ? 'font-medium' : 'font-light'}`}>
+                            {item.title}
+                          </span>
                         </NavLink>
                       </SidebarMenuButton>
                     )}
@@ -198,14 +193,11 @@ export function AppSidebar() {
                             <TooltipTrigger asChild>
                               <SidebarMenuButton 
                                 asChild 
-                                isActive={isActiveView} 
-                                style={isActiveView ? {
-                                  '--sidebar-accent': 'hsl(0 0% 100%)',
-                                  '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                                  backgroundColor: 'white',
-                                  color: 'black',
-                                  fontWeight: 'bold'
-                                } as any : {}}
+                                isActive={isActiveView}
+                                className={isActiveView ? 
+                                  "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : 
+                                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                }
                               >
                                 <NavLink to={projectUrl}>
                                   <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
@@ -217,18 +209,17 @@ export function AppSidebar() {
                         ) : (
                           <SidebarMenuButton 
                             asChild 
-                            isActive={isActiveView} 
-                            style={isActiveView ? {
-                              '--sidebar-accent': 'hsl(0 0% 100%)',
-                              '--sidebar-accent-foreground': 'hsl(0 0% 0%)',
-                              backgroundColor: 'white',
-                              color: 'black',
-                              fontWeight: 'bold'
-                            } as any : {}}
+                            isActive={isActiveView}
+                            className={isActiveView ? 
+                              "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : 
+                              "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            }
                           >
                             <NavLink to={projectUrl} className="my-0 py-[16px]">
                               <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
-                              <span className="text-base font-light">{item.label}</span>
+                              <span className={`text-base ${isActiveView ? 'font-medium' : 'font-light'}`}>
+                                {item.label}
+                              </span>
                             </NavLink>
                           </SidebarMenuButton>
                         )}
