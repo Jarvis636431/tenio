@@ -117,7 +117,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] mx-12 rounded-t-3xl w-auto">
+      <SheetContent side="bottom" className="h-[90vh] w-full">
         <SheetHeader className="pb-6">
           <SheetTitle className="text-xl">新建项目</SheetTitle>
           <SheetDescription>
