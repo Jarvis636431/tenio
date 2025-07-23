@@ -12,6 +12,7 @@ interface ProjectContextType {
   currentProject: Project | null;
   setCurrentProject: (project: Project | null) => void;
   projects: Project[];
+  addProject: (project: Project) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -32,8 +33,12 @@ const mockProjects: Project[] = [
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
-  const [projects] = useState<Project[]>(mockProjects);
+  const [projects, setProjects] = useState<Project[]>(mockProjects);
   const { id } = useParams();
+
+  const addProject = (project: Project) => {
+    setProjects(prev => [...prev, project]);
+  };
 
   // 当路由参数变化时，自动更新当前项目
   useEffect(() => {
@@ -51,7 +56,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     <ProjectContext.Provider value={{
       currentProject,
       setCurrentProject,
-      projects
+      projects,
+      addProject
     }}>
       {children}
     </ProjectContext.Provider>

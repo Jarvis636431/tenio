@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ProjectSelector } from "@/components/ProjectSelector";
 import { useProject } from "@/contexts/ProjectContext";
 import { useNavigate } from "react-router-dom";
+import { NewProjectDialog } from "@/components/NewProjectDialog";
+import { useState } from "react";
 
 const mainMenuItems = [{
   title: "主页",
@@ -54,7 +56,7 @@ export function AppSidebar() {
   // 修复主页选中态逻辑
   const isActive = (path: string) => {
     if (path === "/") {
-      return currentPath === "/" || currentPath === "/new-project";
+      return currentPath === "/";
     }
     return currentPath === path;
   };
@@ -74,8 +76,10 @@ export function AppSidebar() {
   // 项目导航是否应该显示：只要有当前项目就显示
   const shouldShowProjectNavigation = !!currentProject;
 
+  const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+
   const handleNewProject = () => {
-    navigate("/new-project");
+    setNewProjectDialogOpen(true);
   };
 
   return (
@@ -231,6 +235,11 @@ export function AppSidebar() {
             </SidebarGroup>
           )}
         </SidebarContent>
+
+        <NewProjectDialog 
+          open={newProjectDialogOpen} 
+          onOpenChange={setNewProjectDialogOpen} 
+        />
       </Sidebar>
     </TooltipProvider>
   );

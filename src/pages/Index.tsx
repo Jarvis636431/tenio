@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Plus, Building2, Activity, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/contexts/ProjectContext";
+import { NewProjectDialog } from "@/components/NewProjectDialog";
+import { useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
   const { projects } = useProject();
+  const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
 
   const handleNewProject = () => {
-    navigate("/new-project");
+    setNewProjectDialogOpen(true);
   };
 
   const handleSelectProject = (projectId: string) => {
@@ -101,6 +104,11 @@ const Index = () => {
           </div>
         )}
       </div>
+
+      <NewProjectDialog 
+        open={newProjectDialogOpen} 
+        onOpenChange={setNewProjectDialogOpen} 
+      />
     </div>
   );
 };
