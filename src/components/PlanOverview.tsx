@@ -284,22 +284,6 @@ export function PlanOverview({ showExpandButton = false, onExpandSidebar }: Plan
       <Tabs defaultValue="schedule" className="h-full flex flex-col">
         {/* 固定在顶部的部分 */}
         <div className="shrink-0 space-y-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              {showExpandButton && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={onExpandSidebar}
-                  className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              )}
-              <h1 className="tracking-tight text-xl font-medium">计划总览</h1>
-            </div>
-            <p className="text-muted-foreground font-light">项目施工进度规划与时间轴视图</p>
-          </div>
 
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="schedule" className="flex items-center gap-2">

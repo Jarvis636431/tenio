@@ -211,18 +211,6 @@ export function CraftsmanManagement({
   const allSelected = filteredCraftsmen.length > 0 && filteredCraftsmen.every(c => selectedIds.includes(c.id));
   const someSelected = selectedIds.length > 0;
   return <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6">
-        <div className="flex items-center gap-3">
-          {showExpandButton && <Button variant="ghost" size="sm" onClick={onExpandSidebar} className="h-8 w-8 p-0">
-              <Menu className="h-4 w-4" />
-            </Button>}
-          <div>
-            <h1 className="text-xl font-medium tracking-tight">工匠管理</h1>
-            <p className="text-muted-foreground font-light text-base">管理工匠信息、资格认证和进出场记录</p>
-          </div>
-        </div>
-      </div>
 
       {/* Stats Cards */}
       <div className="p-6 space-y-6">

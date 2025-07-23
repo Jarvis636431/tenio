@@ -1576,22 +1576,6 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
   };
   
   return <div className="h-full overflow-auto p-6 space-y-6">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          {showExpandButton && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onExpandSidebar}
-              className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          )}
-          <h1 className="tracking-tight text-xl font-medium">实时监测</h1>
-        </div>
-        <p className="text-muted-foreground font-light text-base">项目关键指标的实时监控与分析</p>
-      </div>
 
       <Tabs value={activeChart} onValueChange={value => setActiveChart(value as keyof typeof chartData)} className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">

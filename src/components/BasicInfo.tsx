@@ -93,15 +93,6 @@ export function BasicInfo({
     toast.success("正在重新生成施工计划...");
   };
   return <div className="h-full overflow-auto p-6 space-y-6 px-[24px] py-[24px]">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          {showExpandButton && <Button variant="ghost" size="sm" onClick={onExpandSidebar} className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted">
-              <ChevronRight className="h-4 w-4" />
-            </Button>}
-          <h1 className="tracking-tight text-xl font-medium">基础信息</h1>
-        </div>
-        <p className="text-muted-foreground font-light text-base">项目基本信息管理和文件管理</p>
-      </div>
 
       {/* 项目基础信息 */}
       <Card>

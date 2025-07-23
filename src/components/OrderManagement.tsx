@@ -190,22 +190,6 @@ export function OrderManagement({ showExpandButton = false, onExpandSidebar }: O
     };
   };
   return <div className="h-full overflow-auto p-6 space-y-6">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          {showExpandButton && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onExpandSidebar}
-              className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          )}
-          <h1 className="tracking-tight text-xl font-medium">订单管理</h1>
-        </div>
-        <p className="text-muted-foreground font-light text-base">采购订单和供应商管理</p>
-      </div>
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

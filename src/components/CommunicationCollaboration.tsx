@@ -105,20 +105,6 @@ export function CommunicationCollaboration({ showExpandButton, onExpandSidebar }
 
   return (
     <div className="flex-1 p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {showExpandButton && (
-            <Button variant="ghost" size="sm" onClick={onExpandSidebar}>
-              <Menu className="h-4 w-4" />
-            </Button>
-          )}
-          <div>
-            <h1 className="text-xl font-medium">沟通协作</h1>
-            <p className="font-light text-base text-muted-foreground">项目变更历史记录和协调沟通管理</p>
-          </div>
-        </div>
-      </div>
 
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-4">
