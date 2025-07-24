@@ -14,7 +14,10 @@ const basicInfoSchema = z.object({
   buildingType: z.string().min(1, "请选择建筑类型"),
   structureType: z.string().min(1, "请选择结构类型"),
   bidAmount: z.number().min(0, "中标金额必须大于0"),
-  controlPrice: z.number().min(0, "内部控制价必须大于0")
+  controlPrice: z.number().min(0, "内部控制价必须大于0"),
+  buildingHeight: z.number().min(0, "建筑高度必须大于0"),
+  buildingFloors: z.number().min(1, "建筑层数必须大于0"),
+  buildingArea: z.number().min(0, "建筑面积必须大于0")
 });
 type BasicInfoFormData = z.infer<typeof basicInfoSchema>;
 interface UploadedFile {
@@ -34,7 +37,10 @@ const defaultFormValues = {
   buildingType: "办公楼",
   structureType: "框架结构",
   bidAmount: 25000000,
-  controlPrice: 23500000
+  controlPrice: 23500000,
+  buildingHeight: 80.5,
+  buildingFloors: 18,
+  buildingArea: 15000
 };
 export function BasicInfo({
   showExpandButton = false,
@@ -174,6 +180,36 @@ export function BasicInfo({
                 field
               }) => <FormItem>
                       <FormLabel>内部控制价 (万元)</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <FormField control={form.control} name="buildingHeight" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel>建筑高度 (米)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <FormField control={form.control} name="buildingFloors" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel>建筑层数</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <FormField control={form.control} name="buildingArea" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel>建筑面积 (平方米)</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
                       </FormControl>

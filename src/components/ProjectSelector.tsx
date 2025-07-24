@@ -1,5 +1,5 @@
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +16,7 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
   const navigate = useNavigate();
   const { currentProject, projects, setCurrentProject } = useProject();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleProjectSelect = (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
@@ -36,13 +37,17 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
   return (
     <div className="flex items-center">
       {/* 项目下拉选择器 */}
-      <DropdownMenu>
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="flex-1 justify-between h-9 px-3 font-normal hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-            <span className="truncate text-left">
+          <Button variant="ghost" className="flex-1 justify-start h-9 px-0 font-normal hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border-none bg-transparent">
+            <span className="truncate text-left flex-1">
               {currentProject?.name || "选择项目"}
             </span>
-            <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+            {dropdownOpen ? (
+              <ChevronUp className="h-4 w-4 opacity-50 flex-shrink-0 ml-2" />
+            ) : (
+              <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0 ml-2" />
+            )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] px-[4px] bg-card">

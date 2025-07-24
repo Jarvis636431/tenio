@@ -158,27 +158,34 @@ export function EntryExitDialog({ open, onOpenChange, craftsman }: EntryExitDial
                 {records.map((record) => {
                   const { date, time } = formatDateTime(record.timestamp);
                   return (
-                    <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className={`text-2xl ${getRecordColor(record.type)}`}>
-                          {getRecordIcon(record.type)}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{date} {time}</span>
-                            <Badge className={getRecordBadgeColor(record.type)}>
-                              {record.type === 'entry' ? '进场' : '离场'}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            <span>地点: {record.location}</span>
-                            {record.note && (
-                              <span className="ml-4">备注: {record.note}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                     <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                       <div className="flex items-center gap-4">
+                         <div className={`text-2xl ${getRecordColor(record.type)}`}>
+                           {getRecordIcon(record.type)}
+                         </div>
+                         <div>
+                           <div className="flex items-center gap-2">
+                             <span className="font-medium">{date} {time}</span>
+                             <Badge className={getRecordBadgeColor(record.type)}>
+                               {record.type === 'entry' ? '进场' : '离场'}
+                             </Badge>
+                           </div>
+                           <div className="text-sm text-muted-foreground mt-1">
+                             <span>地点: {record.location}</span>
+                             {record.note && (
+                               <span className="ml-4">备注: {record.note}</span>
+                             )}
+                           </div>
+                           {record.type === 'entry' && (
+                             <div className="flex items-center gap-1 mt-1">
+                               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                                 已完成安全教育
+                               </Badge>
+                             </div>
+                           )}
+                         </div>
+                       </div>
+                     </div>
                   );
                 })}
               </div>

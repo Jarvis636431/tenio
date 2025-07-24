@@ -78,42 +78,50 @@ export function CertificationDialog({ open, onOpenChange, craftsman }: Certifica
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">姓名</label>
-                    <p className="text-lg font-semibold">{craftsman.name}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">性别</label>
-                    <p className="text-lg">{craftsman.gender}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">年龄</label>
-                    <p className="text-lg">{craftsman.age}岁</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">联系方式</label>
-                    <p className="text-lg flex items-center gap-1">
-                      <Phone className="h-4 w-4" />
-                      {craftsman.phone}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">工种</label>
-                    <div className="mt-1">
-                      <Badge className={getTradeColor(craftsman.trade)}>
-                        {craftsman.trade}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">技能等级</label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-yellow-500 text-lg">{getLevelDisplay(craftsman.level)}</span>
-                      <span className="text-sm text-muted-foreground">{craftsman.level}级</span>
-                    </div>
-                  </div>
-                </div>
+                 <div className="grid grid-cols-2 gap-4">
+                   <div>
+                     <label className="text-sm font-medium text-muted-foreground">姓名</label>
+                     <p className="text-lg font-semibold">{craftsman.name}</p>
+                   </div>
+                   <div>
+                     <label className="text-sm font-medium text-muted-foreground">性别</label>
+                     <p className="text-lg">{craftsman.gender}</p>
+                   </div>
+                   <div>
+                     <label className="text-sm font-medium text-muted-foreground">年龄</label>
+                     <p className="text-lg">{craftsman.age}岁</p>
+                   </div>
+                   <div>
+                     <label className="text-sm font-medium text-muted-foreground">联系方式</label>
+                     <p className="text-lg flex items-center gap-1">
+                       <Phone className="h-4 w-4" />
+                       {craftsman.phone}
+                     </p>
+                   </div>
+                   <div>
+                     <label className="text-sm font-medium text-muted-foreground">紧急联系人</label>
+                     <p className="text-lg">张三（父亲）</p>
+                   </div>
+                   <div>
+                     <label className="text-sm font-medium text-muted-foreground">通讯地址</label>
+                     <p className="text-lg">北京市朝阳区建国门外大街1号</p>
+                   </div>
+                   <div>
+                     <label className="text-sm font-medium text-muted-foreground">工种</label>
+                     <div className="mt-1">
+                       <Badge className={getTradeColor(craftsman.trade)}>
+                         {craftsman.trade}
+                       </Badge>
+                     </div>
+                   </div>
+                   <div>
+                     <label className="text-sm font-medium text-muted-foreground">技能等级</label>
+                     <div className="flex items-center gap-2 mt-1">
+                       <span className="text-yellow-500 text-lg">{getLevelDisplay(craftsman.level)}</span>
+                       <span className="text-sm text-muted-foreground">{craftsman.level}级</span>
+                     </div>
+                   </div>
+                 </div>
               </CardContent>
             </Card>
 
