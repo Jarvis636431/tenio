@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/contexts/ProjectContext";
+import { NewProjectDialog } from "@/components/NewProjectDialog";
+import { useState } from "react";
 
 interface ProjectSelectorProps {
   isCollapsed?: boolean;
@@ -13,6 +15,7 @@ interface ProjectSelectorProps {
 export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
   const navigate = useNavigate();
   const { currentProject, projects, setCurrentProject } = useProject();
+  const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
 
   const handleProjectSelect = (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
@@ -23,7 +26,7 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
   };
 
   const handleNewProject = () => {
-    navigate("/new-project");
+    setNewProjectDialogOpen(true);
   };
 
   if (isCollapsed) {
@@ -35,8 +38,8 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
       {/* 项目下拉选择器 */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="flex-1 justify-between h-9 px-3 font-normal border border-border bg-card">
-            <span className="truncate">
+          <Button variant="ghost" className="flex-1 justify-between h-9 px-3 font-normal hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <span className="truncate text-left">
               {currentProject?.name || "选择项目"}
             </span>
             <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
@@ -64,6 +67,11 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      
+      <NewProjectDialog 
+        open={newProjectDialogOpen} 
+        onOpenChange={setNewProjectDialogOpen} 
+      />
     </div>
   );
 }

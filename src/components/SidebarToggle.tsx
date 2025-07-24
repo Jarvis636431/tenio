@@ -14,8 +14,8 @@ export function SidebarToggle() {
       className="absolute z-10 h-8 w-8 rounded-full bg-background border-border shadow-md hover:shadow-lg transition-all duration-200"
       style={{
         left: isCollapsed ? "3rem" : "16rem",
-        top: "80px",
-        transform: "translateX(-50%)",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
       }}
       onClick={toggleSidebar}
     >

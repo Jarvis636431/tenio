@@ -117,7 +117,16 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] w-full">
+      <SheetContent 
+        side="bottom" 
+        className="h-[80vh] w-full max-w-[calc(100%-96px)] mx-auto rounded-t-xl"
+        style={{ 
+          left: '48px',
+          right: '48px',
+          top: '48px',
+          width: 'calc(100% - 96px)'
+        }}
+      >
         <SheetHeader className="pb-6">
           <SheetTitle className="text-xl">新建项目</SheetTitle>
           <SheetDescription>

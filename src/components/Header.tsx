@@ -1,16 +1,27 @@
 
-import { Building2, Bell, HelpCircle, User } from "lucide-react";
+import { Bell, HelpCircle, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Header() {
+  const { logout, user } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <header className="h-14 flex items-center justify-between z-50 px-[24px] rounded-none bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
       {/* 左侧品牌区域 */}
       <div className="flex items-center space-x-3 mx-0">
-        <Building2 className="h-8 w-8 text-primary mx-0" />
-        <h1 className="text-lg font-semibold text-slate-700">A.PM 智慧建管理</h1>
+        <img 
+          src="/lovable-uploads/7fc2509c-786f-4b70-8fba-9cf0a66bc806.png" 
+          alt="天友" 
+          className="h-8 w-8 mx-0"
+        />
+        <h1 className="text-lg font-semibold text-slate-700">天友智管平台</h1>
       </div>
 
       {/* 右侧操作区域 */}
@@ -41,12 +52,13 @@ export function Header() {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
-              个人资料
+              {user?.name || '用户'}
             </DropdownMenuItem>
             <DropdownMenuItem>
               设置
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
               退出登录
             </DropdownMenuItem>
           </DropdownMenuContent>
