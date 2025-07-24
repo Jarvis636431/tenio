@@ -7,17 +7,19 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import loginImage from '@/assets/login-tech-construction.jpg';
-
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading } = useAuth();
+  const {
+    login,
+    isLoading
+  } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!email || !password) {
       toast({
         title: "请填写完整信息",
@@ -26,7 +28,6 @@ export default function Login() {
       });
       return;
     }
-
     try {
       await login(email, password);
       toast({
@@ -42,21 +43,15 @@ export default function Login() {
       });
     }
   };
-
-  return (
-    <div className="min-h-screen flex">
+  return <div className="min-h-screen flex">
       {/* 左侧登录区域 */}
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <img 
-                src="/lovable-uploads/7fc2509c-786f-4b70-8fba-9cf0a66bc806.png" 
-                alt="天友" 
-                className="h-12 w-12"
-              />
+              <img src="/lovable-uploads/7fc2509c-786f-4b70-8fba-9cf0a66bc806.png" alt="天友" className="h-12 w-12" />
             </div>
-            <h1 className="text-2xl font-semibold text-foreground">天友智管平台</h1>
+            <h1 className="text-2xl font-semibold text-foreground">A.PM 智慧建管</h1>
             <p className="text-muted-foreground mt-2">智慧建筑项目管理系统</p>
           </div>
 
@@ -71,31 +66,13 @@ export default function Login() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">邮箱地址</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="请输入邮箱"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading}
-                  />
+                  <Input id="email" type="email" placeholder="请输入邮箱" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">密码</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="请输入密码"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
-                  />
+                  <Input id="password" type="password" placeholder="请输入密码" value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? '登录中...' : '登录'}
                 </Button>
               </form>
@@ -111,11 +88,7 @@ export default function Login() {
       {/* 右侧图片区域 */}
       <div className="flex-1 relative overflow-hidden bg-primary/5">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5" />
-        <img 
-          src={loginImage}
-          alt="智慧建筑科技"
-          className="w-full h-full object-cover"
-        />
+        <img src={loginImage} alt="智慧建筑科技" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
         <div className="absolute bottom-8 left-8 right-8">
           <div className="bg-background/90 backdrop-blur-sm rounded-lg p-6 border border-border/50">
@@ -127,6 +100,5 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
