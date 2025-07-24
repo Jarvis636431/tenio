@@ -91,13 +91,7 @@ export default function Login() {
         <img src={loginImage} alt="智慧建筑科技" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
         <div className="absolute bottom-8 left-8 right-8">
-          <div className="bg-background/90 backdrop-blur-sm rounded-lg p-6 border border-border/50">
-            <h3 className="text-lg font-semibold mb-2">智慧建筑管理</h3>
-            <p className="text-muted-foreground text-sm">
-              运用先进的技术手段，为建筑项目提供全生命周期的智能化管理解决方案，
-              提升项目效率和质量控制水平。
-            </p>
-          </div>
+          
         </div>
       </div>
     </div>;
