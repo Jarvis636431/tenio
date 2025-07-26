@@ -54,7 +54,7 @@ All colors MUST be HSL.
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --radius: 0.5rem;
+    --radius: 0.375rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -112,10 +112,32 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
+    border-width: 0.5px;
   }
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Remove all shadows by default, preserve only sidebar and header shadows */
+@layer components {
+  .shadow,
+  .shadow-sm,
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: none !important;
+  }
+  
+  /* Preserve specific shadows for sidebar and header */
+  .shadow-sidebar {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  }
+  
+  .shadow-header {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
   }
 }
 
