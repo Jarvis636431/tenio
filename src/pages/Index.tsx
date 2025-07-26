@@ -1,190 +1,101 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Building2, Activity, FileText, BarChart3, Users, Sparkles } from "lucide-react";
+import { Plus, Building2, Activity, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/contexts/ProjectContext";
 import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { useState } from "react";
-
 const Index = () => {
   const navigate = useNavigate();
-  const { projects } = useProject();
+  const {
+    projects
+  } = useProject();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
-
   const handleNewProject = () => {
     setNewProjectDialogOpen(true);
   };
-
   const handleSelectProject = (projectId: string) => {
     navigate(`/project/${projectId}`);
   };
-
-  return (
-    <div className="h-full p-6 py-[8px] px-[8px]">
-      {/* Hero Section with Brand Gradient */}
-      <div className="relative mb-8 p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-primary-glow/5 to-transparent border border-primary/10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50"></div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
-              <Sparkles className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                A.PM 智慧建管
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                智能项目管理，让建设更高效
-              </p>
-            </div>
-          </div>
-          <p className="text-foreground/80 text-base leading-relaxed max-w-2xl">
-            基于AI驱动的建筑项目管理平台，为您提供从规划到竣工的全流程数字化解决方案，实现项目管理的智能化升级。
-          </p>
-        </div>
+  return <div className="h-full p-6 py-0 px-0">
+      <div className="space-y-2 mb-6">
+        <h1 className="tracking-tight text-xl font-medium">主页</h1>
+        <p className="text-muted-foreground text-base font-light">
+          欢迎使用天友智管平台，开始您的项目管理之旅
+        </p>
       </div>
 
-      <div className="w-full bg-card rounded-2xl p-8 space-y-8 h-full flex flex-col shadow-sm border border-border/50">
-        {/* 功能统计 */}
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="bg-gradient-to-br from-primary/5 to-primary-glow/5 rounded-xl p-6 border border-primary/10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">项目总数</p>
-                <p className="text-2xl font-semibold text-primary">{projects.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-success/5 to-success/10 rounded-xl p-6 border border-success/10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">进行中</p>
-                <p className="text-2xl font-semibold text-success">{projects.filter(p => p.hasBasicInfo).length}</p>
-              </div>
-              <div className="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center">
-                <Activity className="h-6 w-6 text-success" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-warning/5 to-warning/10 rounded-xl p-6 border border-warning/10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">待处理</p>
-                <p className="text-2xl font-semibold text-warning">{projects.filter(p => !p.hasBasicInfo).length}</p>
-              </div>
-              <div className="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center">
-                <BarChart3 className="h-6 w-6 text-warning" />
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div className="w-full bg-card rounded-xl p-6 space-y-6 h-full flex flex-col px-[24px]">
         {/* 快速操作区 */}
-        <div>
-          <h2 className="text-lg font-medium mb-4">快速操作</h2>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-primary/10 hover:border-primary/20 group" onClick={handleNewProject}>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg group-hover:text-primary transition-colors">
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center text-white">
-                    <Plus className="h-5 w-5" />
-                  </div>
-                  新建项目
-                </CardTitle>
-                <CardDescription>创建新的项目并开始管理</CardDescription>
-              </CardHeader>
-            </Card>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={handleNewProject}>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Plus className="h-5 w-5 text-primary" />
+                新建项目
+              </CardTitle>
+              <CardDescription>创建新的项目并开始管理</CardDescription>
+            </CardHeader>
+          </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-primary/10 hover:border-primary/20 group" onClick={() => navigate("/project-management")}>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg group-hover:text-primary transition-colors">
-                  <div className="w-10 h-10 bg-gradient-to-br from-success to-success/80 rounded-xl flex items-center justify-center text-white">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                  项目管理
-                </CardTitle>
-                <CardDescription>查看和管理所有项目</CardDescription>
-              </CardHeader>
-            </Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/project-management")}>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Building2 className="h-5 w-5 text-primary" />
+                项目管理
+              </CardTitle>
+              <CardDescription>查看和管理所有项目</CardDescription>
+            </CardHeader>
+          </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-primary/10 hover:border-primary/20 group">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg group-hover:text-primary transition-colors">
-                  <div className="w-10 h-10 bg-gradient-to-br from-warning to-warning/80 rounded-xl flex items-center justify-center text-white">
-                    <Activity className="h-5 w-5" />
-                  </div>
-                  系统状态
-                </CardTitle>
-                <CardDescription>查看系统运行状态</CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Activity className="h-5 w-5 text-primary" />
+                系统状态
+              </CardTitle>
+              <CardDescription>查看系统运行状态</CardDescription>
+            </CardHeader>
+          </Card>
         </div>
 
         {/* 最近项目 */}
-        {projects.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium">最近项目</h2>
-              <Button variant="outline" size="sm" onClick={() => navigate("/project-management")}>
-                查看全部
-              </Button>
-            </div>
+        {projects.length > 0 && <div className="space-y-4">
+            <h2 className="text-lg font-medium">最近项目</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {projects.slice(0, 6).map((project) => (
-                <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-border/50 hover:border-primary/20 group" onClick={() => handleSelectProject(project.id)}>
+              {projects.map(project => <Card key={project.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleSelectProject(project.id)}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-3 text-base group-hover:text-primary transition-colors">
-                      <div className="w-8 h-8 bg-gradient-to-br from-muted to-muted/80 rounded-lg flex items-center justify-center">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                      </div>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
                       {project.name}
                     </CardTitle>
-                    <CardDescription className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${project.hasBasicInfo ? 'bg-success' : 'bg-warning'}`}></div>
+                    <CardDescription>
                       {project.hasBasicInfo ? "已完成基础信息" : "待完善信息"}
                     </CardDescription>
                   </CardHeader>
-                </Card>
-              ))}
+                </Card>)}
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* 空状态 */}
-        {projects.length === 0 && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary/10 to-primary-glow/10 rounded-2xl flex items-center justify-center border border-primary/10">
-                <Building2 className="h-10 w-10 text-primary" />
+        {projects.length === 0 && <div className="flex-1 flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
+                <Building2 className="h-8 w-8 text-muted-foreground" />
               </div>
-              <div className="space-y-3">
-                <h3 className="text-xl font-medium">开始您的第一个项目</h3>
-                <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                  创建项目，体验AI驱动的智能建管平台，让项目管理变得更简单高效
-                </p>
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">暂无项目</h3>
+                <p className="text-muted-foreground">点击新建项目开始您的第一个项目</p>
               </div>
-              <Button onClick={handleNewProject} className="bg-gradient-to-r from-primary to-primary-glow hover:from-primary/90 hover:to-primary-glow/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-3 h-auto">
-                <Plus className="mr-2 h-5 w-5" />
+              <Button onClick={handleNewProject} className="mt-4">
+                <Plus className="mr-2 h-4 w-4" />
                 新建项目
               </Button>
             </div>
-          </div>
-        )}
+          </div>}
       </div>
 
-      <NewProjectDialog 
-        open={newProjectDialogOpen} 
-        onOpenChange={setNewProjectDialogOpen} 
-      />
-    </div>
-  );
+      <NewProjectDialog open={newProjectDialogOpen} onOpenChange={setNewProjectDialogOpen} />
+    </div>;
 };
-
 export default Index;
