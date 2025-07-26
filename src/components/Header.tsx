@@ -1,27 +1,21 @@
-
 import { Bell, HelpCircle, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
-
 export function Header() {
-  const { logout, user } = useAuth();
-
+  const {
+    logout,
+    user
+  } = useAuth();
   const handleLogout = () => {
     logout();
   };
-
-  return (
-    <header className="h-14 flex items-center justify-between z-50 px-[24px] rounded-none bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+  return <header className="h-14 flex items-center justify-between z-50 px-[24px] rounded-none bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
       {/* 左侧品牌区域 */}
       <div className="flex items-center space-x-3 mx-0 cursor-pointer" onClick={() => window.location.href = "/"}>
-        <img 
-          src="/lovable-uploads/7fc2509c-786f-4b70-8fba-9cf0a66bc806.png" 
-          alt="天友" 
-          className="h-8 w-8 mx-0"
-        />
-        <h1 className="text-lg font-semibold text-slate-700">A.PM智慧建管</h1>
+        <img src="/lovable-uploads/7fc2509c-786f-4b70-8fba-9cf0a66bc806.png" alt="天友" className="h-8 w-8 mx-0" />
+        <h1 className="text-lg font-semibold text-slate-700">A.PM 智慧建管</h1>
       </div>
 
       {/* 右侧操作区域 */}
@@ -64,6 +58,5 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </header>
-  );
+    </header>;
 }
