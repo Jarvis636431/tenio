@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Building2, Activity, FileText, BarChart3, Users, Sparkles } from "lucide-react";
@@ -5,22 +6,25 @@ import { useNavigate } from "react-router-dom";
 import { useProject } from "@/contexts/ProjectContext";
 import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { useState } from "react";
+
 const Index = () => {
   const navigate = useNavigate();
-  const {
-    projects
-  } = useProject();
+  const { projects } = useProject();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+
   const handleNewProject = () => {
     setNewProjectDialogOpen(true);
   };
+
   const handleSelectProject = (projectId: string) => {
     navigate(`/project/${projectId}`);
   };
-  return <div className="h-full p-6 px-[8px] py-[8px] my-0 mx-0">
+
+  return (
+    <div className="h-full p-6 py-[8px] px-[8px]">
       {/* Hero Section with Brand Gradient */}
       <div className="relative mb-8 p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-primary-glow/5 to-transparent border border-primary/10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50 mx-0 px-[2px] py-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50"></div>
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
@@ -41,16 +45,52 @@ const Index = () => {
         </div>
       </div>
 
-      <div className="w-full bg-card rounded-2xl p-8 space-y-8 h-full flex flex-col shadow-sm border border-border/50 px-[16px] py-0">
+      <div className="w-full bg-card rounded-2xl p-8 space-y-8 h-full flex flex-col shadow-sm border border-border/50">
         {/* 功能统计 */}
-        
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="bg-gradient-to-br from-primary/5 to-primary-glow/5 rounded-xl p-6 border border-primary/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">项目总数</p>
+                <p className="text-2xl font-semibold text-primary">{projects.length}</p>
+              </div>
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                <Building2 className="h-6 w-6 text-primary" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-success/5 to-success/10 rounded-xl p-6 border border-success/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">进行中</p>
+                <p className="text-2xl font-semibold text-success">{projects.filter(p => p.hasBasicInfo).length}</p>
+              </div>
+              <div className="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center">
+                <Activity className="h-6 w-6 text-success" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-warning/5 to-warning/10 rounded-xl p-6 border border-warning/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">待处理</p>
+                <p className="text-2xl font-semibold text-warning">{projects.filter(p => !p.hasBasicInfo).length}</p>
+              </div>
+              <div className="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center">
+                <BarChart3 className="h-6 w-6 text-warning" />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* 快速操作区 */}
         <div>
-          
+          <h2 className="text-lg font-medium mb-4">快速操作</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-primary/10 hover:border-primary/20 group" onClick={handleNewProject}>
-              <CardHeader className="pb-3 my-0">
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-3 text-lg group-hover:text-primary transition-colors">
                   <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center text-white">
                     <Plus className="h-5 w-5" />
@@ -88,7 +128,8 @@ const Index = () => {
         </div>
 
         {/* 最近项目 */}
-        {projects.length > 0 && <div className="space-y-4">
+        {projects.length > 0 && (
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium">最近项目</h2>
               <Button variant="outline" size="sm" onClick={() => navigate("/project-management")}>
@@ -96,7 +137,8 @@ const Index = () => {
               </Button>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {projects.slice(0, 6).map(project => <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-border/50 hover:border-primary/20 group" onClick={() => handleSelectProject(project.id)}>
+              {projects.slice(0, 6).map((project) => (
+                <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-border/50 hover:border-primary/20 group" onClick={() => handleSelectProject(project.id)}>
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-3 text-base group-hover:text-primary transition-colors">
                       <div className="w-8 h-8 bg-gradient-to-br from-muted to-muted/80 rounded-lg flex items-center justify-center">
@@ -109,12 +151,15 @@ const Index = () => {
                       {project.hasBasicInfo ? "已完成基础信息" : "待完善信息"}
                     </CardDescription>
                   </CardHeader>
-                </Card>)}
+                </Card>
+              ))}
             </div>
-          </div>}
+          </div>
+        )}
 
         {/* 空状态 */}
-        {projects.length === 0 && <div className="flex-1 flex items-center justify-center">
+        {projects.length === 0 && (
+          <div className="flex-1 flex items-center justify-center">
             <div className="text-center space-y-6">
               <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary/10 to-primary-glow/10 rounded-2xl flex items-center justify-center border border-primary/10">
                 <Building2 className="h-10 w-10 text-primary" />
@@ -130,10 +175,16 @@ const Index = () => {
                 新建项目
               </Button>
             </div>
-          </div>}
+          </div>
+        )}
       </div>
 
-      <NewProjectDialog open={newProjectDialogOpen} onOpenChange={setNewProjectDialogOpen} />
-    </div>;
+      <NewProjectDialog 
+        open={newProjectDialogOpen} 
+        onOpenChange={setNewProjectDialogOpen} 
+      />
+    </div>
+  );
 };
+
 export default Index;
