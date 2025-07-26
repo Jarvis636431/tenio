@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import userAvatar from "@/assets/user-avatar.png";
 export function Header() {
   const {
     logout,
@@ -36,7 +37,7 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder.svg" alt="User" />
+                <AvatarImage src={userAvatar} alt="User" />
                 <AvatarFallback>
                   <User className="h-4 w-4" />
                 </AvatarFallback>

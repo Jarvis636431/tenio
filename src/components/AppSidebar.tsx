@@ -79,14 +79,14 @@ export function AppSidebar() {
     setNewProjectDialogOpen(true);
   };
   return <TooltipProvider>
-      <Sidebar className="shadow-[2px_0_8px_rgba(0,0,0,0.06)] border-r-0" collapsible="icon">
-        <SidebarContent className="py-[60px] bg-white px-[4px]">
+      <Sidebar className="shadow-[2px_0_8px_rgba(0,0,0,0.06)] border-r-0" collapsible="icon" style={isCollapsed ? { width: '64px' } : {}}>
+        <SidebarContent className="py-[60px] bg-white" style={isCollapsed ? { paddingLeft: '12px', paddingRight: '12px' } : { paddingLeft: '4px', paddingRight: '4px' }}>
           {/* 顶部新建项目按钮 */}
-          <SidebarHeader className="px-3 pb-0">
+          <SidebarHeader className={isCollapsed ? "px-0 pb-0" : "px-3 pb-0"}>
             {isCollapsed ? <div className="flex justify-center">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="default" size="icon" className="w-8 h-8 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleNewProject}>
+                    <Button variant="default" size="icon" className="w-10 h-10 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleNewProject}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
@@ -106,8 +106,8 @@ export function AppSidebar() {
                     {isCollapsed ? <div className="flex justify-center">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <SidebarMenuButton asChild isActive={isActive(item.url)} className={isActive(item.url) ? "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}>
-                              <NavLink to={item.url}>
+                            <SidebarMenuButton asChild isActive={isActive(item.url)} className={`w-10 h-10 ${isActive(item.url) ? "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`}>
+                              <NavLink to={item.url} className="flex items-center justify-center">
                                 <item.icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
                               </NavLink>
                             </SidebarMenuButton>
@@ -153,8 +153,8 @@ export function AppSidebar() {
                         {isCollapsed ? <div className="flex justify-center">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <SidebarMenuButton asChild isActive={isActiveView} className={isActiveView ? "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}>
-                                  <NavLink to={projectUrl}>
+                                <SidebarMenuButton asChild isActive={isActiveView} className={`w-10 h-10 ${isActiveView ? "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`}>
+                                  <NavLink to={projectUrl} className="flex items-center justify-center">
                                     <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
                                   </NavLink>
                                 </SidebarMenuButton>
