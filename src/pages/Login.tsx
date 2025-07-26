@@ -56,13 +56,8 @@ export default function Login() {
           </div>
 
           <Card className="shadow-lg border-border/50">
-            <CardHeader className="space-y-1 text-center">
-              <CardTitle className="text-xl">登录账户</CardTitle>
-              <CardDescription>
-                输入您的邮箱和密码以访问系统
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            
+            <CardContent className="py-[20px]">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">邮箱地址</Label>
