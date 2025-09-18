@@ -13,7 +13,7 @@ export function SidebarToggle() {
       size="icon"
       className="absolute z-10 h-8 w-8 rounded-full bg-background border-border shadow-md hover:shadow-lg transition-all duration-200"
       style={{
-        left: isCollapsed ? "3rem" : "16rem",
+        left: isCollapsed ? "4.5rem" : "18rem",
         top: "50%",
         transform: "translate(-50%, -50%)",
       }}

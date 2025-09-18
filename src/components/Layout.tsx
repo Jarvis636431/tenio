@@ -4,12 +4,15 @@ import { AIAssistant } from "@/components/AIAssistant";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { Header } from "@/components/Header";
 import { SidebarToggle } from "@/components/SidebarToggle";
+import { useLocation } from "react-router-dom";
 interface LayoutProps {
   children: React.ReactNode;
 }
 export function Layout({
   children
 }: LayoutProps) {
+  const location = useLocation();
+  
   return <ProjectProvider>
       <SidebarProvider defaultOpen={true}>
         <div className="h-screen flex flex-col w-full bg-background overflow-hidden">
@@ -23,7 +26,7 @@ export function Layout({
             {/* 侧边栏分割线上的展开收起按钮 */}
             <SidebarToggle />
             
-            <main className="flex-1 overflow-hidden rounded-tl-[16px] px-[16px] py-[16px]">
+            <main className="flex-1 overflow-hidden px-[16px] py-[16px] bg-white">
               {children}
             </main>
             

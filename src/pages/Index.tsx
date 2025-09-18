@@ -21,75 +21,41 @@ const Index = () => {
   };
 
   return (
-    <div className="h-full p-6 py-[8px] px-[8px]">
-      {/* Hero Section with Brand Gradient */}
-      <div className="relative mb-8 p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-primary-glow/5 to-transparent border border-primary/10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50"></div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
-              <Sparkles className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                A.PM 智慧建管
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                智能项目管理，让建设更高效
+    <div className="h-full flex flex-col overflow-hidden bg-white">
+
+      {/* 主内容区域 - 直接显示，无白色卡片包装 */}
+      <div className="flex-1 overflow-hidden p-6 px-[8px] py-0">
+        <div className="h-full overflow-auto space-y-6">
+          {/* Hero Section with Brand Gradient */}
+          <div className="relative p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-primary-glow/5 to-transparent border border-primary/10 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
+                  <Sparkles className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                    A.PM 智慧建管
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    智能项目管理，让建设更高效
+                  </p>
+                </div>
+              </div>
+              <p className="text-foreground/80 text-base leading-relaxed max-w-2xl">
+                基于AI驱动的建筑项目管理平台，为您提供从规划到竣工的全流程数字化解决方案，实现项目管理的智能化升级。
               </p>
             </div>
           </div>
-          <p className="text-foreground/80 text-base leading-relaxed max-w-2xl">
-            基于AI驱动的建筑项目管理平台，为您提供从规划到竣工的全流程数字化解决方案，实现项目管理的智能化升级。
-          </p>
-        </div>
-      </div>
 
-      <div className="w-full bg-card rounded-2xl p-8 space-y-8 h-full flex flex-col shadow-sm border border-border/50">
-        {/* 功能统计 */}
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="bg-gradient-to-br from-primary/5 to-primary-glow/5 rounded-xl p-6 border border-primary/10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">项目总数</p>
-                <p className="text-2xl font-semibold text-primary">{projects.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-success/5 to-success/10 rounded-xl p-6 border border-success/10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">进行中</p>
-                <p className="text-2xl font-semibold text-success">{projects.filter(p => p.hasBasicInfo).length}</p>
-              </div>
-              <div className="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center">
-                <Activity className="h-6 w-6 text-success" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-warning/5 to-warning/10 rounded-xl p-6 border border-warning/10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">待处理</p>
-                <p className="text-2xl font-semibold text-warning">{projects.filter(p => !p.hasBasicInfo).length}</p>
-              </div>
-              <div className="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center">
-                <BarChart3 className="h-6 w-6 text-warning" />
-              </div>
-            </div>
-          </div>
-        </div>
+          <div className="space-y-8">
 
         {/* 快速操作区 */}
         <div>
           <h2 className="text-lg font-medium mb-4">快速操作</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-primary/10 hover:border-primary/20 group" onClick={handleNewProject}>
+            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-primary/10 hover:border-primary/20 group bg-primary/5" onClick={handleNewProject}>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-3 text-lg group-hover:text-primary transition-colors">
                   <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center text-white">
@@ -101,7 +67,7 @@ const Index = () => {
               </CardHeader>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-primary/10 hover:border-primary/20 group" onClick={() => navigate("/project-management")}>
+            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-success/10 hover:border-success/20 group bg-success/5" onClick={() => navigate("/project-management")}>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-3 text-lg group-hover:text-primary transition-colors">
                   <div className="w-10 h-10 bg-gradient-to-br from-success to-success/80 rounded-xl flex items-center justify-center text-white">
@@ -113,7 +79,7 @@ const Index = () => {
               </CardHeader>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-primary/10 hover:border-primary/20 group">
+            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-warning/10 hover:border-warning/20 group bg-warning/5">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-3 text-lg group-hover:text-primary transition-colors">
                   <div className="w-10 h-10 bg-gradient-to-br from-warning to-warning/80 rounded-xl flex items-center justify-center text-white">
@@ -130,11 +96,8 @@ const Index = () => {
         {/* 最近项目 */}
         {projects.length > 0 && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div>
               <h2 className="text-lg font-medium">最近项目</h2>
-              <Button variant="outline" size="sm" onClick={() => navigate("/project-management")}>
-                查看全部
-              </Button>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {projects.slice(0, 6).map((project) => (
@@ -177,6 +140,8 @@ const Index = () => {
             </div>
           </div>
         )}
+          </div>
+        </div>
       </div>
 
       <NewProjectDialog 

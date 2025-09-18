@@ -210,10 +210,10 @@ export function CraftsmanManagement({
   };
   const allSelected = filteredCraftsmen.length > 0 && filteredCraftsmen.every(c => selectedIds.includes(c.id));
   const someSelected = selectedIds.length > 0;
-  return <div className="h-full flex flex-col">
+  return <div className="h-full flex flex-col space-y-6">
 
       {/* Stats Cards */}
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
@@ -265,7 +265,9 @@ export function CraftsmanManagement({
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-4">
           <div className="flex gap-4 flex-1">
             <div className="flex-1 relative max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -292,7 +294,9 @@ export function CraftsmanManagement({
             </Button>
             <ExportDropdown allCraftsmen={craftsmen} filteredCraftsmen={filteredCraftsmen} selectedCraftsmen={selectedCraftsmen} />
           </div>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Batch Operations Toolbar */}
         {selectedIds.length > 0 && <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

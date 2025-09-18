@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { BasicInfo } from "@/components/BasicInfo";
@@ -27,10 +26,10 @@ export default function ProjectDetail() {
     switch (activeView) {
       case "basic-info":
         return "基础信息";
-      case "plan-and-orders":
-      case "plan-overview":
-      case "order-management":
-        return "计划与订单";
+    case "plan-and-orders":
+    case "plan-overview":
+    case "order-management":
+      return "施工总览";
       case "real-time-monitoring":
         return "实时监测";
       case "order-management":
@@ -48,10 +47,10 @@ export default function ProjectDetail() {
     switch (activeView) {
       case "basic-info":
         return "查看和编辑项目的基本信息";
-      case "plan-and-orders":
-      case "plan-overview":
-      case "order-management":
-        return "计划与订单综合视图";
+    case "plan-and-orders":
+    case "plan-overview":
+    case "order-management":
+      return "管理施工进度，追踪工单";
       case "real-time-monitoring":
         return "实时监控项目状态和数据";
       case "order-management":
@@ -89,8 +88,56 @@ export default function ProjectDetail() {
     }
   };
 
+  // 基础信息和施工总览页面使用特殊布局 - 无白色卡片包装
+  if (activeView === "basic-info" || activeView === "plan-and-orders") {
+    return (
+      <div className="h-full flex flex-col overflow-hidden bg-white">
+        {/* 标题区域 */}
+        <div className="p-6 px-[8px] py-[8px] pb-0">
+          <div className="space-y-2 mb-6">
+            <h1 className="tracking-tight font-medium text-xl">{getViewTitle()}</h1>
+            <p className="text-muted-foreground font-light text-base">
+              {getViewDescription()}
+            </p>
+          </div>
+        </div>
+
+        {/* 主内容区域 - 直接显示，无白色卡片包装 */}
+        <div className="flex-1 overflow-hidden p-6 px-[8px] py-0">
+          <div className="h-full overflow-auto">
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 实时监测页面使用特殊布局
+  if (activeView === "real-time-monitoring") {
+    return (
+      <div className="h-full flex flex-col overflow-hidden">
+        {/* 标题区域 */}
+        <div className="p-6 px-[8px] py-[8px] pb-0">
+          <div className="space-y-2 mb-6">
+            <h1 className="tracking-tight font-medium text-xl">{getViewTitle()}</h1>
+            <p className="text-muted-foreground font-light text-base">
+              {getViewDescription()}
+            </p>
+          </div>
+        </div>
+
+        {/* 主内容区域 - 实时监测使用自己的布局 */}
+        <div className="flex-1 overflow-hidden p-6 px-[8px] py-0">
+          <div className="h-full overflow-auto">
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden bg-white">
       {/* 标题区域 - 移到白色卡片外面 */}
       <div className="p-6 px-[8px] py-[8px] pb-0">
         <div className="space-y-2 mb-6">

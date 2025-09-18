@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Download, Calendar, Filter, Edit, Eye } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
+import { GanttChart } from "@/components/GanttChart";
 
 interface PlanAndOrdersProps {
   showExpandButton?: boolean;
@@ -112,6 +114,54 @@ const officeBuildingData: TaskItem[] = [
       laborDesc: "钢筋工团队工资",
       equipmentDesc: "绑扎工具租赁"
     }
+  },
+  {
+    id: 4,
+    orderNumber: "9#_短肢剪力墙模板拼装_01号单",
+    task: "短肢剪力墙模板拼装",
+    drawingLocation: "",
+    constructionContent: "现场剪力墙模板拼装",
+    quantity: "400平方米",
+    teamSize: 2,
+    jobRequirement: "模板工",
+    startDate: "2025/8/10",
+    endDate: "2025/8/11",
+    duration: "2天",
+    bidPrice: 1600,
+    quotaPrice: 1250,
+    totalCost: 1600,
+    costDetails: {
+      materialCost: 800,
+      laborCost: 600,
+      equipmentCost: 200,
+      materialDesc: "模板材料租赁",
+      laborDesc: "模板工工资",
+      equipmentDesc: "拼装工具使用"
+    }
+  },
+  {
+    id: 5,
+    orderNumber: "9#_短肢剪力墙混凝土浇筑_01号单",
+    task: "短肢剪力墙混凝土浇筑",
+    drawingLocation: "9#楼_4层",
+    constructionContent: "现场剪力墙混凝土浇筑",
+    quantity: "150立方米",
+    teamSize: 4,
+    jobRequirement: "混凝土工",
+    startDate: "2025/8/13",
+    endDate: "2025/8/13",
+    duration: "1天",
+    bidPrice: 2000,
+    quotaPrice: 1480,
+    totalCost: 2000,
+    costDetails: {
+      materialCost: 1200,
+      laborCost: 600,
+      equipmentCost: 200,
+      materialDesc: "商品混凝土采购",
+      laborDesc: "混凝土工工资",
+      equipmentDesc: "浇筑设备租赁"
+    }
   }
 ];
 
@@ -187,6 +237,54 @@ const kindergartenData: TaskItem[] = [
       materialDesc: "砖块及砂浆采购",
       laborDesc: "砌筑工工资",
       equipmentDesc: "砌筑工具及脚手架"
+    }
+  },
+  {
+    id: 4,
+    orderNumber: "幼儿园_抹灰_01号单",
+    task: "抹灰",
+    drawingLocation: "1-2层",
+    constructionContent: "墙面抹灰施工",
+    quantity: "1200平方米",
+    teamSize: 2,
+    jobRequirement: "抹灰工",
+    startDate: "2025/8/9",
+    endDate: "2025/8/13",
+    duration: "5天",
+    bidPrice: 12000,
+    quotaPrice: 10000,
+    totalCost: 12000,
+    costDetails: {
+      materialCost: 6000,
+      laborCost: 5000,
+      equipmentCost: 1000,
+      materialDesc: "水泥砂浆及腻子",
+      laborDesc: "抹灰工工资",
+      equipmentDesc: "抹灰工具租赁"
+    }
+  },
+  {
+    id: 5,
+    orderNumber: "幼儿园_门窗安装_01号单",
+    task: "门窗安装",
+    drawingLocation: "1-2层",
+    constructionContent: "门窗安装施工",
+    quantity: "50樘",
+    teamSize: 2,
+    jobRequirement: "安装工",
+    startDate: "2025/8/14",
+    endDate: "2025/8/14",
+    duration: "1天",
+    bidPrice: 35000,
+    quotaPrice: 30000,
+    totalCost: 35000,
+    costDetails: {
+      materialCost: 30000,
+      laborCost: 3000,
+      equipmentCost: 2000,
+      materialDesc: "门窗产品采购",
+      laborDesc: "安装工工资",
+      equipmentDesc: "安装工具及设备"
     }
   }
 ];
@@ -274,213 +372,221 @@ export function PlanAndOrders(props: PlanAndOrdersProps) {
     };
   };
 
+  // 转换为甘特图数据格式
+  const ganttData = useMemo(() => {
+    return allData.map(item => ({
+      id: item.id,
+      task: item.task,
+      startDate: item.startDate,
+      endDate: item.endDate,
+      duration: item.duration,
+      worker: item.jobRequirement,
+      count: item.teamSize,
+      totalCost: item.totalCost,
+      costDetails: item.costDetails
+    }));
+  }, [allData]);
+
   return (
-    <div className="h-full overflow-auto p-6 space-y-6">
-      {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{allData.length}</div>
-            <p className="text-xs text-muted-foreground">总任务数</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">
-              {allData.filter(item => new Date(item.endDate) >= new Date()).length}
-            </div>
-            <p className="text-xs text-muted-foreground">进行中</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">
-              {allData.filter(item => new Date(item.endDate) < new Date()).length}
-            </div>
-            <p className="text-xs text-muted-foreground">已完成</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-orange-600">
-              ¥{allData.reduce((sum, item) => sum + item.totalCost, 0).toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">总金额</p>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="h-full flex flex-col space-y-6">
+      <Tabs defaultValue="table" className="h-full flex flex-col">
+        {/* 固定在顶部的部分 */}
+        <div className="shrink-0 space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="table" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              任务总览表
+            </TabsTrigger>
+            <TabsTrigger value="gantt" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              施工工序甘特图
+            </TabsTrigger>
+          </TabsList>
+        </div>
+      
+        {/* 可滚动的内容区域 - 自适应高度 */}
+        <div className="flex-1 overflow-hidden">
+          <TabsContent value="table" className="h-full m-0 py-4">
+            <div className="h-full flex flex-col space-y-6">
+              {/* 操作栏 */}
+              <Card className="mt-6">
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div className="flex flex-col md:flex-row gap-4 items-center flex-1">
+                      {/* 搜索框 */}
+                      <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Input 
+                          placeholder="搜索单号、任务或施工内容..." 
+                          value={searchTerm} 
+                          onChange={e => setSearchTerm(e.target.value)} 
+                          className="pl-10" 
+                        />
+                      </div>
 
-      {/* 操作栏 */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-col md:flex-row gap-4 items-center flex-1">
-              {/* 搜索框 */}
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input 
-                  placeholder="搜索单号、任务或施工内容..." 
-                  value={searchTerm} 
-                  onChange={e => setSearchTerm(e.target.value)} 
-                  className="pl-10" 
-                />
-              </div>
+                      {/* 工种筛选 */}
+                      <Select value={jobFilter} onValueChange={setJobFilter}>
+                        <SelectTrigger className="w-40">
+                          <Filter className="h-4 w-4 mr-2" />
+                          <SelectValue placeholder="工种筛选" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">全部工种</SelectItem>
+                          {jobTypes.map(job => (
+                            <SelectItem key={job} value={job}>{job}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
-              {/* 工种筛选 */}
-              <Select value={jobFilter} onValueChange={setJobFilter}>
-                <SelectTrigger className="w-40">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="工种筛选" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部工种</SelectItem>
-                  {jobTypes.map(job => (
-                    <SelectItem key={job} value={job}>{job}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                      {/* 排序 */}
+                      <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="排序方式" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="startDate">按开始时间</SelectItem>
+                          <SelectItem value="bidPrice">按抢单价格</SelectItem>
+                          <SelectItem value="teamSize">按班组人数</SelectItem>
+                          <SelectItem value="totalCost">按总费用</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              {/* 排序 */}
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="排序方式" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="startDate">按开始时间</SelectItem>
-                  <SelectItem value="bidPrice">按抢单价格</SelectItem>
-                  <SelectItem value="teamSize">按班组人数</SelectItem>
-                  <SelectItem value="totalCost">按总费用</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                    {/* 操作按钮 */}
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        导出
+                      </Button>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        新增任务
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* 操作按钮 */}
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                导出
-              </Button>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                新增任务
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              {/* 数据表格 */}
+              <Card className="flex-1">
+                <CardContent className="p-0 h-full">
+                  <div className="h-full overflow-hidden">
+                    <div className="h-full overflow-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+                          <TableRow>
+                            <TableHead className="min-w-[200px]">单号</TableHead>
+                            <TableHead className="min-w-[150px]">任务名称</TableHead>
+                            <TableHead>图纸位置</TableHead>
+                            <TableHead className="min-w-[150px]">施工内容</TableHead>
+                            <TableHead>工程量</TableHead>
+                            <TableHead>班组人数</TableHead>
+                            <TableHead>工种要求</TableHead>
+                            <TableHead>开始时间</TableHead>
+                            <TableHead>结束时间</TableHead>
+                            <TableHead>持续天数</TableHead>
+                            <TableHead>抢单价格</TableHead>
+                            <TableHead>定额价格</TableHead>
+                            <TableHead>总费用</TableHead>
+                            <TableHead className="min-w-[120px]">操作</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedData.map(item => {
+                            const bidPriceInfo = getPriceDifference(item.bidPrice, item.quotaPrice);
+                            return (
+                              <TableRow key={item.id} className="hover:bg-muted/50">
+                                <TableCell className="font-medium">{item.orderNumber}</TableCell>
+                                <TableCell className="font-medium">{item.task}</TableCell>
+                                <TableCell>{item.drawingLocation || "-"}</TableCell>
+                                <TableCell>{item.constructionContent}</TableCell>
+                                <TableCell>{item.quantity}</TableCell>
+                                <TableCell>{item.teamSize}人</TableCell>
+                                <TableCell>
+                                  <Badge variant="secondary" className={getWorkerBadgeColor(item.jobRequirement)}>
+                                    {item.jobRequirement}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>{item.startDate}</TableCell>
+                                <TableCell>{item.endDate}</TableCell>
+                                <TableCell>{item.duration}</TableCell>
+                                <TableCell className={bidPriceInfo.className}>
+                                  ¥{item.bidPrice.toLocaleString()}
+                                </TableCell>
+                                <TableCell>¥{item.quotaPrice.toLocaleString()}</TableCell>
+                                <TableCell className="font-medium">
+                                  {formatCurrency(item.totalCost)}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex gap-2">
+                                    <Button variant="outline" size="sm">
+                                      <Edit className="h-4 w-4 mr-1" />
+                                      编辑
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      详情
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
 
-      {/* 数据表格 */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-hidden">
-            <div className="overflow-auto max-h-[600px]">
-              <Table>
-                <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-                  <TableRow>
-                    <TableHead className="min-w-[200px]">单号</TableHead>
-                    <TableHead className="min-w-[150px]">任务名称</TableHead>
-                    <TableHead>图纸位置</TableHead>
-                    <TableHead className="min-w-[150px]">施工内容</TableHead>
-                    <TableHead>工程量</TableHead>
-                    <TableHead>班组人数</TableHead>
-                    <TableHead>工种要求</TableHead>
-                    <TableHead>开始时间</TableHead>
-                    <TableHead>结束时间</TableHead>
-                    <TableHead>持续天数</TableHead>
-                    <TableHead>抢单价格</TableHead>
-                    <TableHead>定额价格</TableHead>
-                    <TableHead>总费用</TableHead>
-                    <TableHead className="min-w-[120px]">操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedData.map(item => {
-                    const bidPriceInfo = getPriceDifference(item.bidPrice, item.quotaPrice);
-                    return (
-                      <TableRow key={item.id} className="hover:bg-muted/50">
-                        <TableCell className="font-medium">{item.orderNumber}</TableCell>
-                        <TableCell className="font-medium">{item.task}</TableCell>
-                        <TableCell>{item.drawingLocation || "-"}</TableCell>
-                        <TableCell>{item.constructionContent}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{item.teamSize}人</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className={getWorkerBadgeColor(item.jobRequirement)}>
-                            {item.jobRequirement}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{item.startDate}</TableCell>
-                        <TableCell>{item.endDate}</TableCell>
-                        <TableCell>{item.duration}</TableCell>
-                        <TableCell className={bidPriceInfo.className}>
-                          ¥{item.bidPrice.toLocaleString()}
-                        </TableCell>
-                        <TableCell>¥{item.quotaPrice.toLocaleString()}</TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(item.totalCost)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4 mr-1" />
-                              编辑
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4 mr-1" />
-                              详情
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                    {/* 分页控件 */}
+                    <div className="flex items-center justify-between p-4 border-t">
+                      <div className="text-sm text-muted-foreground">
+                        显示 {Math.min((currentPage - 1) * pageSize + 1, filteredData.length)} 到{" "}
+                        {Math.min(currentPage * pageSize, filteredData.length)} 条，共 {filteredData.length} 条记录
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Select value={pageSize.toString()} onValueChange={value => setPageSize(Number(value))}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10">10条</SelectItem>
+                            <SelectItem value="20">20条</SelectItem>
+                            <SelectItem value="50">50条</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} 
+                          disabled={currentPage === 1}
+                        >
+                          上一页
+                        </Button>
+                        <span className="text-sm">
+                          {currentPage} / {totalPages}
+                        </span>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} 
+                          disabled={currentPage === totalPages}
+                        >
+                          下一页
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </div>
+          </TabsContent>
 
-          {/* 分页控件 */}
-          <div className="flex items-center justify-between p-4">
-            <div className="text-sm text-muted-foreground">
-              显示 {Math.min((currentPage - 1) * pageSize + 1, filteredData.length)} 到{" "}
-              {Math.min(currentPage * pageSize, filteredData.length)} 条，共 {filteredData.length} 条记录
+          <TabsContent value="gantt" className="h-full m-0 py-4">
+            <div className="h-full">
+              <GanttChart data={ganttData} />
             </div>
-            <div className="flex items-center gap-2">
-              <Select value={pageSize.toString()} onValueChange={value => setPageSize(Number(value))}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10条</SelectItem>
-                  <SelectItem value="20">20条</SelectItem>
-                  <SelectItem value="50">50条</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} 
-                disabled={currentPage === 1}
-              >
-                上一页
-              </Button>
-              <span className="text-sm">
-                {currentPage} / {totalPages}
-              </span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} 
-                disabled={currentPage === totalPages}
-              >
-                下一页
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </TabsContent>
+        </div>
+      </Tabs>
     </div>
   );
 }
-
-

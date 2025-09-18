@@ -64,17 +64,20 @@ export default function ProjectManagement() {
   };
   
   return (
-    <div className="h-full p-6 py-[8px] px-[8px]">
-      {/* 标题区域 - 移到白色卡片外面 */}
-      <div className="space-y-2 mb-6">
-        <h1 className="tracking-tight font-medium text-xl">项目管理</h1>
-        <p className="text-muted-foreground font-light text-base">
-          管理您的施工项目，上传CAD图纸自动生成进度表
-        </p>
+    <div className="h-full flex flex-col overflow-hidden bg-white">
+      {/* 标题区域 */}
+      <div className="p-6 px-[8px] py-[8px] pb-0">
+        <div className="space-y-2 mb-6">
+          <h1 className="tracking-tight font-medium text-xl">项目管理</h1>
+          <p className="text-muted-foreground font-light text-base">
+            管理您的施工项目，上传CAD图纸自动生成进度表
+          </p>
+        </div>
       </div>
 
-      {/* 内容区域 - 白色卡片 */}
-      <div className="w-full bg-card rounded-xl p-6 space-y-4">
+      {/* 主内容区域 - 直接显示，无白色卡片包装 */}
+      <div className="flex-1 overflow-hidden p-6 px-[8px] py-0">
+        <div className="h-full overflow-auto space-y-4">
         {projects.map(project => (
           <Card 
             key={project.id} 
@@ -113,6 +116,7 @@ export default function ProjectManagement() {
             </CardContent>
           </Card>
         ))}
+        </div>
       </div>
     </div>
   );

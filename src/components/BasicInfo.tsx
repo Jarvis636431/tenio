@@ -123,11 +123,11 @@ export function BasicInfo({
     setHasChanges(false);
     toast.success("正在重新生成施工计划...");
   };
-  return <div className="h-full overflow-auto p-6 space-y-6 px-[24px] py-[24px]">
+  return <div className="h-full overflow-auto space-y-6">
 
       {/* 项目基础信息 */}
       <Card>
-        <CardContent className="py-[16px]">
+        <CardContent className="p-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4 pb-4">

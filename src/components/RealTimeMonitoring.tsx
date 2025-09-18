@@ -1575,18 +1575,19 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
     return mergeWithDefaultData(defaultData, userEntries);
   };
   
-  return <div className="h-full overflow-auto p-6 space-y-6">
-
-      <Tabs value={activeChart} onValueChange={value => setActiveChart(value as keyof typeof chartData)} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          {Object.entries(chartConfig).map(([key, config]) => {
-          const Icon = config.icon;
-          return <TabsTrigger key={key} value={key} className="flex items-center gap-2">
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{config.title}</span>
-              </TabsTrigger>;
-        })}
-        </TabsList>
+  return <div className="space-y-6">
+        <Tabs value={activeChart} onValueChange={value => setActiveChart(value as keyof typeof chartData)} className="h-full flex flex-col">
+          <div className="shrink-0 space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              {Object.entries(chartConfig).map(([key, config]) => {
+              const Icon = config.icon;
+              return <TabsTrigger key={key} value={key} className="flex items-center gap-2">
+                    <Icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{config.title}</span>
+                  </TabsTrigger>;
+            })}
+            </TabsList>
+          </div>
 
         {Object.entries(chartData).map(([key, data]) => {
         // 根据不同标签页选择对应的数据和类型
@@ -1730,119 +1731,130 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
           };
         }
         
-        return <TabsContent key={key} value={key} className="space-y-4">
-              {/* 类型选择器和数据录入按钮 */}
-              <div className="flex items-center justify-between">
-                {typeSelector && <div className="flex items-center gap-4 p-0">
-                    <span className="text-sm font-medium">
-                      {key === 'materials' && '物料类型:'}
-                      {key === 'labor' && '工种类型:'}
-                      {key === 'funding' && '资金类型:'}
-                      {key === 'procurement' && '采购类型:'}
-                    </span>
-                    {typeSelector}
-                  </div>}
-                
-                {/* 数据录入按钮 - 现在在总览和非总览模式下都显示 */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    let category = key;
-                    let type = '';
-                    let title = '';
-                    let unit = currentConfig.unit;
-                    
-                    if (isOverview) {
-                      // 总览模式：传递类别信息，让用户在表单中选择具体类型
-                      handleDataEntry(category, '', currentConfig.title, unit, true);
-                    } else {
-                      // 非总览模式：使用当前选中的具体类型
-                      if (key === 'materials') {
-                        type = selectedMaterialType;
-                        title = materialTypesData[selectedMaterialType].name;
-                        unit = materialTypesData[selectedMaterialType].unit;
-                      } else if (key === 'labor') {
-                        type = selectedLaborType as string;
-                        title = laborTypesData[selectedLaborType as keyof typeof laborTypesData].name;
-                      } else if (key === 'funding') {
-                        type = selectedFundingType as string;
-                        title = fundingTypesData[selectedFundingType as keyof typeof fundingTypesData].name;
-                      } else if (key === 'procurement') {
-                        type = selectedProcurementType as string;
-                        title = procurementTypesData[selectedProcurementType as keyof typeof procurementTypesData].name;
-                      }
+        return <TabsContent key={key} value={key} className="flex-1 overflow-hidden py-4">
+              <div className="h-full flex flex-col space-y-6">
+                {/* 类型选择器和数据录入按钮 */}
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                  {typeSelector && <div className="flex items-center gap-4 p-0">
+                      <span className="text-sm font-medium">
+                        {key === 'materials' && '物料类型:'}
+                        {key === 'labor' && '工种类型:'}
+                        {key === 'funding' && '资金类型:'}
+                        {key === 'procurement' && '采购类型:'}
+                      </span>
+                      {typeSelector}
+                    </div>}
+                  
+                  {/* 数据录入按钮 - 现在在总览和非总览模式下都显示 */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      let category = key;
+                      let type = '';
+                      let title = '';
+                      let unit = currentConfig.unit;
                       
-                      handleDataEntry(category, type, title, unit, false);
-                    }
-                  }}
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  录入数据
-                </Button>
-              </div>
+                      if (isOverview) {
+                        // 总览模式：传递类别信息，让用户在表单中选择具体类型
+                        handleDataEntry(category, '', currentConfig.title, unit, true);
+                      } else {
+                        // 非总览模式：使用当前选中的具体类型
+                        if (key === 'materials') {
+                          type = selectedMaterialType;
+                          title = materialTypesData[selectedMaterialType].name;
+                          unit = materialTypesData[selectedMaterialType].unit;
+                        } else if (key === 'labor') {
+                          type = selectedLaborType as string;
+                          title = laborTypesData[selectedLaborType as keyof typeof laborTypesData].name;
+                        } else if (key === 'funding') {
+                          type = selectedFundingType as string;
+                          title = fundingTypesData[selectedFundingType as keyof typeof fundingTypesData].name;
+                        } else if (key === 'procurement') {
+                          type = selectedProcurementType as string;
+                          title = procurementTypesData[selectedProcurementType as keyof typeof procurementTypesData].name;
+                        }
+                        
+                        handleDataEntry(category, type, title, unit, false);
+                      }
+                    }}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    录入数据
+                  </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* 统计卡片 */}
-              <div className="grid gap-3 md:grid-cols-3 mb-4">
-                <Card className="h-20">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 py-3">
-                    <CardTitle className="text-sm font-medium">
-                      {key === 'materials' ? "总实际值" : currentConfig.isCumulative ? "累计实际值" : "当前值"}
-                    </CardTitle>
-                    <Activity className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent className="pt-0 pb-3">
-                    <div className="text-lg font-bold" style={{
-                  color: currentConfig.color
-                }}>
-                      {stats.current.toLocaleString()}{currentConfig.unit}
+                {/* 统计卡片 */}
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="grid gap-3 md:grid-cols-3">
+                  <div className="h-20 p-4 border rounded-lg bg-white">
+                    <div className="flex flex-row items-center justify-between space-y-0 pb-1">
+                      <div className="text-sm font-medium">
+                        {key === 'materials' ? "总实际值" : currentConfig.isCumulative ? "累计实际值" : "当前值"}
+                      </div>
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="pt-0 pb-3">
+                      <div className="text-lg font-bold" style={{
+                    color: currentConfig.color
+                  }}>
+                        {stats.current.toLocaleString()}{currentConfig.unit}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="h-20 p-4 border rounded-lg bg-white">
+                    <div className="flex flex-row items-center justify-between space-y-0 pb-1">
+                      <div className="text-sm font-medium">
+                        {key === 'materials' ? "总计划值" : currentConfig.isCumulative ? "累计计划值" : "计划值"}
+                      </div>
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="pt-0 pb-3">
+                      <div className="text-lg font-bold text-muted-foreground">
+                        {stats.plan.toLocaleString()}{currentConfig.unit}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="h-20 p-4 border rounded-lg bg-white">
+                    <div className="flex flex-row items-center justify-between space-y-0 pb-1">
+                      <div className="text-sm font-medium">完成率</div>
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="pt-0 pb-3">
+                      <div className="text-lg font-bold">
+                        {Math.round(stats.current / stats.plan * 100)}%
+                      </div>
+                    </div>
+                  </div>
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="h-20">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 py-3">
-                    <CardTitle className="text-sm font-medium">
-                      {key === 'materials' ? "总计划值" : currentConfig.isCumulative ? "累计计划值" : "计划值"}
-                    </CardTitle>
-                    <Activity className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent className="pt-0 pb-3">
-                    <div className="text-lg font-bold text-muted-foreground">
-                      {stats.plan.toLocaleString()}{currentConfig.unit}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="h-20">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 py-3">
-                    <CardTitle className="text-sm font-medium">完成率</CardTitle>
-                    <Activity className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent className="pt-0 pb-3">
-                    <div className="text-lg font-bold">
-                      {Math.round(stats.current / stats.plan * 100)}%
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    {(() => {
-                  const IconComponent = currentConfig.icon;
-                  return <IconComponent className="h-5 w-5" />;
-                })()}
-                    {currentConfig.title}
-                    {currentTypeName && <span className="text-base font-normal text-muted-foreground">
-                        - {currentTypeName}
-                      </span>}
-                  </CardTitle>
-                  <CardDescription>
-                    {isOverview ? `${currentConfig.title}各类型数据对比总览` : currentTypeName ? `${currentTypeName}${key === 'materials' ? '按实际进货日期的' : '每日'}${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应量'}监控` : currentConfig.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                {/* 图表区域 */}
+                 <div className="flex-1 border rounded-lg bg-white p-4">
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      {(() => {
+                    const IconComponent = currentConfig.icon;
+                    return <IconComponent className="h-5 w-5" />;
+                  })()}
+                      <div className="text-lg font-semibold">
+                        {currentConfig.title}
+                        {currentTypeName && <span className="text-base font-normal text-muted-foreground ml-2">
+                            - {currentTypeName}
+                          </span>}
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {isOverview ? `${currentConfig.title}各类型数据对比总览` : currentTypeName ? `${currentTypeName}${key === 'materials' ? '按实际进货日期的' : '每日'}${currentConfig.title.includes('配置') ? '人员数量' : currentConfig.title.includes('进度') ? '采购金额' : currentConfig.title.includes('使用') ? '资金支出' : '供应量'}监控` : currentConfig.description}
+                    </div>
+                  </div>
                   <div className="overflow-x-auto">
                     <ChartContainer config={chartConfigForComponent} className="h-[400px]" style={{
                   minWidth: isOverview ? "800px" : `${(displayData || data).length * 80}px`
@@ -1918,11 +1930,12 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                       </ResponsiveContainer>
                     </ChartContainer>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </TabsContent>;
       })}
-      </Tabs>
+        </Tabs>
+      </div>
 
       {/* 数据录入表单 */}
       {currentEntryContext && (
@@ -1938,5 +1951,4 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
           subType={currentEntryContext.type}
         />
       )}
-    </div>;
 }

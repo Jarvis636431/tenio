@@ -3,6 +3,7 @@ import { PlusCircle, Settings, Building2, Menu, Home, Calendar, BarChart3, Activ
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { ProjectSelector } from "@/components/ProjectSelector";
 import { useProject } from "@/contexts/ProjectContext";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +24,7 @@ const projectMenuItems = [{
   icon: Info
 }, {
   id: "plan-and-orders",
-  label: "计划与订单",
+  label: "施工总览",
   icon: Calendar
 }, {
   id: "real-time-monitoring",
@@ -34,97 +35,63 @@ const projectMenuItems = [{
   label: "工匠管理",
   icon: Users
 }];
+
 export function AppSidebar() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const {
-    currentProject
-  } = useProject();
-  const {
-    state
-  } = useSidebar();
+  const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const currentPath = location.pathname;
-
-  // 修复主页选中态逻辑
-  const isActive = (path: string) => {
-    if (path === "/") {
-      return currentPath === "/";
-    }
-    return currentPath === path;
-  };
-  const isProjectRoute = currentPath.startsWith('/project/');
-
-  // 获取当前项目内的活跃视图
-  const getActiveProjectView = () => {
-    const searchParams = new URLSearchParams(location.search);
-    return searchParams.get('view') || 'basic-info';
-  };
-  const isProjectViewActive = (viewId: string) => {
-    return isProjectRoute && getActiveProjectView() === viewId;
-  };
-
-  // 项目导航是否应该显示：只要有当前项目就显示
-  const shouldShowProjectNavigation = !!currentProject;
+  const { currentProject } = useProject();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+
   const handleNewProject = () => {
     setNewProjectDialogOpen(true);
   };
   return <TooltipProvider>
-      <Sidebar className="shadow-[2px_0_8px_rgba(0,0,0,0.06)] border-r-0" collapsible="icon" style={isCollapsed ? { width: '64px' } : {}}>
-        <SidebarContent className="py-[60px] bg-white" style={isCollapsed ? { paddingLeft: '12px', paddingRight: '12px' } : { paddingLeft: '4px', paddingRight: '4px' }}>
+      <Sidebar className="border-r border-gray-200" collapsible="icon">
+        <SidebarContent className="py-[60px]" style={isCollapsed ? { paddingLeft: '12px', paddingRight: '12px' } : { paddingLeft: '8px', paddingRight: '8px' }}>
           {/* 顶部新建项目按钮 */}
           <SidebarHeader className={isCollapsed ? "px-0 pb-0" : "px-3 pb-0"}>
             {isCollapsed ? <div className="flex justify-center">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="default" size="icon" className="w-10 h-10 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleNewProject}>
+                    <Button variant="outline" size="icon" className="h-8 w-8 bg-white hover:bg-gray-50" onClick={handleNewProject}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right">新建项目</TooltipContent>
+                  <TooltipContent side="right">
+                    <p>新建项目</p>
+                  </TooltipContent>
                 </Tooltip>
-              </div> : <Button variant="default" className="w-full justify-start h-9 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleNewProject}>
-                <Plus className="mr-2 h-4 w-4" />
+              </div> : <Button variant="outline" className="w-full justify-start gap-2 bg-white hover:bg-gray-50" onClick={handleNewProject}>
+                <Plus className="h-4 w-4" />
                 新建项目
               </Button>}
           </SidebarHeader>
 
-          {/* 主导航 */}
+          {/* 主导航菜单 - 移除SidebarGroupLabel */}
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {mainMenuItems.map(item => <SidebarMenuItem key={item.title}>
-                    {isCollapsed ? <div className="flex justify-center">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <SidebarMenuButton asChild isActive={isActive(item.url)} className={`w-10 h-10 ${isActive(item.url) ? "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`}>
-                              <NavLink to={item.url} className="flex items-center justify-center">
-                                <item.icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
-                              </NavLink>
-                            </SidebarMenuButton>
-                          </TooltipTrigger>
-                          <TooltipContent side="right">{item.title}</TooltipContent>
-                        </Tooltip>
-                      </div> : <SidebarMenuButton asChild isActive={isActive(item.url)} className={isActive(item.url) ? "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}>
-                        <NavLink to={item.url} className="my-0 py-[16px]">
-                          <item.icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
-                          <span className={`text-base ${isActive(item.url) ? 'font-medium' : 'font-light'}`}>
-                            {item.title}
-                          </span>
+                {mainMenuItems.map((item) => {
+                  const Icon = item.icon;
+                  return <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                        <NavLink to={item.url}>
+                          <Icon className="h-4 w-4" />
+                          {!isCollapsed && <span>{item.title}</span>}
                         </NavLink>
-                      </SidebarMenuButton>}
-                  </SidebarMenuItem>)}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>;
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* 分割线 - 收起状态下隐藏 */}
-          {!isCollapsed && <div className="px-3 mb-2">
-              <div className="h-px bg-sidebar-border opacity-50"></div>
-            </div>}
+          {/* 分割线 */}
+          <Separator className="mx-4 my-2" />
 
-          {/* 项目选择器 - 收起状态下隐藏 */}
+          {/* 项目选择器 */}
           {!isCollapsed && <SidebarGroup className="py-0 my-0">
               <SidebarGroupContent>
                 <div className="bg-transparent">
@@ -133,42 +100,28 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>}
 
-          {/* 项目内导航 - 当有选中项目时常驻显示 */}
-          {shouldShowProjectNavigation && <SidebarGroup className="my-0 py-0">
+          {/* 项目相关菜单 - 移除SidebarGroupLabel */}
+          {currentProject && <SidebarGroup className="pt-0">
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {projectMenuItems.map(item => {
-                const Icon = item.icon;
-                const isActiveView = isProjectViewActive(item.id);
-                const projectUrl = `/project/${currentProject.id}?view=${item.id}`;
-                return <SidebarMenuItem key={item.id}>
-                        {isCollapsed ? <div className="flex justify-center">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <SidebarMenuButton asChild isActive={isActiveView} className={`w-10 h-10 ${isActiveView ? "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`}>
-                                  <NavLink to={projectUrl} className="flex items-center justify-center">
-                                    <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
-                                  </NavLink>
-                                </SidebarMenuButton>
-                              </TooltipTrigger>
-                              <TooltipContent side="right">{item.label}</TooltipContent>
-                            </Tooltip>
-                          </div> : <SidebarMenuButton asChild isActive={isActiveView} className={isActiveView ? "bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--sidebar-selected-foreground))]" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}>
-                            <NavLink to={projectUrl} className="my-0 py-[16px]">
-                              <Icon className="h-4 w-4 flex-shrink-0 text-slate-600" strokeWidth={1.5} />
-                              <span className={`text-base ${isActiveView ? 'font-medium' : 'font-light'}`}>
-                                {item.label}
-                              </span>
-                            </NavLink>
-                          </SidebarMenuButton>}
+                  {projectMenuItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.search.includes(`view=${item.id}`);
+                    return <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton asChild isActive={isActive}>
+                          <NavLink to={`/project/${currentProject.id}?view=${item.id}`}>
+                            <Icon className="h-4 w-4" />
+                            {!isCollapsed && <span>{item.label}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
                       </SidebarMenuItem>;
-              })}
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>}
         </SidebarContent>
-
-        <NewProjectDialog open={newProjectDialogOpen} onOpenChange={setNewProjectDialogOpen} />
+        {/* 移除SidebarFooter和SidebarTrigger */}
       </Sidebar>
+      <NewProjectDialog open={newProjectDialogOpen} onOpenChange={setNewProjectDialogOpen} />
     </TooltipProvider>;
 }
