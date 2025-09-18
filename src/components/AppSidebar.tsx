@@ -125,9 +125,9 @@ export function AppSidebar() {
             </div>}
 
           {/* 项目选择器 - 收起状态下隐藏 */}
-          {!isCollapsed && <SidebarGroup className="py-0 my-0 px-0 mx-[4px]">
+          {!isCollapsed && <SidebarGroup className="py-0 my-0">
               <SidebarGroupContent>
-                <div className="px-[4px] bg-transparent">
+                <div className="bg-transparent">
                   <ProjectSelector isCollapsed={isCollapsed} />
                 </div>
               </SidebarGroupContent>
