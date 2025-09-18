@@ -7,6 +7,7 @@ import { RealTimeMonitoring } from "@/components/RealTimeMonitoring";
 import { OrderManagement } from "@/components/OrderManagement";
 import { CraftsmanManagement } from "@/components/CraftsmanManagement";
 import { CommunicationCollaboration } from "@/components/CommunicationCollaboration";
+import { PlanAndOrders } from "@/components/PlanAndOrders";
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -26,8 +27,10 @@ export default function ProjectDetail() {
     switch (activeView) {
       case "basic-info":
         return "基础信息";
+      case "plan-and-orders":
       case "plan-overview":
-        return "计划总览";
+      case "order-management":
+        return "计划与订单";
       case "real-time-monitoring":
         return "实时监测";
       case "order-management":
@@ -45,8 +48,10 @@ export default function ProjectDetail() {
     switch (activeView) {
       case "basic-info":
         return "查看和编辑项目的基本信息";
+      case "plan-and-orders":
       case "plan-overview":
-        return "查看项目进度和计划安排";
+      case "order-management":
+        return "计划与订单综合视图";
       case "real-time-monitoring":
         return "实时监控项目状态和数据";
       case "order-management":
@@ -69,12 +74,12 @@ export default function ProjectDetail() {
     switch (activeView) {
       case "basic-info":
         return <BasicInfo {...commonProps} />;
+      case "plan-and-orders":
       case "plan-overview":
-        return <PlanOverview {...commonProps} />;
+      case "order-management":
+        return <PlanAndOrders {...commonProps} />;
       case "real-time-monitoring":
         return <RealTimeMonitoring {...commonProps} />;
-      case "order-management":
-        return <OrderManagement {...commonProps} />;
       case "craftsman-management":
         return <CraftsmanManagement {...commonProps} />;
       case "communication-collaboration":

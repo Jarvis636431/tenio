@@ -26,29 +26,48 @@ const mockProjects: Project[] = [
   },
   {
     id: "2", 
-    name: "项目 2",
+    name: "南山区幼儿园",
     hasBasicInfo: false
   }
 ];
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [currentProject, setCurrentProjectState] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Project[]>(mockProjects);
   const { id } = useParams();
+  const STORAGE_KEY = "currentProjectId";
+
+  const setCurrentProject = (project: Project | null) => {
+    setCurrentProjectState(project);
+    if (project) {
+      try { localStorage.setItem(STORAGE_KEY, project.id); } catch {}
+    } else {
+      try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    }
+  };
 
   const addProject = (project: Project) => {
     setProjects(prev => [...prev, project]);
   };
 
-  // 当路由参数变化时，自动更新当前项目
+  // 当路由参数变化时，自动更新当前项目；无 id 时保持当前选择，不清空
   useEffect(() => {
     if (id) {
       const project = projects.find(p => p.id === id);
       if (project) {
         setCurrentProject(project);
       }
-    } else {
-      setCurrentProject(null);
+    } else if (!currentProject) {
+      // 尝试从本地恢复上次选择
+      try {
+        const savedId = localStorage.getItem(STORAGE_KEY);
+        if (savedId) {
+          const savedProject = projects.find(p => p.id === savedId);
+          if (savedProject) {
+            setCurrentProject(savedProject);
+          }
+        }
+      } catch {}
     }
   }, [id, projects]);
 

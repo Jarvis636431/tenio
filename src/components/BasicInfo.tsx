@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, RefreshCw, FileText, ChevronRight } from "lucide-react";
+import { useProject } from "@/contexts/ProjectContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,24 @@ export function BasicInfo({
   showExpandButton = false,
   onExpandSidebar
 }: BasicInfoProps) {
-  const [savedValues, setSavedValues] = useState<BasicInfoFormData>(defaultFormValues);
+  const { currentProject } = useProject();
+  const computeProjectDefaults = (): BasicInfoFormData => (
+    currentProject?.id === "2"
+      ? {
+          city: "深圳市",
+          buildingType: "学校",
+          structureType: "框架剪力墙结构",
+          bidAmount: 16800000,
+          controlPrice: 15900000,
+          buildingHeight: 24.0,
+          buildingFloors: 6,
+          buildingArea: 8200,
+        }
+      : defaultFormValues
+  );
+
+  const initialDefaults = computeProjectDefaults();
+  const [savedValues, setSavedValues] = useState<BasicInfoFormData>(initialDefaults);
   const [hasChanges, setHasChanges] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([{
     id: "1",
@@ -65,8 +83,15 @@ export function BasicInfo({
   }]);
   const form = useForm<BasicInfoFormData>({
     resolver: zodResolver(basicInfoSchema),
-    defaultValues: defaultFormValues
+    defaultValues: initialDefaults
   });
+  // 当切换项目时，重置为对应项目的默认值
+  useEffect(() => {
+    const nextDefaults = computeProjectDefaults();
+    setSavedValues(nextDefaults);
+    form.reset(nextDefaults);
+    setHasChanges(false);
+  }, [currentProject?.id]);
 
   // Watch form values to detect changes
   const watchedValues = form.watch();

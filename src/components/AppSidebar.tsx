@@ -22,25 +22,17 @@ const projectMenuItems = [{
   label: "基础信息",
   icon: Info
 }, {
-  id: "plan-overview",
-  label: "计划总览",
+  id: "plan-and-orders",
+  label: "计划与订单",
   icon: Calendar
 }, {
   id: "real-time-monitoring",
   label: "实时监测",
   icon: Activity
 }, {
-  id: "order-management",
-  label: "订单管理",
-  icon: ShoppingCart
-}, {
   id: "craftsman-management",
   label: "工匠管理",
   icon: Users
-}, {
-  id: "communication-collaboration",
-  label: "沟通协作",
-  icon: MessageSquare
 }];
 export function AppSidebar() {
   const location = useLocation();
@@ -135,7 +127,7 @@ export function AppSidebar() {
           {/* 项目选择器 - 收起状态下隐藏 */}
           {!isCollapsed && <SidebarGroup className="py-0 my-0 px-0 mx-[4px]">
               <SidebarGroupContent>
-                <div className="px-[12px] bg-transparent">
+                <div className="px-[4px] bg-transparent">
                   <ProjectSelector isCollapsed={isCollapsed} />
                 </div>
               </SidebarGroupContent>
