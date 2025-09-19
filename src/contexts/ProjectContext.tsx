@@ -32,7 +32,7 @@ const mockProjects: Project[] = [
 ];
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
-  const [currentProject, setCurrentProjectState] = useState<Project | null>(null);
+  const [currentProject, setCurrentProjectState] = useState<Project | null>(mockProjects[0] || null);
   const [projects, setProjects] = useState<Project[]>(mockProjects);
   const { id } = useParams();
   const STORAGE_KEY = "currentProjectId";
@@ -58,16 +58,24 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         setCurrentProject(project);
       }
     } else if (!currentProject) {
-      // 尝试从本地恢复上次选择
+      // 尝试从本地恢复上次选择，如果没有则选择第一个项目
       try {
         const savedId = localStorage.getItem(STORAGE_KEY);
         if (savedId) {
           const savedProject = projects.find(p => p.id === savedId);
           if (savedProject) {
             setCurrentProject(savedProject);
+          } else if (projects.length > 0) {
+            setCurrentProject(projects[0]);
           }
+        } else if (projects.length > 0) {
+          setCurrentProject(projects[0]);
         }
-      } catch {}
+      } catch {
+        if (projects.length > 0) {
+          setCurrentProject(projects[0]);
+        }
+      }
     }
   }, [id, projects]);
 

@@ -8,6 +8,22 @@ import { CraftsmanManagement } from "@/components/CraftsmanManagement";
 import { CommunicationCollaboration } from "@/components/CommunicationCollaboration";
 import { PlanAndOrders } from "@/components/PlanAndOrders";
 
+// 实时监测的tab配置
+const chartConfig = {
+  procurement: {
+    title: "采购进度"
+  },
+  labor: {
+    title: "劳动力配置"
+  },
+  funding: {
+    title: "资金使用"
+  },
+  materials: {
+    title: "物料供应"
+  }
+};
+
 export default function ProjectDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -26,14 +42,21 @@ export default function ProjectDetail() {
     switch (activeView) {
       case "basic-info":
         return "基础信息";
-    case "plan-and-orders":
-    case "plan-overview":
-    case "order-management":
-      return "施工总览";
-      case "real-time-monitoring":
-        return "实时监测";
+      case "plan-and-orders":
+        return "施工总览";
+      case "task-overview":
+      case "gantt-chart":
+        return getPlanAndOrdersTitle();
+      case "plan-overview":
       case "order-management":
-        return "订单管理";
+        return "施工总览";
+      case "real-time-monitoring":
+        return "";
+      case "procurement":
+      case "labor":
+      case "funding":
+      case "materials":
+        return getRealTimeMonitoringTitle();
       case "craftsman-management":
         return "工匠管理";
       case "communication-collaboration":
@@ -64,6 +87,24 @@ export default function ProjectDetail() {
     }
   };
 
+  const getRealTimeMonitoringTitle = () => {
+    const tab = searchParams.get('tab');
+    if (tab && chartConfig[tab as keyof typeof chartConfig]) {
+      return chartConfig[tab as keyof typeof chartConfig].title;
+    }
+    return "采购进度"; // 默认标题
+  };
+
+  const getPlanAndOrdersTitle = () => {
+    const tab = searchParams.get('tab');
+    if (tab === 'task-overview') {
+      return "任务总览";
+    } else if (tab === 'gantt-chart') {
+      return "施工工序甘特图";
+    }
+    return "任务总览"; // 默认标题
+  };
+
   const renderContent = () => {
     const commonProps = {
       showExpandButton: false,
@@ -74,10 +115,16 @@ export default function ProjectDetail() {
       case "basic-info":
         return <BasicInfo {...commonProps} />;
       case "plan-and-orders":
+      case "task-overview":
+      case "gantt-chart":
       case "plan-overview":
       case "order-management":
         return <PlanAndOrders {...commonProps} />;
       case "real-time-monitoring":
+      case "procurement":
+      case "labor":
+      case "funding":
+      case "materials":
         return <RealTimeMonitoring {...commonProps} />;
       case "craftsman-management":
         return <CraftsmanManagement {...commonProps} />;
@@ -89,16 +136,13 @@ export default function ProjectDetail() {
   };
 
   // 基础信息和施工总览页面使用特殊布局 - 无白色卡片包装
-  if (activeView === "basic-info" || activeView === "plan-and-orders") {
+  if (activeView === "basic-info" || activeView === "plan-and-orders" || activeView === "task-overview" || activeView === "gantt-chart") {
     return (
       <div className="h-full flex flex-col overflow-hidden bg-white">
         {/* 标题区域 */}
         <div className="p-6 px-[8px] py-[8px] pb-0">
           <div className="space-y-2 mb-6">
             <h1 className="tracking-tight font-medium text-xl">{getViewTitle()}</h1>
-            <p className="text-muted-foreground font-light text-base">
-              {getViewDescription()}
-            </p>
           </div>
         </div>
 
@@ -119,10 +163,7 @@ export default function ProjectDetail() {
         {/* 标题区域 */}
         <div className="p-6 px-[8px] py-[8px] pb-0">
           <div className="space-y-2 mb-6">
-            <h1 className="tracking-tight font-medium text-xl">{getViewTitle()}</h1>
-            <p className="text-muted-foreground font-light text-base">
-              {getViewDescription()}
-            </p>
+            <h1 className="tracking-tight font-medium text-xl">{getRealTimeMonitoringTitle()}</h1>
           </div>
         </div>
 
@@ -142,9 +183,6 @@ export default function ProjectDetail() {
       <div className="p-6 px-[8px] py-[8px] pb-0">
         <div className="space-y-2 mb-6">
           <h1 className="tracking-tight font-medium text-xl">{getViewTitle()}</h1>
-          <p className="text-muted-foreground font-light text-base">
-            {getViewDescription()}
-          </p>
         </div>
       </div>
 

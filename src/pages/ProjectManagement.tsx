@@ -64,9 +64,6 @@ export default function ProjectManagement() {
       <div className="p-6 px-[8px] py-[8px] pb-0">
         <div className="space-y-2 mb-6">
           <h1 className="tracking-tight font-medium text-xl">项目管理</h1>
-          <p className="text-muted-foreground font-light text-base">
-            管理您的施工项目，上传CAD图纸自动生成进度表
-          </p>
         </div>
       </div>
 
@@ -76,7 +73,8 @@ export default function ProjectManagement() {
         {projects.map(project => (
           <Card 
             key={project.id} 
-            className="cursor-pointer hover:shadow-md transition-shadow" 
+            className="cursor-pointer transition-colors duration-300 border-gray-300 hover:bg-gray-50" 
+            style={{borderWidth: '0.5px'}}
             onClick={() => handleProjectClick(project.id)}
           >
             <CardContent className="p-6 px-[16px] py-[16px]">

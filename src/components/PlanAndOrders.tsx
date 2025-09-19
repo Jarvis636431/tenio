@@ -1,15 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3, X } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { GanttChart } from "@/components/GanttChart";
+import { useSearchParams } from "react-router-dom";
 
 interface PlanAndOrdersProps {
   showExpandButton?: boolean;
@@ -436,6 +436,7 @@ const kindergartenData: TaskItem[] = [
 
 export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: PlanAndOrdersProps) {
   const { currentProject } = useProject();
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [jobFilter, setJobFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"sequenceNumber" | "duration" | "workerCount" | "totalCost">("sequenceNumber");
@@ -444,6 +445,9 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   const itemsPerPage = 10;
   const [selectedItem, setSelectedItem] = useState<TaskItem | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  
+  // 根据URL参数确定显示的内容
+  const activeView = searchParams.get('tab') || 'task-overview';
 
   // 根据当前项目选择数据
   const allData = useMemo(() => {
@@ -598,24 +602,10 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
         </div>
       </div>
 
-      <Tabs defaultValue="table" className="h-full flex flex-col">
-        {/* 固定在顶部的部分 */}
-        <div className="shrink-0 space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="table" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              任务总览表
-            </TabsTrigger>
-            <TabsTrigger value="gantt" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              施工工序甘特图
-            </TabsTrigger>
-          </TabsList>
-        </div>
-      
+      <div className="h-full flex flex-col">
         {/* 可滚动的内容区域 - 自适应高度 */}
         <div className="flex-1 overflow-hidden">
-          <TabsContent value="table" className="h-full m-0 py-4">
+          {activeView === 'task-overview' && (
             <div className="h-full flex flex-col space-y-6">
               {/* 数据表格 */}
               <Card className="flex-1">
@@ -712,15 +702,16 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+          )}
 
-          <TabsContent value="gantt" className="h-full m-0 py-4">
+          
+          {activeView === 'gantt-chart' && (
             <div className="h-full">
               <GanttChart data={ganttData} />
             </div>
-          </TabsContent>
+          )}
         </div>
-      </Tabs>
+      </div>
 
       {/* 详情对话框 */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>

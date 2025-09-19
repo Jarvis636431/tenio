@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { PlusCircle, Settings, Building2, Menu, Home, Calendar, BarChart3, Activity, ShoppingCart, Users, MessageSquare, Info, Plus, User, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlusCircle, Settings, Building2, Menu, Home, Calendar, BarChart3, Activity, ShoppingCart, Users, MessageSquare, Info, Plus, User, LogOut, ChevronLeft, ChevronRight, ChevronUp, DollarSign, Package, ClipboardList } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarTrigger, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -29,11 +29,37 @@ const projectMenuItems = [{
 }, {
   id: "plan-and-orders",
   label: "施工总览",
-  icon: Calendar
+  icon: ClipboardList,
+  subItems: [{
+    id: "task-overview",
+    label: "任务总览",
+    icon: Calendar
+  }, {
+    id: "gantt-chart",
+    label: "施工工序甘特图",
+    icon: BarChart3
+  }]
 }, {
   id: "real-time-monitoring",
   label: "实时监测",
-  icon: Activity
+  icon: Activity,
+  subItems: [{
+    id: "procurement",
+    label: "采购",
+    icon: ShoppingCart
+  }, {
+    id: "labor",
+    label: "劳动力",
+    icon: Users
+  }, {
+    id: "funding",
+    label: "资金",
+    icon: DollarSign
+  }, {
+    id: "materials",
+    label: "物料供应",
+    icon: Package
+  }]
 }, {
   id: "craftsman-management",
   label: "工匠管理",
@@ -47,6 +73,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["plan-and-orders", "real-time-monitoring"]);
   const { logout, user } = useAuth();
 
   const handleNewProject = () => {
@@ -61,6 +88,15 @@ export function AppSidebar() {
     navigate("/");
   };
 
+  const toggleExpanded = (itemId: string) => {
+    // 所有菜单项都支持展开/收起
+    setExpandedItems(prev => 
+      prev.includes(itemId) 
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
   return <TooltipProvider>
       <Sidebar className="border-r border-gray-200" collapsible="icon">
         <SidebarContent className="flex flex-col h-full">
@@ -68,8 +104,8 @@ export function AppSidebar() {
           <SidebarHeader className="px-4 py-4 relative">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3 cursor-pointer transition-opacity hover:opacity-80" onClick={handleLogoClick}>
-                <img src="/lovable-uploads/7fc2509c-786f-4b70-8fba-9cf0a66bc806.png" alt="天友" className="h-8 w-8" />
-                {!isCollapsed && <h1 className="text-lg font-semibold text-slate-700">A.PM 智慧建管</h1>}
+                <img src="/lovable-uploads/7fc2509c-786f-4b70-8fba-9cf0a66bc806.png" alt="天友" className="h-8 w-8" style={{backgroundColor: 'transparent', mixBlendMode: 'multiply'}} />
+                {!isCollapsed && <h1 className="text-lg font-semibold text-slate-700 whitespace-nowrap">A.PM 智慧建管</h1>}
               </div>
               {/* 展开状态下显示收起按钮 */}
               {!isCollapsed && (
@@ -97,8 +133,8 @@ export function AppSidebar() {
                     return <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton asChild isActive={location.pathname === item.url}>
                           <NavLink to={item.url}>
-                            <Icon className="h-4 w-4" />
-                            {!isCollapsed && <span>{item.title}</span>}
+                            <Icon className="h-4 w-4 text-muted-foreground" />
+                            {!isCollapsed && <span className="whitespace-nowrap">{item.title}</span>}
                           </NavLink>
                         </SidebarMenuButton>
                       </SidebarMenuItem>;
@@ -120,20 +156,68 @@ export function AppSidebar() {
               </SidebarGroup>}
 
             {/* 项目相关菜单 - 移除SidebarGroupLabel */}
-            {currentProject && <SidebarGroup className="pt-0">
+            {currentProject && <SidebarGroup className="pt-4">
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {projectMenuItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = location.search.includes(`view=${item.id}`);
-                      return <SidebarMenuItem key={item.id}>
-                          <SidebarMenuButton asChild isActive={isActive}>
-                            <NavLink to={`/project/${currentProject.id}?view=${item.id}`}>
-                              <Icon className="h-4 w-4" />
-                              {!isCollapsed && <span>{item.label}</span>}
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>;
+                      const isExpanded = expandedItems.includes(item.id);
+                      const hasSubItems = item.subItems && item.subItems.length > 0;
+                      
+                      return (
+                        <div key={item.id}>
+                          <SidebarMenuItem>
+                            {hasSubItems ? (
+                              <SidebarMenuButton 
+                                onClick={() => toggleExpanded(item.id)}
+                                className="w-full justify-between hover:bg-accent hover:text-accent-foreground"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {isCollapsed && isExpanded ? (
+                                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <Icon className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                  {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                                </div>
+                                {!isCollapsed && hasSubItems && (
+                                  <ChevronRight 
+                                    className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+                                  />
+                                )}
+                              </SidebarMenuButton>
+                            ) : (
+                              <SidebarMenuButton asChild isActive={isActive}>
+                                <NavLink to={`/project/${currentProject.id}?view=${item.id}`}>
+                                  <Icon className="h-4 w-4 text-muted-foreground" />
+                                  {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                                </NavLink>
+                              </SidebarMenuButton>
+                            )}
+                          </SidebarMenuItem>
+                          
+                          {/* 子菜单 */}
+                          {hasSubItems && isExpanded && (
+                            <div className={isCollapsed ? "space-y-1" : "ml-4 space-y-1"}>
+                              {item.subItems.map((subItem) => {
+                                const SubIcon = subItem.icon;
+                                const isSubActive = location.search.includes(`view=${item.id}&tab=${subItem.id}`);
+                                return (
+                                  <SidebarMenuItem key={subItem.id}>
+                                    <SidebarMenuButton asChild isActive={isSubActive}>
+                                      <NavLink to={`/project/${currentProject.id}?view=${item.id}&tab=${subItem.id}`}>
+                                        <SubIcon className="h-4 w-4 text-muted-foreground" />
+                                        {!isCollapsed && <span className="whitespace-nowrap">{subItem.label}</span>}
+                                      </NavLink>
+                                    </SidebarMenuButton>
+                                  </SidebarMenuItem>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
                     })}
                   </SidebarMenu>
                 </SidebarGroupContent>
@@ -156,7 +240,7 @@ export function AppSidebar() {
                 </Tooltip>
               </div>
             ) : (
-              <Button variant="default" className="w-full justify-start gap-2" onClick={handleNewProject}>
+              <Button variant="default" className="w-full justify-center gap-2" onClick={handleNewProject}>
                 <Plus className="h-4 w-4" />
                 新建项目
               </Button>

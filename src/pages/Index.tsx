@@ -55,39 +55,36 @@ const Index = () => {
         <div>
           <h2 className="text-lg font-medium mb-4">快速操作</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-primary/10 hover:border-primary/20 group bg-primary/5" onClick={handleNewProject}>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg group-hover:text-primary transition-colors">
+            <Card className="cursor-pointer transition-colors duration-300 border-primary/10 hover:border-primary/20 group bg-primary/5 hover:bg-primary/10" style={{borderWidth: '0.5px'}} onClick={handleNewProject}>
+              <CardHeader className="py-6">
+                <CardTitle className="flex items-center gap-3 text-lg">
                   <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center text-white">
                     <Plus className="h-5 w-5" />
                   </div>
                   新建项目
                 </CardTitle>
-                <CardDescription>创建新的项目并开始管理</CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-success/10 hover:border-success/20 group bg-success/5" onClick={() => navigate("/project-management")}>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg group-hover:text-primary transition-colors">
+            <Card className="cursor-pointer transition-colors duration-300 border-success/10 hover:border-success/20 group bg-success/5 hover:bg-success/10" style={{borderWidth: '0.5px'}} onClick={() => navigate("/project-management")}>
+              <CardHeader className="py-6">
+                <CardTitle className="flex items-center gap-3 text-lg">
                   <div className="w-10 h-10 bg-gradient-to-br from-success to-success/80 rounded-xl flex items-center justify-center text-white">
                     <Building2 className="h-5 w-5" />
                   </div>
                   项目管理
                 </CardTitle>
-                <CardDescription>查看和管理所有项目</CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-warning/10 hover:border-warning/20 group bg-warning/5">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg group-hover:text-primary transition-colors">
+            <Card className="cursor-pointer transition-colors duration-300 border-warning/10 hover:border-warning/20 group bg-warning/5 hover:bg-warning/10" style={{borderWidth: '0.5px'}}>
+              <CardHeader className="py-6">
+                <CardTitle className="flex items-center gap-3 text-lg">
                   <div className="w-10 h-10 bg-gradient-to-br from-warning to-warning/80 rounded-xl flex items-center justify-center text-white">
                     <Activity className="h-5 w-5" />
                   </div>
                   系统状态
                 </CardTitle>
-                <CardDescription>查看系统运行状态</CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -101,18 +98,14 @@ const Index = () => {
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {projects.slice(0, 6).map((project) => (
-                <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-border/50 hover:border-primary/20 group" onClick={() => handleSelectProject(project.id)}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-3 text-base group-hover:text-primary transition-colors">
+                <Card key={project.id} className="cursor-pointer transition-colors duration-300 border-gray-300 hover:bg-gray-50 group" style={{borderWidth: '0.5px'}} onClick={() => handleSelectProject(project.id)}>
+                  <CardHeader className="py-6">
+                    <CardTitle className="flex items-center gap-3 text-base">
                       <div className="w-8 h-8 bg-gradient-to-br from-muted to-muted/80 rounded-lg flex items-center justify-center">
                         <FileText className="h-4 w-4 text-muted-foreground" />
                       </div>
                       {project.name}
                     </CardTitle>
-                    <CardDescription className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${project.hasBasicInfo ? 'bg-success' : 'bg-warning'}`}></div>
-                      {project.hasBasicInfo ? "已完成基础信息" : "待完善信息"}
-                    </CardDescription>
                   </CardHeader>
                 </Card>
               ))}

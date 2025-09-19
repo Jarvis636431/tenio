@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Activity, ShoppingCart, Users, DollarSign, Package, ChevronRight, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1510,7 +1511,16 @@ interface RealTimeMonitoringProps {
 }
 
 export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }: RealTimeMonitoringProps) {
-  const [activeChart, setActiveChart] = useState<keyof typeof chartData>("procurement");
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') as keyof typeof chartData;
+  const [activeChart, setActiveChart] = useState<keyof typeof chartData>(tabFromUrl || "procurement");
+
+  // 当URL参数变化时更新activeChart
+  useEffect(() => {
+    if (tabFromUrl && tabFromUrl in chartData) {
+      setActiveChart(tabFromUrl);
+    }
+  }, [tabFromUrl]);
   const [selectedMaterialType, setSelectedMaterialType] = useState<keyof typeof materialTypesData>("concrete_c20");
   const [selectedLaborType, setSelectedLaborType] = useState<keyof typeof laborTypesData | "overview">("overview");
   const [selectedFundingType, setSelectedFundingType] = useState<keyof typeof fundingTypesData | "overview">("overview");
@@ -1576,20 +1586,11 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
   };
   
   return <div className="space-y-6">
-        <Tabs value={activeChart} onValueChange={value => setActiveChart(value as keyof typeof chartData)} className="h-full flex flex-col">
-          <div className="shrink-0 space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              {Object.entries(chartConfig).map(([key, config]) => {
-              const Icon = config.icon;
-              return <TabsTrigger key={key} value={key} className="flex items-center gap-2">
-                    <Icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{config.title}</span>
-                  </TabsTrigger>;
-            })}
-            </TabsList>
-          </div>
 
-        {Object.entries(chartData).map(([key, data]) => {
+        {/* 只显示当前选中的tab内容 */}
+        {(() => {
+          const key = activeChart;
+          const data = chartData[key];
         // 根据不同标签页选择对应的数据和类型
         let displayData,
           currentTypeName,
@@ -1731,11 +1732,10 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
           };
         }
         
-        return <TabsContent key={key} value={key} className="flex-1 overflow-hidden py-4">
-              <div className="h-full flex flex-col space-y-6">
+        return <div key={key} className="flex-1 overflow-hidden py-4">
+              <div className="h-full flex flex-col space-y-4">
                 {/* 类型选择器和数据录入按钮 */}
-                <Card>
-                  <CardContent className="p-4">
+                <div>
                     <div className="flex items-center justify-between">
                   {typeSelector && <div className="flex items-center gap-4 p-0">
                       <span className="text-sm font-medium">
@@ -1749,7 +1749,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                   
                   {/* 数据录入按钮 - 现在在总览和非总览模式下都显示 */}
                   <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
                     onClick={() => {
                       let category = key;
@@ -1786,12 +1786,10 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                     录入数据
                   </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                </div>
 
                 {/* 统计卡片 */}
-                <Card>
-                  <CardContent className="p-4">
+                <div>
                     <div className="grid gap-3 md:grid-cols-3">
                   <div className="h-20 p-4 border rounded-lg bg-white">
                     <div className="flex flex-row items-center justify-between space-y-0 pb-1">
@@ -1833,8 +1831,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                     </div>
                   </div>
                     </div>
-                  </CardContent>
-                </Card>
+                </div>
 
                 {/* 图表区域 */}
                  <div className="flex-1 border rounded-lg bg-white p-4">
@@ -1932,9 +1929,8 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                   </div>
                 </div>
               </div>
-            </TabsContent>;
-      })}
-        </Tabs>
+            </div>;
+        })()}
       </div>
 
       {/* 数据录入表单 */}

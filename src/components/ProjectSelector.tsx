@@ -40,8 +40,8 @@ export function ProjectSelector({ isCollapsed }: ProjectSelectorProps) {
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="ghost"
-            className="w-full h-9 p-2 font-normal border-none bg-transparent flex items-center gap-2 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent transition-colors"
+            variant="outline"
+            className="w-full h-9 p-2 font-normal bg-white border border-gray-200 flex items-center gap-2 rounded-md hover:bg-gray-50 hover:text-foreground active:bg-gray-100 transition-colors"
           >
             <span className="truncate text-left flex-1">
               {currentProject?.name || "选择项目"}
