@@ -10,6 +10,7 @@ interface ScheduleItem {
   duration: string;
   worker: string;
   count: number;
+  floor?: number;
 }
 
 interface GanttChartProps {
@@ -20,23 +21,43 @@ const getWorkerColor = (worker: string): string => {
   const colors: {
     [key: string]: string;
   } = {
-    "木工": "#3b82f6",
+    "钢筋工": "#3b82f6",
     "混凝土工": "#f97316",
+    "木工": "#10b981",
+    "测量员": "#8b5cf6",
+    "土方工": "#f59e0b",
     "砌筑工": "#10b981",
     "抹灰工": "#8b5cf6",
-    "安装工": "#ec4899"
+    "防水工": "#06b6d4",
+    "水电工": "#14b8a6",
+    "油漆工": "#84cc16",
+    "油工": "#84cc16",
+    "瓦工": "#ec4899",
+    "不限": "#6b7280"
   };
   return colors[worker] || "#6b7280";
 };
 
 const parseDate = (dateStr: string): Date => {
-  // 解析 "8月1日" 格式的日期
+  // 解析 "2025/09/01" 格式的日期
+  if (dateStr.includes('/')) {
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1; // JavaScript月份从0开始
+      const day = parseInt(parts[2]);
+      return new Date(year, month, day);
+    }
+  }
+  
+  // 兼容旧的 "8月1日" 格式
   const match = dateStr.match(/(\d+)月(\d+)日/);
   if (match) {
     const month = parseInt(match[1]) - 1; // JavaScript月份从0开始
     const day = parseInt(match[2]);
     return new Date(2024, month, day); // 假设是2024年
   }
+  
   return new Date();
 };
 
