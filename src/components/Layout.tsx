@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { AIAssistant } from "@/components/AIAssistant";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { SidebarToggle } from "@/components/SidebarToggle";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import { useLocation } from "react-router-dom";
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ function LayoutContent({ children }: LayoutProps) {
       {isCollapsed && <SidebarToggle />}
       
       <main className="flex-1 overflow-hidden px-[16px] py-[16px] bg-white">
+        <PageBreadcrumb />
         {children}
       </main>
       

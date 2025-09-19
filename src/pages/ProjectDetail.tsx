@@ -39,14 +39,19 @@ export default function ProjectDetail() {
   }, [searchParams]);
 
   const getViewTitle = () => {
+    const tab = searchParams.get('tab');
+    
     switch (activeView) {
       case "basic-info":
         return "基础信息";
       case "plan-and-orders":
+        // 如果有tab参数，显示具体的tab标题
+        if (tab === 'task-overview') {
+          return "任务总览";
+        } else if (tab === 'gantt-chart') {
+          return "施工工序甘特图";
+        }
         return "施工总览";
-      case "task-overview":
-      case "gantt-chart":
-        return getPlanAndOrdersTitle();
       case "plan-overview":
       case "order-management":
         return "施工总览";
