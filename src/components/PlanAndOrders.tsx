@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3, X } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { GanttChart } from "@/components/GanttChart";
 
@@ -15,153 +16,247 @@ interface PlanAndOrdersProps {
   onExpandSidebar?: () => void;
 }
 
-// 合并后的数据结构
+// 新的施工工序数据结构
 interface TaskItem {
   id: number;
-  orderNumber: string;
-  task: string;
-  drawingLocation: string;
-  constructionContent: string;
-  quantity: string;
-  teamSize: number;
-  jobRequirement: string;
-  startDate: string;
-  endDate: string;
-  duration: string;
-  bidPrice: number;
-  quotaPrice: number;
-  totalCost: number;
-  costDetails?: {
-    materialCost: number;
-    laborCost: number;
-    equipmentCost: number;
-    materialDesc: string;
-    laborDesc: string;
-    equipmentDesc: string;
-  };
+  sequenceNumber: string; // 序号
+  processName: string; // 工序名称
+  quantity: number; // 工程量（来自广联达模型）
+  unit: string; // 单位
+  constructionMethod: string; // 施工方式
+  duration: number; // 时间（天）
+  workerCount: number; // 施工人数
+  jobType: string; // 工种
+  specialty: string; // 所属专业
+  constructionTeam: string; // 施工队
+  laborCost: number; // 人工成本（元/工日）
+  materialCost: number; // 材料价格（元）
+  totalLaborCost: number; // 总人工成本
+  totalCost: number; // 总成本
 }
 
 // 办公楼项目数据
 const officeBuildingData: TaskItem[] = [
   {
     id: 1,
-    orderNumber: "9#_墙、梁、板钢筋制作_01号单",
-    task: "墙、梁、板钢筋制作",
-    drawingLocation: "无",
-    constructionContent: "现场钢筋制作加工",
-    quantity: "16吨",
-    teamSize: 2,
-    jobRequirement: "钢筋工",
-    startDate: "2025/8/1",
-    endDate: "2025/8/3",
-    duration: "3天",
-    bidPrice: 4000,
-    quotaPrice: 3200,
-    totalCost: 4000,
-    costDetails: {
-      materialCost: 2500,
-      laborCost: 1000,
-      equipmentCost: 500,
-      materialDesc: "钢筋材料采购",
-      laborDesc: "钢筋工工资",
-      equipmentDesc: "加工设备租赁"
-    }
+    sequenceNumber: "1",
+    processName: "基础开挖",
+    quantity: 1200,
+    unit: "m³",
+    constructionMethod: "机械开挖",
+    duration: 10,
+    workerCount: 8,
+    jobType: "土方工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 300,
+    materialCost: 8000,
+    totalLaborCost: 24000,
+    totalCost: 32000
   },
   {
     id: 2,
-    orderNumber: "9#_测量放线_01号单",
-    task: "测量放线",
-    drawingLocation: "9#楼_4层",
-    constructionContent: "现场放线测量",
-    quantity: "950平方米",
-    teamSize: 1,
-    jobRequirement: "测量工",
-    startDate: "2025/8/1",
-    endDate: "2025/8/1",
-    duration: "1天",
-    bidPrice: 400,
-    quotaPrice: 300,
-    totalCost: 400,
-    costDetails: {
-      materialCost: 50,
-      laborCost: 300,
-      equipmentCost: 50,
-      materialDesc: "测量标记材料",
-      laborDesc: "测量工工资",
-      equipmentDesc: "测量仪器使用"
-    }
+    sequenceNumber: "2",
+    processName: "基础垫层浇筑",
+    quantity: 800,
+    unit: "m³",
+    constructionMethod: "商品混凝土",
+    duration: 8,
+    workerCount: 12,
+    jobType: "混凝土工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 280,
+    materialCost: 25000,
+    totalLaborCost: 26880,
+    totalCost: 51880
   },
   {
     id: 3,
-    orderNumber: "9#_短肢剪力墙钢筋绑扎_01号单",
-    task: "短肢剪力墙钢筋绑扎",
-    drawingLocation: "",
-    constructionContent: "现场剪力墙钢筋绑扎",
-    quantity: "80立方米",
-    teamSize: 4,
-    jobRequirement: "钢筋工",
-    startDate: "2025/8/7",
-    endDate: "2025/8/8",
-    duration: "2天",
-    bidPrice: 6400,
-    quotaPrice: 5600,
-    totalCost: 6400,
-    costDetails: {
-      materialCost: 4000,
-      laborCost: 2000,
-      equipmentCost: 400,
-      materialDesc: "钢筋及绑扎材料",
-      laborDesc: "钢筋工团队工资",
-      equipmentDesc: "绑扎工具租赁"
-    }
+    sequenceNumber: "3",
+    processName: "基础钢筋绑扎",
+    quantity: 45,
+    unit: "t",
+    constructionMethod: "现场绑扎",
+    duration: 12,
+    workerCount: 15,
+    jobType: "钢筋工",
+    specialty: "结构",
+    constructionTeam: "施工2队",
+    laborCost: 350,
+    materialCost: 18000,
+    totalLaborCost: 63000,
+    totalCost: 81000
   },
   {
     id: 4,
-    orderNumber: "9#_短肢剪力墙模板拼装_01号单",
-    task: "短肢剪力墙模板拼装",
-    drawingLocation: "",
-    constructionContent: "现场剪力墙模板拼装",
-    quantity: "400平方米",
-    teamSize: 2,
-    jobRequirement: "模板工",
-    startDate: "2025/8/10",
-    endDate: "2025/8/11",
-    duration: "2天",
-    bidPrice: 1600,
-    quotaPrice: 1250,
-    totalCost: 1600,
-    costDetails: {
-      materialCost: 800,
-      laborCost: 600,
-      equipmentCost: 200,
-      materialDesc: "模板材料租赁",
-      laborDesc: "模板工工资",
-      equipmentDesc: "拼装工具使用"
-    }
+    sequenceNumber: "4",
+    processName: "基础混凝土浇筑",
+    quantity: 800,
+    unit: "m³",
+    constructionMethod: "商品混凝土",
+    duration: 10,
+    workerCount: 12,
+    jobType: "混凝土工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 280,
+    materialCost: 25000,
+    totalLaborCost: 33600,
+    totalCost: 58600
   },
   {
     id: 5,
-    orderNumber: "9#_短肢剪力墙混凝土浇筑_01号单",
-    task: "短肢剪力墙混凝土浇筑",
-    drawingLocation: "9#楼_4层",
-    constructionContent: "现场剪力墙混凝土浇筑",
-    quantity: "150立方米",
-    teamSize: 4,
-    jobRequirement: "混凝土工",
-    startDate: "2025/8/13",
-    endDate: "2025/8/13",
-    duration: "1天",
-    bidPrice: 2000,
-    quotaPrice: 1480,
-    totalCost: 2000,
-    costDetails: {
-      materialCost: 1200,
-      laborCost: 600,
-      equipmentCost: 200,
-      materialDesc: "商品混凝土采购",
-      laborDesc: "混凝土工工资",
-      equipmentDesc: "浇筑设备租赁"
-    }
+    sequenceNumber: "5",
+    processName: "主体框架柱钢筋",
+    quantity: 120,
+    unit: "t",
+    constructionMethod: "现场绑扎",
+    duration: 25,
+    workerCount: 20,
+    jobType: "钢筋工",
+    specialty: "结构",
+    constructionTeam: "施工2队",
+    laborCost: 350,
+    materialCost: 48000,
+    totalLaborCost: 175000,
+    totalCost: 223000
+  },
+  {
+    id: 6,
+    sequenceNumber: "6",
+    processName: "主体框架柱模板",
+    quantity: 2500,
+    unit: "m²",
+    constructionMethod: "木模板",
+    duration: 20,
+    workerCount: 18,
+    jobType: "木工",
+    specialty: "结构",
+    constructionTeam: "施工2队",
+    laborCost: 400,
+    materialCost: 15000,
+    totalLaborCost: 144000,
+    totalCost: 159000
+  },
+  {
+    id: 7,
+    sequenceNumber: "7",
+    processName: "主体框架柱混凝土",
+    quantity: 1200,
+    unit: "m³",
+    constructionMethod: "商品混凝土",
+    duration: 15,
+    workerCount: 15,
+    jobType: "混凝土工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 280,
+    materialCost: 37500,
+    totalLaborCost: 63000,
+    totalCost: 100500
+  },
+  {
+    id: 8,
+    sequenceNumber: "8",
+    processName: "主体框架梁钢筋",
+    quantity: 95,
+    unit: "t",
+    constructionMethod: "现场绑扎",
+    duration: 20,
+    workerCount: 18,
+    jobType: "钢筋工",
+    specialty: "结构",
+    constructionTeam: "施工2队",
+    laborCost: 350,
+    materialCost: 38000,
+    totalLaborCost: 126000,
+    totalCost: 164000
+  },
+  {
+    id: 9,
+    sequenceNumber: "9",
+    processName: "主体框架梁模板",
+    quantity: 2000,
+    unit: "m²",
+    constructionMethod: "木模板",
+    duration: 18,
+    workerCount: 16,
+    jobType: "木工",
+    specialty: "结构",
+    constructionTeam: "施工2队",
+    laborCost: 400,
+    materialCost: 12000,
+    totalLaborCost: 115200,
+    totalCost: 127200
+  },
+  {
+    id: 10,
+    sequenceNumber: "10",
+    processName: "主体框架梁混凝土",
+    quantity: 950,
+    unit: "m³",
+    constructionMethod: "商品混凝土",
+    duration: 12,
+    workerCount: 15,
+    jobType: "混凝土工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 280,
+    materialCost: 29625,
+    totalLaborCost: 50400,
+    totalCost: 80025
+  },
+  {
+    id: 11,
+    sequenceNumber: "11",
+    processName: "楼板钢筋",
+    quantity: 85,
+    unit: "t",
+    constructionMethod: "现场绑扎",
+    duration: 15,
+    workerCount: 16,
+    jobType: "钢筋工",
+    specialty: "结构",
+    constructionTeam: "施工2队",
+    laborCost: 350,
+    materialCost: 34000,
+    totalLaborCost: 84000,
+    totalCost: 118000
+  },
+  {
+    id: 12,
+    sequenceNumber: "12",
+    processName: "楼板模板",
+    quantity: 1800,
+    unit: "m²",
+    constructionMethod: "木模板",
+    duration: 12,
+    workerCount: 14,
+    jobType: "木工",
+    specialty: "结构",
+    constructionTeam: "施工2队",
+    laborCost: 400,
+    materialCost: 10800,
+    totalLaborCost: 67200,
+    totalCost: 78000
+  },
+  {
+    id: 13,
+    sequenceNumber: "13",
+    processName: "楼板混凝土",
+    quantity: 850,
+    unit: "m³",
+    constructionMethod: "商品混凝土",
+    duration: 10,
+    workerCount: 15,
+    jobType: "混凝土工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 280,
+    materialCost: 26500,
+    totalLaborCost: 42000,
+    totalCost: 68500
   }
 ];
 
@@ -169,226 +264,340 @@ const officeBuildingData: TaskItem[] = [
 const kindergartenData: TaskItem[] = [
   {
     id: 1,
-    orderNumber: "幼儿园_地面支模_01号单",
-    task: "地面支模",
-    drawingLocation: "1层地面",
-    constructionContent: "地面模板支设",
-    quantity: "800平方米",
-    teamSize: 2,
-    jobRequirement: "木工",
-    startDate: "2025/8/1",
-    endDate: "2025/8/1",
-    duration: "1天",
-    bidPrice: 8000,
-    quotaPrice: 6500,
-    totalCost: 8000,
-    costDetails: {
-      materialCost: 5000,
-      laborCost: 2000,
-      equipmentCost: 1000,
-      materialDesc: "模板及配件租赁",
-      laborDesc: "木工工资及补贴",
-      equipmentDesc: "支撑工具租赁"
-    }
+    sequenceNumber: "1",
+    processName: "基础开挖",
+    quantity: 800,
+    unit: "m³",
+    constructionMethod: "机械开挖",
+    duration: 8,
+    workerCount: 6,
+    jobType: "土方工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 300,
+    materialCost: 5000,
+    totalLaborCost: 14400,
+    totalCost: 19400
   },
   {
     id: 2,
-    orderNumber: "幼儿园_地面混凝土浇筑_01号单",
-    task: "地面混凝土浇筑",
-    drawingLocation: "1层地面",
-    constructionContent: "地面混凝土浇筑施工",
-    quantity: "800平方米",
-    teamSize: 4,
-    jobRequirement: "混凝土工",
-    startDate: "2025/8/2",
-    endDate: "2025/8/4",
-    duration: "3天",
-    bidPrice: 15000,
-    quotaPrice: 12000,
-    totalCost: 15000,
-    costDetails: {
-      materialCost: 10000,
-      laborCost: 3000,
-      equipmentCost: 2000,
-      materialDesc: "商品混凝土采购",
-      laborDesc: "混凝土工工资",
-      equipmentDesc: "搅拌车及泵车租赁"
-    }
+    sequenceNumber: "2",
+    processName: "基础垫层浇筑",
+    quantity: 500,
+    unit: "m³",
+    constructionMethod: "商品混凝土",
+    duration: 6,
+    workerCount: 10,
+    jobType: "混凝土工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 280,
+    materialCost: 15000,
+    totalLaborCost: 16800,
+    totalCost: 31800
   },
   {
     id: 3,
-    orderNumber: "幼儿园_墙体砌筑_01号单",
-    task: "墙体砌筑",
-    drawingLocation: "1-2层",
-    constructionContent: "砖墙砌筑施工",
-    quantity: "200立方米",
-    teamSize: 4,
-    jobRequirement: "砌筑工",
-    startDate: "2025/8/5",
-    endDate: "2025/8/8",
-    duration: "4天",
-    bidPrice: 18000,
-    quotaPrice: 15000,
-    totalCost: 18000,
-    costDetails: {
-      materialCost: 12000,
-      laborCost: 4000,
-      equipmentCost: 2000,
-      materialDesc: "砖块及砂浆采购",
-      laborDesc: "砌筑工工资",
-      equipmentDesc: "砌筑工具及脚手架"
-    }
+    sequenceNumber: "3",
+    processName: "剪力墙钢筋",
+    quantity: 60,
+    unit: "t",
+    constructionMethod: "现场绑扎",
+    duration: 15,
+    workerCount: 12,
+    jobType: "钢筋工",
+    specialty: "结构",
+    constructionTeam: "施工2队",
+    laborCost: 350,
+    materialCost: 24000,
+    totalLaborCost: 63000,
+    totalCost: 87000
   },
   {
     id: 4,
-    orderNumber: "幼儿园_抹灰_01号单",
-    task: "抹灰",
-    drawingLocation: "1-2层",
-    constructionContent: "墙面抹灰施工",
-    quantity: "1200平方米",
-    teamSize: 2,
-    jobRequirement: "抹灰工",
-    startDate: "2025/8/9",
-    endDate: "2025/8/13",
-    duration: "5天",
-    bidPrice: 12000,
-    quotaPrice: 10000,
-    totalCost: 12000,
-    costDetails: {
-      materialCost: 6000,
-      laborCost: 5000,
-      equipmentCost: 1000,
-      materialDesc: "水泥砂浆及腻子",
-      laborDesc: "抹灰工工资",
-      equipmentDesc: "抹灰工具租赁"
-    }
+    sequenceNumber: "4",
+    processName: "剪力墙模板",
+    quantity: 1500,
+    unit: "m²",
+    constructionMethod: "木模板",
+    duration: 12,
+    workerCount: 10,
+    jobType: "木工",
+    specialty: "结构",
+    constructionTeam: "施工2队",
+    laborCost: 400,
+    materialCost: 9000,
+    totalLaborCost: 48000,
+    totalCost: 57000
   },
   {
     id: 5,
-    orderNumber: "幼儿园_门窗安装_01号单",
-    task: "门窗安装",
-    drawingLocation: "1-2层",
-    constructionContent: "门窗安装施工",
-    quantity: "50樘",
-    teamSize: 2,
-    jobRequirement: "安装工",
-    startDate: "2025/8/14",
-    endDate: "2025/8/14",
-    duration: "1天",
-    bidPrice: 35000,
-    quotaPrice: 30000,
-    totalCost: 35000,
-    costDetails: {
-      materialCost: 30000,
-      laborCost: 3000,
-      equipmentCost: 2000,
-      materialDesc: "门窗产品采购",
-      laborDesc: "安装工工资",
-      equipmentDesc: "安装工具及设备"
-    }
+    sequenceNumber: "5",
+    processName: "剪力墙梁板混凝土",
+    quantity: 600,
+    unit: "m³",
+    constructionMethod: "商品混凝土",
+    duration: 8,
+    workerCount: 12,
+    jobType: "混凝土工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 280,
+    materialCost: 18750,
+    totalLaborCost: 26880,
+    totalCost: 45630
+  },
+  {
+    id: 6,
+    sequenceNumber: "6",
+    processName: "砌体工程",
+    quantity: 1200,
+    unit: "m²",
+    constructionMethod: "加气混凝土砌块",
+    duration: 20,
+    workerCount: 12,
+    jobType: "瓦工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 400,
+    materialCost: 18000,
+    totalLaborCost: 96000,
+    totalCost: 114000
+  },
+  {
+    id: 7,
+    sequenceNumber: "7",
+    processName: "抹灰工程",
+    quantity: 2000,
+    unit: "m²",
+    constructionMethod: "水泥砂浆",
+    duration: 25,
+    workerCount: 15,
+    jobType: "抹灰工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 400,
+    materialCost: 12000,
+    totalLaborCost: 150000,
+    totalCost: 162000
+  },
+  {
+    id: 8,
+    sequenceNumber: "8",
+    processName: "防水工程",
+    quantity: 800,
+    unit: "m²",
+    constructionMethod: "SBS防水卷材",
+    duration: 10,
+    workerCount: 8,
+    jobType: "防水工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 480,
+    materialCost: 16000,
+    totalLaborCost: 38400,
+    totalCost: 54400
+  },
+  {
+    id: 9,
+    sequenceNumber: "9",
+    processName: "水电安装",
+    quantity: 1,
+    unit: "项",
+    constructionMethod: "预埋安装",
+    duration: 30,
+    workerCount: 10,
+    jobType: "水电工",
+    specialty: "水电",
+    constructionTeam: "施工3队",
+    laborCost: 500,
+    materialCost: 25000,
+    totalLaborCost: 150000,
+    totalCost: 175000
+  },
+  {
+    id: 10,
+    sequenceNumber: "10",
+    processName: "装修工程",
+    quantity: 2000,
+    unit: "m²",
+    constructionMethod: "乳胶漆",
+    duration: 20,
+    workerCount: 12,
+    jobType: "油工",
+    specialty: "建筑",
+    constructionTeam: "施工1队",
+    laborCost: 400,
+    materialCost: 15000,
+    totalLaborCost: 96000,
+    totalCost: 111000
   }
 ];
 
-const getWorkerBadgeColor = (worker: string) => {
-  const colors: { [key: string]: string } = {
-    "钢筋工": "bg-blue-100 text-blue-800",
-    "模板工": "bg-green-100 text-green-800",
-    "混凝土工": "bg-orange-100 text-orange-800",
-    "砌筑工": "bg-purple-100 text-purple-800",
-    "抹灰工": "bg-pink-100 text-pink-800",
-    "安装工": "bg-indigo-100 text-indigo-800",
-    "测量工": "bg-yellow-100 text-yellow-800",
-    "木工": "bg-teal-100 text-teal-800"
-  };
-  return colors[worker] || "bg-gray-100 text-gray-800";
-};
-
-const formatCurrency = (amount: number) => {
-  return `¥${amount.toLocaleString()}`;
-};
-
-export function PlanAndOrders(props: PlanAndOrdersProps) {
+export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: PlanAndOrdersProps) {
   const { currentProject } = useProject();
   const [searchTerm, setSearchTerm] = useState("");
   const [jobFilter, setJobFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("startDate");
+  const [sortBy, setSortBy] = useState<"sequenceNumber" | "duration" | "workerCount" | "totalCost">("sequenceNumber");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const itemsPerPage = 10;
+  const [selectedItem, setSelectedItem] = useState<TaskItem | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
   // 根据当前项目选择数据
   const allData = useMemo(() => {
-    return currentProject?.id === "2" ? kindergartenData : officeBuildingData;
+    if (currentProject?.id === "2") {
+      return kindergartenData;
+    }
+    return officeBuildingData;
   }, [currentProject?.id]);
 
-  // 获取工种选项
+  // 工种类型
   const jobTypes = useMemo(() => {
-    const types = Array.from(new Set(allData.map(item => item.jobRequirement)));
-    return types;
+    const types = new Set(allData.map(item => item.jobType));
+    return Array.from(types);
   }, [allData]);
 
-  // 筛选和搜索逻辑
+  // 过滤和排序数据
   const filteredData = useMemo(() => {
     let filtered = allData.filter(item => {
-      const matchesSearch = 
-        item.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.task.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.constructionContent.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesJob = jobFilter === "all" || item.jobRequirement === jobFilter;
+      const matchesSearch = item.processName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           item.sequenceNumber.includes(searchTerm);
+      const matchesJob = jobFilter === "all" || item.jobType === jobFilter;
       return matchesSearch && matchesJob;
     });
 
     // 排序
     filtered.sort((a, b) => {
+      let aValue: number | string;
+      let bValue: number | string;
+
       switch (sortBy) {
-        case "startDate":
-          return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-        case "bidPrice":
-          return b.bidPrice - a.bidPrice;
-        case "teamSize":
-          return b.teamSize - a.teamSize;
+        case "sequenceNumber":
+          aValue = parseInt(a.sequenceNumber);
+          bValue = parseInt(b.sequenceNumber);
+          break;
+        case "duration":
+          aValue = a.duration;
+          bValue = b.duration;
+          break;
+        case "workerCount":
+          aValue = a.workerCount;
+          bValue = b.workerCount;
+          break;
         case "totalCost":
-          return b.totalCost - a.totalCost;
+          aValue = a.totalCost;
+          bValue = b.totalCost;
+          break;
         default:
-          return 0;
+          aValue = a.sequenceNumber;
+          bValue = b.sequenceNumber;
+      }
+
+      if (sortOrder === "asc") {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
     });
+
     return filtered;
-  }, [allData, searchTerm, jobFilter, sortBy]);
+  }, [allData, searchTerm, jobFilter, sortBy, sortOrder]);
 
-  // 分页逻辑
+  // 分页数据
   const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, currentPage, pageSize]);
-  
-  const totalPages = Math.ceil(filteredData.length / pageSize);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredData, currentPage]);
 
-  // 价格差异显示
-  const getPriceDifference = (bidPrice: number, quotaPrice: number) => {
-    const isHigher = bidPrice > quotaPrice;
-    return {
-      isHigher,
-      className: isHigher ? "text-red-600 font-medium" : "text-green-600 font-medium"
+  // 总页数
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  // 工种颜色
+  const getJobTypeColor = (jobType: string) => {
+    const colors: Record<string, string> = {
+      "土方工": "bg-orange-100 text-orange-800",
+      "混凝土工": "bg-blue-100 text-blue-800",
+      "钢筋工": "bg-red-100 text-red-800",
+      "木工": "bg-green-100 text-green-800",
+      "瓦工": "bg-yellow-100 text-yellow-800",
+      "抹灰工": "bg-purple-100 text-purple-800",
+      "防水工": "bg-indigo-100 text-indigo-800",
+      "水电工": "bg-pink-100 text-pink-800",
+      "油工": "bg-gray-100 text-gray-800"
     };
+    return colors[jobType] || "bg-gray-100 text-gray-800";
   };
 
-  // 转换为甘特图数据格式
+  // 格式化货币
+  const formatCurrency = (amount: number) => {
+    return `¥${amount.toLocaleString()}`;
+  };
+
+  // 处理详情按钮点击
+  const handleDetailClick = (item: TaskItem) => {
+    setSelectedItem(item);
+    setIsDetailDialogOpen(true);
+  };
+
+  // 关闭详情对话框
+  const handleCloseDetail = () => {
+    setIsDetailDialogOpen(false);
+    setSelectedItem(null);
+  };
+
+  // 甘特图数据转换
   const ganttData = useMemo(() => {
     return allData.map(item => ({
       id: item.id,
-      task: item.task,
-      startDate: item.startDate,
-      endDate: item.endDate,
-      duration: item.duration,
-      worker: item.jobRequirement,
-      count: item.teamSize,
-      totalCost: item.totalCost,
-      costDetails: item.costDetails
+      task: `${item.sequenceNumber}. ${item.processName}`,
+      startDate: `2024-01-${String(1 + (item.id - 1) * 5).padStart(2, '0')}`,
+      endDate: `2024-01-${String(1 + (item.id - 1) * 5 + item.duration).padStart(2, '0')}`,
+      duration: `${item.duration}天`,
+      worker: item.jobType,
+      count: item.workerCount
     }));
   }, [allData]);
 
   return (
     <div className="h-full flex flex-col space-y-6">
+      {/* 操作栏 */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="flex flex-col md:flex-row gap-4 items-center flex-1">
+          {/* 搜索框 */}
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input 
+              placeholder="搜索序号、工序名称..." 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+              className="pl-10" 
+            />
+          </div>
+          
+          {/* 筛选器 */}
+          <Select value={jobFilter} onValueChange={setJobFilter}>
+            <SelectTrigger className="w-48 bg-background">
+              <SelectValue placeholder="筛选工种" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border">
+              <SelectItem value="all">全部工种</SelectItem>
+              {jobTypes.map(job => (
+                <SelectItem key={job} value={job}>{job}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            添加任务
+          </Button>
+        </div>
+      </div>
+
       <Tabs defaultValue="table" className="h-full flex flex-col">
         {/* 固定在顶部的部分 */}
         <div className="shrink-0 space-y-6">
@@ -408,166 +617,91 @@ export function PlanAndOrders(props: PlanAndOrdersProps) {
         <div className="flex-1 overflow-hidden">
           <TabsContent value="table" className="h-full m-0 py-4">
             <div className="h-full flex flex-col space-y-6">
-              {/* 操作栏 */}
-              <Card className="mt-6">
-                <CardContent className="p-4">
-                  <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="flex flex-col md:flex-row gap-4 items-center flex-1">
-                      {/* 搜索框 */}
-                      <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                        <Input 
-                          placeholder="搜索单号、任务或施工内容..." 
-                          value={searchTerm} 
-                          onChange={e => setSearchTerm(e.target.value)} 
-                          className="pl-10" 
-                        />
-                      </div>
-
-                      {/* 工种筛选 */}
-                      <Select value={jobFilter} onValueChange={setJobFilter}>
-                        <SelectTrigger className="w-40">
-                          <Filter className="h-4 w-4 mr-2" />
-                          <SelectValue placeholder="工种筛选" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">全部工种</SelectItem>
-                          {jobTypes.map(job => (
-                            <SelectItem key={job} value={job}>{job}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      {/* 排序 */}
-                      <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-40">
-                          <SelectValue placeholder="排序方式" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="startDate">按开始时间</SelectItem>
-                          <SelectItem value="bidPrice">按抢单价格</SelectItem>
-                          <SelectItem value="teamSize">按班组人数</SelectItem>
-                          <SelectItem value="totalCost">按总费用</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* 操作按钮 */}
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        导出
-                      </Button>
-                      <Button size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        新增任务
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* 数据表格 */}
               <Card className="flex-1">
                 <CardContent className="p-0 h-full">
                   <div className="h-full overflow-hidden">
                     <div className="h-full overflow-auto">
-                      <Table>
-                        <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-                          <TableRow>
-                            <TableHead className="min-w-[200px]">单号</TableHead>
-                            <TableHead className="min-w-[150px]">任务名称</TableHead>
-                            <TableHead>图纸位置</TableHead>
-                            <TableHead className="min-w-[150px]">施工内容</TableHead>
-                            <TableHead>工程量</TableHead>
-                            <TableHead>班组人数</TableHead>
-                            <TableHead>工种要求</TableHead>
-                            <TableHead>开始时间</TableHead>
-                            <TableHead>结束时间</TableHead>
-                            <TableHead>持续天数</TableHead>
-                            <TableHead>抢单价格</TableHead>
-                            <TableHead>定额价格</TableHead>
-                            <TableHead>总费用</TableHead>
-                            <TableHead className="min-w-[120px]">操作</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {paginatedData.map(item => {
-                            const bidPriceInfo = getPriceDifference(item.bidPrice, item.quotaPrice);
-                            return (
+                      <div className="relative">
+                        <Table>
+                          <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+                            <TableRow>
+                              <TableHead className="sticky left-0 z-20 min-w-[300px] border-r">
+                                工序名称
+                              </TableHead>
+                              <TableHead className="min-w-[150px]">施工方式</TableHead>
+                              <TableHead className="min-w-[100px]">时间(天)</TableHead>
+                              <TableHead className="min-w-[120px]">工种</TableHead>
+                              <TableHead className="min-w-[100px]">所属专业</TableHead>
+                              <TableHead className="min-w-[120px]">施工队</TableHead>
+                              <TableHead className="sticky right-0 z-20 min-w-[120px] border-l">
+                                操作
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {paginatedData.map(item => (
                               <TableRow key={item.id} className="hover:bg-muted/50">
-                                <TableCell className="font-medium">{item.orderNumber}</TableCell>
-                                <TableCell className="font-medium">{item.task}</TableCell>
-                                <TableCell>{item.drawingLocation || "-"}</TableCell>
-                                <TableCell>{item.constructionContent}</TableCell>
-                                <TableCell>{item.quantity}</TableCell>
-                                <TableCell>{item.teamSize}人</TableCell>
+                                <TableCell className="sticky left-0 z-10 border-r font-medium">
+                                  <div className="font-semibold">{item.sequenceNumber}. {item.processName}</div>
+                                </TableCell>
+                                <TableCell>{item.constructionMethod}</TableCell>
+                                <TableCell className="font-medium">{item.duration}</TableCell>
                                 <TableCell>
-                                  <Badge variant="secondary" className={getWorkerBadgeColor(item.jobRequirement)}>
-                                    {item.jobRequirement}
+                                  <Badge variant="secondary" className={getJobTypeColor(item.jobType)}>
+                                    {item.jobType}
                                   </Badge>
                                 </TableCell>
-                                <TableCell>{item.startDate}</TableCell>
-                                <TableCell>{item.endDate}</TableCell>
-                                <TableCell>{item.duration}</TableCell>
-                                <TableCell className={bidPriceInfo.className}>
-                                  ¥{item.bidPrice.toLocaleString()}
-                                </TableCell>
-                                <TableCell>¥{item.quotaPrice.toLocaleString()}</TableCell>
-                                <TableCell className="font-medium">
-                                  {formatCurrency(item.totalCost)}
+                                <TableCell>
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                    {item.specialty}
+                                  </Badge>
                                 </TableCell>
                                 <TableCell>
+                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                    {item.constructionTeam}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="sticky right-0 z-10 border-l">
                                   <div className="flex gap-2">
                                     <Button variant="outline" size="sm">
                                       <Edit className="h-4 w-4 mr-1" />
                                       编辑
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button variant="outline" size="sm" onClick={() => handleDetailClick(item)}>
                                       <Eye className="h-4 w-4 mr-1" />
                                       详情
                                     </Button>
                                   </div>
                                 </TableCell>
                               </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
 
                     {/* 分页控件 */}
                     <div className="flex items-center justify-between p-4 border-t">
                       <div className="text-sm text-muted-foreground">
-                        显示 {Math.min((currentPage - 1) * pageSize + 1, filteredData.length)} 到{" "}
-                        {Math.min(currentPage * pageSize, filteredData.length)} 条，共 {filteredData.length} 条记录
+                        显示 {((currentPage - 1) * itemsPerPage) + 1} 到 {Math.min(currentPage * itemsPerPage, filteredData.length)} 条，共 {filteredData.length} 条记录
                       </div>
                       <div className="flex items-center gap-2">
-                        <Select value={pageSize.toString()} onValueChange={value => setPageSize(Number(value))}>
-                          <SelectTrigger className="w-24">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="10">10条</SelectItem>
-                            <SelectItem value="20">20条</SelectItem>
-                            <SelectItem value="50">50条</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} 
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                           disabled={currentPage === 1}
                         >
                           上一页
                         </Button>
                         <span className="text-sm">
-                          {currentPage} / {totalPages}
+                          第 {currentPage} 页，共 {totalPages} 页
                         </span>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} 
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                           disabled={currentPage === totalPages}
                         >
                           下一页
@@ -587,6 +721,132 @@ export function PlanAndOrders(props: PlanAndOrdersProps) {
           </TabsContent>
         </div>
       </Tabs>
+
+      {/* 详情对话框 */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>工序详情 - {selectedItem?.sequenceNumber}. {selectedItem?.processName}</span>
+              <Button variant="ghost" size="sm" onClick={handleCloseDetail}>
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedItem && (
+            <div className="space-y-6">
+              {/* 基本信息 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">基本信息</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">序号</label>
+                      <p className="text-sm">{selectedItem.sequenceNumber}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">工序名称</label>
+                      <p className="text-sm">{selectedItem.processName}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">施工方式</label>
+                      <p className="text-sm">{selectedItem.constructionMethod}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">时间</label>
+                      <p className="text-sm">{selectedItem.duration} 天</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">工种</label>
+                      <div className="mt-1">
+                        <Badge variant="secondary" className={getJobTypeColor(selectedItem.jobType)}>
+                          {selectedItem.jobType}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">所属专业</label>
+                      <div className="mt-1">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          {selectedItem.specialty}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">施工队</label>
+                      <div className="mt-1">
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          {selectedItem.constructionTeam}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 工程量信息 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">工程量信息</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">工程量</label>
+                      <p className="text-sm">{selectedItem.quantity.toLocaleString()} {selectedItem.unit}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">施工人数</label>
+                      <p className="text-sm">{selectedItem.workerCount} 人</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 成本信息 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">成本信息</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">人工成本（元/工日）</label>
+                      <p className="text-sm font-medium">{formatCurrency(selectedItem.laborCost)}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">材料价格（元）</label>
+                      <p className="text-sm font-medium">{formatCurrency(selectedItem.materialCost)}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">总人工成本（元）</label>
+                      <p className="text-sm font-medium">{formatCurrency(selectedItem.totalLaborCost)}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">总成本（元）</label>
+                      <p className="text-lg font-bold text-primary">{formatCurrency(selectedItem.totalCost)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 操作按钮 */}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={handleCloseDetail}>
+                  关闭
+                </Button>
+                <Button>
+                  <Edit className="h-4 w-4 mr-2" />
+                  编辑工序
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

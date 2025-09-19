@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Calendar, CheckCircle2, ShoppingCart } from "lucide-react";
+import { FileText, Calendar, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // 模拟项目数据
@@ -10,36 +10,31 @@ const projects = [{
   id: 1,
   name: "办公楼建设项目",
   createdAt: "2024-01-10",
-  taskCount: 15,
-  orderCount: 8,
+  orderCount: 156,
   status: "已完成"
 }, {
   id: 2,
   name: "住宅小区A区项目",
   createdAt: "2024-02-15",
-  taskCount: 23,
-  orderCount: 12,
+  orderCount: 234,
   status: "进行中"
 }, {
   id: 3,
   name: "商业综合体项目",
   createdAt: "2024-03-20",
-  taskCount: 31,
-  orderCount: 18,
+  orderCount: 189,
   status: "进行中"
 }, {
   id: 4,
   name: "工业园区基础设施",
   createdAt: "2024-04-05",
-  taskCount: 19,
-  orderCount: 10,
+  orderCount: 267,
   status: "规划中"
 }, {
   id: 5,
   name: "学校扩建项目",
   createdAt: "2024-05-12",
-  taskCount: 27,
-  orderCount: 15,
+  orderCount: 145,
   status: "进行中"
 }];
 
@@ -98,10 +93,6 @@ export default function ProjectManagement() {
 
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                      <span>{project.taskCount} 个任务</span>
-                    </div>
                     <div className="flex items-center gap-1">
                       <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                       <span>{project.orderCount} 个订单</span>

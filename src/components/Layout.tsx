@@ -1,13 +1,33 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AIAssistant } from "@/components/AIAssistant";
 import { ProjectProvider } from "@/contexts/ProjectContext";
-import { Header } from "@/components/Header";
 import { SidebarToggle } from "@/components/SidebarToggle";
 import { useLocation } from "react-router-dom";
 interface LayoutProps {
   children: React.ReactNode;
 }
+
+function LayoutContent({ children }: LayoutProps) {
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
+  
+  return (
+    <div className="h-screen flex w-full bg-background overflow-hidden">
+      <AppSidebar />
+      
+      {/* 收起状态下显示border上的展开按钮 */}
+      {isCollapsed && <SidebarToggle />}
+      
+      <main className="flex-1 overflow-hidden px-[16px] py-[16px] bg-white">
+        {children}
+      </main>
+      
+      <AIAssistant />
+    </div>
+  );
+}
+
 export function Layout({
   children
 }: LayoutProps) {
@@ -15,24 +35,7 @@ export function Layout({
   
   return <ProjectProvider>
       <SidebarProvider defaultOpen={true}>
-        <div className="h-screen flex flex-col w-full bg-background overflow-hidden">
-          {/* 全局 Header */}
-          <Header />
-          
-          {/* 下方区域: Sidebar + Main Content */}
-          <div className="flex-1 flex overflow-hidden relative">
-            <AppSidebar />
-            
-            {/* 侧边栏分割线上的展开收起按钮 */}
-            <SidebarToggle />
-            
-            <main className="flex-1 overflow-hidden px-[16px] py-[16px] bg-white">
-              {children}
-            </main>
-            
-            <AIAssistant />
-          </div>
-        </div>
+        <LayoutContent>{children}</LayoutContent>
       </SidebarProvider>
     </ProjectProvider>;
 }

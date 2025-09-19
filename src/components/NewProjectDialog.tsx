@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, FileText, Wrench, Play } from "lucide-react";
+import { Upload, FileText, Cloud } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/contexts/ProjectContext";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface NewProjectDialogProps {
   open: boolean;
@@ -21,9 +21,9 @@ interface NewProjectDialogProps {
 }
 
 export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) {
-  const [bidNotice, setBidNotice] = useState<File | null>(null);
-  const [controlPrice, setControlPrice] = useState("");
+  const [projectDoc, setProjectDoc] = useState<File | null>(null);
   const [cadFile, setCadFile] = useState<File | null>(null);
+  const [projectName, setProjectName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -60,11 +60,11 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
     event.preventDefault();
   };
 
-  const handleStartAnalysis = async () => {
-    if (!bidNotice || !controlPrice || !cadFile) {
+  const handleCreateProject = async () => {
+    if (!projectName.trim()) {
       toast({
         title: "请完善信息",
-        description: "请上传所需文件并输入内部控制价",
+        description: "请输入项目名称",
         variant: "destructive"
       });
       return;
@@ -72,16 +72,16 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
     
     setIsCreating(true);
     toast({
-      title: "开始解析",
-      description: "正在解析项目文件，请稍候..."
+      title: "创建项目",
+      description: "正在创建项目，请稍候..."
     });
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const newProjectId = Math.floor(Math.random() * 1000) + Date.now();
       const newProject = {
         id: newProjectId.toString(),
-        name: `新建项目 ${newProjectId}`,
+        name: projectName.trim(),
         hasBasicInfo: false
       };
       
@@ -91,19 +91,19 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
       
       toast({
         title: "项目创建成功",
-        description: `项目已成功创建，文件解析完成`
+        description: `项目"${projectName}"已成功创建`
       });
       
       // 重置表单
-      setBidNotice(null);
-      setControlPrice("");
+      setProjectName("");
+      setProjectDoc(null);
       setCadFile(null);
       
       // 关闭弹窗
       onOpenChange(false);
       
-      // 导航到新项目的计划总览页面
-      navigate(`/project/${newProjectId}?view=plan-overview`);
+      // 导航到新项目的基础信息页面
+      navigate(`/project/${newProjectId}?view=basic-info`);
     } catch (error) {
       toast({
         title: "创建失败",
@@ -116,134 +116,117 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side="bottom" 
-        className="h-[calc(100vh-48px)] w-[calc(100%-96px)] mx-auto rounded-t-xl fixed bottom-0 left-[48px] right-[48px] border-0"
-      >
-        <SheetHeader className="pb-6">
-          <SheetTitle className="text-xl">新建项目</SheetTitle>
-          <SheetDescription>
-            上传项目文件并设置基础信息以开始项目管理
-          </SheetDescription>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-xl">创建新项目</DialogTitle>
+        </DialogHeader>
 
-        <div className="flex flex-col h-full pb-6">
-          {/* 第一行：两列布局 */}
-          <div className="grid gap-6 md:grid-cols-2 flex-1 mb-6">
-            {/* CAD 文件上传 */}
-            <Card className="h-full flex flex-col shadow-none border border-border/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Upload className="h-5 w-5 text-primary" />
-                  CAD 图纸
-                </CardTitle>
-                <CardDescription className="text-sm">用于识别建筑类型和结构类型</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
-                <div className="flex-1">
-                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors h-full flex flex-col justify-center" onDrop={e => handleDrop(e, setCadFile, ['.dwg', '.dxf'])} onDragOver={handleDragOver}>
-                    {!cadFile && <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        {cadFile ? cadFile.name : "点击或拖拽上传 DWG 或 DXF 文件"}
-                      </p>
-                      <input type="file" accept=".dwg,.dxf" onChange={e => handleFileUpload(e, setCadFile)} className="hidden" id="cad-file" />
-                      {cadFile ? (
-                        <Button variant="destructive" type="button" onClick={() => handleFileDelete(setCadFile)}>
-                          删除
-                        </Button>
-                      ) : (
-                        <Label htmlFor="cad-file" className="cursor-pointer">
-                          <Button variant="outline" type="button">
-                            选择文件
-                          </Button>
-                        </Label>
-                      )}
-                    </div>
-                  </div>
+        <div className="space-y-6">
+          {/* 项目名称输入 */}
+          <div className="space-y-2">
+            <Label htmlFor="project-name">项目名称</Label>
+            <Input 
+              id="project-name" 
+              placeholder="请输入项目名称" 
+              value={projectName} 
+              onChange={e => setProjectName(e.target.value)} 
+            />
+          </div>
+
+          {/* 文件上传区域 */}
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* 上传项目文档 */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm font-medium">上传项目文档</span>
+              </div>
+              <div 
+                className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors cursor-pointer"
+                onDrop={e => handleDrop(e, setProjectDoc, ['.pdf', '.doc', '.docx'])} 
+                onDragOver={handleDragOver}
+                onClick={() => document.getElementById('project-doc')?.click()}
+              >
+                {!projectDoc && <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {projectDoc ? projectDoc.name : "上传项目文档"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    支持PDF、DOC、DOCX等格式
+                  </p>
+                  <input 
+                    type="file" 
+                    accept=".pdf,.doc,.docx" 
+                    onChange={e => handleFileUpload(e, setProjectDoc)} 
+                    className="hidden" 
+                    id="project-doc" 
+                  />
+                  {projectDoc && (
+                    <Button variant="destructive" size="sm" onClick={(e) => {
+                      e.stopPropagation();
+                      handleFileDelete(setProjectDoc);
+                    }}>
+                      删除
+                    </Button>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* 右侧列：中标通知书和内部控制价 */}
-            <div className="h-full flex flex-col space-y-6">
-              {/* 中标通知书上传 */}
-              <Card className="flex-1 flex flex-col shadow-none border border-border/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <FileText className="h-5 w-5 text-primary" />
-                    中标通知书
-                  </CardTitle>
-                  <CardDescription className="text-sm">用于识别项目城市，建筑类型，中标金额</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
-                  <div className="flex-1">
-                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors h-full flex flex-col justify-center" onDrop={e => handleDrop(e, setBidNotice, ['.pdf'])} onDragOver={handleDragOver}>
-                      {!bidNotice && <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          {bidNotice ? bidNotice.name : "点击或拖拽上传 PDF 文件"}
-                        </p>
-                        <input type="file" accept=".pdf" onChange={e => handleFileUpload(e, setBidNotice)} className="hidden" id="bid-notice" />
-                        {bidNotice ? (
-                          <Button variant="destructive" type="button" onClick={() => handleFileDelete(setBidNotice)}>
-                            删除
-                          </Button>
-                        ) : (
-                          <Label htmlFor="bid-notice" className="cursor-pointer">
-                            <Button variant="outline" type="button">
-                              选择文件
-                            </Button>
-                          </Label>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 内部控制价 */}
-              <Card className="flex-1 flex flex-col shadow-none border border-border/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Wrench className="h-5 w-5 text-primary" />
-                    内部控制价
-                  </CardTitle>
-                  <CardDescription className="text-sm">设置项目的内部控制价百分比</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-center">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="control-price">控制价百分比</Label>
-                      <div className="relative">
-                        <Input id="control-price" type="number" placeholder="输入百分比" value={controlPrice} onChange={e => setControlPrice(e.target.value)} className="pr-8" />
-                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                          %
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        例如：95 表示控制价为投标价的 95%
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* 上传CAD文件 */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Cloud className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm font-medium">上传CAD文件</span>
+              </div>
+              <div 
+                className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors cursor-pointer"
+                onDrop={e => handleDrop(e, setCadFile, ['.dwg', '.dwf', '.dxf'])} 
+                onDragOver={handleDragOver}
+                onClick={() => document.getElementById('cad-file')?.click()}
+              >
+                {!cadFile && <Cloud className="h-8 w-8 mx-auto text-muted-foreground mb-2" />}
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {cadFile ? cadFile.name : "上传CAD文件或广联达模型文件"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    支持DWG、DWF、DXF等格式
+                  </p>
+                  <input 
+                    type="file" 
+                    accept=".dwg,.dwf,.dxf" 
+                    onChange={e => handleFileUpload(e, setCadFile)} 
+                    className="hidden" 
+                    id="cad-file" 
+                  />
+                  {cadFile && (
+                    <Button variant="destructive" size="sm" onClick={(e) => {
+                      e.stopPropagation();
+                      handleFileDelete(setCadFile);
+                    }}>
+                      删除
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* 第二行：解析按钮 */}
-          <div className="flex flex-col items-center space-y-4 pt-4 border-t">
-            <Button onClick={handleStartAnalysis} size="lg" disabled={!bidNotice || !controlPrice || !cadFile || isCreating} className="px-12">
-              <Play className="mr-2 h-4 w-4" />
-              {isCreating ? "正在创建..." : "开始解析"}
+          {/* 创建按钮 */}
+          <div className="flex justify-end">
+            <Button 
+              onClick={handleCreateProject} 
+              disabled={!projectName.trim() || isCreating}
+              className="px-8"
+            >
+              {isCreating ? "创建中..." : "创建项目"}
             </Button>
-            <p className="text-muted-foreground text-sm text-center">
-              完成上述文件上传后，点击开始解析生成项目
-            </p>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
