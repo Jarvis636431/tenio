@@ -179,9 +179,6 @@ export function GanttChart({ data }: GanttChartProps) {
                         }}>
                           <div className="px-2 text-center">
                             <div className="font-medium">{item.duration}天</div>
-                            <div className="text-xs opacity-90">
-                              {parseDate(item.startDate).getMonth() + 1}/{parseDate(item.startDate).getDate()} - {parseDate(item.endDate).getMonth() + 1}/{parseDate(item.endDate).getDate()}
-                            </div>
                           </div>
                         </div>
                       </div>

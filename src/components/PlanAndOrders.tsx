@@ -1799,30 +1799,30 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                       </TableHeader>
                       <TableBody>
                         {paginatedData.map(item => (
-                          <TableRow key={item.id} className="hover:bg-gray-50 border-b">
-                            <TableCell className="sticky left-0 z-20 w-[234px] border-r font-medium bg-white hover:bg-gray-50">
-                              <div className="font-semibold">{item.task}</div>
+                          <TableRow key={item.id} className="hover:bg-gray-50 border-b h-12">
+                            <TableCell className="sticky left-0 z-20 w-[234px] border-r bg-white hover:bg-gray-50 py-2">
+                              <div className="text-sm">{item.task}</div>
                             </TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50">
+                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">
                               {item.specialty && (
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                   {item.specialty}
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50">{item.component}</TableCell>
-                            <TableCell className="w-[100px] font-medium bg-white hover:bg-gray-50">{item.workerCount}</TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50">
+                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">{item.component}</TableCell>
+                            <TableCell className="w-[100px] bg-white hover:bg-gray-50 py-2">{item.workerCount}</TableCell>
+                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">
                               {item.jobType && (
                                 <Badge variant="secondary" className={getJobTypeColor(item.jobType)}>
                                   {item.jobType}
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="w-[120px] font-medium bg-white hover:bg-gray-50">¥{item.totalCost.toLocaleString()}</TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50">{item.startTime}</TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50">{item.endTime}</TableCell>
-                            <TableCell className="sticky right-0 z-20 w-[216px] border-l bg-white hover:bg-gray-50">
+                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">¥{item.totalCost.toLocaleString()}</TableCell>
+                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">{item.startTime}</TableCell>
+                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">{item.endTime}</TableCell>
+                            <TableCell className="sticky right-0 z-20 w-[216px] border-l bg-white hover:bg-gray-50 py-2">
                               <div className="flex gap-2">
                                 <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10">
                                   <Edit className="h-4 w-4 mr-1" />
@@ -2022,6 +2022,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
           </div>
         </SheetContent>
       </Sheet>
+
     </div>
   );
 }
