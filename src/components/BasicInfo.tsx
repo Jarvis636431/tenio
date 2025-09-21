@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, RefreshCw, FileText, ChevronRight } from "lucide-react";
+import { Save, Edit, X, FileText, ChevronRight } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,7 @@ export function BasicInfo({
   const initialDefaults = computeProjectDefaults();
   const [savedValues, setSavedValues] = useState<BasicInfoFormData>(initialDefaults);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([{
     id: "1",
     name: "中标通知书.pdf",
@@ -104,8 +105,26 @@ export function BasicInfo({
     console.log("保存基础信息:", data);
     setSavedValues(data);
     setHasChanges(false);
+    setIsEditMode(false);
     toast.success("项目基础信息已保存");
   };
+
+  const handleEdit = () => {
+    setIsEditMode(true);
+  };
+
+  const handleCancel = () => {
+    form.reset(savedValues);
+    setHasChanges(false);
+    setIsEditMode(false);
+  };
+
+  // 渲染只读字段的辅助函数
+  const renderReadOnlyField = (value: any) => (
+    <div className="px-3 py-2 border rounded-md bg-muted/50 text-sm">
+      {value}
+    </div>
+  );
   const removeFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
     toast.success("文件已删除");
@@ -117,17 +136,31 @@ export function BasicInfo({
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
-  const regeneratePlan = () => {
-    // Reset form to saved values
-    form.reset(savedValues);
-    setHasChanges(false);
-    toast.success("正在重新生成施工计划...");
-  };
   return <div className="h-full overflow-auto space-y-6">
 
       {/* 项目基础信息 */}
       <Card>
-        <CardContent className="p-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="text-base">项目基础信息</CardTitle>
+          {!isEditMode ? (
+            <Button onClick={handleEdit} size="sm">
+              <Edit className="h-4 w-4 mr-2" />
+              编辑
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={handleCancel} size="sm">
+                <X className="h-4 w-4 mr-2" />
+                取消
+              </Button>
+              <Button type="submit" size="sm" disabled={!hasChanges} onClick={form.handleSubmit(onSubmit)}>
+                <Save className="h-4 w-4 mr-2" />
+                保存
+              </Button>
+            </div>
+          )}
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4 pb-4">
@@ -136,17 +169,23 @@ export function BasicInfo({
               }) => <FormItem>
                       <FormLabel>项目城市</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <SelectTrigger className="font-medium">
-                            <SelectValue placeholder="选择城市" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="北京市">北京市</SelectItem>
-                            <SelectItem value="上海市">上海市</SelectItem>
-                            <SelectItem value="广州市">广州市</SelectItem>
-                            <SelectItem value="深圳市">深圳市</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {isEditMode ? (
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <SelectTrigger className="font-medium">
+                              <SelectValue placeholder="选择城市" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="北京市">北京市</SelectItem>
+                              <SelectItem value="上海市">上海市</SelectItem>
+                              <SelectItem value="广州市">广州市</SelectItem>
+                              <SelectItem value="深圳市">深圳市</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="px-3 py-2 border rounded-md bg-muted/50 text-sm">
+                            {field.value}
+                          </div>
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
@@ -156,17 +195,23 @@ export function BasicInfo({
               }) => <FormItem>
                       <FormLabel>建筑类型</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="选择建筑类型" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="住宅">住宅</SelectItem>
-                            <SelectItem value="办公楼">办公楼</SelectItem>
-                            <SelectItem value="商业建筑">商业建筑</SelectItem>
-                            <SelectItem value="工业建筑">工业建筑</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {isEditMode ? (
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="选择建筑类型" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="住宅">住宅</SelectItem>
+                              <SelectItem value="办公楼">办公楼</SelectItem>
+                              <SelectItem value="商业建筑">商业建筑</SelectItem>
+                              <SelectItem value="工业建筑">工业建筑</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="px-3 py-2 border rounded-md bg-muted/50 text-sm">
+                            {field.value}
+                          </div>
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
@@ -176,17 +221,21 @@ export function BasicInfo({
               }) => <FormItem>
                       <FormLabel>结构类型</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="选择结构类型" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="框架结构">框架结构</SelectItem>
-                            <SelectItem value="剪力墙结构">剪力墙结构</SelectItem>
-                            <SelectItem value="框架剪力墙结构">框架剪力墙结构</SelectItem>
-                            <SelectItem value="钢结构">钢结构</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {isEditMode ? (
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="选择结构类型" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="框架结构">框架结构</SelectItem>
+                              <SelectItem value="剪力墙结构">剪力墙结构</SelectItem>
+                              <SelectItem value="框架剪力墙结构">框架剪力墙结构</SelectItem>
+                              <SelectItem value="钢结构">钢结构</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          renderReadOnlyField(field.value)
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
@@ -196,7 +245,11 @@ export function BasicInfo({
               }) => <FormItem>
                       <FormLabel>中标金额 (万元)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                        {isEditMode ? (
+                          <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                        ) : (
+                          renderReadOnlyField(field.value)
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
@@ -206,7 +259,11 @@ export function BasicInfo({
               }) => <FormItem>
                       <FormLabel>内部控制价 (万元)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                        {isEditMode ? (
+                          <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                        ) : (
+                          renderReadOnlyField(field.value)
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
@@ -216,7 +273,11 @@ export function BasicInfo({
               }) => <FormItem>
                       <FormLabel>建筑高度 (米)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.1" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                        {isEditMode ? (
+                          <Input type="number" step="0.1" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                        ) : (
+                          renderReadOnlyField(field.value)
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
@@ -226,7 +287,11 @@ export function BasicInfo({
               }) => <FormItem>
                       <FormLabel>建筑层数</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                        {isEditMode ? (
+                          <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                        ) : (
+                          renderReadOnlyField(field.value)
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
@@ -236,51 +301,47 @@ export function BasicInfo({
               }) => <FormItem>
                       <FormLabel>建筑面积 (平方米)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                        {isEditMode ? (
+                          <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                        ) : (
+                          renderReadOnlyField(field.value)
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
               </div>
 
-              {/* 条件渲染保存按钮 */}
-              {hasChanges && <div className="pt-4 border-t">
-                  <Button type="submit" className="w-full">
-                    <Save className="h-4 w-4 mr-2" />
-                    保存更改
-                  </Button>
-                </div>}
             </form>
           </Form>
 
-          {/* 项目文件列表 */}
-          <div className="mt-6 pt-6 border-t">
-            <div className="space-y-4">
-              {uploadedFiles.map(file => <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-normal">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatFileSize(file.size)} • {file.uploadDate} • 
-                        <span className={file.parsed ? "text-green-600" : "text-yellow-600"}>
-                          {file.parsed ? " 已解析" : " 解析中"}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => toast.info("查看文件功能开发中")}>
-                    查看
-                  </Button>
-                </div>)}
-            </div>
-          </div>
 
-          {/* 重新生成施工计划按钮 */}
-          <div className="mt-6 pt-6 border-t">
-            <Button onClick={regeneratePlan} className="w-full" disabled={hasChanges}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              {hasChanges ? "请先保存更改" : "重新生成施工计划"}
-            </Button>
+        </CardContent>
+      </Card>
+
+      {/* 项目文件 */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base">项目文件</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="space-y-4">
+            {uploadedFiles.map(file => <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-normal">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatFileSize(file.size)} • {file.uploadDate} • 
+                      <span className={file.parsed ? "text-green-600" : "text-yellow-600"}>
+                        {file.parsed ? " 已解析" : " 解析中"}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => toast.info("查看文件功能开发中")}>
+                  查看
+                </Button>
+              </div>)}
           </div>
         </CardContent>
       </Card>

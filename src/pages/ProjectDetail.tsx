@@ -7,6 +7,8 @@ import { OrderManagement } from "@/components/OrderManagement";
 import { CraftsmanManagement } from "@/components/CraftsmanManagement";
 import { CommunicationCollaboration } from "@/components/CommunicationCollaboration";
 import { PlanAndOrders } from "@/components/PlanAndOrders";
+import { ProjectHomepage } from "@/components/ProjectHomepage";
+import { useProject } from "@/contexts/ProjectContext";
 
 // 实时监测的tab配置
 const chartConfig = {
@@ -27,14 +29,15 @@ const chartConfig = {
 export default function ProjectDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const [activeView, setActiveView] = useState("basic-info");
+  const [activeView, setActiveView] = useState("homepage");
+  const { projects } = useProject();
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
     if (viewParam) {
       setActiveView(viewParam);
     } else {
-      setActiveView("basic-info");
+      setActiveView("homepage");
     }
   }, [searchParams]);
 
@@ -42,6 +45,8 @@ export default function ProjectDetail() {
     const tab = searchParams.get('tab');
     
     switch (activeView) {
+      case "homepage":
+        return "项目主页";
       case "basic-info":
         return "基础信息";
       case "plan-and-orders":
@@ -67,12 +72,14 @@ export default function ProjectDetail() {
       case "communication-collaboration":
         return "沟通协作";
       default:
-        return "基础信息";
+        return "项目主页";
     }
   };
 
   const getViewDescription = () => {
     switch (activeView) {
+      case "homepage":
+        return "项目整体进展和快速入口";
       case "basic-info":
         return "查看和编辑项目的基本信息";
     case "plan-and-orders":
@@ -88,7 +95,7 @@ export default function ProjectDetail() {
       case "communication-collaboration":
         return "团队沟通与协作";
       default:
-        return "查看和编辑项目的基本信息";
+        return "项目整体进展和快速入口";
     }
   };
 
@@ -116,7 +123,12 @@ export default function ProjectDetail() {
       onExpandSidebar: () => {}
     };
 
+    // 获取当前项目信息
+    const currentProject = projects.find(p => p.id === id);
+
     switch (activeView) {
+      case "homepage":
+        return <ProjectHomepage projectId={id || ""} projectName={currentProject?.name || "未知项目"} />;
       case "basic-info":
         return <BasicInfo {...commonProps} />;
       case "plan-and-orders":
@@ -136,23 +148,39 @@ export default function ProjectDetail() {
       case "communication-collaboration":
         return <CommunicationCollaboration {...commonProps} />;
       default:
-        return <BasicInfo {...commonProps} />;
+        return <ProjectHomepage projectId={id || ""} projectName={currentProject?.name || "未知项目"} />;
     }
   };
+
+  // 项目主页使用特殊布局 - 无标题区域
+  if (activeView === "homepage") {
+    return (
+      <div className="h-full flex flex-col overflow-hidden bg-white">
+        {/* 主内容区域 - 直接显示，无标题区域 */}
+        <div className="flex-1 overflow-hidden p-6 px-[8px] py-6">
+          <div className="h-full overflow-auto">
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 基础信息和施工总览页面使用特殊布局 - 无白色卡片包装
   if (activeView === "basic-info" || activeView === "plan-and-orders" || activeView === "task-overview" || activeView === "gantt-chart") {
     return (
       <div className="h-full flex flex-col overflow-hidden bg-white">
-        {/* 标题区域 */}
-        <div className="p-6 px-[8px] py-[8px] pb-0">
-          <div className="space-y-2 mb-6">
-            <h1 className="tracking-tight font-medium text-xl">{getViewTitle()}</h1>
+        {/* 基础信息页面隐藏标题 */}
+        {activeView !== "basic-info" && (
+          <div className="p-6 px-[8px] py-[8px] pb-0">
+            <div className="space-y-2 mb-6">
+              <h1 className="tracking-tight font-medium text-xl">{getViewTitle()}</h1>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 主内容区域 - 直接显示，无白色卡片包装 */}
-        <div className="flex-1 overflow-hidden p-6 px-[8px] py-0">
+        <div className={`flex-1 overflow-hidden ${activeView === "basic-info" ? "p-6" : "p-6 px-[8px] py-0"}`}>
           <div className="h-full overflow-auto">
             {renderContent()}
           </div>

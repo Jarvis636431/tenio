@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3 } from "lucide-react";
+import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3, Save, X } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { GanttChart } from "@/components/GanttChart";
 import { useSearchParams } from "react-router-dom";
@@ -1589,6 +1589,8 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   const itemsPerPage = 20;
   const [selectedItem, setSelectedItem] = useState<TaskItem | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedItem, setEditedItem] = useState<TaskItem | null>(null);
   
   // 根据URL参数确定显示的内容
   const activeView = searchParams.get('tab') || 'task-overview';
@@ -1686,12 +1688,121 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   // 详情对话框处理
   const handleDetailClick = (item: TaskItem) => {
     setSelectedItem(item);
+    setIsEditMode(false); // 确保从详情入口进入时是只读状态
+    setEditedItem(null);
     setIsDetailDialogOpen(true);
   };
 
   const handleCloseDetail = () => {
     setIsDetailDialogOpen(false);
     setSelectedItem(null);
+    setIsEditMode(false);
+    setEditedItem(null);
+  };
+
+  const handleEditClick = (item: TaskItem) => {
+    setSelectedItem(item);
+    setEditedItem({ ...item });
+    setIsEditMode(true);
+    // 如果详情页已经打开，不需要重新打开
+    if (!isDetailDialogOpen) {
+      setIsDetailDialogOpen(true);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (editedItem) {
+      // 这里可以添加保存逻辑，比如更新数据
+      console.log('保存编辑:', editedItem);
+      // 更新原始数据
+      setSelectedItem(editedItem);
+      // 退出编辑模式
+      setIsEditMode(false);
+      setEditedItem(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditedItem(null);
+  };
+
+  // CSV导出功能
+  const handleExportCSV = () => {
+    // 准备CSV数据
+    const csvData = filteredData.map(item => ({
+      '任务名称': item.task,
+      '所属专业': item.specialty || '',
+      '施工方式': item.constructionMethod,
+      '构件': item.component,
+      '工种': item.jobType || '',
+      '施工人数': item.workerCount,
+      '开始时间': item.startTime,
+      '结束时间': item.endTime,
+      '持续时长': item.duration,
+      '实际工作天数': item.actualWorkDays,
+      '是否加班': item.overtime,
+      '施工情况': item.constructionSituation,
+      '选定施工方式': item.selectedConstructionMethod,
+      '前置工序': item.prerequisiteProcess || '',
+      '直接依赖任务': item.directDependency,
+      '层数': item.floor,
+      '工程量': item.quantity,
+      '工程量单位': item.quantityUnit,
+      '材料价格': item.materialCost,
+      '劳动力成本': item.laborCost,
+      '总成本': item.totalCost,
+      '备注': item.remarks || ''
+    }));
+
+    // 转换为CSV格式
+    const headers = Object.keys(csvData[0]);
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          // 处理包含逗号、引号或换行符的值
+          if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // 创建并下载文件
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `施工任务清单_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // 渲染字段的辅助函数
+  const renderField = (label: string, value: string, field: keyof TaskItem) => {
+    if (isEditMode && editedItem) {
+      return (
+        <div>
+          <label className="text-sm font-medium text-muted-foreground">{label}</label>
+          <Input
+            value={String(editedItem[field] || '')}
+            onChange={(e) => setEditedItem(prev => prev ? { ...prev, [field]: e.target.value } : null)}
+            className="mt-1"
+          />
+        </div>
+      );
+    }
+    return (
+      <div>
+        <label className="text-sm font-medium text-muted-foreground">{label}</label>
+        <p className="text-sm">{value}</p>
+      </div>
+    );
   };
 
   // 甘特图数据转换 - 使用过滤后的数据
@@ -1757,7 +1868,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
             {activeView === 'gantt-chart' ? `显示 ${ganttData.length} 个任务` : `显示 ${filteredData.length} 个任务`}
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleExportCSV}>
               <Download className="h-4 w-4 mr-2" />
               导出
             </Button>
@@ -1824,7 +1935,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                             <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">{item.endTime}</TableCell>
                             <TableCell className="sticky right-0 z-20 w-[216px] border-l bg-white hover:bg-gray-50 py-2">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10">
+                                <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10" onClick={() => handleEditClick(item)}>
                                   <Edit className="h-4 w-4 mr-1" />
                                   编辑
                                 </Button>
@@ -1873,8 +1984,20 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
           )}
 
           {activeView === 'gantt-chart' && (
-            <div className="h-full">
-              <GanttChart data={ganttData} />
+            <div className="h-[calc(100vh-200px)]">
+              <GanttChart 
+                data={ganttData} 
+                onTaskDetail={(task) => {
+                  // 将甘特图的任务数据转换为表格数据格式
+                  const taskItem = allData.find(item => item.id === task.id);
+                  if (taskItem) {
+                    setSelectedItem(taskItem);
+                    setIsEditMode(false); // 确保从甘特图进入时是只读状态
+                    setEditedItem(null);
+                    setIsDetailDialogOpen(true);
+                  }
+                }}
+              />
             </div>
           )}
         </div>
@@ -1882,144 +2005,105 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
 
       {/* 详情抽屉 */}
       <Sheet open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <SheetContent side="right" className="w-[600px] sm:max-w-[600px]" showOverlay={false}>
-          <SheetHeader>
+        <SheetContent side="right" className="w-[600px] sm:max-w-[600px] flex flex-col" showOverlay={false}>
+          <SheetHeader className="flex-shrink-0">
             <SheetTitle>
-              任务详情 - {selectedItem?.task}
+              {isEditMode ? '编辑任务' : '任务详情'} - {selectedItem?.task}
             </SheetTitle>
           </SheetHeader>
-          <div className="mt-6 overflow-y-auto flex-1">
+          <div className="mt-6 overflow-y-auto flex-1 min-h-0">
           {selectedItem && (
-            <div className="space-y-6">
-              {/* 基本信息 */}
+            <div className="space-y-6 pb-20">
+              {/* 施工时间 */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">基本信息</CardTitle>
+                  <CardTitle className="text-lg">施工时间</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">任务名称</label>
-                      <p className="text-sm">{selectedItem.task}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">所属专业</label>
-                      <p className="text-sm">{selectedItem.specialty || "无"}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">施工方式</label>
-                      <p className="text-sm">{selectedItem.constructionMethod}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">构件</label>
-                      <p className="text-sm">{selectedItem.component}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">工种</label>
-                      <p className="text-sm">{selectedItem.jobType || "无"}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">施工人数</label>
-                      <p className="text-sm">{selectedItem.workerCount}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">开始时间</label>
-                      <p className="text-sm">{selectedItem.startTime}</p>
-                    </div>
+                    {renderField("开始时间", selectedItem.startTime, "startTime")}
+                    {renderField("结束时间", selectedItem.endTime, "endTime")}
+                    {renderField("持续时长", selectedItem.duration, "duration")}
+                    {renderField("实际工作天数", `${selectedItem.actualWorkDays}天`, "actualWorkDays")}
+                    {renderField("是否加班", selectedItem.overtime, "overtime")}
+                    {renderField("施工情况", selectedItem.constructionSituation, "constructionSituation")}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* 详细信息 */}
+              {/* 基础信息 */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">详细信息</CardTitle>
+                  <CardTitle className="text-lg">基础信息</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">结束时间</label>
-                      <p className="text-sm">{selectedItem.endTime}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">持续时长</label>
-                      <p className="text-sm">{selectedItem.duration}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">实际工作天数</label>
-                      <p className="text-sm">{selectedItem.actualWorkDays}天</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">是否加班</label>
-                      <p className="text-sm">{selectedItem.overtime}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">施工情况</label>
-                      <p className="text-sm">{selectedItem.constructionSituation}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">选定施工方式</label>
-                      <p className="text-sm">{selectedItem.selectedConstructionMethod}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">前置工序</label>
-                      <p className="text-sm">{selectedItem.prerequisiteProcess || "无"}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">直接依赖任务</label>
-                      <p className="text-sm">{selectedItem.directDependency}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">层数</label>
-                      <p className="text-sm">{selectedItem.floor}层</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">备注</label>
-                      <p className="text-sm">{selectedItem.remarks || "无"}</p>
-                    </div>
+                    {renderField("任务名称", selectedItem.task, "task")}
+                    {renderField("所属专业", selectedItem.specialty || "无", "specialty")}
+                    {renderField("施工方式", selectedItem.constructionMethod, "constructionMethod")}
+                    {renderField("构件", selectedItem.component, "component")}
+                    {renderField("工种", selectedItem.jobType || "无", "jobType")}
+                    {renderField("施工人数", String(selectedItem.workerCount), "workerCount")}
+                    {renderField("层数", `${selectedItem.floor}层`, "floor")}
+                    {renderField("选定施工方式", selectedItem.selectedConstructionMethod, "selectedConstructionMethod")}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* 成本信息 */}
+              {/* 更多信息 */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">成本信息</CardTitle>
+                  <CardTitle className="text-lg">更多信息</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">工程量</label>
-                      <p className="text-sm">{selectedItem.quantity} {selectedItem.quantityUnit}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">材料价格</label>
-                      <p className="text-sm font-medium">¥{selectedItem.materialCost.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">劳动力成本</label>
-                      <p className="text-sm font-medium">¥{selectedItem.laborCost.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">总成本</label>
-                      <p className="text-lg font-bold text-primary">¥{selectedItem.totalCost.toLocaleString()}</p>
+                    {renderField("前置工序", selectedItem.prerequisiteProcess || "无", "prerequisiteProcess")}
+                    {renderField("直接依赖任务", selectedItem.directDependency, "directDependency")}
+                    {renderField("工程量", `${selectedItem.quantity} ${selectedItem.quantityUnit}`, "quantity")}
+                    {renderField("材料价格", `¥${selectedItem.materialCost.toLocaleString()}`, "materialCost")}
+                    {renderField("劳动力成本", `¥${selectedItem.laborCost.toLocaleString()}`, "laborCost")}
+                    {renderField("总成本", `¥${selectedItem.totalCost.toLocaleString()}`, "totalCost")}
+                    <div className="col-span-2">
+                      {renderField("备注", selectedItem.remarks || "无", "remarks")}
                     </div>
                   </div>
                 </CardContent>
               </Card>
-
-              {/* 操作按钮 */}
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={handleCloseDetail}>
-                  关闭
-                </Button>
-                <Button variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
-                  编辑
-                </Button>
-              </div>
             </div>
           )}
           </div>
+          
+          {/* 固定在底部的操作按钮 */}
+          {selectedItem && (
+            <div className="absolute bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-end gap-2">
+              {isEditMode ? (
+                <>
+                  <Button variant="outline" onClick={handleCancelEdit}>
+                    <X className="h-4 w-4 mr-1" />
+                    取消
+                  </Button>
+                  <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90">
+                    <Save className="h-4 w-4 mr-1" />
+                    保存
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={handleCloseDetail}>
+                    关闭
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="text-primary hover:text-primary hover:bg-primary/10"
+                    onClick={() => handleEditClick(selectedItem)}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    编辑
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 

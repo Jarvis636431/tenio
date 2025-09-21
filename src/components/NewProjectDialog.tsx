@@ -134,8 +134,8 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
       // 关闭弹窗
       onOpenChange(false);
       
-      // 导航到新项目的任务总览页面
-      navigate(`/project/${newProjectId}?view=task-overview`);
+      // 导航到新项目的首页
+      navigate(`/project/${newProjectId}`);
     } catch (error) {
       toast({
         title: "创建失败",
