@@ -72,9 +72,6 @@ export default function Login() {
                 </Button>
               </form>
               
-              <div className="mt-6 text-center text-sm text-muted-foreground">
-                <p>演示账户：任意邮箱和密码即可登录</p>
-              </div>
             </CardContent>
           </Card>
         </div>

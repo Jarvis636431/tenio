@@ -93,10 +93,21 @@ export function EditCommunicationDialog({ open, onOpenChange, record, onEdit }: 
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              className="text-primary hover:text-primary hover:bg-primary/10"
+              onClick={() => onOpenChange(false)}
+            >
               取消
             </Button>
-            <Button type="submit">保存更改</Button>
+            <Button 
+              type="submit"
+              variant="ghost" 
+              className="text-primary hover:text-primary hover:bg-primary/10"
+            >
+              保存更改
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

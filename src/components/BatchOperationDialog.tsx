@@ -150,11 +150,16 @@ export function BatchOperationDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="ghost" 
+            className="text-primary hover:text-primary hover:bg-primary/10"
+            onClick={() => onOpenChange(false)}
+          >
             取消
           </Button>
           <Button 
-            variant={operation === 'delete' ? 'destructive' : 'default'}
+            variant="ghost" 
+            className={operation === 'delete' ? 'text-destructive hover:text-destructive hover:bg-destructive/10' : 'text-primary hover:text-primary hover:bg-primary/10'}
             onClick={handleConfirm} 
             disabled={isProcessing}
           >

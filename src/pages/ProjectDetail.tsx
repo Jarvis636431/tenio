@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { BasicInfo } from "@/components/BasicInfo";
+import BasicInfo from "@/components/BasicInfo";
 import { PlanOverview } from "@/components/PlanOverview";
 import { RealTimeMonitoring } from "@/components/RealTimeMonitoring";
 import { OrderManagement } from "@/components/OrderManagement";

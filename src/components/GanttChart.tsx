@@ -2,7 +2,8 @@ import { useMemo, useRef, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
+import { NewTaskDialog } from "./NewTaskDialog";
 
 interface ScheduleItem {
   id: number;
@@ -18,6 +19,7 @@ interface ScheduleItem {
 interface GanttChartProps {
   data: ScheduleItem[];
   onTaskDetail?: (task: ScheduleItem) => void;
+  onAddTask?: (task: Partial<ScheduleItem>) => void;
 }
 
 const getWorkerColor = (worker: string): string => {
@@ -64,12 +66,13 @@ const parseDate = (dateStr: string): Date => {
   return new Date();
 };
 
-export function GanttChart({ data, onTaskDetail }: GanttChartProps) {
+export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
   const taskListRef = useRef<HTMLDivElement>(null);
   const chartContentRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(false);
   const [hoveredTaskId, setHoveredTaskId] = useState<number | null>(null);
   const [showDetailButton, setShowDetailButton] = useState<number | null>(null);
+  const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
@@ -141,8 +144,31 @@ export function GanttChart({ data, onTaskDetail }: GanttChartProps) {
     };
   });
 
+  const handleAddTask = (taskData: any) => {
+    if (onAddTask) {
+      const newTask: Partial<ScheduleItem> = {
+        task: taskData.task,
+        startDate: taskData.startTime,
+        endDate: taskData.endTime,
+        duration: "1天",
+        worker: taskData.jobType,
+        count: taskData.workerCount,
+        floor: 1
+      };
+      onAddTask(newTask);
+    }
+  };
+
   return (
     <div className="w-full h-full flex flex-col">
+      {/* 新增任务按钮 */}
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setIsNewTaskDialogOpen(true)} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          新增任务
+        </Button>
+      </div>
+      
       <div className="flex-1 overflow-hidden">
         <div className="border rounded-lg overflow-hidden h-full flex flex-col">
           <div className="flex flex-1 overflow-hidden">
@@ -157,7 +183,7 @@ export function GanttChart({ data, onTaskDetail }: GanttChartProps) {
                 {timelineData.map((item, index) => (
                   <div 
                     key={item.id} 
-                    className="border-b p-2 flex items-center justify-between h-12 hover:bg-gray-50 transition-colors relative group"
+                    className="border-b p-2 flex items-center justify-between h-12 bg-gray-50/50 hover:bg-gray-100 transition-colors relative group"
                     onMouseEnter={() => {
                       setHoveredTaskId(item.id);
                       // 清除之前的定时器
@@ -181,9 +207,7 @@ export function GanttChart({ data, onTaskDetail }: GanttChartProps) {
                     style={{ paddingLeft: '8px', paddingRight: '8px' }}
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className={`font-medium text-sm truncate transition-all duration-200 ${
-                        showDetailButton === item.id ? 'max-w-[120px]' : 'max-w-[200px]'
-                      }`}>{item.task}</div>
+                      <div className="font-medium text-sm truncate max-w-[200px]">{item.task}</div>
                       <div className="w-px h-4 bg-border flex-shrink-0"></div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <Badge style={{
@@ -202,8 +226,8 @@ export function GanttChart({ data, onTaskDetail }: GanttChartProps) {
                     {showDetailButton === item.id && onTaskDetail && (
                       <Button
                         size="sm"
-                        variant="ghost"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 h-8 px-2 opacity-100 transition-opacity duration-200 z-10 text-primary hover:text-primary hover:bg-primary/10"
+                        variant="outline"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 h-8 px-3 opacity-100 transition-all duration-200 z-20 bg-white/95 backdrop-blur-sm border-primary/30 text-primary hover:text-white hover:bg-gradient-to-r hover:from-primary hover:to-primary/80 hover:border-primary shadow-lg hover:shadow-xl"
                         onClick={() => onTaskDetail(item)}
                       >
                         详情
@@ -274,6 +298,38 @@ export function GanttChart({ data, onTaskDetail }: GanttChartProps) {
           </div>
         </div>
       </div>
+      
+      {/* 新增任务对话框 */}
+      <NewTaskDialog
+        open={isNewTaskDialogOpen}
+        onOpenChange={setIsNewTaskDialogOpen}
+        onAdd={handleAddTask}
+        existingTasks={data.map(item => ({
+          id: item.id,
+          task: item.task,
+          specialty: "",
+          component: "",
+          workerCount: item.count,
+          jobType: item.worker,
+          totalCost: 0,
+          startTime: item.startDate,
+          endTime: item.endDate,
+          constructionSituation: "",
+          prerequisiteProcess: "",
+          quantity: 0,
+          quantityUnit: "",
+          overtime: "",
+          duration: item.duration,
+          actualWorkDays: 0,
+          constructionMethod: "",
+          directDependency: "",
+          remarks: "",
+          selectedConstructionMethod: "",
+          materialCost: 0,
+          laborCost: 0,
+          floor: item.floor || 1
+        }))}
+      />
     </div>
   );
 }

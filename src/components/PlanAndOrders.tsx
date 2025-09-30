@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3, Save, X } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { GanttChart } from "@/components/GanttChart";
+import { NewTaskDialog } from "@/components/NewTaskDialog";
 import { useSearchParams } from "react-router-dom";
 
 interface PlanAndOrdersProps {
@@ -1591,6 +1592,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedItem, setEditedItem] = useState<TaskItem | null>(null);
+  const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   
   // 根据URL参数确定显示的内容
   const activeView = searchParams.get('tab') || 'task-overview';
@@ -1725,6 +1727,66 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   const handleCancelEdit = () => {
     setIsEditMode(false);
     setEditedItem(null);
+  };
+
+  // 检测内容是否有变化
+  const hasChanges = useMemo(() => {
+    if (!isEditMode || !selectedItem || !editedItem) return false;
+    
+    // 比较所有字段是否有变化
+    const fieldsToCompare: (keyof TaskItem)[] = [
+      'task', 'specialty', 'component', 'workerCount', 'jobType', 'totalCost',
+      'startTime', 'endTime', 'constructionSituation', 'prerequisiteProcess',
+      'quantity', 'quantityUnit', 'overtime', 'duration', 'actualWorkDays',
+      'constructionMethod', 'directDependency', 'remarks', 'selectedConstructionMethod',
+      'materialCost', 'laborCost', 'floor'
+    ];
+    
+    return fieldsToCompare.some(field => {
+      const originalValue = selectedItem[field];
+      const editedValue = editedItem[field];
+      
+      // 处理数字类型的比较
+      if (typeof originalValue === 'number' && typeof editedValue === 'number') {
+        return originalValue !== editedValue;
+      }
+      
+      // 处理字符串类型的比较
+      return String(originalValue || '') !== String(editedValue || '');
+    });
+  }, [isEditMode, selectedItem, editedItem]);
+
+  // 新增任务处理函数
+  const handleAddTask = (taskData: any) => {
+    const newTask: TaskItem = {
+      id: Math.max(...allData.map(item => item.id)) + 1,
+      task: taskData.task,
+      specialty: "结构",
+      component: "自定义",
+      workerCount: taskData.workerCount,
+      jobType: taskData.jobType,
+      totalCost: 0,
+      startTime: taskData.startTime,
+      endTime: taskData.endTime,
+      constructionSituation: "标准层施工",
+      prerequisiteProcess: taskData.prerequisiteTasks.join(', '),
+      quantity: 0,
+      quantityUnit: "个",
+      overtime: "否",
+      duration: "1天",
+      actualWorkDays: 1,
+      constructionMethod: "人工",
+      directDependency: taskData.dependentTasks.join(', '),
+      remarks: taskData.remarks,
+      selectedConstructionMethod: "人工",
+      materialCost: 0,
+      laborCost: 0,
+      floor: 1
+    };
+    
+    // 这里可以添加保存到数据库的逻辑
+    console.log('新增任务:', newTask);
+    setIsNewTaskDialogOpen(false);
   };
 
   // CSV导出功能
@@ -1872,10 +1934,12 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
               <Download className="h-4 w-4 mr-2" />
               导出
             </Button>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              新增任务
-            </Button>
+            {activeView !== 'gantt-chart' && (
+              <Button size="sm" onClick={() => setIsNewTaskDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                新增任务
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -2078,34 +2142,43 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
             <div className="absolute bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-end gap-2">
               {isEditMode ? (
                 <>
-                  <Button variant="outline" onClick={handleCancelEdit}>
-                    <X className="h-4 w-4 mr-1" />
+                  <Button 
+                    variant="ghost" 
+                    className="text-primary hover:text-primary hover:bg-primary/10"
+                    onClick={handleCancelEdit}
+                  >
                     取消
-                  </Button>
-                  <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90">
-                    <Save className="h-4 w-4 mr-1" />
-                    保存
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="outline" onClick={handleCloseDetail}>
-                    关闭
                   </Button>
                   <Button 
                     variant="ghost" 
                     className="text-primary hover:text-primary hover:bg-primary/10"
-                    onClick={() => handleEditClick(selectedItem)}
+                    onClick={handleSaveEdit}
+                    disabled={!hasChanges}
                   >
-                    <Edit className="h-4 w-4 mr-1" />
-                    编辑
+                    保存
                   </Button>
                 </>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  className="text-primary hover:text-primary hover:bg-primary/10"
+                  onClick={() => handleEditClick(selectedItem)}
+                >
+                  编辑
+                </Button>
               )}
             </div>
           )}
         </SheetContent>
       </Sheet>
+
+      {/* 新增任务对话框 */}
+      <NewTaskDialog
+        open={isNewTaskDialogOpen}
+        onOpenChange={setIsNewTaskDialogOpen}
+        onAdd={handleAddTask}
+        existingTasks={allData}
+      />
 
     </div>
   );

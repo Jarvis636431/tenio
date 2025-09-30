@@ -188,10 +188,19 @@ export function EditCraftsmanDialog({ open, onOpenChange, craftsman, onSave }: E
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="ghost" 
+            className="text-primary hover:text-primary hover:bg-primary/10"
+            onClick={() => onOpenChange(false)}
+          >
             取消
           </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
+          <Button 
+            variant="ghost" 
+            className="text-primary hover:text-primary hover:bg-primary/10"
+            onClick={handleSave} 
+            disabled={isLoading}
+          >
             {isLoading ? "保存中..." : "保存"}
           </Button>
         </DialogFooter>
