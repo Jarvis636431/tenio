@@ -1934,12 +1934,10 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
               <Download className="h-4 w-4 mr-2" />
               导出
             </Button>
-            {activeView !== 'gantt-chart' && (
-              <Button size="sm" onClick={() => setIsNewTaskDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                新增任务
-              </Button>
-            )}
+            <Button size="sm" onClick={() => setIsNewTaskDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              新增任务
+            </Button>
           </div>
         </div>
       </div>

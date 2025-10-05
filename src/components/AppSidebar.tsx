@@ -11,6 +11,7 @@ import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/contexts/AuthContext";
 import userAvatar from "@/assets/user-avatar.png";
 const mainMenuItems = [{
@@ -44,21 +45,13 @@ const projectMenuItems = [{
   label: "实时监测",
   icon: Activity,
   subItems: [{
-    id: "procurement",
-    label: "采购",
-    icon: ShoppingCart
-  }, {
     id: "labor",
-    label: "劳动力",
+    label: "施工人数",
     icon: Users
   }, {
-    id: "funding",
-    label: "资金",
+    id: "cost",
+    label: "人工成本",
     icon: DollarSign
-  }, {
-    id: "materials",
-    label: "物料供应",
-    icon: Package
   }]
 }, {
   id: "craftsman-management",
@@ -169,24 +162,54 @@ export function AppSidebar() {
                         <div key={item.id}>
                           <SidebarMenuItem>
                             {hasSubItems ? (
-                              <SidebarMenuButton 
-                                onClick={() => toggleExpanded(item.id)}
-                                className="w-full justify-between hover:bg-accent hover:text-accent-foreground"
-                              >
-                                <div className="flex items-center gap-2">
-                                  {isCollapsed && isExpanded ? (
-                                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                  ) : (
+                              isCollapsed ? (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <SidebarMenuButton className="w-full justify-center hover:bg-accent hover:text-accent-foreground">
+                                      <Icon className="h-4 w-4 text-muted-foreground" />
+                                    </SidebarMenuButton>
+                                  </PopoverTrigger>
+                                  <PopoverContent side="right" className="w-48 p-2">
+                                    <div className="space-y-1">
+                                      <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                                        {item.label}
+                                      </div>
+                                      <div className="border-t pt-1">
+                                        {item.subItems.map((subItem) => {
+                                          const SubIcon = subItem.icon;
+                                          const isSubActive = location.search.includes(`view=${item.id}&tab=${subItem.id}`);
+                                          return (
+                                            <Button
+                                              key={subItem.id}
+                                              variant="ghost"
+                                              className="w-full justify-start h-8 px-2 text-sm"
+                                              asChild
+                                            >
+                                              <NavLink to={`/project/${currentProject.id}?view=${item.id}&tab=${subItem.id}`}>
+                                                <SubIcon className="h-4 w-4 mr-2" />
+                                                {subItem.label}
+                                              </NavLink>
+                                            </Button>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              ) : (
+                                <SidebarMenuButton 
+                                  onClick={() => toggleExpanded(item.id)}
+                                  className="w-full justify-between hover:bg-accent hover:text-accent-foreground"
+                                >
+                                  <div className="flex items-center gap-2">
                                     <Icon className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                  {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
-                                </div>
-                                {!isCollapsed && hasSubItems && (
+                                    <span className="whitespace-nowrap">{item.label}</span>
+                                  </div>
                                   <ChevronRight 
                                     className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
                                   />
-                                )}
-                              </SidebarMenuButton>
+                                </SidebarMenuButton>
+                              )
                             ) : (
                               <SidebarMenuButton asChild isActive={isActive}>
                                 <NavLink to={`/project/${currentProject.id}?view=${item.id}`}>
@@ -197,9 +220,9 @@ export function AppSidebar() {
                             )}
                           </SidebarMenuItem>
                           
-                          {/* 子菜单 */}
-                          {hasSubItems && isExpanded && (
-                            <div className={isCollapsed ? "space-y-1" : "ml-4 space-y-1"}>
+                          {/* 子菜单 - 只在展开状态下显示 */}
+                          {hasSubItems && isExpanded && !isCollapsed && (
+                            <div className="ml-4 space-y-1">
                               {item.subItems.map((subItem) => {
                                 const SubIcon = subItem.icon;
                                 const isSubActive = location.search.includes(`view=${item.id}&tab=${subItem.id}`);
@@ -208,7 +231,7 @@ export function AppSidebar() {
                                     <SidebarMenuButton asChild isActive={isSubActive}>
                                       <NavLink to={`/project/${currentProject.id}?view=${item.id}&tab=${subItem.id}`}>
                                         <SubIcon className="h-4 w-4 text-muted-foreground" />
-                                        {!isCollapsed && <span className="whitespace-nowrap">{subItem.label}</span>}
+                                        <span className="whitespace-nowrap">{subItem.label}</span>
                                       </NavLink>
                                     </SidebarMenuButton>
                                   </SidebarMenuItem>

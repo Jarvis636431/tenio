@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,6 +30,8 @@ export default function BasicInfo() {
   const { currentProject, updateProject } = useProject();
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedItem, setEditedItem] = useState<BasicInfoFormData | null>(null);
+  const [isTabsSticky, setIsTabsSticky] = useState(false);
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<BasicInfoFormData>({
     resolver: zodResolver(basicInfoSchema),
@@ -47,6 +49,22 @@ export default function BasicInfo() {
 
   // 检测表单变化
   const hasChanges = form.formState.isDirty;
+
+  // 监听滚动，实现tab置顶
+  useEffect(() => {
+    const handleScroll = () => {
+      if (tabsRef.current) {
+        const rect = tabsRef.current.getBoundingClientRect();
+        setIsTabsSticky(rect.top <= 0);
+      }
+    };
+
+    const scrollContainer = document.querySelector('.overflow-auto');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   useEffect(() => {
     if (currentProject) {
@@ -112,22 +130,22 @@ export default function BasicInfo() {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col space-y-6">
       {/* 页面头部 */}
-      <div className="flex items-center justify-between p-6 border-b">
-        <h2 className="text-2xl font-semibold">项目基础信息</h2>
-        {!isEditMode ? (
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-medium">项目基础信息</h2>
+          {!isEditMode ? (
           <Button 
             variant="ghost" 
             className="text-primary hover:text-primary hover:bg-primary/10"
             onClick={handleEdit} 
             size="sm"
           >
-            <Edit className="h-4 w-4 mr-2" />
-            编辑
-          </Button>
-        ) : (
-          <div className="flex gap-2">
+              <Edit className="h-4 w-4 mr-2" />
+              编辑
+            </Button>
+          ) : (
+            <div className="flex gap-2">
             <Button 
               type="button" 
               variant="ghost" 
@@ -135,8 +153,8 @@ export default function BasicInfo() {
               onClick={handleCancel} 
               size="sm"
             >
-              取消
-            </Button>
+                取消
+              </Button>
             <Button 
               type="submit" 
               variant="ghost" 
@@ -145,18 +163,25 @@ export default function BasicInfo() {
               disabled={!hasChanges} 
               onClick={form.handleSubmit(onSubmit)}
             >
-              保存
-            </Button>
-          </div>
-        )}
+                保存
+              </Button>
+            </div>
+          )}
       </div>
 
       {/* 主内容区域 */}
       <div className="flex-1 overflow-auto">
-        <Form {...form}>
+          <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList 
+                ref={tabsRef}
+                className={`grid w-full grid-cols-4 transition-all duration-200 ${
+                  isTabsSticky 
+                    ? 'sticky top-0 z-50 bg-background border-b shadow-sm' 
+                    : ''
+                }`}
+              >
                 <TabsTrigger value="basic" className="flex items-center gap-2">
                   <Building className="h-4 w-4" />
                   基本信息
@@ -175,34 +200,40 @@ export default function BasicInfo() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* 基本信息Tab */}
-              <TabsContent value="basic" className="p-6 space-y-6">
-                <div className="border rounded-lg p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">项目名称</label>
-                      <div className="text-sm text-foreground">
-                        石钢旧厂区一期地块（居住地块一）12#
+                  {/* 基本信息Tab */}
+                  <TabsContent value="basic" className="space-y-6">
+                <div className="border rounded-lg">
+                  <div className="flex items-center gap-2 p-4 border-b">
+                    <Building className="h-4 w-4" />
+                    <span className="font-medium">基本信息</span>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">项目名称</label>
+                        <div className="text-sm text-foreground">
+                          石钢旧厂区一期地块（居住地块一）12#
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">建设地点</label>
-                      <div className="text-sm text-foreground">
-                        河北省石家庄市
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">建设地点</label>
+                        <div className="text-sm text-foreground">
+                          河北省石家庄市
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">建筑类型</label>
-                      <div className="text-sm text-foreground">
-                        居住建筑群，包含多层住宅（6层）、小高层住宅（11层）、高层住宅（18层、26层、33层）
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">建筑类型</label>
+                        <div className="text-sm text-foreground">
+                          居住建筑群，包含多层住宅（6层）、小高层住宅（11层）、高层住宅（18层、26层、33层）
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">绿色建筑等级</label>
-                      <div className="text-sm text-foreground">
-                        二星级
-                      </div>
-                    </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">绿色建筑等级</label>
+                        <div className="text-sm text-foreground">
+                          二星级
+                          </div>
+                          </div>
+              </div>
                   </div>
                 </div>
 
@@ -275,8 +306,8 @@ export default function BasicInfo() {
                 </Collapsible>
               </TabsContent>
 
-              {/* 技术规格Tab */}
-              <TabsContent value="technical" className="p-6 space-y-6">
+                  {/* 技术规格Tab */}
+                  <TabsContent value="technical" className="space-y-6">
                 <Collapsible defaultOpen>
                   <div className="border rounded-lg">
                     <CollapsibleTrigger className="flex items-center justify-between w-full p-4 text-left hover:bg-muted/50 rounded-t-lg">
@@ -327,8 +358,8 @@ export default function BasicInfo() {
                 </Collapsible>
               </TabsContent>
 
-              {/* 安全防护Tab */}
-              <TabsContent value="safety" className="p-6 space-y-6">
+                  {/* 安全防护Tab */}
+                  <TabsContent value="safety" className="space-y-6">
                 <Collapsible defaultOpen>
                   <div className="border rounded-lg">
                     <CollapsibleTrigger className="flex items-center justify-between w-full p-4 text-left hover:bg-muted/50 rounded-t-lg">
@@ -402,8 +433,8 @@ export default function BasicInfo() {
                 </Collapsible>
               </TabsContent>
 
-              {/* 环境条件Tab */}
-              <TabsContent value="environment" className="p-6 space-y-6">
+                  {/* 环境条件Tab */}
+                  <TabsContent value="environment" className="space-y-6">
                 <Collapsible defaultOpen>
                   <div className="border rounded-lg">
                     <CollapsibleTrigger className="flex items-center justify-between w-full p-4 text-left hover:bg-muted/50 rounded-t-lg">
@@ -470,6 +501,6 @@ export default function BasicInfo() {
           </form>
         </Form>
       </div>
-    </div>
+          </div>
   );
 }

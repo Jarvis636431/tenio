@@ -161,13 +161,6 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* 新增任务按钮 */}
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => setIsNewTaskDialogOpen(true)} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          新增任务
-        </Button>
-      </div>
       
       <div className="flex-1 overflow-hidden">
         <div className="border rounded-lg overflow-hidden h-full flex flex-col">

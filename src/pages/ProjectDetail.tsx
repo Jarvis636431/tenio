@@ -10,21 +10,6 @@ import { PlanAndOrders } from "@/components/PlanAndOrders";
 import { ProjectHomepage } from "@/components/ProjectHomepage";
 import { useProject } from "@/contexts/ProjectContext";
 
-// 实时监测的tab配置
-const chartConfig = {
-  procurement: {
-    title: "采购进度"
-  },
-  labor: {
-    title: "劳动力配置"
-  },
-  funding: {
-    title: "资金使用"
-  },
-  materials: {
-    title: "物料供应"
-  }
-};
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -62,11 +47,10 @@ export default function ProjectDetail() {
         return "施工总览";
       case "real-time-monitoring":
         return "";
-      case "procurement":
       case "labor":
-      case "funding":
-      case "materials":
-        return getRealTimeMonitoringTitle();
+        return "施工人数";
+      case "cost":
+        return "人工成本";
       case "craftsman-management":
         return "工匠管理";
       case "communication-collaboration":
@@ -82,12 +66,12 @@ export default function ProjectDetail() {
         return "项目整体进展和快速入口";
       case "basic-info":
         return "查看和编辑项目的基本信息";
-    case "plan-and-orders":
+      case "plan-and-orders":
     case "plan-overview":
     case "order-management":
       return "管理施工进度，追踪工单";
-      case "real-time-monitoring":
-        return "实时监控项目状态和数据";
+      case "labor-monitoring":
+        return "实时监控劳动力配置和人工费用";
       case "order-management":
         return "管理项目相关订单";
       case "craftsman-management":
@@ -99,13 +83,6 @@ export default function ProjectDetail() {
     }
   };
 
-  const getRealTimeMonitoringTitle = () => {
-    const tab = searchParams.get('tab');
-    if (tab && chartConfig[tab as keyof typeof chartConfig]) {
-      return chartConfig[tab as keyof typeof chartConfig].title;
-    }
-    return "采购进度"; // 默认标题
-  };
 
   const getPlanAndOrdersTitle = () => {
     const tab = searchParams.get('tab');
@@ -138,10 +115,8 @@ export default function ProjectDetail() {
       case "order-management":
         return <PlanAndOrders {...commonProps} />;
       case "real-time-monitoring":
-      case "procurement":
       case "labor":
-      case "funding":
-      case "materials":
+      case "cost":
         return <RealTimeMonitoring {...commonProps} />;
       case "craftsman-management":
         return <CraftsmanManagement {...commonProps} />;
@@ -166,12 +141,12 @@ export default function ProjectDetail() {
     );
   }
 
-  // 基础信息和施工总览页面使用特殊布局 - 无白色卡片包装
-  if (activeView === "basic-info" || activeView === "plan-and-orders" || activeView === "task-overview" || activeView === "gantt-chart") {
+  // 基础信息、施工总览和实时监测页面使用特殊布局 - 无白色卡片包装
+  if (activeView === "basic-info" || activeView === "plan-and-orders" || activeView === "task-overview" || activeView === "gantt-chart" || activeView === "real-time-monitoring" || activeView === "labor" || activeView === "cost") {
     return (
       <div className="h-full flex flex-col overflow-hidden bg-white">
-        {/* 基础信息页面隐藏标题 */}
-        {activeView !== "basic-info" && (
+        {/* 基础信息和实时监测页面隐藏标题 */}
+        {activeView !== "basic-info" && activeView !== "real-time-monitoring" && activeView !== "labor" && activeView !== "cost" && (
           <div className="p-6 px-[8px] py-[8px] pb-0">
             <div className="space-y-2 mb-6">
               <h1 className="tracking-tight font-medium text-xl">{getViewTitle()}</h1>
@@ -189,26 +164,6 @@ export default function ProjectDetail() {
     );
   }
 
-  // 实时监测页面使用特殊布局
-  if (activeView === "real-time-monitoring") {
-    return (
-      <div className="h-full flex flex-col overflow-hidden">
-        {/* 标题区域 */}
-        <div className="p-6 px-[8px] py-[8px] pb-0">
-          <div className="space-y-2 mb-6">
-            <h1 className="tracking-tight font-medium text-xl">{getRealTimeMonitoringTitle()}</h1>
-          </div>
-        </div>
-
-        {/* 主内容区域 - 实时监测使用自己的布局 */}
-        <div className="flex-1 overflow-hidden p-6 px-[8px] py-0">
-          <div className="h-full overflow-auto">
-            {renderContent()}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
