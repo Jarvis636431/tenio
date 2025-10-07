@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, BarChart3, DollarSign, Package, Users, Wrench, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,246 +13,149 @@ interface PlanOverviewProps {
   onExpandSidebar?: () => void;
 }
 
-// 扩展的进度数据，包含费用信息
-const scheduleData = [{
-  id: 1,
-  task: "地面支模",
-  startDate: "8月1日",
-  endDate: "8月1日",
-  duration: "1天",
-  worker: "木工",
-  count: 2,
-  totalCost: 8000,
+interface ScheduleData {
+  id: number;
+  task: string;
+  startDate: string;
+  endDate: string;
+  duration: string;
+  worker: string;
+  count: number;
+  totalCost: number;
   costDetails: {
-    materialCost: 5000,
-    laborCost: 2000,
-    equipmentCost: 1000,
-    materialDesc: "模板及配件租赁",
-    laborDesc: "木工工资及补贴",
-    equipmentDesc: "支撑工具租赁"
+    materialCost: number;
+    laborCost: number;
+    equipmentCost: number;
+    materialDesc: string;
+    laborDesc: string;
+    equipmentDesc: string;
+  };
+}
+
+// 解析CSV行，处理引号包围的字段
+const parseCsvRow = (row: string): string[] => {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < row.length; i++) {
+    const char = row[i];
+    
+    if (char === '"') {
+      if (inQuotes && row[i + 1] === '"') {
+        // 转义的引号
+        current += '"';
+        i++; // 跳过下一个引号
+      } else {
+        // 切换引号状态
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      // 字段分隔符
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
   }
-}, {
-  id: 2,
-  task: "地面混凝土浇筑",
-  startDate: "8月2日",
-  endDate: "8月4日",
-  duration: "3天",
-  worker: "混凝土工",
-  count: 4,
-  totalCost: 15000,
-  costDetails: {
-    materialCost: 10000,
-    laborCost: 3000,
-    equipmentCost: 2000,
-    materialDesc: "商品混凝土采购",
-    laborDesc: "混凝土工工资",
-    equipmentDesc: "搅拌车及泵车租赁"
+  
+  // 添加最后一个字段
+  result.push(current.trim());
+  return result;
+};
+
+// 从任务总表CSV加载数据（预计约753条）
+const loadScheduleData = async (): Promise<ScheduleData[]> => {
+  try {
+    const csvUrl = '/Database/10层mock数据.csv';
+    const resp = await fetch(csvUrl);
+    if (!resp.ok) {
+      console.error('Failed to fetch CSV:', resp.status, resp.statusText);
+      return [];
+    }
+    const text = await resp.text();
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length <= 1) return [];
+
+    const headers = parseCsvRow(lines[0]);
+    const get = (arr: string[], key: string) => {
+      const idx = headers.indexOf(key);
+      if (idx === -1) return '';
+      return arr[idx] ?? '';
+    };
+
+    const scheduleData: ScheduleData[] = [];
+    let id = 1;
+
+    for (let i = 1; i < lines.length; i++) {
+      const row = lines[i];
+      if (!row) continue;
+      const cols = parseCsvRow(row);
+
+      const task = get(cols, '任务');
+      if (!task) continue;
+      const startDate = get(cols, '开始时间');
+      const endDate = get(cols, '结束时间');
+      const duration = get(cols, '持续时长') || '';
+      const worker = get(cols, '工种') || '其他';
+      const count = Number(get(cols, '施工人数')) || 0;
+      const totalCost = Number(get(cols, '总成本')) || 0;
+      const materialCost = Number(get(cols, '材料价格')) || 0;
+      const laborCost = Number(get(cols, '劳动力成本')) || 0;
+
+      scheduleData.push({
+        id: id++,
+        task,
+        startDate,
+        endDate,
+        duration,
+        worker,
+        count,
+        totalCost,
+        costDetails: {
+          materialCost,
+          laborCost,
+          equipmentCost: Math.max(0, totalCost - materialCost - laborCost),
+          materialDesc: '材料费用',
+          laborDesc: '劳务费用',
+          equipmentDesc: '设备/其他费用'
+        }
+      });
+    }
+
+    console.log('Loaded schedule data from CSV:', scheduleData.length);
+    return scheduleData;
+  } catch (error) {
+    console.error('Error loading schedule data:', error);
+    return [];
   }
-}, {
-  id: 3,
-  task: "地面拆模",
-  startDate: "8月5日",
-  endDate: "8月5日",
-  duration: "1天",
-  worker: "木工",
-  count: 3,
-  totalCost: 3000,
-  costDetails: {
-    materialCost: 500,
-    laborCost: 2000,
-    equipmentCost: 500,
-    materialDesc: "拆模辅材消耗",
-    laborDesc: "木工拆模工资",
-    equipmentDesc: "拆模工具使用"
+};
+
+export function PlanOverview({ showExpandButton = false, onExpandSidebar }: PlanOverviewProps) {
+  const [scheduleData, setScheduleData] = useState<ScheduleData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      const data = await loadScheduleData();
+      setScheduleData(data);
+      setLoading(false);
+    };
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">加载数据中...</p>
+        </div>
+      </div>
+    );
   }
-}, {
-  id: 4,
-  task: "柱支模",
-  startDate: "8月5日",
-  endDate: "8月5日",
-  duration: "1天",
-  worker: "木工",
-  count: 2,
-  totalCost: 6000,
-  costDetails: {
-    materialCost: 4000,
-    laborCost: 1500,
-    equipmentCost: 500,
-    materialDesc: "柱模板系统租赁",
-    laborDesc: "木工支模工资",
-    equipmentDesc: "支撑架具租赁"
-  }
-}, {
-  id: 5,
-  task: "柱混凝土浇筑",
-  startDate: "8月6日",
-  endDate: "8月6日",
-  duration: "1天",
-  worker: "混凝土工",
-  count: 2,
-  totalCost: 8000,
-  costDetails: {
-    materialCost: 5500,
-    laborCost: 1500,
-    equipmentCost: 1000,
-    materialDesc: "高强度混凝土采购",
-    laborDesc: "混凝土工浇筑工资",
-    equipmentDesc: "小型泵车租赁"
-  }
-}, {
-  id: 6,
-  task: "柱拆模",
-  startDate: "8月7日",
-  endDate: "8月7日",
-  duration: "1天",
-  worker: "木工",
-  count: 2,
-  totalCost: 2500,
-  costDetails: {
-    materialCost: 300,
-    laborCost: 1500,
-    equipmentCost: 700,
-    materialDesc: "拆模材料损耗",
-    laborDesc: "木工拆模工资",
-    equipmentDesc: "拆模设备使用"
-  }
-}, {
-  id: 7,
-  task: "承重墙支模",
-  startDate: "8月6日",
-  endDate: "8月6日",
-  duration: "1天",
-  worker: "木工",
-  count: 4,
-  totalCost: 12000,
-  costDetails: {
-    materialCost: 8000,
-    laborCost: 3000,
-    equipmentCost: 1000,
-    materialDesc: "大型墙体模板租赁",
-    laborDesc: "木工团队工资",
-    equipmentDesc: "支撑系统租赁"
-  }
-}, {
-  id: 8,
-  task: "承重墙混凝土浇筑",
-  startDate: "8月7日",
-  endDate: "8月9日",
-  duration: "3天",
-  worker: "混凝土工",
-  count: 4,
-  totalCost: 25000,
-  costDetails: {
-    materialCost: 18000,
-    laborCost: 4000,
-    equipmentCost: 3000,
-    materialDesc: "大量商品混凝土采购",
-    laborDesc: "混凝土工团队工资",
-    equipmentDesc: "大型泵车租赁"
-  }
-}, {
-  id: 9,
-  task: "承重墙拆模",
-  startDate: "8月10日",
-  endDate: "8月10日",
-  duration: "1天",
-  worker: "木工",
-  count: 4,
-  totalCost: 5000,
-  costDetails: {
-    materialCost: 800,
-    laborCost: 3000,
-    equipmentCost: 1200,
-    materialDesc: "拆模辅助材料",
-    laborDesc: "木工团队拆模工资",
-    equipmentDesc: "拆模机械设备"
-  }
-}, {
-  id: 10,
-  task: "砌体隔墙",
-  startDate: "8月11日",
-  endDate: "8月12日",
-  duration: "2天",
-  worker: "砌筑工",
-  count: 4,
-  totalCost: 18000,
-  costDetails: {
-    materialCost: 12000,
-    laborCost: 4000,
-    equipmentCost: 2000,
-    materialDesc: "砖块及砂浆采购",
-    laborDesc: "砌筑工工资",
-    equipmentDesc: "砌筑工具及脚手架"
-  }
-}, {
-  id: 11,
-  task: "抹灰",
-  startDate: "8月13日",
-  endDate: "8月17日",
-  duration: "5天",
-  worker: "抹灰工",
-  count: 2,
-  totalCost: 12000,
-  costDetails: {
-    materialCost: 6000,
-    laborCost: 5000,
-    equipmentCost: 1000,
-    materialDesc: "水泥砂浆及腻子",
-    laborDesc: "抹灰工工资",
-    equipmentDesc: "抹灰工具租赁"
-  }
-}, {
-  id: 12,
-  task: "门窗安装",
-  startDate: "8月13日",
-  endDate: "8月13日",
-  duration: "1天",
-  worker: "安装工",
-  count: 2,
-  totalCost: 35000,
-  costDetails: {
-    materialCost: 30000,
-    laborCost: 3000,
-    equipmentCost: 2000,
-    materialDesc: "门窗产品采购",
-    laborDesc: "安装工工资",
-    equipmentDesc: "安装工具及设备"
-  }
-}, {
-  id: 13,
-  task: "屋面支模",
-  startDate: "8月14日",
-  endDate: "8月14日",
-  duration: "1天",
-  worker: "木工",
-  count: 2,
-  totalCost: 8000,
-  costDetails: {
-    materialCost: 5500,
-    laborCost: 2000,
-    equipmentCost: 500,
-    materialDesc: "屋面模板系统租赁",
-    laborDesc: "木工高空作业工资",
-    equipmentDesc: "高空作业设备"
-  }
-}, {
-  id: 14,
-  task: "屋面混凝土浇筑",
-  startDate: "8月15日",
-  endDate: "8月15日",
-  duration: "1天",
-  worker: "混凝土工",
-  count: 2,
-  totalCost: 12000,
-  costDetails: {
-    materialCost: 8000,
-    laborCost: 2500,
-    equipmentCost: 1500,
-    materialDesc: "防水混凝土采购",
-    laborDesc: "混凝土工高空作业工资",
-    equipmentDesc: "高空泵送设备"
-  }
-}];
+
 
 const getWorkerBadgeColor = (worker: string) => {
   const colors: {
@@ -271,11 +174,10 @@ const formatCurrency = (amount: number) => {
   return `¥${amount.toLocaleString()}`;
 };
 
-export function PlanOverview({ showExpandButton = false, onExpandSidebar }: PlanOverviewProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<typeof scheduleData[0] | null>(null);
+  const [selectedTask, setSelectedTask] = useState<ScheduleData | null>(null);
 
-  const handleViewDetails = (task: typeof scheduleData[0]) => {
+  const handleViewDetails = (task: ScheduleData) => {
     setSelectedTask(task);
     setIsSheetOpen(true);
   };

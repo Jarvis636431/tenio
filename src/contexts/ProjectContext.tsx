@@ -6,6 +6,15 @@ interface Project {
   id: string;
   name: string;
   hasBasicInfo?: boolean;
+  // 可编辑基础信息字段
+  city?: string;
+  buildingType?: string;
+  structureType?: string;
+  bidAmount?: number;
+  controlPrice?: number;
+  buildingHeight?: number;
+  buildingFloors?: number;
+  buildingArea?: number;
 }
 
 interface ProjectContextType {
@@ -13,6 +22,7 @@ interface ProjectContextType {
   setCurrentProject: (project: Project | null) => void;
   projects: Project[];
   addProject: (project: Project) => void;
+  updateProject: (project: Project) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -22,12 +32,20 @@ const mockProjects: Project[] = [
   {
     id: "1",
     name: "办公楼建设项目",
-    hasBasicInfo: true
+    hasBasicInfo: true,
+    city: "北京市",
+    buildingType: "住宅",
+    structureType: "框架结构",
+    bidAmount: 0,
+    controlPrice: 0,
+    buildingHeight: 0,
+    buildingFloors: 1,
+    buildingArea: 0,
   },
   {
     id: "2", 
     name: "南山区幼儿园",
-    hasBasicInfo: false
+    hasBasicInfo: false,
   }
 ];
 
@@ -48,6 +66,16 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   const addProject = (project: Project) => {
     setProjects(prev => [...prev, project]);
+  };
+
+  const updateProject = (updated: Project) => {
+    setProjects(prev => prev.map(p => p.id === updated.id ? { ...p, ...updated } : p));
+    if (currentProject && currentProject.id === updated.id) {
+      setCurrentProject(updated);
+    }
+    try {
+      localStorage.setItem('projects', JSON.stringify(prev => prev));
+    } catch {}
   };
 
   // 当路由参数变化时，自动更新当前项目；无 id 时保持当前选择，不清空
@@ -84,7 +112,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       currentProject,
       setCurrentProject,
       projects,
-      addProject
+      addProject,
+      updateProject
     }}>
       {children}
     </ProjectContext.Provider>

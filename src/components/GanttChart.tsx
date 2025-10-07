@@ -2,8 +2,9 @@ import { useMemo, useRef, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, Plus } from "lucide-react";
+import { Eye, Plus, MoreHorizontal } from "lucide-react";
 import { NewTaskDialog } from "./NewTaskDialog";
+import { TaskDetailDialog } from "./TaskDetailDialog";
 
 interface ScheduleItem {
   id: number;
@@ -73,7 +74,13 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
   const [hoveredTaskId, setHoveredTaskId] = useState<number | null>(null);
   const [showDetailButton, setShowDetailButton] = useState<number | null>(null);
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
+  const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
+  const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<ScheduleItem | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+
+  const ROW_HEIGHT = 48; // h-12
+  const COL_WIDTH = 80;
 
   const {
     timelineData,
@@ -106,6 +113,12 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
     };
   }, [data]);
 
+  const totalRows = timelineData.length;
+  const visibleRowCount = 12; // 渲染窗口中的最大行数
+  const startRowIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2);
+  const endRowIndex = Math.min(totalRows, startRowIndex + visibleRowCount + 4);
+  const visibleRows = timelineData.slice(startRowIndex, endRowIndex);
+
   // 同步滚动逻辑 - 只监听右侧滚动，同步到左侧
   useEffect(() => {
     const taskList = taskListRef.current;
@@ -117,6 +130,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
       if (isScrolling) return;
       setIsScrolling(true);
       taskList.scrollTop = chartContent.scrollTop;
+      setScrollTop(chartContent.scrollTop);
       setTimeout(() => setIsScrolling(false), 10);
     };
 
@@ -124,7 +138,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
     taskList.scrollTop = 0;
     chartContent.scrollTop = 0;
 
-    chartContent.addEventListener('scroll', handleChartScroll);
+    chartContent.addEventListener('scroll', handleChartScroll, { passive: true });
 
     return () => {
       chartContent.removeEventListener('scroll', handleChartScroll);
@@ -132,9 +146,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
   }, [data]); // 数据变化时重新建立同步并重置滚动位置
 
   // 生成日期标头
-  const dateHeaders = Array.from({
-    length: totalDays
-  }, (_, index) => {
+  const dateHeaders = Array.from({ length: totalDays }, (_, index) => {
     const date = new Date(startDate);
     date.setDate(date.getDate() + index);
     return {
@@ -159,85 +171,81 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
     }
   };
 
+  const handleMoreClick = (task: ScheduleItem) => {
+    setSelectedTaskForDetail(task);
+    setIsTaskDetailDialogOpen(true);
+  };
+
   return (
     <div className="w-full h-full flex flex-col">
       
       <div className="flex-1 overflow-hidden">
         <div className="border rounded-lg overflow-hidden h-full flex flex-col">
           <div className="flex flex-1 overflow-hidden">
-            {/* 左侧固定区域 */}
+            {/* 左侧固定区域（虚拟滚动） */}
             <div className="w-80 flex-shrink-0 flex flex-col">
               {/* 任务名称表头 */}
               <div className="bg-muted/50 border-r border-b p-3 font-semibold h-12 flex items-center">
                 任务名称
               </div>
-              {/* 任务列表 */}
-              <div ref={taskListRef} className="flex-1 overflow-hidden border-r bg-background">
-                {timelineData.map((item, index) => (
-                  <div 
-                    key={item.id} 
-                    className="border-b p-2 flex items-center justify-between h-12 bg-gray-50/50 hover:bg-gray-100 transition-colors relative group"
-                    onMouseEnter={() => {
-                      setHoveredTaskId(item.id);
-                      // 清除之前的定时器
-                      if (hoverTimeoutRef.current) {
-                        clearTimeout(hoverTimeoutRef.current);
-                      }
-                      // 延迟显示详情按钮 - 减少延迟时间
-                      hoverTimeoutRef.current = setTimeout(() => {
-                        setShowDetailButton(item.id);
-                      }, 150);
-                    }}
-                    onMouseLeave={() => {
-                      setHoveredTaskId(null);
-                      setShowDetailButton(null);
-                      // 清除定时器
-                      if (hoverTimeoutRef.current) {
-                        clearTimeout(hoverTimeoutRef.current);
-                        hoverTimeoutRef.current = null;
-                      }
-                    }}
-                    style={{ paddingLeft: '8px', paddingRight: '8px' }}
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate max-w-[200px]">{item.task}</div>
-                      <div className="w-px h-4 bg-border flex-shrink-0"></div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge style={{
-                          backgroundColor: `${item.color}20`,
-                          color: item.color,
-                          borderColor: item.color
-                        }} className="text-xs">
-                          {item.worker}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {item.count}人
-                        </span>
+              {/* 任务列表（虚拟高度容器） */}
+              <div ref={taskListRef} className="flex-1 overflow-hidden border-r bg-background relative">
+                <div style={{ height: totalRows * ROW_HEIGHT }} />
+                {visibleRows.map((item, i) => {
+                  const rowIndex = startRowIndex + i;
+                  const top = rowIndex * ROW_HEIGHT;
+                  return (
+                    <div
+                      key={item.id}
+                      className="border-b p-2 flex items-center justify-between h-12 bg-gray-50/50 hover:bg-gray-100 transition-colors relative group"
+                      onMouseEnter={() => {
+                        setHoveredTaskId(item.id);
+                        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                        hoverTimeoutRef.current = setTimeout(() => setShowDetailButton(item.id), 150);
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredTaskId(null);
+                        setShowDetailButton(null);
+                        if (hoverTimeoutRef.current) {
+                          clearTimeout(hoverTimeoutRef.current);
+                          hoverTimeoutRef.current = null;
+                        }
+                      }}
+                      style={{ paddingLeft: '8px', paddingRight: '8px', position: 'absolute', top, left: 0, right: 0 }}
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate max-w-[200px]">{item.task}</div>
+                        <div className="w-px h-4 bg-border flex-shrink-0"></div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Badge style={{ backgroundColor: `${item.color}20`, color: item.color, borderColor: item.color }} className="text-xs">
+                            {item.worker}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">{item.count}人</span>
+                        </div>
                       </div>
+                      {showDetailButton === item.id && onTaskDetail && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 h-8 px-3 opacity-100 transition-all duration-200 z-20 bg-white/95 backdrop-blur-sm border-primary/30 text-primary hover:text-white hover:bg-gradient-to-r hover:from-primary hover:to-primary/80 hover:border-primary shadow-lg hover:shadow-xl"
+                          onClick={() => onTaskDetail(item)}
+                        >
+                          详情
+                        </Button>
+                      )}
                     </div>
-                    {/* 详情按钮 - 只在hover时显示，使用绝对定位避免影响布局 */}
-                    {showDetailButton === item.id && onTaskDetail && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 h-8 px-3 opacity-100 transition-all duration-200 z-20 bg-white/95 backdrop-blur-sm border-primary/30 text-primary hover:text-white hover:bg-gradient-to-r hover:from-primary hover:to-primary/80 hover:border-primary shadow-lg hover:shadow-xl"
-                        onClick={() => onTaskDetail(item)}
-                      >
-                        详情
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
             
-            {/* 右侧整体滚动区域 */}
+            {/* 右侧整体滚动区域（虚拟滚动） */}
             <div ref={chartContentRef} className="flex-1 overflow-auto flex flex-col">
-              <div style={{ minWidth: `${totalDays * 80}px` }} className="flex-1">
+              <div style={{ minWidth: `${totalDays * COL_WIDTH}px` }} className="flex-1">
                 {/* 时间轴表头 */}
                 <div className="bg-muted/50 border-b sticky top-0 z-10">
                   <div className="grid gap-0 h-12" style={{
-                    gridTemplateColumns: `repeat(${totalDays}, 80px)`
+                    gridTemplateColumns: `repeat(${totalDays}, ${COL_WIDTH}px)`
                   }}>
                     {dateHeaders.map(header => (
                       <div key={header.day} className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${header.dayOfWeek === 0 || header.dayOfWeek === 6 ? 'bg-muted/70 text-muted-foreground' : ''}`}>
@@ -251,40 +259,57 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
                 </div>
                 
                 {/* 甘特图内容 */}
-                <div className="flex-1">
-                  {timelineData.map((item, index) => (
-                    <div 
-                      key={item.id} 
-                      className="border-b relative h-12 hover:bg-gray-50 transition-colors"
-                      onMouseEnter={() => setHoveredTaskId(item.id)}
-                      onMouseLeave={() => setHoveredTaskId(null)}
-                    >
-                      <div className="grid gap-0 h-full" style={{
-                        gridTemplateColumns: `repeat(${totalDays}, 80px)`
-                      }}>
-                        {/* 网格背景 */}
-                        {dateHeaders.map(header => (
-                          <div key={header.day} className={`border-r border-border/20 ${header.dayOfWeek === 0 || header.dayOfWeek === 6 ? 'bg-muted/30' : ''}`} />
-                        ))}
-                        
+                <div className="flex-1 relative" style={{ height: totalRows * ROW_HEIGHT }}>
+                  {/* 网格背景使用渐变，避免为每行渲染 totalDays 个单元格 */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      backgroundImage: `repeating-linear-gradient(to right, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${COL_WIDTH}px), repeating-linear-gradient(to bottom, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${ROW_HEIGHT}px)`
+                    }}
+                  />
+                  {visibleRows.map((item, i) => {
+                    const rowIndex = startRowIndex + i;
+                    const top = rowIndex * ROW_HEIGHT;
+                    return (
+                      <div
+                        key={item.id}
+                        className="absolute left-0 right-0 border-b hover:bg-gray-50 transition-colors"
+                        style={{ top, height: ROW_HEIGHT }}
+                        onMouseEnter={() => setHoveredTaskId(item.id)}
+                        onMouseLeave={() => setHoveredTaskId(null)}
+                      >
                         {/* 任务条 - 可点击 */}
-                        <div 
-                          className="absolute top-1 h-10 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200 hover:brightness-110" 
+                        <div
+                          className="absolute top-1 h-10 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200 hover:brightness-110"
                           style={{
-                            left: `${(item.startDay * 80)}px`,
-                            width: `${Number(item.duration) * 80}px`,
+                            left: `${item.startDay * COL_WIDTH}px`,
+                            width: `${Number(item.duration) * COL_WIDTH}px`,
                             backgroundColor: item.color,
-                            minWidth: '80px'
+                            minWidth: `${COL_WIDTH}px`
                           }}
                           onClick={() => onTaskDetail?.(item)}
                         >
-                          <div className="px-2 text-center">
+                          <div className="px-2 text-center flex-1">
                             <div className="font-medium">{item.duration}天</div>
                           </div>
+                          {/* 更多按钮 - 悬停时显示 */}
+                          {hoveredTaskId === item.id && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 mr-1 opacity-80 hover:opacity-100 transition-opacity z-10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMoreClick(item);
+                              }}
+                            >
+                              <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -322,6 +347,13 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
           laborCost: 0,
           floor: item.floor || 1
         }))}
+      />
+
+      {/* 任务详情对话框 */}
+      <TaskDetailDialog
+        open={isTaskDetailDialogOpen}
+        onOpenChange={setIsTaskDetailDialogOpen}
+        task={selectedTaskForDetail}
       />
     </div>
   );

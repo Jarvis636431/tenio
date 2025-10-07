@@ -52,6 +52,8 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
     endTime: '',
     workerCount: 0,
     jobType: '',
+    team: '',
+    totalCost: '' as number | '',
     prerequisiteTasks: [] as number[],
     dependentTasks: [] as number[],
     remarks: ''
@@ -65,11 +67,20 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
   const [prerequisiteVisible, setPrerequisiteVisible] = useState(100);
   const [dependentVisible, setDependentVisible] = useState(100);
 
+  // 二次确认弹窗
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingTask, setPendingTask] = useState<Partial<TaskItem> | null>(null);
+
   // 工种选项
   const jobTypes = [
     "钢筋工", "混凝土工", "木工", "测量员", "土方工", 
     "砌筑工", "抹灰工", "防水工", "水电工", "油漆工", 
     "油工", "瓦工", "不限"
+  ];
+
+  // 班组选项（可根据需要扩充或改为从外部传入）
+  const teams = [
+    "未指定", "一班组", "二班组", "三班组", "钢筋班组", "木工班组", "水电班组"
   ];
 
   // 过滤前置任务选项
@@ -106,7 +117,7 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.task || !formData.startTime || !formData.endTime || !formData.jobType) return;
+    if (!formData.task) return;
 
     const newTask: Partial<TaskItem> = {
       task: formData.task,
@@ -116,10 +127,10 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
       jobType: formData.jobType,
       prerequisiteProcess: formData.prerequisiteTasks.join(', '),
       directDependency: formData.dependentTasks.join(', '),
-      remarks: formData.remarks,
+      remarks: `${formData.team && formData.team !== '未指定' ? `指定班组: ${formData.team}。` : ''}${formData.remarks}`,
       specialty: "结构",
       component: "自定义",
-      totalCost: 0,
+      totalCost: Number(formData.totalCost) || 0,
       constructionSituation: "标准层施工",
       quantity: 0,
       quantityUnit: "个",
@@ -132,10 +143,9 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
       laborCost: 0,
       floor: 1
     };
-
-    onAdd(newTask);
-    resetForm();
-    onOpenChange(false);
+    // 打开二次确认弹窗，展示影响摘要
+    setPendingTask(newTask);
+    setConfirmOpen(true);
   };
 
   const resetForm = () => {
@@ -145,12 +155,28 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
       endTime: '',
       workerCount: 0,
       jobType: '',
+      team: '',
+      totalCost: '',
       prerequisiteTasks: [],
       dependentTasks: [],
       remarks: ''
     });
     setPrerequisiteSearch('');
     setDependentSearch('');
+  };
+
+  const doCreate = (updatePlan: boolean) => {
+    if (pendingTask) {
+      onAdd(pendingTask);
+    }
+    setConfirmOpen(false);
+    setPendingTask(null);
+    resetForm();
+    onOpenChange(false);
+    // 这里可接入实际的计划更新逻辑
+    if (updatePlan) {
+      console.info('Create task and update plan impact');
+    }
   };
 
   const addPrerequisiteTask = (taskId: number) => {
@@ -188,6 +214,7 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -209,23 +236,21 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
           {/* 时间范围 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startTime">开始时间 *</Label>
+              <Label htmlFor="startTime">开始时间</Label>
               <Input
                 id="startTime"
                 type="date"
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="endTime">结束时间 *</Label>
+              <Label htmlFor="endTime">结束时间</Label>
               <Input
                 id="endTime"
                 type="date"
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                required
               />
             </div>
           </div>
@@ -243,11 +268,10 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="jobType">工种 *</Label>
+              <Label htmlFor="jobType">工种</Label>
               <Select
                 value={formData.jobType}
                 onValueChange={(value) => setFormData({ ...formData, jobType: value })}
-                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择工种" />
@@ -261,143 +285,174 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
             </div>
           </div>
 
-          {/* 前置任务 */}
-          <div className="space-y-2">
-            <Label>前置任务</Label>
+          {/* 指定班组 与 总成本 */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              {/* 前置任务选择器 */}
-              <Popover open={prerequisiteOpen} onOpenChange={setPrerequisiteOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={prerequisiteOpen}
-                    className="w-full justify-between h-auto min-h-10 items-start hover:bg-transparent focus:bg-transparent"
-                  >
-                    <div className="flex flex-wrap gap-2 text-left">
-                      {formData.prerequisiteTasks.length === 0 ? (
-                        <span className="text-muted-foreground">搜索并选择前置任务...</span>
-                      ) : (
-                        getSelectedTaskNames(formData.prerequisiteTasks).map((taskName, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 transition-colors">
-                            {taskName}
-                            <button
-                              type="button"
-                              className="h-3 w-3 cursor-pointer hover:text-blue-600 rounded-sm transition-colors flex items-center justify-center ml-1"
-                              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                              onClick={(e) => { 
-                                e.preventDefault(); 
-                                e.stopPropagation(); 
-                                removePrerequisiteTask(formData.prerequisiteTasks[index]); 
-                              }}
-                            >
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </Badge>
-                        ))
-                      )}
-                    </div>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                  <Command>
-                    <CommandInput 
-                      placeholder="搜索任务..." 
-                      value={prerequisiteSearch}
-                      onValueChange={setPrerequisiteSearch}
-                    />
-                    <div className="max-h-72 overflow-auto" onScroll={handlePrerequisiteScroll}>
-                      <div className="p-1">
-                        {displayPrerequisiteTasks.length === 0 ? (
-                          <div className="py-6 text-center text-sm text-muted-foreground">未找到任务</div>
-                        ) : (
-                          displayPrerequisiteTasks.map((task) => (
-                            <div
-                              key={task.id}
-                              className="flex items-center px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                              onClick={() => addPrerequisiteTask(task.id)}
-                            >
-                              <Check className={cn("mr-2 h-4 w-4", formData.prerequisiteTasks.includes(task.id) ? "opacity-100" : "opacity-0")} />
-                              {task.task}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor="team">指定班组</Label>
+              <Select
+                value={formData.team}
+                onValueChange={(value) => setFormData({ ...formData, team: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择班组" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teams.map(team => (
+                    <SelectItem key={team} value={team}>{team}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="totalCost">总成本</Label>
+              <Input
+                id="totalCost"
+                type="number"
+                min="0"
+                value={formData.totalCost}
+                onChange={(e) => setFormData({ ...formData, totalCost: e.target.value === '' ? '' : Number(e.target.value) })}
+              />
             </div>
           </div>
 
-          {/* 后置任务 */}
-          <div className="space-y-2">
-            <Label>后置任务</Label>
+          {/* 前置/后置任务 同行显示 */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              {/* 后置任务选择器 */}
-              <Popover open={dependentOpen} onOpenChange={setDependentOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={dependentOpen}
-                    className="w-full justify-between h-auto min-h-10 items-start hover:bg-transparent focus:bg-transparent"
-                  >
-                    <div className="flex flex-wrap gap-2 text-left">
-                      {formData.dependentTasks.length === 0 ? (
-                        <span className="text-muted-foreground">搜索并选择后置任务...</span>
-                      ) : (
-                        getSelectedTaskNames(formData.dependentTasks).map((taskName, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-200 transition-colors">
-                            {taskName}
-                            <button
-                              type="button"
-                              className="h-3 w-3 cursor-pointer hover:text-green-600 rounded-sm transition-colors flex items-center justify-center ml-1"
-                              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                              onClick={(e) => { 
-                                e.preventDefault(); 
-                                e.stopPropagation(); 
-                                removeDependentTask(formData.dependentTasks[index]); 
-                              }}
-                            >
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </Badge>
-                        ))
-                      )}
-                    </div>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                  <Command>
-                    <CommandInput 
-                      placeholder="搜索任务..." 
-                      value={dependentSearch}
-                      onValueChange={setDependentSearch}
-                    />
-                    <div className="max-h-72 overflow-auto" onScroll={handleDependentScroll}>
-                      <div className="p-1">
-                        {displayDependentTasks.length === 0 ? (
-                          <div className="py-6 text-center text-sm text-muted-foreground">未找到任务</div>
+              <Label>前置任务</Label>
+              <div className="space-y-2">
+                {/* 前置任务选择器 */}
+                <Popover open={prerequisiteOpen} onOpenChange={setPrerequisiteOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={prerequisiteOpen}
+                      className="w-full justify-between h-auto min-h-10 items-start hover:bg-transparent focus:bg-transparent"
+                    >
+                      <div className="flex flex-wrap gap-2 text-left">
+                        {formData.prerequisiteTasks.length === 0 ? (
+                          <span className="text-muted-foreground">搜索并选择前置任务...</span>
                         ) : (
-                          displayDependentTasks.map((task) => (
-                            <div
-                              key={task.id}
-                              className="flex items-center px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                              onClick={() => addDependentTask(task.id)}
-                            >
-                              <Check className={cn("mr-2 h-4 w-4", formData.dependentTasks.includes(task.id) ? "opacity-100" : "opacity-0")} />
-                              {task.task}
-                            </div>
+                          getSelectedTaskNames(formData.prerequisiteTasks).map((taskName, index) => (
+                            <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 transition-colors">
+                              {taskName}
+                              <button
+                                type="button"
+                                className="h-3 w-3 cursor-pointer hover:text-blue-600 rounded-sm transition-colors flex items-center justify-center ml-1"
+                                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                onClick={(e) => { 
+                                  e.preventDefault(); 
+                                  e.stopPropagation(); 
+                                  removePrerequisiteTask(formData.prerequisiteTasks[index]); 
+                                }}
+                              >
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            </Badge>
                           ))
                         )}
                       </div>
-                    </div>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                      <CommandInput 
+                        placeholder="搜索任务..." 
+                        value={prerequisiteSearch}
+                        onValueChange={setPrerequisiteSearch}
+                      />
+                      <div className="max-h-72 overflow-auto" onScroll={handlePrerequisiteScroll}>
+                        <div className="p-1">
+                          {displayPrerequisiteTasks.length === 0 ? (
+                            <div className="py-6 text-center text-sm text-muted-foreground">未找到任务</div>
+                          ) : (
+                            displayPrerequisiteTasks.map((task) => (
+                              <div
+                                key={task.id}
+                                className="flex items-center px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                                onClick={() => addPrerequisiteTask(task.id)}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", formData.prerequisiteTasks.includes(task.id) ? "opacity-100" : "opacity-0")} />
+                                {task.task}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>后置任务</Label>
+              <div className="space-y-2">
+                {/* 后置任务选择器 */}
+                <Popover open={dependentOpen} onOpenChange={setDependentOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={dependentOpen}
+                      className="w-full justify-between h-auto min-h-10 items-start hover:bg-transparent focus:bg-transparent"
+                    >
+                      <div className="flex flex-wrap gap-2 text-left">
+                        {formData.dependentTasks.length === 0 ? (
+                          <span className="text-muted-foreground">搜索并选择后置任务...</span>
+                        ) : (
+                          getSelectedTaskNames(formData.dependentTasks).map((taskName, index) => (
+                            <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-200 transition-colors">
+                              {taskName}
+                              <button
+                                type="button"
+                                className="h-3 w-3 cursor-pointer hover:text-green-600 rounded-sm transition-colors flex items-center justify-center ml-1"
+                                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                onClick={(e) => { 
+                                  e.preventDefault(); 
+                                  e.stopPropagation(); 
+                                  removeDependentTask(formData.dependentTasks[index]); 
+                                }}
+                              >
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                      <CommandInput 
+                        placeholder="搜索任务..." 
+                        value={dependentSearch}
+                        onValueChange={setDependentSearch}
+                      />
+                      <div className="max-h-72 overflow-auto" onScroll={handleDependentScroll}>
+                        <div className="p-1">
+                          {displayDependentTasks.length === 0 ? (
+                            <div className="py-6 text-center text-sm text-muted-foreground">未找到任务</div>
+                          ) : (
+                            displayDependentTasks.map((task) => (
+                              <div
+                                key={task.id}
+                                className="flex items-center px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                                onClick={() => addDependentTask(task.id)}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", formData.dependentTasks.includes(task.id) ? "opacity-100" : "opacity-0")} />
+                                {task.task}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </div>
 
@@ -424,5 +479,41 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* 二次确认：展示影响摘要 */}
+    <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <DialogContent className="sm:max-w-[560px]">
+        <DialogHeader>
+          <DialogTitle>是否根据新增任务更新整体计划？</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 text-sm">
+          <div className="text-muted-foreground">以下为本次新增任务的预估影响（模拟数据）：</div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-md bg-muted/40">
+              <div className="text-xs text-muted-foreground">影响后续工序</div>
+              <div className="text-base font-medium">{(formData.dependentTasks?.length || 0) + 2} 道</div>
+            </div>
+            <div className="p-3 rounded-md bg-muted/40">
+              <div className="text-xs text-muted-foreground">整体资金变化</div>
+              <div className="text-base font-medium">¥{Number(formData.totalCost || 0).toLocaleString()}</div>
+            </div>
+            <div className="p-3 rounded-md bg-muted/40">
+              <div className="text-xs text-muted-foreground">工期变化</div>
+              <div className="text-base font-medium">+{formData.startTime && formData.endTime ? Math.max(1, Math.ceil((new Date(formData.endTime).getTime() - new Date(formData.startTime).getTime())/(1000*3600*24))) : 1} 天</div>
+            </div>
+            <div className="p-3 rounded-md bg-muted/40">
+              <div className="text-xs text-muted-foreground">资源占用（人数）</div>
+              <div className="text-base font-medium">{formData.workerCount || 0} 人</div>
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground">最终以调度计算为准，本摘要为参考估算。</div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => doCreate(false)}>仅创建任务</Button>
+          <Button onClick={() => doCreate(true)}>创建并更新计划</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3, Save, X } from "lucide-react";
+import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3, Save, X, MoreHorizontal } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { GanttChart } from "@/components/GanttChart";
 import { NewTaskDialog } from "@/components/NewTaskDialog";
+import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { useSearchParams } from "react-router-dom";
 
 interface PlanAndOrdersProps {
@@ -44,6 +45,99 @@ interface TaskItem {
   laborCost: number; // 劳动力成本
   floor: number; // 层数
 }
+
+// 解析CSV行，处理引号包围的字段
+const parseCsvRow = (row: string): string[] => {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < row.length; i++) {
+    const char = row[i];
+    
+    if (char === '"') {
+      if (inQuotes && row[i + 1] === '"') {
+        // 转义的引号
+        current += '"';
+        i++; // 跳过下一个引号
+      } else {
+        // 切换引号状态
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      // 字段分隔符
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  // 添加最后一个字段
+  result.push(current.trim());
+  return result;
+};
+
+// 从 public/Database/10层mock数据.csv 加载全部任务
+const loadAllTasksFromCsv = async (): Promise<TaskItem[]> => {
+  try {
+    const csvUrl = '/Database/10层mock数据.csv';
+    const resp = await fetch(csvUrl);
+    if (!resp.ok) return [];
+    const text = await resp.text();
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length <= 1) return [];
+    
+    const headers = parseCsvRow(lines[0]);
+    const get = (arr: string[], key: string) => {
+      const idx = headers.indexOf(key);
+      if (idx === -1) return '';
+      return arr[idx] ?? '';
+    };
+    
+    const result: TaskItem[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const row = lines[i];
+      if (!row) continue;
+      const cols = parseCsvRow(row);
+      const task = get(cols, '任务');
+      if (!task) continue;
+      
+      result.push({
+        id: i,
+        task,
+        specialty: get(cols, '所属专业') || '',
+        component: get(cols, '构件') || '',
+        workerCount: Number(get(cols, '施工人数')) || 0,
+        jobType: get(cols, '工种') || '',
+        totalCost: Number(get(cols, '总成本')) || 0,
+        startTime: get(cols, '开始时间') || '',
+        endTime: get(cols, '结束时间') || '',
+        constructionSituation: get(cols, '施工情况') || '',
+        prerequisiteProcess: get(cols, '前置工序') || '',
+        quantity: Number(get(cols, '工程量')) || 0,
+        quantityUnit: get(cols, '工程量单位') || '',
+        overtime: get(cols, '是否加班') || '',
+        duration: get(cols, '持续时长') || '',
+        actualWorkDays: Number((get(cols, '实际工作天数') || '').replace(/[^0-9.]/g, '')) || 0,
+        constructionMethod: get(cols, '施工方式') || '',
+        directDependency: get(cols, '直接依赖任务') || '',
+        remarks: get(cols, '备注') || '',
+        selectedConstructionMethod: get(cols, '选定施工方式') || '',
+        materialCost: Number(get(cols, '材料价格')) || 0,
+        laborCost: Number(get(cols, '劳动力成本')) || 0,
+        floor: Number(get(cols, '层数')) || 0,
+      });
+    }
+    
+    console.log('Loaded tasks from CSV:', result.length);
+    console.log('Sample task floors:', result.slice(0, 5).map(t => ({ task: t.task, floor: t.floor })));
+    return result;
+  } catch (error) {
+    console.error('Error loading CSV:', error);
+    return [];
+  }
+};
 
 // CSV数据 - 前20条
 const csvData: TaskItem[] = [
@@ -1593,15 +1687,21 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedItem, setEditedItem] = useState<TaskItem | null>(null);
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
+  const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
+  const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<TaskItem | null>(null);
   
   // 根据URL参数确定显示的内容
   const activeView = searchParams.get('tab') || 'task-overview';
 
+  // 加载任务总表数据
+  const [loadedData, setLoadedData] = useState<TaskItem[]>([]);
+  useEffect(() => {
+    loadAllTasksFromCsv().then(setLoadedData);
+  }, []);
   // 根据当前项目选择数据
   const allData = useMemo(() => {
-    // 始终使用CSV数据，除非明确指定使用幼儿园数据
-    return csvData;
-  }, []);
+    return loadedData.length > 0 ? loadedData : csvData; // 无数据时回退示例
+  }, [loadedData]);
 
   // 工种类型
   const jobTypes = useMemo(() => {
@@ -1609,10 +1709,18 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
     return Array.from(types);
   }, [allData]);
 
-  // 楼层类型
+  // 楼层类型 - 10层排在最后，但在跨楼层之前
   const floorTypes = useMemo(() => {
     const floors = new Set(allData.map(item => item.floor));
-    return Array.from(floors).sort((a, b) => a - b);
+    const floorArray = Array.from(floors);
+    
+    // 分离普通楼层和特殊楼层
+    const normalFloors = floorArray.filter(f => f > 0 && f < 10).sort((a, b) => a - b);
+    const floor10 = floorArray.filter(f => f === 10);
+    const crossFloors = floorArray.filter(f => f === 0 || f < 0); // 跨楼层或特殊楼层
+    
+    // 按顺序排列：普通楼层 -> 10层 -> 跨楼层
+    return [...normalFloors, ...floor10, ...crossFloors];
   }, [allData]);
 
   // 过滤和排序数据
@@ -1629,10 +1737,21 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
       let aValue: any, bValue: any;
 
       switch (sortBy) {
-        case "task":
+        case "task": {
+          // 自定义楼层排序：1-9层 -> 10层 -> 跨楼层(0/负数)
+          const floorRank = (f?: number) => {
+            if (!f || f <= 0) return 101; // 跨楼层最后
+            if (f === 10) return 100;     // 10层排在普通楼层之后
+            return f;                     // 1-9层按数字
+          };
+          const ra = floorRank(a.floor);
+          const rb = floorRank(b.floor);
+          if (ra !== rb) return ra - rb;
+          // 同楼层时再按任务名称
           aValue = a.task;
           bValue = b.task;
           break;
+        }
         case "duration":
           aValue = a.actualWorkDays;
           bValue = b.actualWorkDays;
@@ -1693,6 +1812,12 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
     setIsEditMode(false); // 确保从详情入口进入时是只读状态
     setEditedItem(null);
     setIsDetailDialogOpen(true);
+  };
+
+  // 更多详情对话框处理
+  const handleMoreClick = (item: TaskItem) => {
+    setSelectedTaskForDetail(item);
+    setIsTaskDetailDialogOpen(true);
   };
 
   const handleCloseDetail = () => {
@@ -2005,6 +2130,10 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                                   <Eye className="h-4 w-4 mr-1" />
                                   详情
                                 </Button>
+                                <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10" onClick={() => handleMoreClick(item)}>
+                                  <MoreHorizontal className="h-4 w-4 mr-1" />
+                                  更多
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -2178,6 +2307,12 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
         existingTasks={allData}
       />
 
+      {/* 任务详情对话框 */}
+      <TaskDetailDialog
+        open={isTaskDetailDialogOpen}
+        onOpenChange={setIsTaskDetailDialogOpen}
+        task={selectedTaskForDetail}
+      />
     </div>
   );
 }

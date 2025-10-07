@@ -1,15 +1,13 @@
-import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   Calendar, 
   Users, 
-  Clock, 
-  TrendingUp, 
   BarChart3, 
-  Eye
+  Eye,
+  TrendingUp,
+  Clock
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -20,21 +18,20 @@ interface ProjectHomepageProps {
 
 export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps) {
   const navigate = useNavigate();
-  
-  // 模拟项目数据
-  const projectStats = useMemo(() => ({
+
+  // 简要项目状态（可替换为真实数据）
+  const projectStats = {
     totalTasks: 60,
     completedTasks: 23,
     inProgressTasks: 12,
     pendingTasks: 25,
     totalWorkers: 45,
     activeWorkers: 38,
-    projectDuration: 45, // 天
+    projectDuration: 45,
     daysElapsed: 18,
     budget: 2500000,
     spent: 1200000,
-    remaining: 1300000
-  }), []);
+  };
 
   const progressPercentage = Math.round((projectStats.completedTasks / projectStats.totalTasks) * 100);
   const budgetPercentage = Math.round((projectStats.spent / projectStats.budget) * 100);
@@ -125,7 +122,8 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
         <p className="text-gray-600 mt-1">项目ID: {projectId}</p>
       </div>
 
-      {/* 项目统计卡片 */}
+
+      {/* 状态卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* 任务进度 */}
         <Card>
@@ -153,11 +151,6 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
             <p className="text-xs text-muted-foreground">
               {projectStats.totalWorkers} 总人员，{projectStats.activeWorkers} 在岗
             </p>
-            <div className="flex items-center mt-2">
-              <Badge variant="outline" className="text-xs">
-                {Math.round((projectStats.activeWorkers / projectStats.totalWorkers) * 100)}% 在岗率
-              </Badge>
-            </div>
           </CardContent>
         </Card>
 
@@ -192,7 +185,7 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
         {/* 快速入口 */}
         <Card className="lg:col-span-2">
           <CardHeader>

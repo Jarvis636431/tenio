@@ -77,16 +77,7 @@ const Index = () => {
               </CardHeader>
             </Card>
 
-            <Card className="cursor-pointer transition-colors duration-300 border-warning/10 hover:border-warning/20 group bg-warning/5 hover:bg-warning/10" style={{borderWidth: '0.5px'}}>
-              <CardHeader className="py-6">
-                <CardTitle className="flex items-center gap-3 text-lg">
-                  <div className="w-10 h-10 bg-gradient-to-br from-warning to-warning/80 rounded-xl flex items-center justify-center text-white">
-                    <Activity className="h-5 w-5" />
-                  </div>
-                  系统状态
-                </CardTitle>
-              </CardHeader>
-            </Card>
+            {/* 系统状态卡片已移除 */}
           </div>
         </div>
 

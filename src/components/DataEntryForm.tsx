@@ -117,6 +117,17 @@ export function DataEntryForm({
     },
   });
 
+  // 劳动力录入：分工种多行输入（不受筛选影响）
+  const [laborRows, setLaborRows] = useState<Array<{ jobType: string; count: number }>>([
+    { jobType: "", count: 0 }
+  ]);
+
+  const allJobTypes = [
+    "钢筋工", "混凝土工", "木工", "测量员", "土方工",
+    "砌筑工", "抹灰工", "防水工", "水电工", "油漆工",
+    "油工", "瓦工", "不限"
+  ];
+
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     const formattedDate = format(values.date, "M/d");
     const finalCategory = initialCategory;
@@ -124,22 +135,39 @@ export function DataEntryForm({
     const finalTitle = showCategorySelector && finalSubType && initialCategory
       ? categorySubTypeMap[initialCategory as keyof typeof categorySubTypeMap]?.subTypes[finalSubType as keyof any]?.name || title
       : title;
-    
-    onSubmit({
-      date: formattedDate,
-      value: values.value,
-      notes: values.notes,
-      category: finalCategory,
-      subType: finalSubType,
-    });
+
+    // 如果是劳动力录入，则按分工种累加总人数，并把明细写入备注
+    if (initialCategory === 'labor') {
+      const cleaned = laborRows.filter(r => r.jobType && r.count > 0);
+      const total = cleaned.reduce((sum, r) => sum + r.count, 0);
+      const detailNote = cleaned.length > 0 ? `分工种明细: ${cleaned.map(r => `${r.jobType} ${r.count}人`).join('；')}` : '';
+      onSubmit({
+        date: formattedDate,
+        value: total,
+        notes: [detailNote, values.notes || ''].filter(Boolean).join('\n'),
+        category: finalCategory,
+        subType: finalSubType,
+      });
+    } else {
+      onSubmit({
+        date: formattedDate,
+        value: values.value,
+        notes: values.notes,
+        category: finalCategory,
+        subType: finalSubType,
+      });
+    }
     
     toast({
       title: "数据录入成功",
-      description: `已记录 ${formattedDate} 的${finalTitle}数据：${values.value}${currentUnit}`,
+      description: initialCategory === 'labor'
+        ? `已记录 ${formattedDate} 的劳动力数据：合计 ${laborRows.reduce((s, r) => s + (r.count || 0), 0)}人`
+        : `已记录 ${formattedDate} 的${finalTitle}数据：${values.value}${currentUnit}`,
     });
     
     form.reset();
     setSelectedSubType("");
+    setLaborRows([{ jobType: "", count: 0 }]);
     onOpenChange(false);
   };
 
@@ -165,14 +193,11 @@ export function DataEntryForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>
-            {showCategorySelector ? `录入${getCategoryName()}数据` : `录入${title}数据`}
+            {initialCategory === 'labor' ? '施工人数录入' : initialCategory === 'cost' ? '人工成本录入' : (showCategorySelector ? `录入${getCategoryName()}数据` : `录入${title}数据`)}
           </DialogTitle>
-          <DialogDescription>
-            {showCategorySelector ? `请选择具体类型，然后录入${getCategoryName()}的实际监测数据` : description}
-          </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>
@@ -236,28 +261,74 @@ export function DataEntryForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="value"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    实际值 ({showCategorySelector && selectedSubType ? currentUnit : unit})
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder={`请输入实际值`}
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      disabled={showCategorySelector && !selectedSubType}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {initialCategory === 'labor' ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <FormLabel>分工种录入</FormLabel>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setLaborRows([...laborRows, { jobType: "", count: 0 }])}>添加工种</Button>
+                </div>
+                {laborRows.map((row, idx) => (
+                  <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-7">
+                      <Select value={row.jobType} onValueChange={(v) => {
+                        const next = [...laborRows];
+                        next[idx].jobType = v;
+                        setLaborRows(next);
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择工种" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {allJobTypes.map((jt) => (
+                            <SelectItem key={jt} value={jt}>{jt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-4">
+                      <Input type="number" min="0" placeholder="人数"
+                        value={row.count}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value || '0', 10);
+                          const next = [...laborRows];
+                          next[idx].count = isNaN(val) ? 0 : val;
+                          setLaborRows(next);
+                        }}
+                      />
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      {laborRows.length > 1 && (
+                        <Button type="button" variant="ghost" onClick={() => setLaborRows(laborRows.filter((_, i) => i !== idx))}>×</Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <div className="text-xs text-muted-foreground">总人数：{laborRows.reduce((s, r) => s + (r.count || 0), 0)} 人</div>
+              </div>
+            ) : (
+              <FormField
+                control={form.control}
+                name="value"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      实际值 ({showCategorySelector && selectedSubType ? currentUnit : unit})
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder={`请输入实际值`}
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        disabled={showCategorySelector && !selectedSubType}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

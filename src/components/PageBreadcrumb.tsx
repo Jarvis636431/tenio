@@ -47,7 +47,8 @@ export function PageBreadcrumb() {
           'task-overview': '任务总览',
           'gantt-chart': '施工工序甘特图',
           'procurement': '采购进度',
-          'labor': '劳动力配置',
+          'labor': '施工人数',
+          'cost': '人工成本',
           'funding': '资金使用',
           'materials': '物料供应'
         };

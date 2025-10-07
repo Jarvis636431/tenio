@@ -1,86 +1,118 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Users, DollarSign, Plus, Calendar, Table as TableIcon, Eye, EyeOff } from "lucide-react";
+import { Users, DollarSign, Plus, Calendar, Table as TableIcon, BarChart3, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { DataEntryForm } from "@/components/DataEntryForm";
 import { useDataEntry } from "@/hooks/useDataEntry";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, LabelList } from "recharts";
 
 // 工种数据 - 基于真实CSV数据
 const jobTypes = {
-  all: { name: "总计", color: "#8884d8" },
-  "测量员": { name: "测量员", color: "#82ca9d" },
-  "钢筋工": { name: "钢筋工", color: "#ffc658" },
-  "木工": { name: "木工", color: "#ff7300" },
-  "混凝土工": { name: "混凝土工", color: "#00ff00" },
-  "安装工": { name: "安装工", color: "#ff00ff" },
-  "不限": { name: "不限", color: "#8884d8" },
+  all: { name: "全部工种", color: "#8884d8" },
+  "不限": { name: "不限", color: "#82ca9d" },
+  "安装工": { name: "安装工", color: "#ffc658" },
+  "抹灰工": { name: "抹灰工", color: "#ff7300" },
+  "木工": { name: "木工", color: "#00ff00" },
+  "水电工": { name: "水电工", color: "#ff00ff" },
+  "测量员": { name: "测量员", color: "#8884d8" },
+  "混凝土工": { name: "混凝土工", color: "#82ca9d" },
+  "砌筑工": { name: "砌筑工", color: "#ffc658" },
+  "管道工": { name: "管道工", color: "#ff7300" },
+  "钢筋工": { name: "钢筋工", color: "#00ff00" },
+  "防水工": { name: "防水工", color: "#ff00ff" },
 };
 
-// 真实数据接口
+// 真实数据接口 - 基于新的CSV结构
 interface DailyData {
   date: string;
-  labor: number;
-  cost: number;
+  totalLabor: number;        // 总施工人数
+  totalCost: number;         // 总劳动力成本
+  actualLabor: number;       // 总施工实际人数
+  actualCost: number;        // 总劳动力实际成本
 }
 
 interface JobTypeData {
   date: string;
   jobType: string;
-  labor: number;
-  cost: number;
+  planLabor: number;         // 计划人数
+  planCost: number;          // 计划成本
+  actualLabor: number;       // 实际人数
+  actualCost: number;        // 实际成本
 }
 
-// 模拟加载真实数据
+// 基于CSV数据的快速生成函数
 const loadRealData = async () => {
-  // 模拟总计数据（基于10层mock_每日总计.csv结构）
-  const totalData: DailyData[] = [
-    { date: "2025-09-01", labor: 5.0, cost: 1315.0 },
-    { date: "2025-09-02", labor: 17.0, cost: 4515.0 },
-    { date: "2025-09-03", labor: 14.0, cost: 5160.0 },
-    { date: "2025-09-04", labor: 2.0, cost: 1800.0 },
-    { date: "2025-09-05", labor: 0.0, cost: 0.0 },
-    { date: "2025-09-07", labor: 12.57, cost: 1808.0 },
-    { date: "2025-09-08", labor: 0.57, cost: 768.0 },
-    { date: "2025-09-09", labor: 0.57, cost: 768.0 },
-    { date: "2025-09-10", labor: 0.77, cost: 3434.67 },
-    { date: "2025-09-11", labor: 4.77, cost: 3434.67 },
-    { date: "2025-09-12", labor: 18.77, cost: 10152.38 },
-    { date: "2025-09-13", labor: 14.69, cost: 10698.38 },
-    { date: "2025-09-14", labor: 21.97, cost: 11212.38 },
-    { date: "2025-09-15", labor: 0.97, cost: 5736.38 },
-    { date: "2025-09-16", labor: 1.97, cost: 5976.38 },
-    { date: "2025-09-17", labor: 6.04, cost: 9446.90 },
-    { date: "2025-09-18", labor: 5.04, cost: 10870.90 },
-    { date: "2025-09-19", labor: 7.04, cost: 10878.90 },
-    { date: "2025-09-20", labor: 3.15, cost: 11574.90 },
-  ];
+  // 生成总计数据 - 基于CSV中的实际数据
+  const totalData: DailyData[] = [];
+  const jobTypeData: JobTypeData[] = [];
   
-  // 模拟工种细分数据（基于10层mock_每日按工种细分.csv结构）
-  const jobTypeData: JobTypeData[] = [
-    { date: "2025-09-01", jobType: "测量员", labor: 4.0, cost: 160.0 },
-    { date: "2025-09-01", jobType: "钢筋工", labor: 1.0, cost: 1155.0 },
-    { date: "2025-09-02", jobType: "钢筋工", labor: 17.0, cost: 4515.0 },
-    { date: "2025-09-03", jobType: "木工", labor: 6.0, cost: 1800.0 },
-    { date: "2025-09-03", jobType: "钢筋工", labor: 8.0, cost: 3360.0 },
-    { date: "2025-09-04", jobType: "木工", labor: 2.0, cost: 1800.0 },
-    { date: "2025-09-07", jobType: "不限", labor: 0.57, cost: 768.0 },
-    { date: "2025-09-07", jobType: "混凝土工", labor: 12.0, cost: 1040.0 },
-    { date: "2025-09-08", jobType: "不限", labor: 0.57, cost: 768.0 },
-    { date: "2025-09-09", jobType: "不限", labor: 0.57, cost: 768.0 },
-    { date: "2025-09-10", jobType: "不限", labor: 0.57, cost: 768.0 },
-    { date: "2025-09-10", jobType: "安装工", labor: 0.2, cost: 2666.67 },
-    { date: "2025-09-11", jobType: "不限", labor: 0.57, cost: 768.0 },
-    { date: "2025-09-11", jobType: "安装工", labor: 0.2, cost: 2666.67 },
-    { date: "2025-09-11", jobType: "木工", labor: 4.0, cost: 0.0 },
-    { date: "2025-09-12", jobType: "不限", labor: 3.29, cost: 960.0 },
-    { date: "2025-09-12", jobType: "安装工", labor: 0.2, cost: 2666.67 },
-    { date: "2025-09-12", jobType: "木工", labor: 13.0, cost: 5760.0 },
-    { date: "2025-09-12", jobType: "测量员", labor: 2.0, cost: 80.0 },
-  ];
+  // 工种映射
+  const jobTypeMapping = {
+    '不限': { planLabor: '不限人数', planCost: '不限成本', actualLabor: '不限实际人数', actualCost: '不限实际成本' },
+    '安装工': { planLabor: '安装工人数', planCost: '安装工成本', actualLabor: '安装工实际人数', actualCost: '安装工实际成本' },
+    '抹灰工': { planLabor: '抹灰工人数', planCost: '抹灰工成本', actualLabor: '抹灰工实际人数', actualCost: '抹灰工实际成本' },
+    '木工': { planLabor: '木工人数', planCost: '木工成本', actualLabor: '木工实际人数', actualCost: '木工实际成本' },
+    '水电工': { planLabor: '水电工人数', planCost: '水电工成本', actualLabor: '水电工实际人数', actualCost: '水电工实际成本' },
+    '测量员': { planLabor: '测量员人数', planCost: '测量员成本', actualLabor: '测量员实际人数', actualCost: '测量员实际成本' },
+    '混凝土工': { planLabor: '混凝土工人数', planCost: '混凝土工成本', actualLabor: '混凝土工实际人数', actualCost: '混凝土工实际成本' },
+    '砌筑工': { planLabor: '砌筑工人数', planCost: '砌筑工成本', actualLabor: '砌筑工实际人数', actualCost: '砌筑工实际成本' },
+    '管道工': { planLabor: '管道工人数', planCost: '管道工成本', actualLabor: '管道工实际人数', actualCost: '管道工实际成本' },
+    '钢筋工': { planLabor: '钢筋工人数', planCost: '钢筋工成本', actualLabor: '钢筋工实际人数', actualCost: '钢筋工实际成本' },
+    '防水工': { planLabor: '防水工人数', planCost: '防水工成本', actualLabor: '防水工实际人数', actualCost: '防水工实际成本' },
+  };
+
+  // 从public目录读取CSV文件
+  const csvUrl = '/Database/10层mock_每日汇总_含工种细分_带实际字段_含模拟数据.csv';
+  const resp = await fetch(csvUrl);
+  if (!resp.ok) {
+    console.error('Failed to fetch CSV:', resp.status, resp.statusText);
+    return { totalData, jobTypeData };
+  }
+  const text = await resp.text();
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length <= 1) return { totalData, jobTypeData };
+
+  const headers = lines[0].split(',');
+  const get = (arr: string[], key: string) => {
+    const idx = headers.indexOf(key);
+    if (idx === -1) return '';
+    return arr[idx] ?? '';
+  };
+
+  for (let i = 1; i < lines.length; i++) {
+    const row = lines[i];
+    if (!row) continue;
+    const cols = row.split(',');
+    const date = get(cols, '日期');
+    if (!date) continue;
+
+    const totalLabor = Number(get(cols, '总施工人数')) || 0;
+    const totalCost = Number(get(cols, '总劳动力成本')) || 0;
+    const actualLabor = Number(get(cols, '总实际施工人数')) || Number(get(cols, '总施工实际人数')) || 0;
+    const actualCost = Number(get(cols, '总实际劳动力成本')) || Number(get(cols, '总劳动力实际成本')) || 0;
+
+    totalData.push({ date, totalLabor, totalCost, actualLabor, actualCost });
+
+    const allJobTypes = Object.keys(jobTypeMapping);
+    allJobTypes.forEach((jt) => {
+      const m = jobTypeMapping[jt as keyof typeof jobTypeMapping];
+      const planLabor = Number(get(cols, m.planLabor)) || 0;
+      const planCost = Number(get(cols, m.planCost)) || 0;
+      const actualLaborJT = Number(get(cols, m.actualLabor)) || 0;
+      const actualCostJT = Number(get(cols, m.actualCost)) || 0;
+      if (planLabor !== 0 || actualLaborJT !== 0 || planCost !== 0 || actualCostJT !== 0) {
+        jobTypeData.push({ date, jobType: jt, planLabor, planCost, actualLabor: actualLaborJT, actualCost: actualCostJT });
+      }
+    });
+  }
+
+  console.log('Loaded totalData:', totalData.length, 'items');
+  console.log('Loaded jobTypeData:', jobTypeData.length, 'items');
   
   return { totalData, jobTypeData };
 };
@@ -98,10 +130,10 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
   const [isDataEntryOpen, setIsDataEntryOpen] = useState(false);
   const [currentEntryContext, setCurrentEntryContext] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<'table' | 'calendar' | 'weekly'>('calendar');
+  const [selectedDate, setSelectedDate] = useState(new Date(2025, 8, 1)); // 初始定位到2025年9月
   const [dataType, setDataType] = useState<'labor' | 'cost'>(tabFromUrl === 'cost' ? 'cost' : 'labor');
-  const [showDetail, setShowDetail] = useState(false); // 是否显示工种明细
+  const [detailForDate, setDetailForDate] = useState<string | null>(null);
   const [totalData, setTotalData] = useState<DailyData[]>([]);
   const [jobTypeData, setJobTypeData] = useState<JobTypeData[]>([]);
   const itemsPerPage = 20;
@@ -141,13 +173,31 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
     );
   };
 
+  // 获取有数据的工种列表
+  const getAvailableJobTypes = () => {
+    const availableJobTypes = new Set<string>();
+    
+    // 遍历所有工种数据，找出有数据的工种
+    jobTypeData.forEach(item => {
+      const hasData = dataType === 'labor' 
+        ? (item.planLabor > 0 || item.actualLabor > 0)
+        : (item.planCost > 0 || item.actualCost > 0);
+      
+      if (hasData) {
+        availableJobTypes.add(item.jobType);
+      }
+    });
+    
+    return Array.from(availableJobTypes);
+  };
+
   const getDisplayData = () => {
     if (selectedJobType === "all") {
       // 显示总计数据
       return totalData.map(item => ({
         date: item.date,
-        value: dataType === 'labor' ? item.labor : item.cost,
-        plan: dataType === 'labor' ? item.labor * 1.1 : item.cost * 1.1 // 模拟计划值
+        value: dataType === 'labor' ? item.actualLabor : item.actualCost,
+        plan: dataType === 'labor' ? item.totalLabor : item.totalCost
       }));
     } else {
       // 显示特定工种数据
@@ -155,16 +205,12 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
       const filteredData = jobTypeData.filter(item => item.jobType === jobTypeName);
       return filteredData.map(item => ({
         date: item.date,
-        value: dataType === 'labor' ? item.labor : item.cost,
-        plan: dataType === 'labor' ? item.labor * 1.1 : item.cost * 1.1
+        value: dataType === 'labor' ? item.actualLabor : item.actualCost,
+        plan: dataType === 'labor' ? item.planLabor : item.planCost
       }));
     }
   };
 
-  // 获取工种明细数据
-  const getJobTypeDetailData = (date: string) => {
-    return jobTypeData.filter(item => item.date === date);
-  };
 
   const displayData = getDisplayData();
   
@@ -191,10 +237,9 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
   };
 
   const getVarianceColor = (actual: number, plan: number) => {
-    const variance = ((actual - plan) / plan) * 100;
-    if (variance > 10) return "text-red-600";
-    if (variance < -10) return "text-blue-600";
-    return "text-green-600";
+    if (actual > plan) return "text-red-600";
+    if (actual < plan) return "text-green-600";
+    return "text-gray-600";
   };
 
   // 日历视图辅助函数
@@ -229,201 +274,243 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
 
   const getDayStatus = (dayData: any) => {
     if (!dayData) return 'no-data';
-    const variance = ((dayData.value - dayData.plan) / dayData.plan) * 100;
-    if (variance > 10) return 'over';
-    if (variance < -10) return 'under';
+    if (dayData.value > dayData.plan) return 'over';
+    if (dayData.value < dayData.plan) return 'under';
     return 'normal';
   };
 
   const getDayColor = (status: string) => {
     switch (status) {
-      case 'over': return 'bg-red-100 border-red-300 text-red-800';
-      case 'under': return 'bg-blue-100 border-blue-300 text-blue-800';
-      case 'normal': return 'bg-green-100 border-green-300 text-green-800';
-      default: return 'bg-gray-100 border-gray-300 text-gray-500';
+      case 'over': return 'bg-red-50 text-red-800';
+      case 'under': return 'bg-green-50 text-green-800';
+      case 'normal': return 'bg-gray-50 text-gray-800';
+      default: return 'bg-gray-50 text-gray-500';
     }
   };
 
+  // 周视图数据处理 - 显示一周内每天的情况
+  const getWeeklyData = () => {
+    const data = getDisplayData();
+    const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    
+    // 获取当前选中日期所在的一周
+    const currentDate = new Date(selectedDate);
+    const weekStart = new Date(currentDate);
+    weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1); // 获取周一
+    
+    const weeklyData = [];
+    
+    // 生成一周的数据
+    for (let i = 0; i < 7; i++) {
+      const dayDate = new Date(weekStart);
+      dayDate.setDate(weekStart.getDate() + i);
+      const dateStr = dayDate.toISOString().split('T')[0];
+      
+      // 查找对应日期的数据
+      const dayData = data.find(item => item.date === dateStr);
+      
+      weeklyData.push({
+        day: weekDays[i],
+        date: dateStr,
+        actual: dayData ? dayData.value : 0,
+        plan: dayData ? dayData.plan : 0,
+        hasData: !!dayData
+      });
+    }
+    
+    return weeklyData;
+  };
+
+  // 生成指定日期的工种细分，仅返回非 0 的数据
+  const getBreakdownByDate = (dateStr: string) => {
+    const forDate = jobTypeData.filter((item) => item.date === dateStr);
+    return forDate
+      .map((item) => ({
+        jobType: item.jobType,
+        planValue: dataType === 'labor' ? item.planLabor : item.planCost,
+        actualValue: dataType === 'labor' ? item.actualLabor : item.actualCost,
+      }))
+      .filter((x) => x.planValue !== 0 || x.actualValue !== 0);
+  };
+
+  // 通用自定义 Tooltip：当选择"全部工种"时展示工种细分（只显示非 0 项）
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || !payload[0]) return null;
+    const point = payload[0].payload; // { day, date, actual, plan } 或 { date, value, plan }
+    const unit = dataType === 'labor' ? '人' : '元';
+    const breakdown = selectedJobType === 'all' ? getBreakdownByDate(point.date) : [];
+    
+    // 处理不同的数据结构
+    const displayDate = point.day ? `${point.day} (${point.date})` : point.date;
+    const planValue = point.plan || point.value;
+    const actualValue = point.actual || point.value;
+    
+    return (
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
+        <div style={{ fontWeight: 500, fontSize: 14, marginBottom: breakdown.length > 0 ? 8 : 6 }}>{displayDate}</div>
+        {breakdown.length === 0 && (
+          <>
+            <div style={{ color: '#6b7280', marginBottom: 4 }}>计划：{dataType === 'labor' ? `${planValue}${unit}` : `¥${Number(planValue).toLocaleString()}`}</div>
+            <div style={{ color: '#2563eb' }}>实际：{dataType === 'labor' ? `${actualValue}${unit}` : `¥${Number(actualValue).toLocaleString()}`}</div>
+          </>
+        )}
+        {breakdown.length > 0 && (
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 6, maxHeight: 220, overflowY: 'auto' }}>
+            {breakdown.map((row, index) => (
+              <div key={`${point.date}-${row.jobType}`} style={{ fontSize: 12, lineHeight: '18px', padding: '4px 0', borderBottom: index < breakdown.length - 1 ? '1px solid #f8f9fa' : 'none' }}>
+                <div style={{ color: '#374151', fontWeight: 500, marginBottom: 2 }}>{row.jobType}</div>
+                <div style={{ color: '#6b7280', marginBottom: 1 }}>计划: {dataType === 'labor' ? `${row.planValue}${unit}` : `¥${Number(row.planValue).toLocaleString()}`}</div>
+                <div style={{ color: '#2563eb' }}>实际: {dataType === 'labor' ? `${row.actualValue}${unit}` : `¥${Number(row.actualValue).toLocaleString()}`}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6">
-      {/* 页面头部 */}
+    <div className="h-full flex flex-col space-y-6 pb-24">
+      {/* 标题 */}
                     <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">
+        <h2 className="tracking-tight font-medium text-xl">
           {tabFromUrl === 'cost' ? '人工成本' : tabFromUrl === 'labor' ? '施工人数' : '实时监测'}
         </h2>
+      </div>
+
+      {/* 操作栏 */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Select value={selectedJobType} onValueChange={(value) => setSelectedJobType(value as keyof typeof jobTypes)}>
             <SelectTrigger className="w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(jobTypes).map(([key, jobType]) => (
-                <SelectItem key={key} value={key}>
-                  {jobType.name}
+              {/* 总是显示"全部工种"选项 */}
+              <SelectItem key="all" value="all">
+                {jobTypes.all.name}
+              </SelectItem>
+              {/* 只显示有数据的工种 */}
+              {getAvailableJobTypes().map((jobType) => (
+                <SelectItem key={jobType} value={jobType}>
+                  {jobTypes[jobType as keyof typeof jobTypes]?.name || jobType}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === 'table' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-            >
-              <TableIcon className="h-4 w-4 mr-2" />
-              表格视图
-            </Button>
-            <Button
-              variant={viewMode === 'calendar' ? 'default' : 'outline'}
-              size="sm"
+          
+          {/* 视图切换 - 类似截图的tab样式 */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
               onClick={() => setViewMode('calendar')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'calendar' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
             >
-              <Calendar className="h-4 w-4 mr-2" />
-              日历视图
-            </Button>
-            {selectedJobType === "all" && (
-              <Button
-                variant={showDetail ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setShowDetail(!showDetail)}
-              >
-                {showDetail ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                {showDetail ? '隐藏明细' : '查看明细'}
-              </Button>
-            )}
+              <Calendar className="h-4 w-4" />
+              月视图
+            </button>
+            <button
+              onClick={() => setViewMode('weekly')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'weekly' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <BarChart3 className="h-4 w-4" />
+              周视图
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'table' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <TableIcon className="h-4 w-4" />
+              全部数据
+            </button>
           </div>
+        </div>
+        
+        {/* 操作按钮 */}
                   <Button
                     variant="default"
                     size="sm"
                     onClick={() => {
-              setCurrentEntryContext({
-                category: dataType,
-                type: selectedJobType,
-                title: `${jobTypes[selectedJobType].name}${dataType === 'labor' ? '劳动力配置' : '人工费用'}`,
-                unit: dataType === 'labor' ? '人' : '元',
-                description: dataType === 'labor' ? '每日人员数量监控' : '每日人工费用支出监控',
-              });
-              setIsDataEntryOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            数据录入
+            setCurrentEntryContext({
+              category: dataType,
+              type: selectedJobType,
+              title: `${jobTypes[selectedJobType].name}${dataType === 'labor' ? '劳动力配置' : '人工费用'}`,
+              unit: dataType === 'labor' ? '人' : '元',
+              description: dataType === 'labor' ? '每日人员数量监控' : '每日人工费用支出监控',
+            });
+            setIsDataEntryOpen(true);
+          }}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+                    录入数据
                   </Button>
                     </div>
-                </div>
 
 
       {/* 主内容区域 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {dataType === 'labor' ? <Users className="h-5 w-5" /> : <DollarSign className="h-5 w-5" />}
-            {jobTypes[selectedJobType].name}{dataType === 'labor' ? '劳动力配置' : '人工费用'}
-          </CardTitle>
-          <CardDescription>
-            {dataType === 'labor' ? '每日人员数量监控' : '每日人工费用支出监控'} - 支持多年项目数据查看
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {viewMode === 'table' ? (
-            <>
-              <div className="rounded-md border">
+      {viewMode === 'table' ? (
+        <>
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>日期</TableHead>
-                      {showDetail && selectedJobType === "all" ? (
-                        <>
-                          <TableHead>工种</TableHead>
-                          <TableHead>实际{dataType === 'labor' ? '人数' : '费用'}</TableHead>
-                          <TableHead>计划{dataType === 'labor' ? '人数' : '费用'}</TableHead>
-                        </>
-                      ) : (
-                        <>
-                          <TableHead>实际{dataType === 'labor' ? '人数' : '费用'}</TableHead>
-                          <TableHead>计划{dataType === 'labor' ? '人数' : '费用'}</TableHead>
-                          <TableHead>差异</TableHead>
-                          <TableHead>完成率</TableHead>
-                        </>
-                      )}
+                      <TableHead>实际{dataType === 'labor' ? '人数' : '费用'}</TableHead>
+                      <TableHead>计划{dataType === 'labor' ? '人数' : '费用'}</TableHead>
+                      <TableHead>差异</TableHead>
+                      <TableHead>完成率</TableHead>
+                      <TableHead className="w-28">操作</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {showDetail && selectedJobType === "all" ? (
-                      // 显示工种明细
-                      (() => {
-                        const detailData: { date: string; jobType: string; value: number; plan: number }[] = [];
-                        paginatedData.forEach(item => {
-                          const dayDetails = getJobTypeDetailData(item.date);
-                          dayDetails.forEach(detail => {
-                            detailData.push({
-                              date: item.date,
-                              jobType: detail.jobType,
-                              value: dataType === 'labor' ? detail.labor : detail.cost,
-                              plan: dataType === 'labor' ? detail.labor * 1.1 : detail.cost * 1.1
-                            });
-                          });
-                        });
-                        return detailData.map((item, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">{item.date}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="bg-gray-100">
-                                {item.jobType}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary" className={dataType === 'labor' ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}>
-                                {dataType === 'labor' ? `${item.value}人` : `¥${item.value.toLocaleString()}`}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {dataType === 'labor' ? `${item.plan.toFixed(1)}人` : `¥${item.plan.toLocaleString()}`}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ));
-                      })()
-                    ) : (
-                      // 显示汇总数据
-                      paginatedData.map((item, index) => {
-                        const variance = item.value - item.plan;
-                        const completionRate = ((item.value / item.plan) * 100).toFixed(1);
-                        return (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">{item.date}</TableCell>
-                            <TableCell>
-                              <Badge variant="secondary" className={dataType === 'labor' ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}>
-                                {dataType === 'labor' ? `${item.value}人` : `¥${item.value.toLocaleString()}`}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {dataType === 'labor' ? `${item.plan.toFixed(1)}人` : `¥${item.plan.toLocaleString()}`}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className={getVarianceColor(item.value, item.plan)}>
-                              {variance > 0 ? '+' : ''}{dataType === 'labor' ? `${variance.toFixed(1)}人` : `¥${variance.toLocaleString()}`}
-                            </TableCell>
-                            <TableCell>
-                              <span className={getVarianceColor(item.value, item.plan)}>
-                                {completionRate}%
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    )}
+                    {paginatedData.map((item, index) => {
+                      const variance = item.value - item.plan;
+                      const completionRate = ((item.value / item.plan) * 100).toFixed(1);
+                      return (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{item.date}</TableCell>
+                          <TableCell>
+                            {dataType === 'labor' ? `${item.value}人` : `¥${item.value.toLocaleString()}`}
+                          </TableCell>
+                          <TableCell>
+                            {dataType === 'labor' ? `${item.plan.toFixed(1)}人` : `¥${item.plan.toLocaleString()}`}
+                          </TableCell>
+                          <TableCell className={getVarianceColor(item.value, item.plan)}>
+                            {variance > 0 ? '+' : ''}{dataType === 'labor' ? `${variance.toFixed(1)}人` : `¥${variance.toLocaleString()}`}
+                          </TableCell>
+                          <TableCell>
+                            <span className={getVarianceColor(item.value, item.plan)}>
+                              {completionRate}%
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="outline" size="sm" onClick={() => setDetailForDate(item.date)}>
+                              查看详情
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
-                      </div>
-              
+                </div>
+
               {/* 分页 */}
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center justify-between mt-4 bg-white">
                 <div className="text-sm text-muted-foreground">
                   显示 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, displayData.length)} 条，共 {displayData.length} 条
-                    </div>
+                      </div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -444,11 +531,11 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                   >
                     下一页
                   </Button>
-                      </div>
                     </div>
+                      </div>
             </>
-          ) : (
-            <div className="space-y-4">
+          ) : viewMode === 'calendar' ? (
+            <div className="rounded-md border p-6 space-y-4">
               {/* 日历导航 */}
               <div className="flex items-center justify-between">
                 <Button
@@ -468,7 +555,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                 >
                   下月 →
                 </Button>
-                  </div>
+                    </div>
               
               {/* 日历网格 */}
               <div className="grid grid-cols-7 gap-1">
@@ -476,20 +563,21 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                 {['日', '一', '二', '三', '四', '五', '六'].map(day => (
                   <div key={day} className="p-2 text-center font-medium text-gray-500">
                     {day}
-                      </div>
+                  </div>
                 ))}
                 
                 {/* 日历日期 */}
                 {getCalendarData().map((day, index) => {
                   const status = getDayStatus(day.data);
                   const colorClass = getDayColor(status);
+                  const breakdown = selectedJobType === 'all' && day.data ? getBreakdownByDate(day.dateStr) : [];
                   
                   return (
                     <div
                       key={index}
-                      className={`p-2 min-h-[80px] border rounded cursor-pointer hover:shadow-md transition-all ${
+                      className={`p-2 min-h-[80px] rounded cursor-pointer transition-all relative group ${
                         day.isCurrentMonth ? colorClass : 'bg-gray-50 text-gray-400'
-                      } ${day.isToday ? 'ring-2 ring-blue-500' : ''}`}
+                      }`}
                       onClick={() => {
                         if (day.data) {
                           console.log('点击日期:', day.dateStr, day.data);
@@ -498,52 +586,151 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                     >
                       <div className="text-sm font-medium mb-1">
                         {day.date.getDate()}
-                    </div>
+                      </div>
                       {day.data && (
                         <div className="text-xs space-y-1">
                           <div className="font-medium">
                             实际: {dataType === 'labor' ? `${day.data.value}人` : `¥${day.data.value.toLocaleString()}`}
-                      </div>
+                    </div>
                           <div className="opacity-75">
                             计划: {dataType === 'labor' ? `${day.data.plan}人` : `¥${day.data.plan.toLocaleString()}`}
-                    </div>
-                          <div className={`text-xs font-medium ${
-                            status === 'over' ? 'text-red-600' : 
-                            status === 'under' ? 'text-blue-600' : 
-                            'text-green-600'
-                          }`}>
-                            {status === 'over' ? '超支' : status === 'under' ? '节约' : '正常'}
-                  </div>
+                      </div>
                     </div>
                       )}
+                      
+                      {/* 自定义 Tooltip */}
+                      {day.data && breakdown.length > 0 && (
+                        <div className="absolute z-50 invisible group-hover:visible bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-[200px] max-w-[300px] top-full left-1/2 transform -translate-x-1/2 mt-1">
+                          <div className="text-sm font-medium text-gray-900 mb-2">
+                            {day.dateStr}
+                          </div>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {breakdown.map((row, idx) => (
+                              <div key={`${day.dateStr}-${row.jobType}`} className="border-b border-gray-100 last:border-b-0 pb-2 last:pb-0">
+                                <div className="text-xs font-medium text-gray-700 mb-1">{row.jobType}</div>
+                                <div className="text-xs text-gray-500 mb-0.5">
+                                  计划: {dataType === 'labor' ? `${row.planValue}人` : `¥${Number(row.planValue).toLocaleString()}`}
+                                </div>
+                                <div className="text-xs text-blue-600">
+                                  实际: {dataType === 'labor' ? `${row.actualValue}人` : `¥${Number(row.actualValue).toLocaleString()}`}
+                                </div>
+                              </div>
+                            ))}
                       </div>
+                    </div>
+                      )}
+                  </div>
                   );
                 })}
                 </div>
 
-              {/* 图例 */}
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-100 border border-red-300 rounded"></div>
-                  <span>超支</span>
+            </div>
+          ) : viewMode === 'weekly' ? (
+            <div className="rounded-md border p-6 space-y-4">
+              {/* 周导航 */}
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setDate(selectedDate.getDate() - 7);
+                    setSelectedDate(newDate);
+                  }}
+                >
+                  ← 上周
+                </Button>
+                <h3 className="text-lg font-semibold">
+                      {(() => {
+                    const weekStart = new Date(selectedDate);
+                    weekStart.setDate(selectedDate.getDate() - selectedDate.getDay() + 1);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    return `${weekStart.getMonth() + 1}月${weekStart.getDate()}日 - ${weekEnd.getMonth() + 1}月${weekEnd.getDate()}日`;
+                  })()}
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setDate(selectedDate.getDate() + 7);
+                    setSelectedDate(newDate);
+                  }}
+                >
+                  下周 →
+                </Button>
                       </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
-                  <span>正常</span>
-                    </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded"></div>
-                  <span>节约</span>
-                    </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></div>
-                  <span>无数据</span>
+              
+              {/* 周视图柱状图 */}
+              <div className="h-96">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={getWeeklyData()} barCategoryGap="10%">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="day" 
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => dataType === 'labor' ? `${value}人` : `¥${value.toLocaleString()}`}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar 
+                      dataKey="plan" 
+                      fill="#9ca3af" 
+                      name="计划"
+                      radius={[2, 2, 0, 0]}
+                      maxBarSize={40}
+                    >
+                      <LabelList 
+                        dataKey="plan" 
+                        position="top" 
+                        formatter={(value) => dataType === 'labor' ? `${value}人` : `¥${value.toLocaleString()}`}
+                        style={{ fontSize: '12px', fill: '#6b7280' }}
+                      />
+                    </Bar>
+                    <Bar 
+                      dataKey="actual" 
+                      fill="#3b82f6" 
+                      name="实际"
+                      radius={[2, 2, 0, 0]}
+                      maxBarSize={40}
+                    >
+                      <LabelList 
+                        dataKey="actual" 
+                        position="top" 
+                        formatter={(value) => dataType === 'labor' ? `${value}人` : `¥${value.toLocaleString()}`}
+                        style={{ fontSize: '12px', fill: '#1d4ed8' }}
+                      />
+                    </Bar>
+                  </BarChart>
+                      </ResponsiveContainer>
                   </div>
-                  </div>
+              
+              {/* 周视图统计信息 */}
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {getWeeklyData().reduce((sum, day) => sum + day.actual, 0)}
                 </div>
-          )}
-        </CardContent>
-      </Card>
+                  <div className="text-muted-foreground">本周实际{dataType === 'labor' ? '人数' : '费用'}</div>
+              </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {getWeeklyData().reduce((sum, day) => sum + day.plan, 0)}
+      </div>
+                  <div className="text-muted-foreground">本周计划{dataType === 'labor' ? '人数' : '费用'}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {getWeeklyData().filter(day => day.hasData).length}
+                  </div>
+                  <div className="text-muted-foreground">有数据天数</div>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
       {/* 数据录入对话框 */}
       {isDataEntryOpen && (
@@ -554,8 +741,42 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
           title={currentEntryContext?.title}
           unit={currentEntryContext?.unit}
           description={currentEntryContext?.description}
+          category={currentEntryContext?.category}
         />
       )}
+
+      {/* 全部数据-查看详情（分工种明细） */}
+      <Dialog open={!!detailForDate} onOpenChange={(open) => setDetailForDate(open ? detailForDate : null)}>
+        <DialogContent className="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle>分工种明细 - {detailForDate}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            {(() => {
+              if (!detailForDate) return null;
+              const rows = getBreakdownByDate(detailForDate);
+              if (!rows || rows.length === 0) {
+                return <div className="text-sm text-muted-foreground">该日无分工种数据</div>;
+              }
+              return (
+                <div className="divide-y">
+                  {rows.map((row: any) => (
+                    <div key={`${detailForDate}-${row.jobType}`} className="py-2">
+                      <div className="text-sm font-medium text-gray-900 mb-1">{row.jobType}</div>
+                      <div className="text-xs text-gray-500 mb-0.5">
+                        计划：{dataType === 'labor' ? `${row.planValue}人` : `¥${Number(row.planValue).toLocaleString()}`}
+                      </div>
+                      <div className="text-xs text-blue-600">
+                        实际：{dataType === 'labor' ? `${row.actualValue}人` : `¥${Number(row.actualValue).toLocaleString()}`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
