@@ -67,8 +67,8 @@ export function BatchOperationDialog({
   const getTradeColor = (trade: string) => {
     switch (trade) {
       case "木工": return "bg-amber-100 text-amber-800";
-      case "电工": return "bg-yellow-100 text-yellow-800";
-      case "钢筋工": return "bg-blue-100 text-blue-800";
+      case "电工": return "bg-category-yellow-100 text-category-yellow-800";
+      case "钢筋工": return "bg-category-blue-100 text-category-blue-800";
       case "混凝土工": return "bg-gray-100 text-gray-800";
       default: return "bg-gray-100 text-gray-800";
     }
@@ -79,14 +79,14 @@ export function BatchOperationDialog({
       <DialogContent className="max-w-3xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-orange-500" />
+            <AlertTriangle className="h-5 w-5 text-category-orange-600" />
             {operationInfo.title}确认
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-            <p className="text-sm text-orange-800">
+          <div className="bg-category-orange-50 border border-category-orange-200 rounded-lg p-4">
+            <p className="text-sm text-category-orange-800">
               {operationInfo.description}，此操作将影响 <span className="font-semibold">{selectedCraftsmen.length}</span> 名工匠
               {operation === 'delete' && '，删除后无法恢复'}。
             </p>
@@ -115,12 +115,12 @@ export function BatchOperationDialog({
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <span className="text-yellow-500">{"★".repeat(craftsman.level)}{"☆".repeat(4 - craftsman.level)}</span>
+                        <span className="text-category-yellow-600">{"★".repeat(craftsman.level)}{"☆".repeat(4 - craftsman.level)}</span>
                         <span className="ml-2 text-sm text-muted-foreground">{craftsman.level}级</span>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${craftsman.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                          <div className={`w-2 h-2 rounded-full ${craftsman.status === 'active' ? 'bg-category-green-600' : 'bg-gray-400'}`} />
                           <span className="text-sm">
                             {craftsman.status === 'active' ? '在场' : craftsman.status === 'departed' ? '已出库' : '离场'}
                           </span>

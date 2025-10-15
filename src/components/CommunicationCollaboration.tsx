@@ -140,7 +140,7 @@ export function CommunicationCollaboration({ showExpandButton, onExpandSidebar }
 
       {/* Table */}
       <div className="border rounded-lg">
-        <div className="overflow-auto max-h-[600px]">
+        <div className="overflow-auto max-h-[calc(100vh-400px)]">
           <Table>
           <TableHeader>
             <TableRow>
@@ -169,19 +169,19 @@ export function CommunicationCollaboration({ showExpandButton, onExpandSidebar }
                       size="sm"
                       onClick={() => setViewingRecord(record)}
                     >
-                      <Eye className="h-3 w-3" />
+                      查看
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setEditingRecord(record)}
                     >
-                      <Edit className="h-3 w-3" />
+                      编辑
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="outline" size="sm">
-                          <Trash2 className="h-3 w-3" />
+                          删除
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>

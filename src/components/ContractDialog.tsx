@@ -41,9 +41,9 @@ export function ContractDialog({ open, onOpenChange, craftsman }: ContractDialog
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case '已签署': return 'bg-green-100 text-green-800';
-      case '待签署': return 'bg-yellow-100 text-yellow-800';
-      case '已到期': return 'bg-red-100 text-red-800';
+      case '已签署': return 'bg-category-green-100 text-category-green-800';
+      case '待签署': return 'bg-category-yellow-100 text-category-yellow-800';
+      case '已到期': return 'bg-category-red-100 text-category-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -117,8 +117,8 @@ export function ContractDialog({ open, onOpenChange, craftsman }: ContractDialog
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 p-4 border rounded-lg">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Clock className="h-5 w-5 text-blue-600" />
+                  <div className="p-2 bg-category-blue-100 rounded-lg">
+                    <Clock className="h-5 w-5 text-category-blue-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">合同开始</p>
@@ -126,8 +126,8 @@ export function ContractDialog({ open, onOpenChange, craftsman }: ContractDialog
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 border rounded-lg">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <Clock className="h-5 w-5 text-red-600" />
+                  <div className="p-2 bg-category-red-100 rounded-lg">
+                    <Clock className="h-5 w-5 text-category-red-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">合同结束</p>
@@ -149,8 +149,8 @@ export function ContractDialog({ open, onOpenChange, craftsman }: ContractDialog
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-3 p-4 border rounded-lg">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <DollarSign className="h-5 w-5 text-green-600" />
+                  <div className="p-2 bg-category-green-100 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-category-green-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">日工资</p>
@@ -158,8 +158,8 @@ export function ContractDialog({ open, onOpenChange, craftsman }: ContractDialog
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 border rounded-lg">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <Clock className="h-5 w-5 text-orange-600" />
+                  <div className="p-2 bg-category-orange-100 rounded-lg">
+                    <Clock className="h-5 w-5 text-category-orange-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">加班倍率</p>
@@ -167,8 +167,8 @@ export function ContractDialog({ open, onOpenChange, craftsman }: ContractDialog
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 border rounded-lg">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <DollarSign className="h-5 w-5 text-purple-600" />
+                  <div className="p-2 bg-category-purple-100 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-category-purple-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">合同总额</p>
@@ -212,14 +212,14 @@ export function ContractDialog({ open, onOpenChange, craftsman }: ContractDialog
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">甲方签署</label>
-                    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="mt-2 p-3 bg-category-green-50 border border-category-green-200 rounded-lg">
                       <p className="font-medium">建设单位有限公司</p>
                       <p className="text-sm text-muted-foreground">签署时间: {contractData.signDate}</p>
                     </div>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">乙方签署</label>
-                    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="mt-2 p-3 bg-category-green-50 border border-category-green-200 rounded-lg">
                       <p className="font-medium">{craftsman.name}</p>
                       <p className="text-sm text-muted-foreground">签署时间: {contractData.signDate}</p>
                     </div>

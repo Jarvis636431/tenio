@@ -156,16 +156,16 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl">新建项目</DialogTitle>
+          <DialogTitle className="text-lg">新建项目</DialogTitle>
         </DialogHeader>
 
         {currentStep === 'confirm' && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-md mb-6">
+          <div className="p-4 bg-category-blue-50 border border-category-blue-200 rounded-md mb-6">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                <div className="w-2 h-2 bg-category-blue-600 rounded-full mt-2"></div>
               </div>
-              <div className="text-sm text-blue-800">
+              <div className="text-sm text-category-blue-800">
                 <p className="font-medium mb-1">系统已解析项目基础信息</p>
                 <p>请确认以上信息无误后，点击"生成工序"开始创建施工工序计划。</p>
               </div>

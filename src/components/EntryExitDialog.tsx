@@ -78,11 +78,11 @@ export function EntryExitDialog({ open, onOpenChange, craftsman }: EntryExitDial
   };
 
   const getRecordColor = (type: 'entry' | 'exit') => {
-    return type === 'entry' ? 'text-green-600' : 'text-red-600';
+    return type === 'entry' ? 'text-category-green-600' : 'text-category-red-600';
   };
 
   const getRecordBadgeColor = (type: 'entry' | 'exit') => {
-    return type === 'entry' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+    return type === 'entry' ? 'bg-category-green-100 text-category-green-800' : 'bg-category-red-100 text-category-red-800';
   };
 
   // 统计信息
@@ -107,12 +107,12 @@ export function EntryExitDialog({ open, onOpenChange, craftsman }: EntryExitDial
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <TrendingUp className="h-5 w-5 text-blue-600" />
+                  <div className="p-2 bg-category-blue-100 rounded-lg">
+                    <TrendingUp className="h-5 w-5 text-category-blue-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">总进场次数</p>
-                    <p className="text-2xl font-bold">{entryRecords.length}</p>
+                    <p className="text-xl font-bold">{entryRecords.length}</p>
                   </div>
                 </div>
               </CardContent>
@@ -121,12 +121,12 @@ export function EntryExitDialog({ open, onOpenChange, craftsman }: EntryExitDial
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Calendar className="h-5 w-5 text-green-600" />
+                  <div className="p-2 bg-category-green-100 rounded-lg">
+                    <Calendar className="h-5 w-5 text-category-green-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">本月出勤天数</p>
-                    <p className="text-2xl font-bold">{thisMonthDays}</p>
+                    <p className="text-xl font-bold">{thisMonthDays}</p>
                   </div>
                 </div>
               </CardContent>
@@ -135,12 +135,12 @@ export function EntryExitDialog({ open, onOpenChange, craftsman }: EntryExitDial
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Clock className="h-5 w-5 text-purple-600" />
+                  <div className="p-2 bg-category-purple-100 rounded-lg">
+                    <Clock className="h-5 w-5 text-category-purple-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">平均工作时长</p>
-                    <p className="text-2xl font-bold">8.5小时</p>
+                    <p className="text-xl font-bold">8.5小时</p>
                   </div>
                 </div>
               </CardContent>
@@ -160,7 +160,7 @@ export function EntryExitDialog({ open, onOpenChange, craftsman }: EntryExitDial
                   return (
                      <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                        <div className="flex items-center gap-4">
-                         <div className={`text-2xl ${getRecordColor(record.type)}`}>
+                         <div className={`text-xl ${getRecordColor(record.type)}`}>
                            {getRecordIcon(record.type)}
                          </div>
                          <div>
@@ -178,7 +178,7 @@ export function EntryExitDialog({ open, onOpenChange, craftsman }: EntryExitDial
                            </div>
                            {record.type === 'entry' && (
                              <div className="flex items-center gap-1 mt-1">
-                               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                               <Badge variant="outline" className="bg-category-green-50 text-category-green-700 border-category-green-200 text-xs">
                                  已完成安全教育
                                </Badge>
                              </div>

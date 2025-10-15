@@ -196,9 +196,9 @@ export function CraftsmanManagement({
       case "木工":
         return "bg-amber-100 text-amber-800 hover:bg-amber-200";
       case "电工":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
+        return "bg-category-yellow-100 text-category-yellow-800 hover:bg-category-yellow-200";
       case "钢筋工":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-200";
+        return "bg-category-blue-100 text-category-blue-800 hover:bg-category-blue-200";
       case "混凝土工":
         return "bg-gray-100 text-gray-800 hover:bg-gray-200";
       default:
@@ -221,7 +221,7 @@ export function CraftsmanManagement({
                 
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">总工匠数</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-xl font-bold">{stats.total}</p>
                 </div>
               </div>
             </CardContent>
@@ -233,7 +233,7 @@ export function CraftsmanManagement({
                 
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">在场人数</p>
-                  <p className="text-2xl font-bold">{stats.active}</p>
+                  <p className="text-xl font-bold">{stats.active}</p>
                 </div>
               </div>
             </CardContent>
@@ -245,7 +245,7 @@ export function CraftsmanManagement({
                 
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">已认证</p>
-                  <p className="text-2xl font-bold">{stats.certified}</p>
+                  <p className="text-xl font-bold">{stats.certified}</p>
                 </div>
               </div>
             </CardContent>
@@ -257,7 +257,7 @@ export function CraftsmanManagement({
                 
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">认证完成率</p>
-                  <p className="text-2xl font-bold">{stats.certificationRate}%</p>
+                  <p className="text-xl font-bold">{stats.certificationRate}%</p>
                 </div>
               </div>
             </CardContent>
@@ -299,7 +299,7 @@ export function CraftsmanManagement({
         </Card>
 
         {/* Batch Operations Toolbar */}
-        {selectedIds.length > 0 && <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        {selectedIds.length > 0 && <div className="bg-category-blue-50 border border-category-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium">
@@ -323,7 +323,7 @@ export function CraftsmanManagement({
 
         {/* Table */}
         <Card>
-          <div className="overflow-auto max-h-[600px]">
+          <div className="overflow-auto max-h-[calc(100vh-400px)]">
             <Table>
             <TableHeader>
               <TableRow>
@@ -355,14 +355,14 @@ export function CraftsmanManagement({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${craftsman.status === 'active' ? 'bg-green-500' : craftsman.status === 'departed' ? 'bg-orange-500' : 'bg-gray-400'}`} />
+                      <div className={`w-2 h-2 rounded-full ${craftsman.status === 'active' ? 'bg-category-green-600' : craftsman.status === 'departed' ? 'bg-category-orange-600' : 'bg-gray-400'}`} />
                       <span className="text-sm">
                         {craftsman.status === 'active' ? '在场' : craftsman.status === 'departed' ? '已出库' : '离场'}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={craftsman.certificationStatus === '已认证' ? 'default' : 'secondary'} className={craftsman.certificationStatus === '已认证' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                    <Badge variant={craftsman.certificationStatus === '已认证' ? 'default' : 'secondary'} className={craftsman.certificationStatus === '已认证' ? 'bg-category-green-100 text-category-green-800' : 'bg-category-yellow-100 text-category-yellow-800'}>
                       {craftsman.certificationStatus}
                     </Badge>
                   </TableCell>
@@ -370,7 +370,7 @@ export function CraftsmanManagement({
                   <TableCell>
                     <div className="flex gap-1">
                       <Button variant="outline" size="sm" onClick={() => handleEdit(craftsman)}>
-                        <Edit className="h-3 w-3" />
+                        编辑
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => {
                     setSelectedCraftsman(craftsman);

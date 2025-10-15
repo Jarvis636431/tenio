@@ -149,7 +149,7 @@ export function PlanOverview({ showExpandButton = false, onExpandSidebar }: Plan
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-category-blue-600 mx-auto"></div>
           <p className="mt-2 text-gray-600">加载数据中...</p>
         </div>
       </div>
@@ -161,10 +161,10 @@ const getWorkerBadgeColor = (worker: string) => {
   const colors: {
     [key: string]: string;
   } = {
-    "木工": "bg-blue-100 text-blue-800",
-    "混凝土工": "bg-orange-100 text-orange-800",
-    "砌筑工": "bg-green-100 text-green-800",
-    "抹灰工": "bg-purple-100 text-purple-800",
+    "木工": "bg-category-blue-100 text-category-blue-800",
+    "混凝土工": "bg-category-orange-100 text-category-orange-800",
+    "砌筑工": "bg-category-green-100 text-category-green-800",
+    "抹灰工": "bg-category-purple-100 text-category-purple-800",
     "安装工": "bg-pink-100 text-pink-800"
   };
   return colors[worker] || "bg-gray-100 text-gray-800";
@@ -264,7 +264,7 @@ const formatCurrency = (amount: number) => {
         <SheetContent className="w-[90vw] max-w-none overflow-y-auto" showOverlay={false}>
           {selectedTask && <>
               <SheetHeader>
-                <SheetTitle className="text-xl">{selectedTask.task} - 详细信息</SheetTitle>
+                <SheetTitle className="text-lg">{selectedTask.task} - 详细信息</SheetTitle>
                 <SheetDescription>
                   总费用：{formatCurrency(selectedTask.totalCost)}
                 </SheetDescription>

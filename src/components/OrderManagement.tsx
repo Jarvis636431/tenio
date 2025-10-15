@@ -171,11 +171,11 @@ export function OrderManagement({ showExpandButton = false, onExpandSidebar }: O
   const getJobBadgeColor = (job: string) => {
     switch (job) {
       case "钢筋工":
-        return "bg-blue-100 text-blue-800";
+        return "bg-category-blue-100 text-category-blue-800";
       case "模板工":
-        return "bg-green-100 text-green-800";
+        return "bg-category-green-100 text-category-green-800";
       case "混凝土工":
-        return "bg-orange-100 text-orange-800";
+        return "bg-category-orange-100 text-category-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -186,7 +186,7 @@ export function OrderManagement({ showExpandButton = false, onExpandSidebar }: O
     const isHigher = bidPrice > quotaPrice;
     return {
       isHigher,
-      className: isHigher ? "text-red-600 font-medium" : "text-green-600 font-medium"
+      className: isHigher ? "text-category-red-600 font-medium" : "text-category-green-600 font-medium"
     };
   };
   return <div className="h-full overflow-auto p-6 space-y-6">
@@ -195,13 +195,13 @@ export function OrderManagement({ showExpandButton = false, onExpandSidebar }: O
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold">{mockOrders.length}</div>
+            <div className="text-xl font-bold">{mockOrders.length}</div>
             <p className="text-xs text-muted-foreground">总订单数</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-xl font-bold text-category-blue-600">
               {mockOrders.filter(order => new Date(order.endDate) >= new Date()).length}
             </div>
             <p className="text-xs text-muted-foreground">进行中</p>
@@ -209,7 +209,7 @@ export function OrderManagement({ showExpandButton = false, onExpandSidebar }: O
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl font-bold text-category-green-600">
               {mockOrders.filter(order => new Date(order.endDate) < new Date()).length}
             </div>
             <p className="text-xs text-muted-foreground">已完成</p>
@@ -217,7 +217,7 @@ export function OrderManagement({ showExpandButton = false, onExpandSidebar }: O
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-xl font-bold text-category-orange-600">
               ¥{mockOrders.reduce((sum, order) => sum + order.bidPrice, 0).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">总金额</p>
@@ -281,7 +281,7 @@ export function OrderManagement({ showExpandButton = false, onExpandSidebar }: O
         
         <CardContent className="p-0">
           <div className="overflow-hidden">
-            <div className="overflow-auto max-h-[600px]">
+            <div className="overflow-auto max-h-[calc(100vh-400px)]">
               <Table>
                 <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
                   <TableRow>
@@ -300,7 +300,7 @@ export function OrderManagement({ showExpandButton = false, onExpandSidebar }: O
                 <TableBody>
                   {paginatedOrders.map(order => {
                   const bidPriceInfo = getPriceDifference(order.bidPrice, order.quotaPrice);
-                  return <TableRow key={order.id} className="hover:bg-muted/50">
+                  return <TableRow key={order.id}>
                         <TableCell className="font-medium">{order.orderNumber}</TableCell>
                         <TableCell>{order.drawingLocation || "-"}</TableCell>
                         <TableCell>{order.constructionContent}</TableCell>

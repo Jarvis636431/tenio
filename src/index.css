@@ -70,6 +70,55 @@ All colors MUST be HSL.
     /* Custom sidebar selected state - more prominent */
     --sidebar-selected: 220 10% 92%;
     --sidebar-selected-foreground: 240 5.9% 10%;
+
+    /* Category Colors - Equally weighted for types/categories */
+    --category-blue: 210 85% 45%;
+    --category-blue-50: 210 85% 95%;
+    --category-blue-100: 210 80% 90%;
+    --category-blue-200: 210 75% 80%;
+    --category-blue-600: 210 85% 45%;
+    --category-blue-700: 210 85% 38%;
+    --category-blue-800: 210 80% 30%;
+
+    --category-purple: 255 70% 50%;
+    --category-purple-50: 255 70% 95%;
+    --category-purple-100: 255 65% 90%;
+    --category-purple-200: 255 60% 80%;
+    --category-purple-600: 255 70% 50%;
+    --category-purple-700: 255 70% 42%;
+    --category-purple-800: 255 65% 35%;
+
+    --category-green: 165 70% 42%;
+    --category-green-50: 165 65% 95%;
+    --category-green-100: 165 60% 88%;
+    --category-green-200: 165 55% 78%;
+    --category-green-600: 165 70% 42%;
+    --category-green-700: 165 70% 35%;
+    --category-green-800: 165 65% 28%;
+
+    --category-yellow: 40 90% 55%;
+    --category-yellow-50: 40 90% 95%;
+    --category-yellow-100: 40 85% 88%;
+    --category-yellow-200: 40 80% 75%;
+    --category-yellow-600: 40 90% 55%;
+    --category-yellow-700: 40 90% 45%;
+    --category-yellow-800: 40 85% 35%;
+
+    --category-orange: 25 85% 58%;
+    --category-orange-50: 25 85% 95%;
+    --category-orange-100: 25 80% 88%;
+    --category-orange-200: 25 75% 78%;
+    --category-orange-600: 25 85% 58%;
+    --category-orange-700: 25 85% 48%;
+    --category-orange-800: 25 80% 38%;
+
+    --category-red: 355 80% 60%;
+    --category-red-50: 355 75% 95%;
+    --category-red-100: 355 70% 90%;
+    --category-red-200: 355 65% 80%;
+    --category-red-600: 355 80% 60%;
+    --category-red-700: 355 80% 50%;
+    --category-red-800: 355 75% 40%;
   }
 
   .dark {

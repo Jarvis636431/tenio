@@ -79,7 +79,7 @@ export function AIAssistant() {
         <Card className="h-full shadow-2xl border-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-500" />
+              <Sparkles className="w-5 h-5 text-category-blue-600" />
               AI助手
             </CardTitle>
             <Button

@@ -31,8 +31,8 @@ export function CertificationDialog({ open, onOpenChange, craftsman }: Certifica
   const getTradeColor = (trade: string) => {
     switch (trade) {
       case "木工": return "bg-amber-100 text-amber-800";
-      case "电工": return "bg-yellow-100 text-yellow-800";
-      case "钢筋工": return "bg-blue-100 text-blue-800";
+      case "电工": return "bg-category-yellow-100 text-category-yellow-800";
+      case "钢筋工": return "bg-category-blue-100 text-category-blue-800";
       case "混凝土工": return "bg-gray-100 text-gray-800";
       default: return "bg-gray-100 text-gray-800";
     }
@@ -55,7 +55,7 @@ export function CertificationDialog({ open, onOpenChange, craftsman }: Certifica
               <CardContent className="flex flex-col items-center space-y-4">
                 <Avatar className="h-32 w-32">
                   <AvatarImage src={`/placeholder.svg`} alt={craftsman.name} />
-                  <AvatarFallback className="text-2xl">
+                  <AvatarFallback className="text-xl">
                     {craftsman.name.slice(0, 1)}
                   </AvatarFallback>
                 </Avatar>
@@ -117,7 +117,7 @@ export function CertificationDialog({ open, onOpenChange, craftsman }: Certifica
                    <div>
                      <label className="text-sm font-medium text-muted-foreground">技能等级</label>
                      <div className="flex items-center gap-2 mt-1">
-                       <span className="text-yellow-500 text-lg">{getLevelDisplay(craftsman.level)}</span>
+                       <span className="text-category-yellow-600 text-lg">{getLevelDisplay(craftsman.level)}</span>
                        <span className="text-sm text-muted-foreground">{craftsman.level}级</span>
                      </div>
                    </div>
@@ -150,7 +150,7 @@ export function CertificationDialog({ open, onOpenChange, craftsman }: Certifica
                     <span className="text-sm font-medium">认证状态</span>
                     <Badge 
                       variant={craftsman.certificationStatus === '已认证' ? 'default' : 'secondary'}
-                      className={craftsman.certificationStatus === '已认证' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
+                      className={craftsman.certificationStatus === '已认证' ? 'bg-category-green-100 text-category-green-800' : 'bg-category-yellow-100 text-category-yellow-800'}
                     >
                       {craftsman.certificationStatus}
                     </Badge>
@@ -159,7 +159,7 @@ export function CertificationDialog({ open, onOpenChange, craftsman }: Certifica
                   {craftsman.certificationStatus === '已认证' && (
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                       <div className="space-y-2">
-                        <Award className="h-12 w-12 mx-auto text-green-600" />
+                        <Award className="h-12 w-12 mx-auto text-category-green-600" />
                         <h4 className="text-lg font-semibold">认证证书</h4>
                         <p className="text-muted-foreground">
                           {craftsman.trade}技能等级证书 - {craftsman.level}级
@@ -174,9 +174,9 @@ export function CertificationDialog({ open, onOpenChange, craftsman }: Certifica
                   )}
                   
                   {craftsman.certificationStatus === '待认证' && (
-                    <div className="border-2 border-dashed border-yellow-300 rounded-lg p-8 text-center">
+                    <div className="border-2 border-dashed border-category-yellow-200 rounded-lg p-8 text-center">
                       <div className="space-y-2">
-                        <Calendar className="h-12 w-12 mx-auto text-yellow-600" />
+                        <Calendar className="h-12 w-12 mx-auto text-category-yellow-600" />
                         <h4 className="text-lg font-semibold">待认证</h4>
                         <p className="text-muted-foreground">
                           认证材料审核中，预计3-5个工作日完成

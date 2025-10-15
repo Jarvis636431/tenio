@@ -8,7 +8,8 @@ import { ProjectSelector } from "@/components/ProjectSelector";
 import { useProject } from "@/contexts/ProjectContext";
 import { useNavigate } from "react-router-dom";
 import { NewProjectDialog } from "@/components/NewProjectDialog";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -67,6 +68,9 @@ export function AppSidebar() {
   const location = useLocation();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>(["plan-and-orders", "real-time-monitoring"]);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{top: number, left: number} | null>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { logout, user } = useAuth();
 
   const handleNewProject = () => {
@@ -90,16 +94,57 @@ export function AppSidebar() {
     );
   };
 
-  return <TooltipProvider>
+  const handleMouseEnter = (itemId: string, event: React.MouseEvent) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
+    setMenuPosition({
+      top: rect.top,
+      left: rect.right + 8 // 8px gap
+    });
+    setHoveredItem(itemId);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredItem(null);
+      setMenuPosition(null);
+    }, 150); // 150ms延迟，避免快速移动时闪烁
+  };
+
+  // 清理timeout
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  return <TooltipProvider delayDuration={300}>
       <Sidebar className="border-r border-gray-200" collapsible="icon">
         <SidebarContent className="flex flex-col h-full">
           {/* 顶部公司Logo和名称 */}
           <SidebarHeader className="px-4 py-4 relative">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 cursor-pointer transition-opacity hover:opacity-80" onClick={handleLogoClick}>
-                <img src="/lovable-uploads/Frame 2147224672.svg" alt="天友" className="h-8 w-8" />
-                {!isCollapsed && <h1 className="text-lg font-semibold text-slate-700 whitespace-nowrap">A.PM 智慧建管</h1>}
-              </div>
+              {isCollapsed ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center space-x-3 cursor-pointer transition-opacity hover:opacity-80" onClick={handleLogoClick}>
+                      <img src="/lovable-uploads/Frame 2147224672.svg" alt="天友" className="h-8 w-8" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>A.PM 智慧建管</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <div className="flex items-center space-x-3 cursor-pointer transition-opacity hover:opacity-80" onClick={handleLogoClick}>
+                  <img src="/lovable-uploads/Frame 2147224672.svg" alt="天友" className="h-8 w-8" />
+                  <h1 className="text-lg font-semibold text-slate-700 whitespace-nowrap">A.PM 智慧建管</h1>
+                </div>
+              )}
               {/* 展开状态下显示收起按钮 */}
               {!isCollapsed && (
                 <Button
@@ -124,12 +169,27 @@ export function AppSidebar() {
                   {mainMenuItems.map((item) => {
                     const Icon = item.icon;
                     return <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={location.pathname === item.url}>
-                          <NavLink to={item.url}>
-                            <Icon className="h-4 w-4 text-muted-foreground" />
-                            {!isCollapsed && <span className="whitespace-nowrap">{item.title}</span>}
-                          </NavLink>
-                        </SidebarMenuButton>
+                        {isCollapsed ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="w-full h-8">
+                                <NavLink to={item.url}>
+                                  <Icon className="h-4 w-4 text-muted-foreground" />
+                                </NavLink>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              <p>{item.title}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                            <NavLink to={item.url}>
+                              <Icon className="h-4 w-4 text-muted-foreground" />
+                              <span className="whitespace-nowrap">{item.title}</span>
+                            </NavLink>
+                          </SidebarMenuButton>
+                        )}
                       </SidebarMenuItem>;
                   })}
                 </SidebarMenu>
@@ -163,39 +223,15 @@ export function AppSidebar() {
                           <SidebarMenuItem>
                             {hasSubItems ? (
                               isCollapsed ? (
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <SidebarMenuButton className="w-full justify-center hover:bg-accent hover:text-accent-foreground">
-                                      <Icon className="h-4 w-4 text-muted-foreground" />
-                                    </SidebarMenuButton>
-                                  </PopoverTrigger>
-                                  <PopoverContent side="right" className="w-48 p-2">
-                                    <div className="space-y-1">
-                                      <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
-                                        {item.label}
-                                      </div>
-                                      <div className="border-t pt-1">
-                                        {item.subItems.map((subItem) => {
-                                          const SubIcon = subItem.icon;
-                                          const isSubActive = location.search.includes(`view=${item.id}&tab=${subItem.id}`);
-                                          return (
-                                            <Button
-                                              key={subItem.id}
-                                              variant="ghost"
-                                              className="w-full justify-start h-8 px-2 text-sm"
-                                              asChild
-                                            >
-                                              <NavLink to={`/project/${currentProject.id}?view=${item.id}&tab=${subItem.id}`}>
-                                                <SubIcon className="h-4 w-4 mr-2" />
-                                                {subItem.label}
-                                              </NavLink>
-                                            </Button>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  </PopoverContent>
-                                </Popover>
+                                <div 
+                                  className="relative"
+                                  onMouseEnter={(e) => handleMouseEnter(item.id, e)}
+                                  onMouseLeave={handleMouseLeave}
+                                >
+                                  <SidebarMenuButton className="w-full justify-center hover:bg-accent hover:text-accent-foreground">
+                                    <Icon className="h-4 w-4 text-muted-foreground" />
+                                  </SidebarMenuButton>
+                                </div>
                               ) : (
                                 <SidebarMenuButton 
                                   onClick={() => toggleExpanded(item.id)}
@@ -211,12 +247,27 @@ export function AppSidebar() {
                                 </SidebarMenuButton>
                               )
                             ) : (
-                              <SidebarMenuButton asChild isActive={isActive}>
-                                <NavLink to={`/project/${currentProject.id}?view=${item.id}`}>
-                                  <Icon className="h-4 w-4 text-muted-foreground" />
-                                  {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
-                                </NavLink>
-                              </SidebarMenuButton>
+                              isCollapsed ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="w-full h-8">
+                                      <NavLink to={`/project/${currentProject.id}?view=${item.id}`}>
+                                        <Icon className="h-4 w-4 text-muted-foreground" />
+                                      </NavLink>
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="right">
+                                    <p>{item.label}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <SidebarMenuButton asChild isActive={isActive}>
+                                  <NavLink to={`/project/${currentProject.id}?view=${item.id}`}>
+                                    <Icon className="h-4 w-4 text-muted-foreground" />
+                                    <span className="whitespace-nowrap">{item.label}</span>
+                                  </NavLink>
+                                </SidebarMenuButton>
+                              )
                             )}
                           </SidebarMenuItem>
                           
@@ -341,5 +392,41 @@ export function AppSidebar() {
         </SidebarContent>
       </Sidebar>
       <NewProjectDialog open={newProjectDialogOpen} onOpenChange={setNewProjectDialogOpen} />
+      
+      {/* Portal-rendered hover menu */}
+      {hoveredItem && menuPosition && createPortal(
+        <div 
+          style={{ top: menuPosition.top, left: menuPosition.left }}
+          className="fixed z-[9999] w-48 bg-white border border-gray-200 rounded-md shadow-lg p-2"
+          onMouseEnter={() => handleMouseEnter(hoveredItem, { currentTarget: { getBoundingClientRect: () => menuPosition } } as any)}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className="space-y-1">
+            <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+              {projectMenuItems.find(item => item.id === hoveredItem)?.label}
+            </div>
+            <div className="border-t pt-1">
+              {projectMenuItems.find(item => item.id === hoveredItem)?.subItems?.map((subItem) => {
+                const SubIcon = subItem.icon;
+                const isSubActive = location.search.includes(`view=${hoveredItem}&tab=${subItem.id}`);
+                return (
+                  <Button
+                    key={subItem.id}
+                    variant="ghost"
+                    className="w-full justify-start h-8 px-2 text-sm"
+                    asChild
+                  >
+                    <NavLink to={`/project/${currentProject?.id}?view=${hoveredItem}&tab=${subItem.id}`}>
+                      <SubIcon className="h-4 w-4 mr-2" />
+                      {subItem.label}
+                    </NavLink>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </TooltipProvider>;
 }

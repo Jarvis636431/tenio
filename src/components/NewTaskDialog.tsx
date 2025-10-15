@@ -334,11 +334,11 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
                           <span className="text-muted-foreground">搜索并选择前置任务...</span>
                         ) : (
                           getSelectedTaskNames(formData.prerequisiteTasks).map((taskName, index) => (
-                            <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 transition-colors">
+                            <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-category-blue-100 text-category-blue-800 border-category-blue-200 hover:bg-category-blue-200 transition-colors">
                               {taskName}
                               <button
                                 type="button"
-                                className="h-3 w-3 cursor-pointer hover:text-blue-600 rounded-sm transition-colors flex items-center justify-center ml-1"
+                                className="h-3 w-3 cursor-pointer hover:text-category-blue-600 rounded-sm transition-colors flex items-center justify-center ml-1"
                                 onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                 onClick={(e) => { 
                                   e.preventDefault(); 
@@ -403,11 +403,11 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
                           <span className="text-muted-foreground">搜索并选择后置任务...</span>
                         ) : (
                           getSelectedTaskNames(formData.dependentTasks).map((taskName, index) => (
-                            <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-200 transition-colors">
+                            <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-category-green-100 text-category-green-800 border-category-green-200 hover:bg-category-green-200 transition-colors">
                               {taskName}
                               <button
                                 type="button"
-                                className="h-3 w-3 cursor-pointer hover:text-green-600 rounded-sm transition-colors flex items-center justify-center ml-1"
+                                className="h-3 w-3 cursor-pointer hover:text-category-green-600 rounded-sm transition-colors flex items-center justify-center ml-1"
                                 onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                 onClick={(e) => { 
                                   e.preventDefault(); 

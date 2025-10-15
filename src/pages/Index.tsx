@@ -39,7 +39,7 @@ const Index = () => {
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                  <h2 className="text-lg font-semibold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
                     A.PM 智慧建管
                   </h2>
                   <p className="text-muted-foreground text-xs">
@@ -61,7 +61,7 @@ const Index = () => {
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             <Card className="cursor-pointer transition-colors duration-200 border-primary/20 hover:border-primary/40 group bg-primary/5 hover:bg-primary/10 rounded-lg" onClick={handleNewProject}>
               <CardHeader className="py-6">
-                <CardTitle className="flex items-center gap-3 text-lg">
+                <CardTitle className="flex items-center gap-3 text-lg ml-4">
                   <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center text-white">
                     <Plus className="h-5 w-5" />
                   </div>
@@ -72,7 +72,7 @@ const Index = () => {
 
             <Card className="cursor-pointer transition-colors duration-200 border-success/20 hover:border-success/40 group bg-success/5 hover:bg-success/10 rounded-lg" onClick={() => navigate("/project-management")}>
               <CardHeader className="py-6">
-                <CardTitle className="flex items-center gap-3 text-lg">
+                <CardTitle className="flex items-center gap-3 text-lg ml-4">
                   <div className="w-10 h-10 bg-gradient-to-br from-success to-success/80 rounded-lg flex items-center justify-center text-white">
                     <Building2 className="h-5 w-5" />
                   </div>
@@ -95,7 +95,7 @@ const Index = () => {
               {projects.slice(0, 6).map((project) => (
                 <Card key={project.id} className="cursor-pointer transition-colors duration-200 border-border hover:border-primary/30 hover:bg-muted/30 group rounded-lg" onClick={() => handleSelectProject(project.id)}>
                   <CardHeader className="py-6">
-                    <CardTitle className="flex items-center gap-3 text-lg">
+                    <CardTitle className="flex items-center gap-3 text-lg ml-4">
                       <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
                         <FileText className="h-5 w-5 text-muted-foreground" />
                       </div>

@@ -42,28 +42,28 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
       title: "任务总览",
       description: "查看和管理所有任务",
       icon: BarChart3,
-      color: "bg-blue-500",
+      color: "bg-category-blue-600",
       href: `/project/${projectId}?view=task-overview`
     },
     {
       title: "甘特图",
       description: "可视化项目进度",
       icon: Calendar,
-      color: "bg-green-500",
+      color: "bg-category-green-600",
       href: `/project/${projectId}?view=gantt-chart`
     },
     {
       title: "人员管理",
       description: "管理施工人员",
       icon: Users,
-      color: "bg-purple-500",
+      color: "bg-category-purple-600",
       href: `/project/${projectId}?view=craftsman-management`
     },
     {
       title: "实时监控",
       description: "监控现场情况",
       icon: TrendingUp,
-      color: "bg-orange-500",
+      color: "bg-category-orange-600",
       href: `/project/${projectId}?view=real-time-monitoring`
     }
   ];
@@ -102,13 +102,13 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "task_completed":
-        return <div className="w-2 h-2 bg-green-500 rounded-full" />;
+        return <div className="w-2 h-2 bg-category-green-600 rounded-full" />;
       case "task_started":
-        return <div className="w-2 h-2 bg-blue-500 rounded-full" />;
+        return <div className="w-2 h-2 bg-category-blue-600 rounded-full" />;
       case "worker_added":
-        return <div className="w-2 h-2 bg-purple-500 rounded-full" />;
+        return <div className="w-2 h-2 bg-category-purple-600 rounded-full" />;
       case "task_updated":
-        return <div className="w-2 h-2 bg-orange-500 rounded-full" />;
+        return <div className="w-2 h-2 bg-category-orange-600 rounded-full" />;
       default:
         return <div className="w-2 h-2 bg-gray-500 rounded-full" />;
     }
@@ -131,7 +131,7 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{progressPercentage}%</div>
+            <div className="text-xl font-bold">{progressPercentage}%</div>
             <p className="text-xs text-muted-foreground">
               {projectStats.completedTasks} / {projectStats.totalTasks} 任务完成
             </p>
@@ -146,7 +146,7 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{projectStats.activeWorkers}</div>
+            <div className="text-xl font-bold">{projectStats.activeWorkers}</div>
             <p className="text-xs text-muted-foreground">
               {projectStats.totalWorkers} 总人员，{projectStats.activeWorkers} 在岗
             </p>
@@ -160,7 +160,7 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{timePercentage}%</div>
+            <div className="text-xl font-bold">{timePercentage}%</div>
             <p className="text-xs text-muted-foreground">
               第 {projectStats.daysElapsed} 天 / 共 {projectStats.projectDuration} 天
             </p>
@@ -175,7 +175,7 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{budgetPercentage}%</div>
+            <div className="text-xl font-bold">{budgetPercentage}%</div>
             <p className="text-xs text-muted-foreground">
               已用 ¥{projectStats.spent.toLocaleString()} / 预算 ¥{projectStats.budget.toLocaleString()}
             </p>
@@ -197,7 +197,7 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
                 <Button
                   key={index}
                   variant="outline"
-                  className="h-auto p-4 flex flex-col items-start space-y-2 hover:shadow-md transition-shadow"
+                  className="h-auto p-4 flex flex-col items-start space-y-2 transition-shadow"
                   onClick={() => navigate(action.href)}
                 >
                   <div className="flex items-center space-x-3 w-full">

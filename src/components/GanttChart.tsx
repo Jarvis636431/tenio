@@ -27,21 +27,42 @@ const getWorkerColor = (worker: string): string => {
   const colors: {
     [key: string]: string;
   } = {
-    "钢筋工": "#3b82f6",
-    "混凝土工": "#f97316",
-    "木工": "#10b981",
-    "测量员": "#8b5cf6",
-    "土方工": "#f59e0b",
-    "砌筑工": "#10b981",
-    "抹灰工": "#8b5cf6",
-    "防水工": "#06b6d4",
-    "水电工": "#14b8a6",
-    "油漆工": "#84cc16",
-    "油工": "#84cc16",
-    "瓦工": "#ec4899",
-    "不限": "#6b7280"
+    "钢筋工": "hsl(210, 70%, 65%)", // lighter blue
+    "混凝土工": "hsl(25, 75%, 70%)", // lighter orange
+    "木工": "hsl(40, 80%, 70%)", // lighter yellow
+    "测量员": "hsl(255, 60%, 65%)", // lighter purple
+    "土方工": "hsl(25, 75%, 70%)", // lighter orange
+    "砌筑工": "hsl(165, 60%, 60%)", // lighter green
+    "抹灰工": "hsl(255, 60%, 65%)", // lighter purple
+    "防水工": "hsl(210, 70%, 65%)", // lighter blue
+    "水电工": "hsl(165, 60%, 60%)", // lighter green
+    "油漆工": "hsl(40, 80%, 70%)", // lighter yellow
+    "油工": "hsl(40, 80%, 70%)", // lighter yellow
+    "瓦工": "hsl(355, 70%, 70%)", // lighter red
+    "不限": "#9ca3af"
   };
-  return colors[worker] || "#6b7280";
+  return colors[worker] || "#9ca3af";
+};
+
+const getWorkerBadgeClass = (worker: string): string => {
+  const badgeClasses: {
+    [key: string]: string;
+  } = {
+    "钢筋工": "bg-category-blue-100 text-category-blue-800 border-category-blue-200 hover:bg-category-blue-100 hover:text-category-blue-800",
+    "混凝土工": "bg-category-orange-100 text-category-orange-800 border-category-orange-200 hover:bg-category-orange-100 hover:text-category-orange-800",
+    "木工": "bg-category-yellow-100 text-category-yellow-800 border-category-yellow-200 hover:bg-category-yellow-100 hover:text-category-yellow-800",
+    "测量员": "bg-category-purple-100 text-category-purple-800 border-category-purple-200 hover:bg-category-purple-100 hover:text-category-purple-800",
+    "土方工": "bg-category-orange-100 text-category-orange-800 border-category-orange-200 hover:bg-category-orange-100 hover:text-category-orange-800",
+    "砌筑工": "bg-category-green-100 text-category-green-800 border-category-green-200 hover:bg-category-green-100 hover:text-category-green-800",
+    "抹灰工": "bg-category-purple-100 text-category-purple-800 border-category-purple-200 hover:bg-category-purple-100 hover:text-category-purple-800",
+    "防水工": "bg-category-blue-100 text-category-blue-800 border-category-blue-200 hover:bg-category-blue-100 hover:text-category-blue-800",
+    "水电工": "bg-category-green-100 text-category-green-800 border-category-green-200 hover:bg-category-green-100 hover:text-category-green-800",
+    "油漆工": "bg-category-yellow-100 text-category-yellow-800 border-category-yellow-200 hover:bg-category-yellow-100 hover:text-category-yellow-800",
+    "油工": "bg-category-yellow-100 text-category-yellow-800 border-category-yellow-200 hover:bg-category-yellow-100 hover:text-category-yellow-800",
+    "瓦工": "bg-category-red-100 text-category-red-800 border-category-red-200 hover:bg-category-red-100 hover:text-category-red-800",
+    "不限": "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-800"
+  };
+  return badgeClasses[worker] || "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-800";
 };
 
 const parseDate = (dateStr: string): Date => {
@@ -197,7 +218,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
                   return (
                     <div
                       key={item.id}
-                      className="border-b p-2 flex items-center justify-between h-12 bg-gray-50/50 hover:bg-gray-100 transition-colors relative group"
+                      className="border-b p-2 flex items-center justify-between h-12 bg-gray-50/50 transition-colors relative group"
                       onMouseEnter={() => {
                         setHoveredTaskId(item.id);
                         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
@@ -217,7 +238,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
                         <div className="font-medium text-sm truncate max-w-[200px]">{item.task}</div>
                         <div className="w-px h-4 bg-border flex-shrink-0"></div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge style={{ backgroundColor: `${item.color}20`, color: item.color, borderColor: item.color }} className="text-xs">
+                          <Badge className={`text-xs ${getWorkerBadgeClass(item.worker)}`}>
                             {item.worker}
                           </Badge>
                           <span className="text-xs text-muted-foreground">{item.count}人</span>
@@ -284,7 +305,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
                           style={{
                             left: `${item.startDay * COL_WIDTH}px`,
                             width: `${Number(item.duration) * COL_WIDTH}px`,
-                            backgroundColor: item.color,
+                            backgroundColor: getWorkerColor(item.worker),
                             minWidth: `${COL_WIDTH}px`
                           }}
                           onClick={() => onTaskDetail?.(item)}

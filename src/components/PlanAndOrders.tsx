@@ -1789,11 +1789,11 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   // 工种颜色映射
   const getJobTypeColor = (jobType: string) => {
     const colors: { [key: string]: string } = {
-      "钢筋工": "bg-blue-100 text-blue-800",
-      "混凝土工": "bg-green-100 text-green-800",
-      "木工": "bg-yellow-100 text-yellow-800",
-      "测量员": "bg-purple-100 text-purple-800",
-      "土方工": "bg-orange-100 text-orange-800",
+      "钢筋工": "bg-category-blue-100 text-category-blue-800",
+      "混凝土工": "bg-category-green-100 text-category-green-800",
+      "木工": "bg-category-yellow-100 text-category-yellow-800",
+      "测量员": "bg-category-purple-100 text-category-purple-800",
+      "土方工": "bg-category-orange-100 text-category-orange-800",
       "砌筑工": "bg-pink-100 text-pink-800",
       "抹灰工": "bg-indigo-100 text-indigo-800",
       "防水工": "bg-cyan-100 text-cyan-800",
@@ -2080,7 +2080,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                     <Table>
                       <TableHeader className="sticky top-0 bg-white z-30 shadow-sm">
                         <TableRow>
-                          <TableHead className="w-[234px] border-r bg-white">
+                          <TableHead className="w-[234px] bg-white">
                             任务
                           </TableHead>
                           <TableHead className="w-[120px] bg-white">所属专业</TableHead>
@@ -2090,48 +2090,45 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                           <TableHead className="w-[120px] bg-white">总成本</TableHead>
                           <TableHead className="w-[120px] bg-white">开始时间</TableHead>
                           <TableHead className="w-[120px] bg-white">结束时间</TableHead>
-                          <TableHead className="w-[216px] border-l bg-white">
+                          <TableHead className="w-[216px] bg-white">
                             操作
                           </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {paginatedData.map(item => (
-                          <TableRow key={item.id} className="hover:bg-gray-50 border-b h-12">
-                            <TableCell className="sticky left-0 z-20 w-[234px] border-r bg-white hover:bg-gray-50 py-2">
+                          <TableRow key={item.id} className="border-b h-12">
+                            <TableCell className="sticky left-0 z-20 w-[234px] bg-white py-2">
                               <div className="text-sm">{item.task}</div>
                             </TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">
+                            <TableCell className="w-[120px] bg-white py-2">
                               {item.specialty && (
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                <Badge variant="outline" className="bg-category-blue-50 text-category-blue-700 border-category-blue-200">
                                   {item.specialty}
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">{item.component}</TableCell>
-                            <TableCell className="w-[100px] bg-white hover:bg-gray-50 py-2">{item.workerCount}</TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">
+                            <TableCell className="w-[120px] bg-white py-2">{item.component}</TableCell>
+                            <TableCell className="w-[100px] bg-white py-2">{item.workerCount}</TableCell>
+                            <TableCell className="w-[120px] bg-white py-2">
                               {item.jobType && (
                                 <Badge variant="secondary" className={getJobTypeColor(item.jobType)}>
                                   {item.jobType}
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">¥{item.totalCost.toLocaleString()}</TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">{item.startTime}</TableCell>
-                            <TableCell className="w-[120px] bg-white hover:bg-gray-50 py-2">{item.endTime}</TableCell>
-                            <TableCell className="sticky right-0 z-20 w-[216px] border-l bg-white hover:bg-gray-50 py-2">
+                            <TableCell className="w-[120px] bg-white py-2">¥{item.totalCost.toLocaleString()}</TableCell>
+                            <TableCell className="w-[120px] bg-white py-2">{item.startTime}</TableCell>
+                            <TableCell className="w-[120px] bg-white py-2">{item.endTime}</TableCell>
+                            <TableCell className="sticky right-0 z-20 w-[216px] bg-white py-2">
                               <div className="flex gap-2">
                                 <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10" onClick={() => handleEditClick(item)}>
-                                  <Edit className="h-4 w-4 mr-1" />
                                   编辑
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10" onClick={() => handleDetailClick(item)}>
-                                  <Eye className="h-4 w-4 mr-1" />
                                   详情
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10" onClick={() => handleMoreClick(item)}>
-                                  <MoreHorizontal className="h-4 w-4 mr-1" />
                                   更多
                                 </Button>
                               </div>

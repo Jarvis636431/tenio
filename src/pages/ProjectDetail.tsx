@@ -140,7 +140,7 @@ export default function ProjectDetail() {
     const currentProject = projects.find(p => p.id === id);
     return (
       <div className="h-full flex flex-col overflow-hidden bg-white">
-        <div className="px-6 pt-6">
+        <div className="px-6">
           <PageHeader title={currentProject?.name || "项目主页"} />
         </div>
         {/* 主内容区域 - 直接显示，无标题区域 */}

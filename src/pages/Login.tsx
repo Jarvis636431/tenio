@@ -51,7 +51,7 @@ export default function Login() {
             <div className="flex items-center justify-center mb-4">
               <img src="/lovable-uploads/7fc2509c-786f-4b70-8fba-9cf0a66bc806.png" alt="天友" className="h-12 w-12" />
             </div>
-            <h1 className="text-2xl font-semibold text-foreground">A.PM 智慧建管</h1>
+            <h1 className="text-xl font-semibold text-foreground">A.PM 智慧建管</h1>
             <p className="text-muted-foreground mt-2">智慧建筑项目管理系统</p>
           </div>
 

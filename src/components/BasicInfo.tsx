@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, Edit, X, FileText, ChevronRight, Building, MapPin, Shield, Wrench, TreePine, File, Upload, Download, ChevronDown, ChevronUp } from "lucide-react";
+import { Save, Edit, X, FileText, ChevronRight, Building, MapPin, Shield, Wrench, TreePine, File, Upload, Download, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -116,6 +116,13 @@ export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) 
     }
   };
 
+  const handleRegenerateProcedures = () => {
+    // 触发重新生成工序的逻辑
+    toast.success("正在重新生成施工工序...");
+    // TODO: 在此触发真实的重新生成逻辑
+    console.info('Regenerate construction procedures requested');
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -129,15 +136,24 @@ export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) 
     if (actions) return actions;
     
     return !isEditMode ? (
-      <Button 
-        variant="ghost" 
-        className="text-primary hover:text-primary hover:bg-primary/10"
-        onClick={handleEdit} 
-        size="sm"
-      >
-        <Edit className="h-4 w-4 mr-2" />
-        编辑
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          variant="ghost" 
+          className="text-primary hover:text-primary hover:bg-primary/10"
+          onClick={handleEdit} 
+          size="sm"
+        >
+          编辑
+        </Button>
+        <Button 
+          variant="ghost" 
+          className="text-primary hover:text-primary hover:bg-primary/10"
+          onClick={handleRegenerateProcedures} 
+          size="sm"
+        >
+          重新生成工序
+        </Button>
+      </div>
     ) : (
       <div className="flex gap-2">
         <Button 

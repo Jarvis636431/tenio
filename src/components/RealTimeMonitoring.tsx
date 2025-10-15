@@ -237,8 +237,8 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
   };
 
   const getVarianceColor = (actual: number, plan: number) => {
-    if (actual > plan) return "text-red-600";
-    if (actual < plan) return "text-green-600";
+    if (actual > plan) return "text-category-red-600";
+    if (actual < plan) return "text-category-green-600";
     return "text-gray-600";
   };
 
@@ -281,8 +281,8 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
 
   const getDayColor = (status: string) => {
     switch (status) {
-      case 'over': return 'bg-red-50 text-red-800';
-      case 'under': return 'bg-green-50 text-green-800';
+      case 'over': return 'bg-category-red-50 text-category-red-800';
+      case 'under': return 'bg-category-green-50 text-category-green-800';
       case 'normal': return 'bg-gray-50 text-gray-800';
       default: return 'bg-gray-50 text-gray-500';
     }
@@ -455,7 +455,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
       {viewMode === 'table' ? (
         <>
               <div className="rounded-md border">
-                <div className="overflow-auto max-h-[600px]">
+                <div className="overflow-auto max-h-[calc(100vh-400px)]">
                   <Table>
                   <TableHeader>
                     <TableRow>
@@ -606,7 +606,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                                 <div className="text-xs text-gray-500 mb-0.5">
                                   计划: {dataType === 'labor' ? `${row.planValue}人` : `¥${Number(row.planValue).toLocaleString()}`}
                                 </div>
-                                <div className="text-xs text-blue-600">
+                                <div className="text-xs text-category-blue-600">
                                   实际: {dataType === 'labor' ? `${row.actualValue}人` : `¥${Number(row.actualValue).toLocaleString()}`}
                                 </div>
                               </div>
@@ -670,10 +670,10 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                       tick={{ fontSize: 12 }}
                       tickFormatter={(value) => dataType === 'labor' ? `${value}人` : `¥${value.toLocaleString()}`}
                     />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} />
                     <Bar 
                       dataKey="plan" 
-                      fill="#9ca3af" 
+                      fill="hsl(0, 0%, 70%)" 
                       name="计划"
                       radius={[2, 2, 0, 0]}
                       maxBarSize={40}
@@ -682,12 +682,12 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                         dataKey="plan" 
                         position="top" 
                         formatter={(value) => dataType === 'labor' ? `${value}人` : `¥${value.toLocaleString()}`}
-                        style={{ fontSize: '12px', fill: '#6b7280' }}
+                        style={{ fontSize: '12px', fill: 'hsl(0, 0%, 50%)' }}
                       />
                     </Bar>
                     <Bar 
                       dataKey="actual" 
-                      fill="#3b82f6" 
+                      fill="hsl(210, 70%, 65%)" 
                       name="实际"
                       radius={[2, 2, 0, 0]}
                       maxBarSize={40}
@@ -696,7 +696,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                         dataKey="actual" 
                         position="top" 
                         formatter={(value) => dataType === 'labor' ? `${value}人` : `¥${value.toLocaleString()}`}
-                        style={{ fontSize: '12px', fill: '#1d4ed8' }}
+                        style={{ fontSize: '12px', fill: 'hsl(210, 70%, 45%)' }}
                       />
                     </Bar>
                   </BarChart>
@@ -706,19 +706,19 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
               {/* 周视图统计信息 */}
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-xl font-bold text-category-blue-600">
                     {getWeeklyData().reduce((sum, day) => sum + day.actual, 0)}
                 </div>
                   <div className="text-muted-foreground">本周实际{dataType === 'labor' ? '人数' : '费用'}</div>
               </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
+                  <div className="text-xl font-bold text-category-purple-600">
                     {getWeeklyData().reduce((sum, day) => sum + day.plan, 0)}
       </div>
                   <div className="text-muted-foreground">本周计划{dataType === 'labor' ? '人数' : '费用'}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-xl font-bold text-category-green-600">
                     {getWeeklyData().filter(day => day.hasData).length}
                   </div>
                   <div className="text-muted-foreground">有数据天数</div>
@@ -761,7 +761,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                       <div className="text-xs text-gray-500 mb-0.5">
                         计划：{dataType === 'labor' ? `${row.planValue}人` : `¥${Number(row.planValue).toLocaleString()}`}
                       </div>
-                      <div className="text-xs text-blue-600">
+                      <div className="text-xs text-category-blue-600">
                         实际：{dataType === 'labor' ? `${row.actualValue}人` : `¥${Number(row.actualValue).toLocaleString()}`}
                       </div>
                     </div>

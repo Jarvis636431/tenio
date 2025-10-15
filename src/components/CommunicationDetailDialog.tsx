@@ -50,7 +50,7 @@ export function CommunicationDetailDialog({ open, onOpenChange, record }: Commun
                 {record.attachments.map((attachment, index) => (
                   <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
                     {attachment.type === 'image' ? (
-                      <Image className="h-6 w-6 text-blue-500" />
+                      <Image className="h-6 w-6 text-category-blue-600" />
                     ) : (
                       <FileText className="h-6 w-6 text-gray-500" />
                     )}
