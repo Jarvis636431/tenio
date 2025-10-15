@@ -371,13 +371,6 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
 
   return (
     <div className="h-full flex flex-col space-y-6 pb-24">
-      {/* 标题 */}
-                    <div className="flex items-center justify-between">
-        <h2 className="tracking-tight font-medium text-xl">
-          {tabFromUrl === 'cost' ? '人工成本' : tabFromUrl === 'labor' ? '施工人数' : '实时监测'}
-        </h2>
-      </div>
-
       {/* 操作栏 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -461,8 +454,9 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
       {/* 主内容区域 */}
       {viewMode === 'table' ? (
         <>
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
+              <div className="rounded-md border">
+                <div className="overflow-auto max-h-[600px]">
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>日期</TableHead>
@@ -505,6 +499,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                   </TableBody>
                 </Table>
                 </div>
+              </div>
 
               {/* 分页 */}
               <div className="flex items-center justify-between mt-4 bg-white">

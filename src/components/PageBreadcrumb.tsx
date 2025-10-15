@@ -30,7 +30,11 @@ export function PageBreadcrumb() {
     // 项目详情页面
     if (location.pathname.startsWith('/project/') && id) {
       if (currentProject) {
-        items.push({ label: currentProject.name, isClickable: false });
+        items.push({ 
+          label: currentProject.name, 
+          href: `/project/${id}`, 
+          isClickable: true 
+        });
       }
 
       // 根据view和tab参数添加子页面
@@ -71,7 +75,9 @@ export function PageBreadcrumb() {
         }
       } else {
         // 如果没有view参数，当前项目就是当前页面
-        items[items.length - 1].isCurrent = true;
+        if (items.length > 0) {
+          items[items.length - 1].isCurrent = true;
+        }
       }
     }
 
@@ -95,10 +101,12 @@ export function PageBreadcrumb() {
                 <BreadcrumbPage>{item.label}</BreadcrumbPage>
               ) : item.isClickable === false ? (
                 <span className="text-muted-foreground">{item.label}</span>
-              ) : (
+              ) : item.href ? (
                 <BreadcrumbLink asChild>
                   <Link to={item.href}>{item.label}</Link>
                 </BreadcrumbLink>
+              ) : (
+                <span className="text-muted-foreground">{item.label}</span>
               )}
             </BreadcrumbItem>
             {index < breadcrumbItems.length - 1 && <BreadcrumbSeparator />}

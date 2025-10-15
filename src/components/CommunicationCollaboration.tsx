@@ -140,7 +140,8 @@ export function CommunicationCollaboration({ showExpandButton, onExpandSidebar }
 
       {/* Table */}
       <div className="border rounded-lg">
-        <Table>
+        <div className="overflow-auto max-h-[600px]">
+          <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-16">序号</TableHead>
@@ -203,7 +204,8 @@ export function CommunicationCollaboration({ showExpandButton, onExpandSidebar }
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </div>
 
       {/* Dialogs */}

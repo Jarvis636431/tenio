@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Calendar, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { PageHeader } from "@/components/PageHeader";
 
 // 模拟项目数据
 const projects = [{
@@ -60,15 +61,12 @@ export default function ProjectManagement() {
   
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
-      {/* 标题区域 */}
-      <div className="p-6 px-[8px] py-[8px] pb-0">
-        <div className="space-y-2 mb-6">
-          <h1 className="tracking-tight font-medium text-xl">项目管理</h1>
-        </div>
+      <div className="px-6 pt-6">
+        <PageHeader title="项目管理" />
       </div>
 
       {/* 主内容区域 - 直接显示，无白色卡片包装 */}
-      <div className="flex-1 overflow-hidden p-6 px-[8px] py-0">
+      <div className="flex-1 overflow-hidden px-6 pb-6">
         <div className="h-full overflow-auto space-y-4">
         {projects.map(project => (
           <Card 

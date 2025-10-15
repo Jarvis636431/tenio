@@ -9,6 +9,7 @@ import { CommunicationCollaboration } from "@/components/CommunicationCollaborat
 import { PlanAndOrders } from "@/components/PlanAndOrders";
 import { ProjectHomepage } from "@/components/ProjectHomepage";
 import { useProject } from "@/contexts/ProjectContext";
+import { PageHeader } from "@/components/PageHeader";
 
 
 export default function ProjectDetail() {
@@ -16,6 +17,7 @@ export default function ProjectDetail() {
   const [searchParams] = useSearchParams();
   const [activeView, setActiveView] = useState("homepage");
   const { projects } = useProject();
+  const [basicInfoActions, setBasicInfoActions] = useState<React.ReactNode>(null);
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
@@ -46,7 +48,13 @@ export default function ProjectDetail() {
       case "order-management":
         return "施工总览";
       case "real-time-monitoring":
-        return "";
+        // 根据tab参数显示具体标题
+        if (tab === 'labor') {
+          return "施工人数";
+        } else if (tab === 'cost') {
+          return "人工成本";
+        }
+        return "实时监测";
       case "labor":
         return "施工人数";
       case "cost":
@@ -107,7 +115,7 @@ export default function ProjectDetail() {
       case "homepage":
         return <ProjectHomepage projectId={id || ""} projectName={currentProject?.name || "未知项目"} />;
       case "basic-info":
-        return <BasicInfo {...commonProps} />;
+        return <BasicInfo {...commonProps} onActionsChange={setBasicInfoActions} />;
       case "plan-and-orders":
       case "task-overview":
       case "gantt-chart":
@@ -127,12 +135,16 @@ export default function ProjectDetail() {
     }
   };
 
-  // 项目主页使用特殊布局 - 无标题区域
+  // 项目主页使用特殊布局 - 显示项目名称作为标题
   if (activeView === "homepage") {
+    const currentProject = projects.find(p => p.id === id);
     return (
       <div className="h-full flex flex-col overflow-hidden bg-white">
+        <div className="px-6 pt-6">
+          <PageHeader title={currentProject?.name || "项目主页"} />
+        </div>
         {/* 主内容区域 - 直接显示，无标题区域 */}
-        <div className="flex-1 overflow-hidden p-6 px-[8px] py-6">
+        <div className="flex-1 overflow-hidden px-6 pb-6">
           <div className="h-full overflow-auto">
             {renderContent()}
           </div>
@@ -145,17 +157,15 @@ export default function ProjectDetail() {
   if (activeView === "basic-info" || activeView === "plan-and-orders" || activeView === "task-overview" || activeView === "gantt-chart" || activeView === "real-time-monitoring" || activeView === "labor" || activeView === "cost") {
     return (
       <div className="h-full flex flex-col overflow-hidden bg-white">
-        {/* 基础信息和实时监测页面隐藏标题 */}
-        {activeView !== "basic-info" && activeView !== "real-time-monitoring" && activeView !== "labor" && activeView !== "cost" && (
-          <div className="p-6 px-[8px] py-[8px] pb-0">
-            <div className="space-y-2 mb-6">
-              <h1 className="tracking-tight font-medium text-xl">{getViewTitle()}</h1>
-            </div>
-          </div>
-        )}
+        <div className="px-6 pt-6">
+          <PageHeader 
+            title={getViewTitle()} 
+            actions={activeView === "basic-info" ? basicInfoActions : undefined} 
+          />
+        </div>
 
         {/* 主内容区域 - 直接显示，无白色卡片包装 */}
-        <div className={`flex-1 overflow-hidden ${activeView === "basic-info" ? "p-6" : "p-6 px-[8px] py-0"}`}>
+        <div className="flex-1 overflow-hidden px-6 pb-6">
           <div className="h-full overflow-auto">
             {renderContent()}
           </div>
@@ -167,15 +177,12 @@ export default function ProjectDetail() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
-      {/* 标题区域 - 移到白色卡片外面 */}
-      <div className="p-6 px-[8px] py-[8px] pb-0">
-        <div className="space-y-2 mb-6">
-          <h1 className="tracking-tight font-medium text-xl">{getViewTitle()}</h1>
-        </div>
+      <div className="px-6 pt-6">
+        <PageHeader title={getViewTitle()} />
       </div>
 
       {/* 主内容区域 - 白色卡片容器 */}
-      <div className="flex-1 overflow-hidden p-6 px-[8px] py-0">
+      <div className="flex-1 overflow-hidden px-6 pb-6">
         <div className="h-full bg-white rounded-lg overflow-hidden">
           <div className="h-full overflow-auto">
             {renderContent()}

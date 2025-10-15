@@ -19,48 +19,48 @@ export function Header() {
   const handleLogoClick = () => {
     navigate("/");
   };
-  return <header className="h-14 flex items-center justify-between z-50 px-[24px] rounded-none bg-sidebar border-b border-gray-200">
+  return <header className="h-12 flex items-center justify-between z-50 px-4 rounded-none bg-sidebar border-b border-border">
       {/* 左侧品牌区域 */}
-      <div className="flex items-center space-x-3 mx-0 cursor-pointer transition-opacity hover:opacity-80" onClick={handleLogoClick}>
-        <img src="/lovable-uploads/7fc2509c-786f-4b70-8fba-9cf0a66bc806.png" alt="天友" className="h-8 w-8 mx-0" />
-        <h1 className="text-lg font-semibold text-slate-700">A.PM 智慧建管</h1>
+      <div className="flex items-center space-x-2.5 cursor-pointer transition-opacity hover:opacity-80" onClick={handleLogoClick}>
+        <img src="/lovable-uploads/Frame 2147224672.svg" alt="天友" className="h-7 w-7" />
+        <h1 className="text-base font-semibold text-slate-700">A.PM 智慧建管</h1>
       </div>
 
       {/* 右侧操作区域 */}
-      <div className="flex items-center space-x-4 px-0 mx-0 py-[20px] my-0">
+      <div className="flex items-center space-x-2">
         {/* 消息通知 */}
-        <Button variant="ghost" size="icon" className="relative mx-0">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs"></span>
+        <Button variant="ghost" size="icon" className="relative h-8 w-8">
+          <Bell className="h-4 w-4" />
+          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-red-500 rounded-full text-xs"></span>
         </Button>
 
         {/* 帮助中心 */}
-        <Button variant="ghost" size="icon" className="mx-0">
-          <HelpCircle className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <HelpCircle className="h-4 w-4" />
         </Button>
 
         {/* 用户菜单 */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
+            <Button variant="ghost" className="relative h-8 w-8 rounded-sm">
+              <Avatar className="h-7 w-7">
                 <AvatarImage src={userAvatar} alt="User" />
                 <AvatarFallback>
-                  <User className="h-4 w-4" />
+                  <User className="h-3.5 w-3.5" />
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuContent className="w-48" align="end" forceMount>
             <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
+              <User className="mr-2 h-3.5 w-3.5" />
               {user?.name || '用户'}
             </DropdownMenuItem>
             <DropdownMenuItem>
               设置
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 h-3.5 w-3.5" />
               退出登录
             </DropdownMenuItem>
           </DropdownMenuContent>

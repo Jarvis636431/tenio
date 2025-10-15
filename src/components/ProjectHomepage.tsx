@@ -116,10 +116,9 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
 
   return (
     <div className="h-full flex flex-col space-y-6">
-      {/* 项目标题和基本信息 */}
+      {/* 项目基本信息 */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">{projectName}</h1>
-        <p className="text-gray-600 mt-1">项目ID: {projectId}</p>
+        <p className="text-gray-600">项目ID: {projectId}</p>
       </div>
 
 

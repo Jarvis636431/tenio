@@ -97,7 +97,7 @@ export function AppSidebar() {
           <SidebarHeader className="px-4 py-4 relative">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3 cursor-pointer transition-opacity hover:opacity-80" onClick={handleLogoClick}>
-                <img src="/lovable-uploads/7fc2509c-786f-4b70-8fba-9cf0a66bc806.png" alt="天友" className="h-8 w-8" style={{backgroundColor: 'transparent', mixBlendMode: 'multiply'}} />
+                <img src="/lovable-uploads/Frame 2147224672.svg" alt="天友" className="h-8 w-8" />
                 {!isCollapsed && <h1 className="text-lg font-semibold text-slate-700 whitespace-nowrap">A.PM 智慧建管</h1>}
               </div>
               {/* 展开状态下显示收起按钮 */}

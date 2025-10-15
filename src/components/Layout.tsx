@@ -20,7 +20,7 @@ function LayoutContent({ children }: LayoutProps) {
       {/* 收起状态下显示border上的展开按钮 */}
       {isCollapsed && <SidebarToggle />}
       
-      <main className="flex-1 overflow-hidden px-[16px] py-[16px] bg-white">
+      <main className="flex-1 overflow-hidden px-3 py-3 bg-white">
         <PageBreadcrumb />
         {children}
       </main>

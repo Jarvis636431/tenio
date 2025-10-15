@@ -323,7 +323,8 @@ export function CraftsmanManagement({
 
         {/* Table */}
         <Card>
-          <Table>
+          <div className="overflow-auto max-h-[600px]">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
@@ -393,7 +394,8 @@ export function CraftsmanManagement({
                   </TableCell>
                 </TableRow>)}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         </Card>
       </div>
 

@@ -15,6 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 
+interface BasicInfoProps {
+  actions?: React.ReactNode;
+  onActionsChange?: (actions: React.ReactNode) => void;
+}
+
 const basicInfoSchema = z.object({
   city: z.string().min(1, "请选择项目城市"),
   buildingType: z.string().min(1, "请选择建筑类型"),
@@ -28,7 +33,7 @@ const basicInfoSchema = z.object({
 
 type BasicInfoFormData = z.infer<typeof basicInfoSchema>;
 
-export default function BasicInfo() {
+export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) {
   const { currentProject, updateProject } = useProject();
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedItem, setEditedItem] = useState<BasicInfoFormData | null>(null);
@@ -119,46 +124,54 @@ export default function BasicInfo() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // 渲染操作按钮
+  const renderActions = () => {
+    if (actions) return actions;
+    
+    return !isEditMode ? (
+      <Button 
+        variant="ghost" 
+        className="text-primary hover:text-primary hover:bg-primary/10"
+        onClick={handleEdit} 
+        size="sm"
+      >
+        <Edit className="h-4 w-4 mr-2" />
+        编辑
+      </Button>
+    ) : (
+      <div className="flex gap-2">
+        <Button 
+          type="button" 
+          variant="ghost" 
+          className="text-primary hover:text-primary hover:bg-primary/10"
+          onClick={handleCancel} 
+          size="sm"
+        >
+          取消
+        </Button>
+        <Button 
+          type="submit" 
+          variant="ghost" 
+          className="text-primary hover:text-primary hover:bg-primary/10"
+          size="sm" 
+          disabled={!hasChanges} 
+          onClick={form.handleSubmit(onSubmit)}
+        >
+          保存
+        </Button>
+      </div>
+    );
+  };
+
+  // 当编辑状态改变时，通知父组件更新操作按钮
+  useEffect(() => {
+    if (onActionsChange) {
+      onActionsChange(renderActions());
+    }
+  }, [isEditMode, hasChanges, onActionsChange]);
+
   return (
     <div className="h-full flex flex-col space-y-6">
-      {/* 页面头部 */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">项目基础信息</h2>
-          {!isEditMode ? (
-          <Button 
-            variant="ghost" 
-            className="text-primary hover:text-primary hover:bg-primary/10"
-            onClick={handleEdit} 
-            size="sm"
-          >
-              <Edit className="h-4 w-4 mr-2" />
-              编辑
-            </Button>
-          ) : (
-            <div className="flex gap-2">
-            <Button 
-              type="button" 
-              variant="ghost" 
-              className="text-primary hover:text-primary hover:bg-primary/10"
-              onClick={handleCancel} 
-              size="sm"
-            >
-                取消
-              </Button>
-            <Button 
-              type="submit" 
-              variant="ghost" 
-              className="text-primary hover:text-primary hover:bg-primary/10"
-              size="sm" 
-              disabled={!hasChanges} 
-              onClick={form.handleSubmit(onSubmit)}
-            >
-                保存
-              </Button>
-            </div>
-          )}
-      </div>
-
       {/* 主内容区域 */}
       <div className="flex-1 overflow-auto">
           <Form {...form}>
