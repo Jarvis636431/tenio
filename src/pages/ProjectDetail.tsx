@@ -80,8 +80,6 @@ export default function ProjectDetail() {
       return "管理施工进度，追踪工单";
       case "labor-monitoring":
         return "实时监控劳动力配置和人工费用";
-      case "order-management":
-        return "管理项目相关订单";
       case "craftsman-management":
         return "管理项目工匠团队";
       case "communication-collaboration":
