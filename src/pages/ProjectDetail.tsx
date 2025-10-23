@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import BasicInfo from "@/components/BasicInfo";
-import { PlanOverview } from "@/components/PlanOverview";
 import { RealTimeMonitoring } from "@/components/RealTimeMonitoring";
-import { OrderManagement } from "@/components/OrderManagement";
 import { CraftsmanManagement } from "@/components/CraftsmanManagement";
 import { CommunicationCollaboration } from "@/components/CommunicationCollaboration";
 import { PlanAndOrders } from "@/components/PlanAndOrders";
@@ -87,17 +85,6 @@ export default function ProjectDetail() {
       default:
         return "项目整体进展和快速入口";
     }
-  };
-
-
-  const getPlanAndOrdersTitle = () => {
-    const tab = searchParams.get('tab');
-    if (tab === 'task-overview') {
-      return "任务总览";
-    } else if (tab === 'gantt-chart') {
-      return "施工工序甘特图";
-    }
-    return "任务总览"; // 默认标题
   };
 
   const renderContent = () => {

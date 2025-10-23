@@ -47,7 +47,7 @@ const Index = () => {
                   </p>
                 </div>
               </div>
-              <p className="text-foreground/80 text-sm leading-relaxed max-w-2xl">
+              <p className="text-foreground/80 text-sm leading-relaxed max-w-3xl">
                 基于AI驱动的建筑项目管理平台，为您提供从规划到竣工的全流程数字化解决方案，实现项目管理的智能化升级。
               </p>
             </div>
