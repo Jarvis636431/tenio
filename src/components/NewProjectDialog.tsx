@@ -203,7 +203,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
                 )}
                 {cadFile && (
                   <div className="space-y-2">
-                    <p className="text-sm text-gray-700">{cadFile.name}</p>
+                    <p className="text-sm text-gray-700 truncate w-full text-left">{cadFile.name}</p>
                     <Button variant="destructive" size="sm" onClick={(e) => {
                       e.stopPropagation();
                       handleFileDelete(setCadFile);
@@ -239,7 +239,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
                 )}
                 {projectDoc && (
                   <div className="space-y-2">
-                    <p className="text-sm text-gray-700">{projectDoc.name}</p>
+                    <p className="text-sm text-gray-700 truncate w-full text-left">{projectDoc.name}</p>
                     <Button variant="destructive" size="sm" onClick={(e) => {
                       e.stopPropagation();
                       handleFileDelete(setProjectDoc);
