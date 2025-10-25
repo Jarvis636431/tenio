@@ -42,7 +42,7 @@ export function TaskDetailDialog({ open, onOpenChange, task }: TaskDetailDialogP
             <TabsTrigger value="3d">三维模型</TabsTrigger>
             <TabsTrigger value="drawings">图纸</TabsTrigger>
             <TabsTrigger value="details">节点大样</TabsTrigger>
-            <TabsTrigger value="disclaimer">免责声明</TabsTrigger>
+            <TabsTrigger value="disclaimer">交底文件</TabsTrigger>
             <TabsTrigger value="tutorial">施工教程</TabsTrigger>
           </TabsList>
 
