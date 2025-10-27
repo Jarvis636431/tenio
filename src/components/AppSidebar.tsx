@@ -12,7 +12,6 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/contexts/AuthContext";
 import userAvatar from "@/assets/user-avatar.png";
 const mainMenuItems = [{
@@ -341,7 +340,7 @@ export function AppSidebar() {
                       <DropdownMenuContent className="w-56" align="end" forceMount>
                         <DropdownMenuItem>
                           <User className="mr-2 h-4 w-4" />
-                          {user?.name || '用户'}
+                          {user?.username || '用户'}
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           设置
@@ -354,7 +353,7 @@ export function AppSidebar() {
                     </DropdownMenu>
                   </TooltipTrigger>
                   <TooltipContent side="right">
-                    <p>Jinzhou Liu</p>
+                    <p>{user?.username || "用户"}</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -369,14 +368,14 @@ export function AppSidebar() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start">
-                      <span className="text-sm font-medium">Jinzhou Liu</span>
+                      <span className="text-sm font-medium">{user?.username || "用户"}</span>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />
-                    Jinzhou Liu
+                    {user?.username || "用户"}
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     设置

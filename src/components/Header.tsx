@@ -54,7 +54,7 @@ export function Header() {
           <DropdownMenuContent className="w-48" align="end" forceMount>
             <DropdownMenuItem>
               <User className="mr-2 h-3.5 w-3.5" />
-              {user?.name || '用户'}
+              {user?.username || '用户'}
             </DropdownMenuItem>
             <DropdownMenuItem>
               设置

@@ -4,7 +4,6 @@ import { getCurrentUser, login as loginRequest, register as registerRequest, TOK
 interface User {
   id: string;
   username: string;
-  name: string;
   role?: string;
 }
 
@@ -41,7 +40,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           try {
             const parsed = JSON.parse(savedUser);
             if (parsed) {
-              setUser(parsed as User);
+                const normalizedUser: User = {
+                  id: parsed.id ?? 'unknown',
+                  username: parsed.username ?? '用户',
+                  role: parsed.role,
+                };
+                setUser(normalizedUser);
             }
           } catch {
             // ignore parse errors
@@ -52,7 +56,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const normalizedUser: User = {
             id: profile.user_id,
             username: profile.username,
-            name: profile.username,
             role: profile.role,
           };
           setUser(normalizedUser);
@@ -88,7 +91,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           profile = {
             id: remoteProfile.user_id,
             username: remoteProfile.username,
-            name: remoteProfile.username,
             role: remoteProfile.role,
           };
         } catch (error) {
@@ -96,7 +98,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           profile = {
             id: 'unknown',
             username,
-            name: username,
           };
         }
 
