@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Eye, Plus, MoreHorizontal } from "lucide-react";
 import { NewTaskDialog } from "./NewTaskDialog";
 import { TaskDetailDialog } from "./TaskDetailDialog";
+import { useProject } from "@/contexts/ProjectContext";
 
 interface ScheduleItem {
   id: number;
@@ -99,6 +100,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
   const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<ScheduleItem | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
+  const { currentProject } = useProject();
 
   const ROW_HEIGHT = 48; // h-12
   const COL_WIDTH = 80;
@@ -368,6 +370,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
           laborCost: 0,
           floor: item.floor || 1
         }))}
+        projectId={currentProject?.id ?? ""}
       />
 
       {/* 任务详情对话框 */}

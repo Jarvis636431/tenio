@@ -2059,7 +2059,11 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
               <Download className="h-4 w-4 mr-2" />
               导出
             </Button>
-            <Button size="sm" onClick={() => setIsNewTaskDialogOpen(true)}>
+            <Button
+              size="sm"
+              onClick={() => currentProject?.id && setIsNewTaskDialogOpen(true)}
+              disabled={!currentProject?.id}
+            >
               <Plus className="h-4 w-4 mr-2" />
               新增任务
             </Button>
@@ -2302,6 +2306,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
         onOpenChange={setIsNewTaskDialogOpen}
         onAdd={handleAddTask}
         existingTasks={allData}
+        projectId={currentProject?.id ?? ""}
       />
 
       {/* 任务详情对话框 */}

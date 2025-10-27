@@ -86,6 +86,27 @@ export interface ProjectListResponse {
   projects: ProjectListItem[];
 }
 
+export interface AddProcessPayload {
+  project_id: string;
+  construction_process: string;
+  duration: number;
+  construction_method?: string;
+  workers_count?: number;
+  work_type?: string;
+  predecessor_processes?: string;
+  successor_processes?: string;
+  description?: string;
+}
+
+export interface AddProcessResponse {
+  status: string;
+  message: string;
+  file_url?: string;
+  filename?: string;
+  version_num?: number;
+  final_days?: number;
+}
+
 // ----------- API wrappers -----------
 
 export async function precreateProject(
@@ -173,4 +194,43 @@ export async function getProjectList(token?: string, userId?: string): Promise<P
   });
 
   return parseResponse<ProjectListResponse>(response);
+}
+
+export async function addProcess(
+  payload: AddProcessPayload,
+  token?: string
+): Promise<AddProcessResponse> {
+  const formData = new FormData();
+  formData.append("project_id", payload.project_id);
+  formData.append("construction_process", payload.construction_process);
+  formData.append("duration", payload.duration.toString());
+
+  if (payload.construction_method) {
+    formData.append("construction_method", payload.construction_method);
+  }
+  if (typeof payload.workers_count === "number") {
+    formData.append("workers_count", payload.workers_count.toString());
+  }
+  if (payload.work_type) {
+    formData.append("work_type", payload.work_type);
+  }
+  if (payload.predecessor_processes) {
+    formData.append("predecessor_processes", payload.predecessor_processes);
+  }
+  if (payload.successor_processes) {
+    formData.append("successor_processes", payload.successor_processes);
+  }
+  if (payload.description) {
+    formData.append("description", payload.description);
+  }
+
+  const response = await fetch(`${PROJECT_SERVICE_BASE_URL}/add_process`, {
+    method: "POST",
+    headers: {
+      ...authHeaders(token),
+    },
+    body: formData,
+  });
+
+  return parseResponse<AddProcessResponse>(response);
 }

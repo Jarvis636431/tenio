@@ -6,11 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Search } from "lucide-react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { X } from "lucide-react";
+import { Command, CommandInput } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { addProcess } from "@/services/project-service";
 
 interface TaskItem {
   id: number;
@@ -43,9 +46,12 @@ interface NewTaskDialogProps {
   onOpenChange: (open: boolean) => void;
   onAdd: (task: Partial<TaskItem>) => void;
   existingTasks: TaskItem[];
+  projectId: string;
 }
 
-export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewTaskDialogProps) {
+export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks, projectId }: NewTaskDialogProps) {
+  const { toast } = useToast();
+  const { token } = useAuth();
   const [formData, setFormData] = useState({
     task: '',
     startTime: '',
@@ -56,7 +62,9 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
     totalCost: '' as number | '',
     prerequisiteTasks: [] as number[],
     dependentTasks: [] as number[],
-    remarks: ''
+    remarks: '',
+    duration: '',
+    constructionMethod: '',
   });
 
   const [prerequisiteOpen, setPrerequisiteOpen] = useState(false);
@@ -70,6 +78,7 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
   // 二次确认弹窗
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingTask, setPendingTask] = useState<Partial<TaskItem> | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 工种选项
   const jobTypes = [
@@ -119,6 +128,16 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
     e.preventDefault();
     if (!formData.task) return;
 
+    const durationValue = Number(formData.duration);
+    if (!durationValue || durationValue <= 0) {
+      toast({
+        title: "请输入有效工期",
+        description: "工期需要大于 0",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newTask: Partial<TaskItem> = {
       task: formData.task,
       startTime: formData.startTime,
@@ -135,10 +154,10 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
       quantity: 0,
       quantityUnit: "个",
       overtime: "否",
-      duration: "1天",
+      duration: `${durationValue}天`,
       actualWorkDays: 1,
-      constructionMethod: "人工",
-      selectedConstructionMethod: "人工",
+      constructionMethod: formData.constructionMethod || "人工",
+      selectedConstructionMethod: formData.constructionMethod || "人工",
       materialCost: 0,
       laborCost: 0,
       floor: 1
@@ -159,23 +178,76 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
       totalCost: '',
       prerequisiteTasks: [],
       dependentTasks: [],
-      remarks: ''
+      remarks: '',
+      duration: '',
+      constructionMethod: '',
     });
     setPrerequisiteSearch('');
     setDependentSearch('');
   };
 
-  const doCreate = (updatePlan: boolean) => {
-    if (pendingTask) {
-      onAdd(pendingTask);
+  const doCreate = async (updatePlan: boolean) => {
+    if (!pendingTask) return;
+
+    if (!projectId) {
+      toast({
+        title: "缺少项目",
+        description: "请先选择项目后再新增工序",
+        variant: "destructive",
+      });
+      return;
     }
-    setConfirmOpen(false);
-    setPendingTask(null);
-    resetForm();
-    onOpenChange(false);
-    // 这里可接入实际的计划更新逻辑
-    if (updatePlan) {
-      console.info('Create task and update plan impact');
+
+    if (!token) {
+      toast({
+        title: "登录已失效",
+        description: "请重新登录后再尝试",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const durationValue = Number(formData.duration) || 1;
+
+    setIsSubmitting(true);
+    try {
+      await addProcess(
+        {
+          project_id: projectId,
+          construction_process: pendingTask.task ?? formData.task,
+          duration: durationValue,
+          construction_method: formData.constructionMethod || undefined,
+          workers_count: pendingTask.workerCount,
+          work_type: formData.jobType || undefined,
+          predecessor_processes: pendingTask.prerequisiteProcess?.replace(/\s+/g, '') || undefined,
+          successor_processes: pendingTask.directDependency?.replace(/\s+/g, '') || undefined,
+          description: formData.remarks || undefined,
+        },
+        token
+      );
+
+      onAdd(pendingTask);
+      toast({
+        title: "已新增工序",
+        description: updatePlan ? "已创建并更新施工计划" : "工序已成功创建",
+      });
+
+      setConfirmOpen(false);
+      setPendingTask(null);
+      resetForm();
+      onOpenChange(false);
+
+      if (updatePlan) {
+        console.info('Create task and update plan impact');
+      }
+    } catch (error) {
+      toast({
+        title: "新增工序失败",
+        description: error instanceof Error ? error.message : "请稍后再试",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -282,6 +354,31 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* 工期与施工方式 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="duration">工期（天） *</Label>
+              <Input
+                id="duration"
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="constructionMethod">施工方式</Label>
+              <Input
+                id="constructionMethod"
+                placeholder="如：人工绑扎"
+                value={formData.constructionMethod}
+                onChange={(e) => setFormData({ ...formData, constructionMethod: e.target.value })}
+              />
             </div>
           </div>
 
@@ -499,7 +596,7 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
             </div>
             <div className="p-3 rounded-md bg-muted/40">
               <div className="text-xs text-muted-foreground">工期变化</div>
-              <div className="text-base font-medium">+{formData.startTime && formData.endTime ? Math.max(1, Math.ceil((new Date(formData.endTime).getTime() - new Date(formData.startTime).getTime())/(1000*3600*24))) : 1} 天</div>
+              <div className="text-base font-medium">+{Number(formData.duration) || 1} 天</div>
             </div>
             <div className="p-3 rounded-md bg-muted/40">
               <div className="text-xs text-muted-foreground">资源占用（人数）</div>
@@ -509,8 +606,12 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks }: NewT
           <div className="text-xs text-muted-foreground">最终以调度计算为准，本摘要为参考估算。</div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => doCreate(false)}>仅创建任务</Button>
-          <Button onClick={() => doCreate(true)}>创建并更新计划</Button>
+          <Button variant="outline" onClick={() => doCreate(false)} disabled={isSubmitting}>
+            {isSubmitting ? "处理中..." : "仅创建任务"}
+          </Button>
+          <Button onClick={() => doCreate(true)} disabled={isSubmitting}>
+            {isSubmitting ? "处理中..." : "创建并更新计划"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
