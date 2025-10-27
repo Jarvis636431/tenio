@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Eye } from "lucide-react";
+import { ModelViewer } from "@/components/ModelViewer";
 
 interface TaskDetailDialogProps {
   open: boolean;
@@ -47,16 +48,11 @@ export function TaskDetailDialog({ open, onOpenChange, task }: TaskDetailDialogP
           </TabsList>
 
           <TabsContent value="3d" className="mt-4 flex-1">
-            <div className="h-full bg-gray-100 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <div className="text-4xl mb-2">🏗️</div>
-                <p>三维模型视口</p>
-                <p className="text-sm">支持缩放、旋转查看</p>
-                <p className="text-xs text-gray-400 mt-2">
-                  支持缩放、旋转查看
-                </p>
-              </div>
-            </div>
+            <ModelViewer
+              src={task?.modelUrl}
+              allowUpload
+              className="h-full"
+            />
           </TabsContent>
 
           <TabsContent value="drawings" className="mt-4 flex-1">
