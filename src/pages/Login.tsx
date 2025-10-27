@@ -41,7 +41,7 @@ export default function Login() {
     } catch (error) {
       toast({
         title: "登录失败",
-        description: "账号或密码错误",
+        description: error instanceof Error ? error.message : "账号或密码错误",
         variant: "destructive"
       });
     }
@@ -77,7 +77,7 @@ export default function Login() {
     } catch (error) {
       toast({
         title: "注册失败",
-        description: "请稍后再试",
+        description: error instanceof Error ? error.message : "请稍后再试",
         variant: "destructive"
       });
     }

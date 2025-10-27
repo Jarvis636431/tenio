@@ -1,13 +1,16 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { getCurrentUser, login as loginRequest, register as registerRequest, TOKEN_STORAGE_KEY } from '@/services/user-service';
 
 interface User {
   id: string;
   username: string;
   name: string;
+  role?: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -20,76 +23,123 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+const USER_STORAGE_KEY = 'user';
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // 检查本地存储中是否有登录信息
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        const parsed = JSON.parse(savedUser);
-        if (parsed) {
+    const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+    const savedUser = localStorage.getItem(USER_STORAGE_KEY);
+
+    const bootstrap = async () => {
+      if (savedToken) {
+        setToken(savedToken);
+        if (savedUser) {
+          try {
+            const parsed = JSON.parse(savedUser);
+            if (parsed) {
+              setUser(parsed as User);
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
+        try {
+          const profile = await getCurrentUser(savedToken);
           const normalizedUser: User = {
-            id: parsed.id ?? '1',
-            username: parsed.username ?? parsed.email ?? 'user',
-            name: parsed.name ?? parsed.username ?? parsed.email ?? '用户'
+            id: profile.user_id,
+            username: profile.username,
+            name: profile.username,
+            role: profile.role,
           };
           setUser(normalizedUser);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalizedUser));
+        } catch (error) {
+          console.error('Failed to fetch current user profile:', error);
+          localStorage.removeItem(TOKEN_STORAGE_KEY);
+          localStorage.removeItem(USER_STORAGE_KEY);
+          setToken(null);
+          setUser(null);
         }
-      } catch {
-        // ignore parse errors
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+
+    bootstrap();
   }, []);
 
-  const login = async (username: string, password: string) => {
-    setIsLoading(true);
-    try {
-      // 模拟登录验证
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockUser: User = {
-        id: '1',
-        username,
-        name: username
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const authenticate = useCallback(
+    async (username: string, password: string, options?: { skipLoading?: boolean }) => {
+      if (!options?.skipLoading) {
+        setIsLoading(true);
+      }
+      try {
+        const response = await loginRequest({ username, password });
+        const accessToken = response.access_token;
+        setToken(accessToken);
+        localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
 
-  const register = async (username: string, password: string) => {
-    setIsLoading(true);
-    try {
-      // 模拟注册过程
-      await new Promise(resolve => setTimeout(resolve, 1000));
+        let profile: User;
+        try {
+          const remoteProfile = await getCurrentUser(accessToken);
+          profile = {
+            id: remoteProfile.user_id,
+            username: remoteProfile.username,
+            name: remoteProfile.username,
+            role: remoteProfile.role,
+          };
+        } catch (error) {
+          console.error('Failed to fetch user profile after login:', error);
+          profile = {
+            id: 'unknown',
+            username,
+            name: username,
+          };
+        }
 
-      const mockUser: User = {
-        id: Date.now().toString(),
-        username,
-        name: username
-      };
+        setUser(profile);
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(profile));
+      } finally {
+        if (!options?.skipLoading) {
+          setIsLoading(false);
+        }
+      }
+    },
+    []
+  );
 
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const login = useCallback(
+    async (username: string, password: string) => {
+      await authenticate(username, password);
+    },
+    [authenticate]
+  );
+
+  const register = useCallback(
+    async (username: string, password: string) => {
+      setIsLoading(true);
+      try {
+        await registerRequest({ username, password, role: 'user' });
+        await authenticate(username, password, { skipLoading: true });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [authenticate]
+  );
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    setToken(null);
+    localStorage.removeItem(USER_STORAGE_KEY);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
