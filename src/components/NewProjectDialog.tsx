@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/contexts/ProjectContext";
+import { precreateProject } from "@/services/project-service";
 import {
   Dialog,
   DialogContent,
@@ -97,14 +98,21 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
     });
     
     try {
+      const payload = {
+        project_name: projectInfo.name.trim() || projectName.trim(),
+      };
+
+      const response = await precreateProject(payload);
+      
       // 模拟解析过程
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const newProjectId = Math.floor(Math.random() * 1000) + Date.now();
+      const newProjectId = response.project_id;
       const newProject = {
-        id: newProjectId.toString(),
+        id: newProjectId,
         name: projectInfo.name.trim() || projectName.trim(),
-        hasBasicInfo: true
+        hasBasicInfo: true,
+        status: response.status,
       };
       
       // 添加到项目列表并设置为当前项目
@@ -113,7 +121,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
       
       toast({
         title: "项目创建成功",
-        description: `项目"${projectInfo.name.trim() || projectName}"已成功创建，工序已生成`
+        description: `项目"${projectInfo.name.trim() || projectName}"已成功创建（状态：${response.status || "precreated"}）`
       });
       
       // 重置表单
@@ -139,7 +147,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
     } catch (error) {
       toast({
         title: "创建失败",
-        description: "项目创建过程中出现错误，请重试",
+        description: error instanceof Error ? error.message : "项目创建过程中出现错误，请重试",
         variant: "destructive"
       });
       setCurrentStep('confirm');
@@ -358,12 +366,35 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
 
         {currentStep === 'generating' && (
           <div className="space-y-6">
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <h3 className="text-lg font-medium mb-2">正在生成工序</h3>
-              <p className="text-muted-foreground">系统正在分析项目信息，生成施工工序计划...</p>
-            </div>
+            <Card className="bg-white border border-dashed border-primary/30">
+              <CardHeader>
+                <CardTitle>正在生成施工工序</CardTitle>
+                <CardDescription>系统正在分析上传文件并生成施工计划，请稍候...</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <Cloud className="h-8 w-8 text-primary animate-pulse" />
+                  <div>
+                    <p className="font-medium">文件解析中...</p>
+                    <p className="text-sm text-muted-foreground">系统会根据上传的CAD图纸和说明文档生成完整的施工工序和资源计划。</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <FileText className="h-8 w-8 text-primary animate-pulse" />
+                  <div>
+                    <p className="font-medium">施工图纸生成中...</p>
+                    <p className="text-sm text-muted-foreground">将构建项目的施工图纸信息和BIM模型，生成可视化的施工流程。</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+        )}
+
+        {currentStep !== 'generating' && (
+          <DialogDescription>
+            请填写项目的基础信息，后续可在项目详情中补充更多内容。
+          </DialogDescription>
         )}
       </DialogContent>
     </Dialog>
