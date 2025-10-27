@@ -1,16 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-
-type IfcViewerAPIType = {
-  IFC: {
-    setWasmPath: (path: string) => void;
-    loadIfcUrl: (url: string, settings?: Record<string, unknown>) => Promise<void>;
-  };
-  axes: { setAxes: () => void };
-  grid: { setGrid: () => void };
-  context: { renderer: { domElement: HTMLCanvasElement } };
-  dispose: () => void;
-};
 
 interface ModelViewerProps {
   src?: string;
@@ -19,17 +8,30 @@ interface ModelViewerProps {
 }
 
 /**
- * 轻量级 IFC 模型查看器：
- * - 默认使用 CDN 动态加载 three.js 与 IFC.js，无需提前安装依赖
- * - 支持通过 props 传入 IFC 模型 URL，或允许用户本地上传
- * - 仅作演示用途，后续可扩展构件拾取、剖切等功能
+ * IFC 模型查看器
+ * - 依赖 web-ifc-viewer + three，本地打包
+ * - wasm 文件需放置在 /public/wasm/web-ifc.wasm
  */
 export function ModelViewer({ src, allowUpload = false, className }: ModelViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const viewerRef = useRef<IfcViewerAPIType | null>(null);
+  const viewerRef = useRef<any>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isLoadingModel, setIsLoadingModel] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const loadModel = useCallback(async (url: string) => {
+    if (!viewerRef.current) return;
+    setIsLoadingModel(true);
+    setError(null);
+    try {
+      await viewerRef.current.IFC.loadIfcUrl(url);
+    } catch (err) {
+      console.error(err);
+      setError("模型加载失败，请确认 IFC 文件是否有效。");
+    } finally {
+      setIsLoadingModel(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
@@ -42,33 +44,29 @@ export function ModelViewer({ src, allowUpload = false, className }: ModelViewer
 
       try {
         const [{ IfcViewerAPI }, THREE] = await Promise.all([
-          import(
-            /* @vite-ignore */
-            "https://cdn.skypack.dev/@ifcjs/ifcjs@1.0.181"
-          ),
-          import(
-            /* @vite-ignore */
-            "https://cdn.skypack.dev/three@0.162.0"
-          ),
+          import("web-ifc-viewer"),
+          import("three"),
         ]);
 
-        if (disposed) return;
+        if (disposed || !containerRef.current) return;
 
-        const viewer: IfcViewerAPIType = new IfcViewerAPI({
-          container: containerRef.current!,
+        const viewer = new IfcViewerAPI({
+          container: containerRef.current,
           backgroundColor: new THREE.Color("#f0f0f0"),
         });
 
         viewer.axes.setAxes();
         viewer.grid.setGrid();
-
-        // 使用 CDN 提供的 web-ifc.wasm；如需离线部署，可将 wasm 文件放在 /public/wasm/
-        viewer.IFC.setWasmPath("https://cdn.jsdelivr.net/npm/web-ifc@0.0.53/");
+        viewer.IFC.setWasmPath("/wasm/");
 
         viewerRef.current = viewer;
+
+        if (src) {
+          await loadModel(src);
+        }
       } catch (err) {
         console.error(err);
-        setError("初始化模型查看器失败，请检查网络连接或稍后重试。");
+        setError("初始化模型查看器失败，请确认依赖是否正确安装。");
       } finally {
         if (!disposed) {
           setIsInitializing(false);
@@ -85,28 +83,13 @@ export function ModelViewer({ src, allowUpload = false, className }: ModelViewer
         viewerRef.current = null;
       }
     };
-  }, []);
-
-  const loadModel = async (url: string) => {
-    if (!viewerRef.current) return;
-    setIsLoadingModel(true);
-    setError(null);
-    try {
-      await viewerRef.current.IFC.loadIfcUrl(url);
-    } catch (err) {
-      console.error(err);
-      setError("模型加载失败，请确认 IFC 文件是否有效。");
-    } finally {
-      setIsLoadingModel(false);
-    }
-  };
+  }, [loadModel, src]);
 
   useEffect(() => {
-    if (src) {
+    if (viewerRef.current && src) {
       loadModel(src);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src]);
+  }, [src, loadModel]);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

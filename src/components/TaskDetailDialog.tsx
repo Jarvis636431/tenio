@@ -49,8 +49,7 @@ export function TaskDetailDialog({ open, onOpenChange, task }: TaskDetailDialogP
 
           <TabsContent value="3d" className="mt-4 flex-1">
             <ModelViewer
-              src={task?.modelUrl}
-              allowUpload
+              src="/models/1012.ifc"
               className="h-full"
             />
           </TabsContent>
