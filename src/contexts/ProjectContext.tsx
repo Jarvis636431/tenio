@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { getProjectList } from '@/services/project-service';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Project {
   id: string;
@@ -15,6 +17,9 @@ interface Project {
   buildingHeight?: number;
   buildingFloors?: number;
   buildingArea?: number;
+  status?: string;
+  createdAt?: string;
+  description?: string;
 }
 
 interface ProjectContextType {
@@ -23,37 +28,18 @@ interface ProjectContextType {
   projects: Project[];
   addProject: (project: Project) => void;
   updateProject: (project: Project) => void;
+  isLoading: boolean;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
-// 模拟项目数据
-const mockProjects: Project[] = [
-  {
-    id: "1",
-    name: "办公楼建设项目",
-    hasBasicInfo: true,
-    city: "北京市",
-    buildingType: "住宅",
-    structureType: "框架结构",
-    bidAmount: 0,
-    controlPrice: 0,
-    buildingHeight: 0,
-    buildingFloors: 1,
-    buildingArea: 0,
-  },
-  {
-    id: "2", 
-    name: "南山区幼儿园",
-    hasBasicInfo: false,
-  }
-];
-
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
-  const [currentProject, setCurrentProjectState] = useState<Project | null>(mockProjects[0] || null);
-  const [projects, setProjects] = useState<Project[]>(mockProjects);
+  const [currentProject, setCurrentProjectState] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { id } = useParams();
   const STORAGE_KEY = "currentProjectId";
+  const { token } = useAuth();
 
   const setCurrentProject = (project: Project | null) => {
     setCurrentProjectState(project);
@@ -73,36 +59,71 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     if (currentProject && currentProject.id === updated.id) {
       setCurrentProject(updated);
     }
-    try {
-      localStorage.setItem('projects', JSON.stringify(prev => prev));
-    } catch {}
   };
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchProjects = async () => {
+      if (!token) {
+        setProjects([]);
+        setCurrentProjectState(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const response = await getProjectList(token);
+        if (!active) return;
+        const projectList: Project[] = response.projects.map(item => ({
+          id: item.project_id,
+          name: item.name,
+          description: item.description,
+          status: item.status,
+          createdAt: item.created_at,
+        }));
+        setProjects(projectList);
+
+        if (projectList.length === 0) {
+          setCurrentProjectState(null);
+          return;
+        }
+
+        // 按顺序选择当前项目：路由参数 -> 本地缓存 -> 列表第一个
+        const routeProject = id ? projectList.find(p => p.id === id) : undefined;
+        const savedId = localStorage.getItem(STORAGE_KEY);
+        const savedProject = savedId ? projectList.find(p => p.id === savedId) : undefined;
+        const nextProject = routeProject || savedProject || projectList[0];
+        if (nextProject) {
+          setCurrentProjectState(nextProject);
+          try {
+            localStorage.setItem(STORAGE_KEY, nextProject.id);
+          } catch {}
+        } else {
+          setCurrentProjectState(null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch project list:', error);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchProjects();
+
+    return () => {
+      active = false;
+    };
+  }, [token, id]);
 
   // 当路由参数变化时，自动更新当前项目；无 id 时保持当前选择，不清空
   useEffect(() => {
-    if (id) {
+    if (id && projects.length > 0) {
       const project = projects.find(p => p.id === id);
       if (project) {
         setCurrentProject(project);
-      }
-    } else if (!currentProject) {
-      // 尝试从本地恢复上次选择，如果没有则选择第一个项目
-      try {
-        const savedId = localStorage.getItem(STORAGE_KEY);
-        if (savedId) {
-          const savedProject = projects.find(p => p.id === savedId);
-          if (savedProject) {
-            setCurrentProject(savedProject);
-          } else if (projects.length > 0) {
-            setCurrentProject(projects[0]);
-          }
-        } else if (projects.length > 0) {
-          setCurrentProject(projects[0]);
-        }
-      } catch {
-        if (projects.length > 0) {
-          setCurrentProject(projects[0]);
-        }
       }
     }
   }, [id, projects]);
@@ -113,7 +134,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setCurrentProject,
       projects,
       addProject,
-      updateProject
+      updateProject,
+      isLoading,
     }}>
       {children}
     </ProjectContext.Provider>

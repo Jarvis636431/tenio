@@ -73,6 +73,18 @@ export interface ProcessInfoResponse {
   [key: string]: unknown;
 }
 
+export interface ProjectListItem {
+  project_id: string;
+  name: string;
+  description?: string;
+  status: string;
+  created_at: string;
+}
+
+export interface ProjectListResponse {
+  projects: ProjectListItem[];
+}
+
 // ----------- API wrappers -----------
 
 export async function precreateProject(
@@ -145,4 +157,14 @@ export async function getProcessInfo(projectId: string, token?: string): Promise
   });
 
   return parseResponse<ProcessInfoResponse>(response);
+}
+
+export async function getProjectList(token?: string): Promise<ProjectListResponse> {
+  const response = await fetch(`${PROJECT_SERVICE_BASE_URL}/project_list`, {
+    headers: {
+      ...authHeaders(token),
+    },
+  });
+
+  return parseResponse<ProjectListResponse>(response);
 }
