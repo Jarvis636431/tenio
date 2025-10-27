@@ -28,6 +28,7 @@ interface ProjectContextType {
   projects: Project[];
   addProject: (project: Project) => void;
   updateProject: (project: Project) => void;
+  refreshProjects: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -40,6 +41,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const { id } = useParams();
   const STORAGE_KEY = "currentProjectId";
   const { token, user } = useAuth();
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   const setCurrentProject = (project: Project | null) => {
     setCurrentProjectState(project);
@@ -50,8 +52,57 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshProjects = async () => {
+    if (!token || !user?.id) {
+      setProjects([]);
+      setCurrentProjectState(null);
+      return;
+    }
+
+    setIsRefreshing(true);
+    try {
+      const response = await getProjectList(token, user.id);
+      const projectList: Project[] = response.projects.map(item => ({
+        id: item.project_id,
+        name: item.name,
+        description: item.description,
+        status: item.status,
+        createdAt: item.created_at,
+      }));
+      setProjects(projectList);
+
+      if (projectList.length === 0) {
+        setCurrentProjectState(null);
+        return;
+      }
+
+      const routeProject = id ? projectList.find(p => p.id === id) : undefined;
+      const savedId = localStorage.getItem(STORAGE_KEY);
+      const savedProject = savedId ? projectList.find(p => p.id === savedId) : undefined;
+      const nextProject = routeProject || savedProject || projectList[0];
+      if (nextProject) {
+        setCurrentProjectState(nextProject);
+        try {
+          localStorage.setItem(STORAGE_KEY, nextProject.id);
+        } catch {}
+      } else {
+        setCurrentProjectState(null);
+      }
+    } catch (error) {
+      console.error('Failed to refresh project list:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const addProject = (project: Project) => {
-    setProjects(prev => [...prev, project]);
+    setProjects(prev => {
+      const exists = prev.some(p => p.id === project.id);
+      if (exists) {
+        return prev.map(p => p.id === project.id ? { ...p, ...project } : p);
+      }
+      return [...prev, project];
+    });
   };
 
   const updateProject = (updated: Project) => {
@@ -73,37 +124,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
       setIsLoading(true);
       try {
-        const response = await getProjectList(token, user.id);
-        if (!active) return;
-        const projectList: Project[] = response.projects.map(item => ({
-          id: item.project_id,
-          name: item.name,
-          description: item.description,
-          status: item.status,
-          createdAt: item.created_at,
-        }));
-        setProjects(projectList);
-
-        if (projectList.length === 0) {
-          setCurrentProjectState(null);
-          return;
-        }
-
-        // 按顺序选择当前项目：路由参数 -> 本地缓存 -> 列表第一个
-        const routeProject = id ? projectList.find(p => p.id === id) : undefined;
-        const savedId = localStorage.getItem(STORAGE_KEY);
-        const savedProject = savedId ? projectList.find(p => p.id === savedId) : undefined;
-        const nextProject = routeProject || savedProject || projectList[0];
-        if (nextProject) {
-          setCurrentProjectState(nextProject);
-          try {
-            localStorage.setItem(STORAGE_KEY, nextProject.id);
-          } catch {}
-        } else {
-          setCurrentProjectState(null);
-        }
-      } catch (error) {
-        console.error('Failed to fetch project list:', error);
+        await refreshProjects();
       } finally {
         if (active) {
           setIsLoading(false);
@@ -135,6 +156,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       projects,
       addProject,
       updateProject,
+      refreshProjects,
       isLoading,
     }}>
       {children}

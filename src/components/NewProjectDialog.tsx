@@ -42,7 +42,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
   
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { setCurrentProject, addProject } = useProject();
+  const { setCurrentProject, addProject, refreshProjects } = useProject();
   const { user, token } = useAuth();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, setter: (file: File | null) => void) => {
@@ -118,9 +118,9 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         status: response.status,
       };
       
-      // 添加到项目列表并设置为当前项目
       addProject(newProject);
       setCurrentProject(newProject);
+      refreshProjects();
       
       toast({
         title: "项目创建成功",
