@@ -1,35 +1,38 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import loginImage from '@/assets/login-tech-construction.jpg';
+
+type AuthTab = 'login' | 'register';
+
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const {
-    login,
-    isLoading
-  } = useAuth();
+  const [activeTab, setActiveTab] = useState<AuthTab>('login');
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerUsername, setRegisterUsername] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const { login, register, isLoading } = useAuth();
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { toast } = useToast();
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!loginUsername || !loginPassword) {
       toast({
         title: "请填写完整信息",
-        description: "请输入邮箱和密码",
+        description: "请输入账号和密码",
         variant: "destructive"
       });
       return;
     }
     try {
-      await login(email, password);
+      await login(loginUsername, loginPassword);
       toast({
         title: "登录成功",
         description: "欢迎回来！"
@@ -38,11 +41,48 @@ export default function Login() {
     } catch (error) {
       toast({
         title: "登录失败",
-        description: "邮箱或密码错误",
+        description: "账号或密码错误",
         variant: "destructive"
       });
     }
   };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!registerUsername || !registerPassword || !registerConfirmPassword) {
+      toast({
+        title: "请填写完整信息",
+        description: "请输入账号与两次密码",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (registerPassword !== registerConfirmPassword) {
+      toast({
+        title: "两次密码不一致",
+        description: "请确认两次输入的密码相同",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await register(registerUsername, registerPassword);
+      toast({
+        title: "注册成功",
+        description: "已自动登录，欢迎使用！"
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: "注册失败",
+        description: "请稍后再试",
+        variant: "destructive"
+      });
+    }
+  };
+
   return <div className="min-h-screen flex">
       {/* 左侧登录区域 */}
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
@@ -56,22 +96,96 @@ export default function Login() {
           </div>
 
           <Card className="shadow-lg border-border/50">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-medium flex gap-2 justify-center">
+                <Button
+                  type="button"
+                  variant={activeTab === 'login' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setActiveTab('login')}
+                  disabled={isLoading}
+                >
+                  登录
+                </Button>
+                <Button
+                  type="button"
+                  variant={activeTab === 'register' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setActiveTab('register')}
+                  disabled={isLoading}
+                >
+                  注册
+                </Button>
+              </CardTitle>
+            </CardHeader>
             
             <CardContent className="py-[20px]">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">邮箱地址</Label>
-                  <Input id="email" type="email" placeholder="请输入邮箱" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">密码</Label>
-                  <Input id="password" type="password" placeholder="请输入密码" value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? '登录中...' : '登录'}
-                </Button>
-              </form>
-              
+              {activeTab === 'login' ? (
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-username">账号</Label>
+                    <Input
+                      id="login-username"
+                      placeholder="请输入账号"
+                      value={loginUsername}
+                      onChange={e => setLoginUsername(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">密码</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="请输入密码"
+                      value={loginPassword}
+                      onChange={e => setLoginPassword(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? '登录中...' : '登录'}
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="register-username">账号</Label>
+                    <Input
+                      id="register-username"
+                      placeholder="请输入账号"
+                      value={registerUsername}
+                      onChange={e => setRegisterUsername(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">密码</Label>
+                    <Input
+                      id="register-password"
+                      type="password"
+                      placeholder="请输入密码"
+                      value={registerPassword}
+                      onChange={e => setRegisterPassword(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password-confirm">确认密码</Label>
+                    <Input
+                      id="register-password-confirm"
+                      type="password"
+                      placeholder="请再次输入密码"
+                      value={registerConfirmPassword}
+                      onChange={e => setRegisterConfirmPassword(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? '注册中...' : '注册'}
+                  </Button>
+                </form>
+              )}
             </CardContent>
           </Card>
         </div>

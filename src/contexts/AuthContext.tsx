@@ -2,13 +2,14 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 interface User {
   id: string;
-  email: string;
+  username: string;
   name: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -27,12 +28,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // 检查本地存储中是否有登录信息
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed) {
+          const normalizedUser: User = {
+            id: parsed.id ?? '1',
+            username: parsed.username ?? parsed.email ?? 'user',
+            name: parsed.name ?? parsed.username ?? parsed.email ?? '用户'
+          };
+          setUser(normalizedUser);
+        }
+      } catch {
+        // ignore parse errors
+      }
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
       // 模拟登录验证
@@ -40,10 +53,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       const mockUser: User = {
         id: '1',
-        email,
-        name: email.split('@')[0]
+        username,
+        name: username
       };
       
+      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (username: string, password: string) => {
+    setIsLoading(true);
+    try {
+      // 模拟注册过程
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const mockUser: User = {
+        id: Date.now().toString(),
+        username,
+        name: username
+      };
+
       setUser(mockUser);
       localStorage.setItem('user', JSON.stringify(mockUser));
     } finally {
@@ -57,7 +89,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
