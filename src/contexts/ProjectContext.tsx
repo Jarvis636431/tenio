@@ -39,7 +39,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { id } = useParams();
   const STORAGE_KEY = "currentProjectId";
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const setCurrentProject = (project: Project | null) => {
     setCurrentProjectState(project);
@@ -65,7 +65,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     let active = true;
 
     const fetchProjects = async () => {
-      if (!token) {
+      if (!token || !user?.id) {
         setProjects([]);
         setCurrentProjectState(null);
         return;
@@ -73,7 +73,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
       setIsLoading(true);
       try {
-        const response = await getProjectList(token);
+        const response = await getProjectList(token, user.id);
         if (!active) return;
         const projectList: Project[] = response.projects.map(item => ({
           id: item.project_id,
@@ -116,7 +116,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [token, id]);
+  }, [token, user?.id, id]);
 
   // 当路由参数变化时，自动更新当前项目；无 id 时保持当前选择，不清空
   useEffect(() => {

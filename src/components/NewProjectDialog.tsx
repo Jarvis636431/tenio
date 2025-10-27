@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/contexts/ProjectContext";
 import { precreateProject } from "@/services/project-service";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
   const { toast } = useToast();
   const navigate = useNavigate();
   const { setCurrentProject, addProject } = useProject();
+  const { user, token } = useAuth();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, setter: (file: File | null) => void) => {
     const file = event.target.files?.[0] || null;
@@ -99,10 +101,11 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
     
     try {
       const payload = {
-        project_name: projectInfo.name.trim() || projectName.trim(),
+        name: projectInfo.name.trim() || projectName.trim(),
+        user_id: user?.id,
       };
 
-      const response = await precreateProject(payload);
+      const response = await precreateProject(payload, token || undefined);
       
       // 模拟解析过程
       await new Promise(resolve => setTimeout(resolve, 2000));

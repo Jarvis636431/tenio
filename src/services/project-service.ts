@@ -44,8 +44,9 @@ async function parseResponse<T>(response: Response): Promise<T> {
 // ----------- Types -----------
 
 export interface PrecreateProjectPayload {
-  project_name: string;
+  name: string;
   description?: string;
+  user_id?: string;
 }
 
 export interface PrecreateProjectResponse {
@@ -159,8 +160,13 @@ export async function getProcessInfo(projectId: string, token?: string): Promise
   return parseResponse<ProcessInfoResponse>(response);
 }
 
-export async function getProjectList(token?: string): Promise<ProjectListResponse> {
-  const response = await fetch(`${PROJECT_SERVICE_BASE_URL}/project_list`, {
+export async function getProjectList(token?: string, userId?: string): Promise<ProjectListResponse> {
+  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/project_list`);
+  if (userId) {
+    url.searchParams.set("user_id", userId);
+  }
+
+  const response = await fetch(url.toString(), {
     headers: {
       ...authHeaders(token),
     },
