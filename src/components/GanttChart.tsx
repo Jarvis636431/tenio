@@ -22,7 +22,140 @@ interface GanttChartProps {
   data: ScheduleItem[];
   onTaskDetail?: (task: ScheduleItem) => void;
   onAddTask?: (task: Partial<ScheduleItem>) => void;
+  scale?: TimelineScale;
 }
+
+export type TimelineScale = "day" | "hour" | "month";
+
+const BASELINE_DATE = new Date(2025, 9, 1); // 2025-10-01
+const MS_IN_HOUR = 1000 * 60 * 60;
+const MS_IN_DAY = MS_IN_HOUR * 24;
+
+const COLUMN_WIDTH_MAP: Record<TimelineScale, number> = {
+  day: 80,
+  hour: 60,
+  month: 120,
+};
+
+const UNIT_LABELS: Record<TimelineScale, string> = {
+  day: "天",
+  hour: "小时",
+  month: "月",
+};
+
+const alignDateToScaleStart = (date: Date, scale: TimelineScale) => {
+  const aligned = new Date(date.getTime());
+  if (scale === "month") {
+    aligned.setDate(1);
+    aligned.setHours(0, 0, 0, 0);
+  } else if (scale === "day") {
+    aligned.setHours(0, 0, 0, 0);
+  } else {
+    aligned.setMinutes(0, 0, 0);
+  }
+  return aligned;
+};
+
+const addUnits = (date: Date, units: number, scale: TimelineScale) => {
+  const next = new Date(date.getTime());
+  if (scale === "month") {
+    next.setMonth(next.getMonth() + units);
+  } else if (scale === "day") {
+    next.setDate(next.getDate() + units);
+  } else {
+    next.setHours(next.getHours() + units);
+  }
+  return next;
+};
+
+const monthDiff = (start: Date, end: Date) => {
+  return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+};
+
+const calculateTotalUnits = (startAnchor: Date, maxTime: number, scale: TimelineScale) => {
+  if (scale === "month") {
+    const endDate = alignDateToScaleStart(new Date(maxTime), "month");
+    const diff = monthDiff(startAnchor, endDate);
+    return Math.max(1, diff + 1);
+  }
+  const step = scale === "day" ? MS_IN_DAY : MS_IN_HOUR;
+  const diff = Math.max(0, maxTime - startAnchor.getTime());
+  return Math.max(1, Math.ceil(diff / step) + 1);
+};
+
+const calculateStartOffset = (start: Date, startAnchor: Date, scale: TimelineScale) => {
+  if (scale === "month") {
+    const alignedStart = alignDateToScaleStart(start, "month");
+    return Math.max(0, monthDiff(startAnchor, alignedStart));
+  }
+  const step = scale === "day" ? MS_IN_DAY : MS_IN_HOUR;
+  const diff = start.getTime() - startAnchor.getTime();
+  return Math.max(0, Math.floor(diff / step));
+};
+
+const calculateSpanUnits = (start: Date, end: Date, scale: TimelineScale) => {
+  if (scale === "month") {
+    const startAligned = alignDateToScaleStart(start, "month");
+    const endAligned = alignDateToScaleStart(end, "month");
+    const diff = monthDiff(startAligned, endAligned);
+    return Math.max(1, diff + 1);
+  }
+
+  const diff = end.getTime() - start.getTime();
+  if (scale === "day") {
+    const units = Math.ceil(diff / MS_IN_DAY) + 1;
+    return Math.max(1, units);
+  }
+
+  // hour scale
+  const units = Math.ceil(Math.max(diff, 0) / MS_IN_HOUR);
+  return Math.max(1, units || 1);
+};
+
+interface TimelineHeader {
+  key: number;
+  primary: string;
+  secondary?: string;
+  isWeekend?: boolean;
+}
+
+type TimelineRow = ScheduleItem & {
+  startOffset: number;
+  spanUnits: number;
+  barLabel: string;
+  color: string;
+};
+
+const generateHeaders = (startAnchor: Date, totalUnits: number, scale: TimelineScale): TimelineHeader[] => {
+  return Array.from({ length: totalUnits }, (_, index) => {
+    const current = addUnits(startAnchor, index, scale);
+
+    if (scale === "month") {
+      return {
+        key: index,
+        primary: `${current.getFullYear()}/${current.getMonth() + 1}`,
+      };
+    }
+
+    if (scale === "day") {
+      const dayOfWeek = current.getDay();
+      return {
+        key: index,
+        primary: `${current.getMonth() + 1}/${current.getDate()}`,
+        secondary: ["日", "一", "二", "三", "四", "五", "六"][dayOfWeek],
+        isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
+      };
+    }
+
+    const dayOfWeek = current.getDay();
+    return {
+      key: index,
+      primary: `${current.getHours().toString().padStart(2, "0")}:00`,
+      secondary: `${current.getMonth() + 1}/${current.getDate()}`,
+      isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
+    };
+  });
+};
 
 const getWorkerColor = (worker: string): string => {
   const colors: {
@@ -66,9 +199,15 @@ const getWorkerBadgeClass = (worker: string): string => {
   return badgeClasses[worker] || "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-800";
 };
 
+const getBaselineDate = () => {
+  const baseline = new Date(BASELINE_DATE.getTime());
+  baseline.setHours(0, 0, 0, 0);
+  return baseline;
+};
+
 const parseDate = (dateStr: string): Date => {
   if (!dateStr) {
-    return new Date(2024, 0, 1);
+    return getBaselineDate();
   }
 
   const trimmed = dateStr.trim();
@@ -101,7 +240,7 @@ const parseDate = (dateStr: string): Date => {
     const day = parseInt(relativeMatch[1], 10);
     const hours = relativeMatch[2] ? parseInt(relativeMatch[2], 10) : 0;
     const minutes = relativeMatch[3] ? parseInt(relativeMatch[3], 10) : 0;
-    const base = new Date(2024, 0, 1);
+    const base = getBaselineDate();
     if (!Number.isNaN(day) && day > 0) {
       base.setDate(base.getDate() + day - 1);
     }
@@ -112,7 +251,7 @@ const parseDate = (dateStr: string): Date => {
   const relativeMatchNoTime = trimmed.match(/第\s*(\d+)\s*天/);
   if (relativeMatchNoTime) {
     const day = parseInt(relativeMatchNoTime[1], 10);
-    const base = new Date(2024, 0, 1);
+    const base = getBaselineDate();
     if (!Number.isNaN(day) && day > 0) {
       base.setDate(base.getDate() + day - 1);
     }
@@ -125,14 +264,17 @@ const parseDate = (dateStr: string): Date => {
   if (match) {
     const month = parseInt(match[1], 10) - 1;
     const day = parseInt(match[2], 10);
-    return new Date(2024, month, day);
+    const base = getBaselineDate();
+    base.setMonth(month, day);
+    base.setHours(0, 0, 0, 0);
+    return base;
   }
 
   // 如果无法解析，返回基准日期避免 NaN
-  return new Date(2024, 0, 1);
+  return getBaselineDate();
 };
 
-export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
+export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: GanttChartProps) {
   const taskListRef = useRef<HTMLDivElement>(null);
   const chartContentRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -146,38 +288,50 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
   const { currentProject } = useProject();
 
   const ROW_HEIGHT = 48; // h-12
-  const COL_WIDTH = 80;
+  const timelineScale = scale;
+  const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
 
   const {
     timelineData,
-    totalDays,
-    startDate
+    totalUnits,
+    headers
   } = useMemo(() => {
-    const dates = data.flatMap(item => [parseDate(item.startDate), parseDate(item.endDate)]);
-    const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-    const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
-    const totalDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const baseline = getBaselineDate();
+    const parsedItems = data.map(item => ({
+      item,
+      start: parseDate(item.startDate),
+      end: parseDate(item.endDate)
+    }));
 
-    const timelineData = data.map(item => {
-      const start = parseDate(item.startDate);
-      const end = parseDate(item.endDate);
-      const startDay = Math.ceil((start.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
-      const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const timePoints = parsedItems.flatMap(({ start, end }) => [start.getTime(), end.getTime()]);
+    timePoints.push(baseline.getTime());
+
+    const minTime = Math.min(...timePoints);
+    const maxTime = Math.max(...timePoints);
+
+    const startAnchor = alignDateToScaleStart(new Date(minTime), timelineScale);
+    const totalUnits = calculateTotalUnits(startAnchor, maxTime, timelineScale);
+    const headers = generateHeaders(startAnchor, totalUnits, timelineScale);
+
+    const timelineData: TimelineRow[] = parsedItems.map(({ item, start, end }) => {
+      const startOffset = calculateStartOffset(start, startAnchor, timelineScale);
+      const spanUnits = calculateSpanUnits(start, end, timelineScale);
 
       return {
         ...item,
-        startDay,
-        duration: Math.max(duration, 1).toString(),
+        startOffset,
+        spanUnits,
+        barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
         color: getWorkerColor(item.worker)
       };
     });
 
     return {
       timelineData,
-      totalDays,
-      startDate: minDate
+      totalUnits,
+      headers
     };
-  }, [data]);
+  }, [data, timelineScale]);
 
   const totalRows = timelineData.length;
   const visibleRowCount = 12; // 渲染窗口中的最大行数
@@ -212,15 +366,6 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
   }, [data]); // 数据变化时重新建立同步并重置滚动位置
 
   // 生成日期标头
-  const dateHeaders = Array.from({ length: totalDays }, (_, index) => {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + index);
-    return {
-      day: index + 1,
-      date: `${date.getMonth() + 1}/${date.getDate()}`,
-      dayOfWeek: date.getDay()
-    };
-  });
 
   const handleAddTask = (taskData: any) => {
     if (onAddTask) {
@@ -307,30 +452,33 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
             
             {/* 右侧整体滚动区域（虚拟滚动） */}
             <div ref={chartContentRef} className="flex-1 overflow-auto flex flex-col">
-              <div style={{ minWidth: `${totalDays * COL_WIDTH}px` }} className="flex-1">
+              <div style={{ minWidth: `${totalUnits * columnWidth}px` }} className="flex-1">
                 {/* 时间轴表头 */}
                 <div className="bg-muted/50 border-b sticky top-0 z-10">
                   <div className="grid gap-0 h-12" style={{
-                    gridTemplateColumns: `repeat(${totalDays}, ${COL_WIDTH}px)`
+                    gridTemplateColumns: `repeat(${totalUnits}, ${columnWidth}px)`
                   }}>
-                    {dateHeaders.map(header => (
-                      <div key={header.day} className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${header.dayOfWeek === 0 || header.dayOfWeek === 6 ? 'bg-muted/70 text-muted-foreground' : ''}`}>
-                        <div className="font-medium">{header.date}</div>
-                        <div className="text-[10px] text-muted-foreground">
-                          {['日', '一', '二', '三', '四', '五', '六'][header.dayOfWeek]}
-                        </div>
+                    {headers.map(header => (
+                      <div
+                        key={header.key}
+                        className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${header.isWeekend ? 'bg-muted/70 text-muted-foreground' : ''}`}
+                      >
+                        <div className="font-medium">{header.primary}</div>
+                        {header.secondary && (
+                          <div className="text-[10px] text-muted-foreground">{header.secondary}</div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 {/* 甘特图内容 */}
                 <div className="flex-1 relative" style={{ height: totalRows * ROW_HEIGHT }}>
-                  {/* 网格背景使用渐变，避免为每行渲染 totalDays 个单元格 */}
+                  {/* 网格背景使用渐变，避免为每行渲染大量时间单元格 */}
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                      backgroundImage: `repeating-linear-gradient(to right, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${COL_WIDTH}px), repeating-linear-gradient(to bottom, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${ROW_HEIGHT}px)`
+                      backgroundImage: `repeating-linear-gradient(to right, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${columnWidth}px), repeating-linear-gradient(to bottom, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${ROW_HEIGHT}px)`
                     }}
                   />
                   {visibleRows.map((item, i) => {
@@ -348,15 +496,15 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
                         <div
                           className="absolute top-1 h-10 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200 hover:brightness-110"
                           style={{
-                            left: `${item.startDay * COL_WIDTH}px`,
-                            width: `${Number(item.duration) * COL_WIDTH}px`,
-                            backgroundColor: getWorkerColor(item.worker),
-                            minWidth: `${COL_WIDTH}px`
+                            left: `${item.startOffset * columnWidth}px`,
+                            width: `${item.spanUnits * columnWidth}px`,
+                            backgroundColor: item.color,
+                            minWidth: `${columnWidth}px`
                           }}
                           onClick={() => onTaskDetail?.(item)}
                         >
                           <div className="px-2 text-center flex-1">
-                            <div className="font-medium">{item.duration}天</div>
+                            <div className="font-medium">{item.barLabel}</div>
                           </div>
                           {/* 更多按钮 - 悬停时显示 */}
                           {hoveredTaskId === item.id && (

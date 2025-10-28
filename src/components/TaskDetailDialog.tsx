@@ -116,7 +116,7 @@ export function TaskDetailDialog({
 
           <TabsContent value="3d" className="mt-4 flex-1">
             <ModelViewer
-              src="/models/1012.ifc"
+              src="/models/0923.ifc"
               highlightIds={highlightedComponentIds}
               className="h-full"
             />

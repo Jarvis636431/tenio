@@ -7,10 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3, Save, X, MoreHorizontal } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import type { ProjectScheduleItem } from "@/hooks/useProjectSchedule";
-import { GanttChart } from "@/components/GanttChart";
+import { GanttChart, type TimelineScale } from "@/components/GanttChart";
 import { NewTaskDialog } from "@/components/NewTaskDialog";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { useSearchParams } from "react-router-dom";
@@ -21,6 +22,12 @@ interface PlanAndOrdersProps {
 }
 
 type TaskItem = ProjectScheduleItem;
+
+const TIMELINE_SCALE_LABELS: Record<TimelineScale, string> = {
+  day: "天",
+  hour: "小时",
+  month: "月",
+};
 
 export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: PlanAndOrdersProps) {
   const { currentProject } = useProject();
@@ -37,6 +44,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
   const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<TaskItem | null>(null);
+  const [timelineScale, setTimelineScale] = useState<TimelineScale>("day");
   
   // 根据URL参数确定显示的内容
   const activeView = searchParams.get('tab') || 'task-overview';
@@ -394,6 +402,26 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
           </Select>
         </div>
         <div className="flex items-center space-x-4">
+          {activeView === 'gantt-chart' && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="min-w-[140px] justify-between">
+                  <span>时间粒度：{TIMELINE_SCALE_LABELS[timelineScale]}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36">
+                {(Object.entries(TIMELINE_SCALE_LABELS) as [TimelineScale, string][]).map(([value, label]) => (
+                  <DropdownMenuItem
+                    key={value}
+                    onSelect={() => setTimelineScale(value)}
+                    className={timelineScale === value ? "bg-muted font-medium" : ""}
+                  >
+                    {label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           <div className="text-sm text-muted-foreground">
             {activeView === 'gantt-chart' ? `显示 ${ganttData.length} 个任务` : `显示 ${filteredData.length} 个任务`}
           </div>
@@ -514,6 +542,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
             <div className="h-[calc(100vh-200px)]">
               <GanttChart 
                 data={ganttData} 
+                scale={timelineScale}
                 onTaskDetail={(task) => {
                   // 将甘特图的任务数据转换为表格数据格式
                   const taskItem = allData.find(item => item.id === task.id);
