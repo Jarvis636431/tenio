@@ -85,6 +85,16 @@ export interface ProjectDetailResponse {
   project_info: ProjectInfoRow[];
 }
 
+export interface ProjectConfig {
+  project_id: string;
+  name: string;
+  description?: string;
+  config: Record<string, unknown>;
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ProcessInfoData {
   [key: string]: unknown;
   施工工序?: string;
@@ -280,4 +290,17 @@ export async function addProcess(
   });
 
   return parseResponse<AddProcessResponse>(response);
+}
+
+export async function getProjectConfig(projectId: string, token?: string): Promise<ProjectConfig> {
+  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/project_config`);
+  url.searchParams.set("project_id", projectId);
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      ...authHeaders(token),
+    },
+  });
+
+  return parseResponse<ProjectConfig>(response);
 }
