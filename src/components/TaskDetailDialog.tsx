@@ -57,8 +57,6 @@ export function TaskDetailDialog({
     };
   }, [open, projectId, workProcessName, token]);
 
-  if (!task) return null;
-
   const planeDrawings = useMemo(() => {
     const raw = orderInfo?.["详细信息"];
     if (!raw) return [];
@@ -80,6 +78,21 @@ export function TaskDetailDialog({
     if (!raw) return [];
     return Array.isArray(raw) ? raw : [raw];
   }, [orderInfo]);
+
+  if (!task) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>暂无任务信息</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-muted-foreground">
+            请选择任务后查看详情。
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
