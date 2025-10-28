@@ -34,7 +34,7 @@ const mapScheduleRow = (row: ScheduleRow, index: number): ProjectScheduleItem =>
   id: index + 1,
   task: String(row["施工工序"] ?? row["任务"] ?? `任务${index + 1}`),
   workerCount: Number(row["施工人数"] ?? 0),
-  jobType: String(row["施工方式"] ?? ""),
+  jobType: String(row["工种"] ?? ""),
   totalCost: Number(row["总成本"] ?? 0),
   startTime: String(row["开始时间"] ?? ""),
   endTime: String(row["结束时间"] ?? ""),

@@ -432,6 +432,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                           </TableHead>
                           <TableHead className="w-[100px] bg-white">人数</TableHead>
                           <TableHead className="w-[120px] bg-white">工种</TableHead>
+                          <TableHead className="w-[120px] bg-white">施工方式</TableHead>
                           <TableHead className="w-[120px] bg-white">总成本</TableHead>
                           <TableHead className="w-[120px] bg-white">开始时间</TableHead>
                           <TableHead className="w-[120px] bg-white">结束时间</TableHead>
@@ -454,6 +455,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                                 </Badge>
                               )}
                             </TableCell>
+                            <TableCell className="w-[120px] bg-white py-2">{item.constructionMethod || "--"}</TableCell>
                             <TableCell className="w-[120px] bg-white py-2">¥{item.totalCost.toLocaleString()}</TableCell>
                             <TableCell className="w-[120px] bg-white py-2">{item.startTime}</TableCell>
                             <TableCell className="w-[120px] bg-white py-2">{item.endTime}</TableCell>
