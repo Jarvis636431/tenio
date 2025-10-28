@@ -1,40 +1,90 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Eye } from "lucide-react";
+import { Eye, Loader2, ShieldAlert } from "lucide-react";
+import { getProcessInfo, OrderInfoData } from "@/services/project-service";
+import { useAuth } from "@/contexts/AuthContext";
 import { ModelViewer } from "@/components/ModelViewer";
 
 interface TaskDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task: any; // TaskItem type
+  projectId?: string | null;
+  workProcessName?: string;
 }
 
-export function TaskDetailDialog({ open, onOpenChange, task }: TaskDetailDialogProps) {
+export function TaskDetailDialog({
+  open,
+  onOpenChange,
+  task,
+  projectId,
+  workProcessName,
+}: TaskDetailDialogProps) {
   const [activeTab, setActiveTab] = useState("3d");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [orderInfo, setOrderInfo] = useState<OrderInfoData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    if (!open || !projectId || !workProcessName) {
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+    setOrderInfo(null);
+
+    getProcessInfo(projectId, token || undefined, { workProcessName })
+      .then((data) => {
+        if (cancelled) return;
+        setOrderInfo(data.order_info ?? null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err : new Error(String(err)));
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, projectId, workProcessName, token]);
 
   if (!task) return null;
 
-  // Mock data for demonstration
-  const detailImages = [
-    "/src/assets/大样 1.jpeg",
-    "/src/assets/大样 3.jpeg",
-    "/src/assets/图纸.jpeg"
-  ];
+  const planeDrawings = useMemo(() => {
+    const raw = orderInfo?.["详细信息"];
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw.filter(Boolean) : [raw];
+  }, [orderInfo]);
 
-  const tutorialVideo = "/src/assets/施工教程.mp4"; // Mock video path
+  const detailImages = useMemo(() => {
+    const raw = orderInfo?.["节点大样图"];
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw.filter(Boolean) : [raw];
+  }, [orderInfo]);
+
+  const tutorialVideo = orderInfo?.["视频"] ?? "";
+  const workDescription = orderInfo?.["工单内容"];
+  const safetyNote = orderInfo?.["安全交底"];
+  const technicalNote = orderInfo?.["技术验收标准"];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <span>{task.task}</span>
-            <Badge variant="outline">{task.specialty}</Badge>
-            <Badge variant="secondary">{task.jobType}</Badge>
+            <span>{task.task ?? workProcessName ?? "未知工序"}</span>
+            {task.specialty && <Badge variant="outline">{task.specialty}</Badge>}
+            {task.jobType && <Badge variant="secondary">{task.jobType}</Badge>}
           </DialogTitle>
         </DialogHeader>
 
@@ -55,69 +105,118 @@ export function TaskDetailDialog({ open, onOpenChange, task }: TaskDetailDialogP
           </TabsContent>
 
           <TabsContent value="drawings" className="mt-4 flex-1">
-            <div className="h-full bg-gray-100 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <div className="text-4xl mb-2">📐</div>
-                <p>平面图纸视口</p>
-                <p className="text-sm">支持缩放查看</p>
-                <p className="text-xs text-gray-400 mt-2">
-                  支持缩放查看
-                </p>
+            {isLoading ? (
+              <div className="h-full flex items-center justify-center text-muted-foreground">
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                加载图纸中...
               </div>
-            </div>
+            ) : error ? (
+              <div className="h-full flex flex-col items-center justify-center text-destructive gap-2">
+                <ShieldAlert className="h-6 w-6" />
+                <p className="text-sm">获取图纸失败：{error.message}</p>
+              </div>
+            ) : planeDrawings.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-auto pr-2">
+                {planeDrawings.map((src, index) => (
+                  <div
+                    key={`${src}-${index}`}
+                    className="relative group cursor-pointer"
+                    onClick={() => setSelectedImage(src)}
+                  >
+                    <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border">
+                      <img src={src} alt={`图纸 ${index + 1}`} className="h-full w-full object-cover" />
+                    </div>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all rounded-lg flex items-center justify-center">
+                      <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-full bg-gray-100 flex items-center justify-center text-gray-500 text-sm">
+                暂无平面图纸
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="details" className="mt-4 flex-1 overflow-auto">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {detailImages.map((image, index) => (
-                <div key={index} className="relative group cursor-pointer" onClick={() => setSelectedImage(image)}>
-                  <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors">
-                    <div className="text-center text-gray-500">
-                      <div className="text-2xl mb-1">📷</div>
-                      <p className="text-sm">大样图 {index + 1}</p>
+            {isLoading ? (
+              <div className="h-full flex items-center justify-center text-muted-foreground">
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                加载节点大样图中...
+              </div>
+            ) : error ? (
+              <div className="h-full flex flex-col items-center justify-center text-destructive gap-2">
+                <ShieldAlert className="h-6 w-6" />
+                <p className="text-sm">获取节点大样失败：{error.message}</p>
+              </div>
+            ) : detailImages.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pr-2">
+                {detailImages.map((src, index) => (
+                  <div
+                    key={`${src}-${index}`}
+                    className="relative group cursor-pointer"
+                    onClick={() => setSelectedImage(src)}
+                  >
+                    <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border">
+                      <img src={src} alt={`节点大样图 ${index + 1}`} className="h-full w-full object-cover" />
+                    </div>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all rounded-lg flex items-center justify-center">
+                      <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg flex items-center justify-center">
-                    <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                暂无节点大样图
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="disclaimer" className="mt-4 flex-1 overflow-auto">
-            <div className="prose max-w-none text-sm text-gray-700 space-y-3">
-              <p><strong>施工安全注意事项：</strong></p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>砌筑材料（砖、砂浆、砌块）堆放稳固，距临边（如脚手架边缘、楼板边缘）不小于 1m，高度不超过 1.5m，防止倾倒；墙板堆放需立放并固定，避免侧翻。</li>
-                <li>施工人员必须佩戴安全帽、安全带等防护用品，严禁酒后作业。</li>
-                <li>高空作业时，必须设置安全防护网，确保施工安全。</li>
-                <li>施工过程中如遇恶劣天气，应立即停止作业，确保人员安全。</li>
-              </ul>
-              <p><strong>质量要求：</strong></p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>严格按照设计图纸和施工规范进行施工。</li>
-                <li>材料进场前必须进行质量检验，不合格材料严禁使用。</li>
-                <li>施工过程中应进行质量自检，发现问题及时整改。</li>
-              </ul>
-              <p className="text-xs text-gray-500 mt-4">
-                * 本声明仅供参考，具体施工要求请以实际工程图纸和规范为准。
-              </p>
+            <div className="prose max-w-none text-sm text-gray-700 space-y-4">
+              {workDescription && (
+                <div>
+                  <p className="font-semibold">工单内容</p>
+                  <p>{workDescription}</p>
+                </div>
+              )}
+              {safetyNote && (
+                <div>
+                  <p className="font-semibold">安全交底</p>
+                  <p>{safetyNote}</p>
+                </div>
+              )}
+              {technicalNote && (
+                <div>
+                  <p className="font-semibold">技术验收标准</p>
+                  <p>{technicalNote}</p>
+                </div>
+              )}
+              {!workDescription && !safetyNote && !technicalNote && (
+                <p className="text-gray-500 text-sm">暂无交底文件信息</p>
+              )}
             </div>
           </TabsContent>
 
           <TabsContent value="tutorial" className="mt-4 flex-1">
-            <div className="h-full bg-gray-100 rounded-lg flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <div className="text-4xl mb-2">🎥</div>
-                <p>施工教程视频</p>
-                <p className="text-sm">点击播放按钮开始观看</p>
-                <Button className="mt-4" size="lg">
-                  <Play className="h-5 w-5 mr-2" />
-                  播放视频
-                </Button>
+            {tutorialVideo ? (
+              <video
+                src={tutorialVideo}
+                controls
+                className="w-full h-full rounded-lg bg-black object-contain"
+              >
+                您的浏览器不支持播放该视频。
+              </video>
+            ) : (
+              <div className="h-full bg-gray-100 rounded-lg flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <div className="text-4xl mb-2">🎥</div>
+                  <p>暂无施工教程视频</p>
+                </div>
               </div>
-            </div>
+            )}
           </TabsContent>
         </Tabs>
 
@@ -128,12 +227,8 @@ export function TaskDetailDialog({ open, onOpenChange, task }: TaskDetailDialogP
               <DialogHeader>
                 <DialogTitle>节点大样图</DialogTitle>
               </DialogHeader>
-              <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <div className="text-4xl mb-2">🔍</div>
-                  <p>大图查看</p>
-                  <p className="text-sm">支持缩放和拖拽</p>
-                </div>
+              <div className="bg-black/5 rounded-lg overflow-hidden">
+                <img src={selectedImage} alt="节点大样图" className="w-full h-full object-contain" />
               </div>
             </DialogContent>
           </Dialog>
