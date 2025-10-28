@@ -85,9 +85,33 @@ export interface ProjectDetailResponse {
   project_info: ProjectInfoRow[];
 }
 
-export interface ProcessInfoResponse {
-  // 文档未提供字段，留作泛型对象
+export interface ProcessInfoData {
   [key: string]: unknown;
+  施工工序?: string;
+  持续时间?: string;
+  开始时间?: string;
+  结束时间?: string;
+  施工人数?: number;
+  施工工种?: string;
+  人工成本?: number;
+  拆单名称?: string;
+}
+
+export interface OrderInfoData {
+  [key: string]: unknown;
+  工单内容?: string;
+  详细信息?: string;
+  节点大样图?: string;
+  设计交底?: string;
+  安全交底?: string;
+  技术验收标准?: string;
+  构件?: string[];
+  视频?: string;
+}
+
+export interface ProcessInfoResponse {
+  process_info?: ProcessInfoData;
+  order_info?: OrderInfoData;
 }
 
 export interface ProjectListItem {
@@ -182,10 +206,17 @@ export async function getProjectDetail(projectId: string, token?: string): Promi
   return parseResponse<ProjectDetailResponse>(response);
 }
 
-export async function getProcessInfo(projectId: string, token?: string): Promise<ProcessInfoResponse> {
+export async function getProcessInfo(
+  projectId: string,
+  token?: string,
+  options?: { workProcessName?: string }
+): Promise<ProcessInfoResponse> {
   const url = new URL(`${PROJECT_SERVICE_BASE_URL}/process_info`);
   if (projectId) {
     url.searchParams.set("project_id", projectId);
+  }
+  if (options?.workProcessName) {
+    url.searchParams.set("work_process_name", options.workProcessName);
   }
 
   const response = await fetch(url.toString(), {
