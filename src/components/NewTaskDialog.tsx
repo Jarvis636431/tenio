@@ -27,6 +27,7 @@ interface TaskItem {
   endTime: string;
   constructionSituation: string;
   prerequisiteProcess: string;
+  prerequisiteTasks?: number[];
   quantity: number;
   quantityUnit: string;
   overtime: string;
@@ -34,6 +35,7 @@ interface TaskItem {
   actualWorkDays: number;
   constructionMethod: string;
   directDependency: string;
+  dependentTasks?: number[];
   remarks: string;
   selectedConstructionMethod: string;
   materialCost: number;
@@ -144,6 +146,8 @@ export function NewTaskDialog({ open, onOpenChange, onAdd, existingTasks, projec
       endTime: formData.endTime,
       workerCount: formData.workerCount,
       jobType: formData.jobType,
+      prerequisiteTasks: [...formData.prerequisiteTasks],
+      dependentTasks: [...formData.dependentTasks],
       prerequisiteProcess: formData.prerequisiteTasks.join(', '),
       directDependency: formData.dependentTasks.join(', '),
       remarks: `${formData.team && formData.team !== '未指定' ? `指定班组: ${formData.team}。` : ''}${formData.remarks}`,

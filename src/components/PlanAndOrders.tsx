@@ -228,6 +228,14 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   const handleAddTask = (taskData: any) => {
     const nextId =
       allData.length > 0 ? Math.max(...allData.map((item) => item.id)) + 1 : 1;
+
+    const prerequisites = Array.isArray(taskData.prerequisiteTasks)
+      ? taskData.prerequisiteTasks.join(', ')
+      : String(taskData.prerequisiteProcess || '');
+    const successors = Array.isArray(taskData.dependentTasks)
+      ? taskData.dependentTasks.join(', ')
+      : String(taskData.directDependency || '');
+
     const newTask: TaskItem = {
       id: nextId,
       task: taskData.task,
@@ -239,22 +247,21 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
       startTime: taskData.startTime,
       endTime: taskData.endTime,
       constructionSituation: "标准层施工",
-      prerequisiteProcess: taskData.prerequisiteTasks.join(', '),
+      prerequisiteProcess: prerequisites,
       quantity: 0,
       quantityUnit: "个",
       overtime: "否",
       duration: "1天",
       actualWorkDays: 1,
       constructionMethod: "人工",
-      directDependency: taskData.dependentTasks.join(', '),
+      directDependency: successors,
       remarks: taskData.remarks,
       selectedConstructionMethod: "人工",
       materialCost: 0,
       laborCost: 0,
       floor: 1
     };
-    
-    // 这里可以添加保存到数据库的逻辑
+
     console.log('新增任务:', newTask);
     setIsNewTaskDialogOpen(false);
   };
