@@ -430,8 +430,6 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                           <TableHead className="w-[234px] bg-white">
                             任务
                           </TableHead>
-                          <TableHead className="w-[120px] bg-white">所属专业</TableHead>
-                          <TableHead className="w-[120px] bg-white">构件</TableHead>
                           <TableHead className="w-[100px] bg-white">人数</TableHead>
                           <TableHead className="w-[120px] bg-white">工种</TableHead>
                           <TableHead className="w-[120px] bg-white">总成本</TableHead>
@@ -448,14 +446,6 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                             <TableCell className="sticky left-0 z-20 w-[234px] bg-white py-2">
                               <div className="text-sm">{item.task}</div>
                             </TableCell>
-                            <TableCell className="w-[120px] bg-white py-2">
-                              {item.specialty && (
-                                <Badge variant="outline" className="bg-category-blue-50 text-category-blue-700 border-category-blue-200">
-                                  {item.specialty}
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="w-[120px] bg-white py-2">{item.component}</TableCell>
                             <TableCell className="w-[100px] bg-white py-2">{item.workerCount}</TableCell>
                             <TableCell className="w-[120px] bg-white py-2">
                               {item.jobType && (
