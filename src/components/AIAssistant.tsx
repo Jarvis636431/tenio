@@ -4,7 +4,6 @@ import { Sparkles, X, Send, WifiOff, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useProject } from "@/contexts/ProjectContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -24,6 +23,7 @@ interface Message {
 type ConnectionStatus = "idle" | "connecting" | "open" | "closed" | "error";
 
 const AI_WS_URL = import.meta.env.VITE_SOCKET_URL ||"";
+const DEBUG_TAG = "[ai-ws-debug]";
 
 function createMessageId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -86,15 +86,18 @@ export function AIAssistant() {
     };
 
     setConnectionStatus("connecting");
+    console.debug(DEBUG_TAG, "attempting connection", { projectId, hasToken: Boolean(token) });
     const ws = new WebSocket(buildUrl());
     socketRef.current = ws;
 
     ws.onopen = () => {
       setConnectionStatus("open");
       setErrorHint(null);
+      console.debug(DEBUG_TAG, "connection opened");
     };
 
     ws.onmessage = (event) => {
+      console.debug(DEBUG_TAG, "raw message", event.data);
       try {
         const data = JSON.parse(event.data);
         handleServerMessage(data);
@@ -107,15 +110,22 @@ export function AIAssistant() {
       console.error("AI WebSocket error", event);
       setConnectionStatus("error");
       setErrorHint("AI 服务连接异常，请检查网络或稍后再试");
+      console.debug(DEBUG_TAG, "socket error event", event);
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
+      console.debug(DEBUG_TAG, "connection closed", {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean,
+      });
       setConnectionStatus("closed");
       setIsThinking(false);
       setErrorHint("AI 服务已断开，请稍后重试");
     };
 
     return () => {
+      console.debug(DEBUG_TAG, "cleanup: closing socket");
       ws.close();
       socketRef.current = null;
     };
@@ -189,6 +199,7 @@ export function AIAssistant() {
 
     try {
       ws.send(JSON.stringify(payload));
+      console.debug(DEBUG_TAG, "sent payload", payload);
     } catch (err) {
       console.error("send message error", err);
       setMessages((prev) => [
@@ -404,8 +415,8 @@ export function AIAssistant() {
             </div>
           </CardHeader>
           
-          <CardContent className="px-0 flex-1">
-            <ScrollArea className="h-full px-4" ref={scrollAreaRef}>
+          <CardContent className="px-0 flex-1 overflow-hidden min-h-0">
+            <div className="h-full px-4 overflow-y-auto" ref={scrollAreaRef}>
               <div className="space-y-4 py-4">
                 {messages.map((message) => (
                   <div
@@ -462,7 +473,7 @@ export function AIAssistant() {
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           </CardContent>
 
           {errorHint && (
