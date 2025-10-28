@@ -58,6 +58,7 @@ export function AIAssistant() {
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
+  const hasSentUserMessageRef = useRef(false);
   const { currentProject } = useProject();
   const { token } = useAuth();
 
@@ -108,6 +109,7 @@ export function AIAssistant() {
         attempt: reconnectAttemptsRef.current + 1,
       });
 
+      hasSentUserMessageRef.current = false;
       const ws = new WebSocket(buildUrl());
       socketRef.current = ws;
 
@@ -162,6 +164,7 @@ export function AIAssistant() {
           return;
         }
 
+        hasSentUserMessageRef.current = false;
         setConnectionStatus("connecting");
         setErrorHint(null);
 
@@ -197,6 +200,7 @@ export function AIAssistant() {
         ws.close();
       }
       socketRef.current = null;
+      hasSentUserMessageRef.current = false;
     };
   }, [projectId, token]);
 
@@ -209,6 +213,7 @@ export function AIAssistant() {
     const handler = () => {
       const ws = socketRef.current;
       if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      if (!hasSentUserMessageRef.current) return;
       ws.send(JSON.stringify({ type: "ping" }));
     };
     const interval = setInterval(handler, 30000);
@@ -269,6 +274,7 @@ export function AIAssistant() {
     try {
       ws.send(JSON.stringify(payload));
       console.debug(DEBUG_TAG, "sent payload", payload);
+      hasSentUserMessageRef.current = true;
     } catch (err) {
       console.error("send message error", err);
       setMessages((prev) => [
