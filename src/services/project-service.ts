@@ -123,7 +123,7 @@ export interface ProjectListItem {
 }
 
 export interface ProjectListResponse {
-  projects: ProjectListItem[];
+  result: ProjectListItem[];
 }
 
 export interface AddProcessPayload {

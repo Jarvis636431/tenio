@@ -2314,6 +2314,8 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
         open={isTaskDetailDialogOpen}
         onOpenChange={setIsTaskDetailDialogOpen}
         task={selectedTaskForDetail}
+        projectId={currentProject?.id}
+        workProcessName={selectedTaskForDetail?.task}
       />
     </div>
   );

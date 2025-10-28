@@ -62,7 +62,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     setIsRefreshing(true);
     try {
       const response = await getProjectList(token, user.id);
-      const projectList: Project[] = response.projects.map(item => ({
+      const projectList: Project[] = response.result.map(item => ({
         id: item.project_id,
         name: item.name,
         description: item.description,

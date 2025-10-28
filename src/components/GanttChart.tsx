@@ -378,6 +378,8 @@ export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
         open={isTaskDetailDialogOpen}
         onOpenChange={setIsTaskDetailDialogOpen}
         task={selectedTaskForDetail}
+        projectId={currentProject?.id}
+        workProcessName={selectedTaskForDetail?.task}
       />
     </div>
   );
