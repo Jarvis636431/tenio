@@ -220,13 +220,15 @@ export function TaskDetailDialog({
 
           <TabsContent value="tutorial" className="mt-4 flex-1">
             {tutorialVideo ? (
-              <video
-                src={tutorialVideo}
-                controls
-                className="w-full h-full rounded-lg bg-black object-contain"
-              >
-                您的浏览器不支持播放该视频。
-              </video>
+              <div className="h-full w-full rounded-lg overflow-hidden bg-black">
+                <iframe
+                  title="施工教程视频"
+                  src={tutorialVideo}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  allowFullScreen
+                  className="h-full w-full border-0"
+                />
+              </div>
             ) : (
               <div className="h-full bg-gray-100 rounded-lg flex items-center justify-center">
                 <div className="text-center text-gray-500">
