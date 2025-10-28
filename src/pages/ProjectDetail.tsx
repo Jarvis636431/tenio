@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import BasicInfo from "@/components/BasicInfo";
 import { RealTimeMonitoring } from "@/components/RealTimeMonitoring";
@@ -8,6 +8,8 @@ import { PlanAndOrders } from "@/components/PlanAndOrders";
 import { ProjectHomepage } from "@/components/ProjectHomepage";
 import { useProject } from "@/contexts/ProjectContext";
 import { PageHeader } from "@/components/PageHeader";
+import { useProjectSchedule } from "@/hooks/useProjectSchedule";
+import type { ProjectInfoRow } from "@/services/project-service";
 
 
 export default function ProjectDetail() {
@@ -16,6 +18,46 @@ export default function ProjectDetail() {
   const [activeView, setActiveView] = useState("homepage");
   const { projects } = useProject();
   const [basicInfoActions, setBasicInfoActions] = useState<React.ReactNode>(null);
+  const { projectInfo } = useProjectSchedule();
+
+  const totalDurationLabel = useMemo(() => {
+    if (!projectInfo || projectInfo.length === 0) {
+      return "";
+    }
+
+    const totalDurationRow = projectInfo.find((row: ProjectInfoRow) => {
+      const label = row["项目信息"] ?? row["项目统计"];
+      return typeof label === "string" && label.includes("总工期");
+    });
+
+    if (!totalDurationRow) {
+      return "";
+    }
+
+    const valueKey = Object.keys(totalDurationRow).find((key) => {
+      if (key === "项目信息" || key === "项目统计" || key.toLowerCase().includes("index")) {
+        return false;
+      }
+      const value = totalDurationRow[key];
+      return value !== undefined && value !== null && String(value).trim() !== "";
+    });
+
+    if (!valueKey) {
+      return "";
+    }
+
+    const value = totalDurationRow[valueKey];
+    const result = typeof value === "string" ? value : String(value ?? "");
+    return result.trim();
+  }, [projectInfo]);
+
+  const planViews = useMemo(() => new Set([
+    "plan-and-orders",
+    "task-overview",
+    "gantt-chart",
+    "plan-overview",
+    "order-management"
+  ]), []);
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
@@ -146,6 +188,7 @@ export default function ProjectDetail() {
           <PageHeader 
             title={getViewTitle()} 
             actions={activeView === "basic-info" ? basicInfoActions : undefined} 
+            titleExtra={planViews.has(activeView) && totalDurationLabel ? `总工期：${totalDurationLabel}` : undefined}
           />
         </div>
 

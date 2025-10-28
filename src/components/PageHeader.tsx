@@ -4,16 +4,24 @@ interface PageHeaderProps {
   title?: string;
   actions?: ReactNode;
   className?: string;
+  titleExtra?: ReactNode;
 }
 
-export function PageHeader({ title, actions, className = "" }: PageHeaderProps) {
+export function PageHeader({ title, actions, className = "", titleExtra }: PageHeaderProps) {
   return (
     <div className={`flex items-center justify-between mb-2 ${className}`}>
       <div className="flex items-center">
         {title && (
-          <h1 className="text-xl font-semibold text-foreground">
-            {title}
-          </h1>
+          <>
+            <h1 className="text-xl font-semibold text-foreground">
+              {title}
+            </h1>
+            {titleExtra && (
+              <span className="ml-3 text-sm text-muted-foreground whitespace-nowrap">
+                {titleExtra}
+              </span>
+            )}
+          </>
         )}
       </div>
       {actions && (
@@ -24,4 +32,3 @@ export function PageHeader({ title, actions, className = "" }: PageHeaderProps) 
     </div>
   );
 }
-
