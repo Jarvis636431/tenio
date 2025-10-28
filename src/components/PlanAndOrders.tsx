@@ -28,8 +28,6 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   const [searchTerm, setSearchTerm] = useState("");
   const [jobFilter, setJobFilter] = useState("all");
   const [floorFilter, setFloorFilter] = useState("all");
-  const [sortBy, setSortBy] = useState<"task" | "duration" | "workerCount" | "totalCost">("task");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
   const [selectedItem, setSelectedItem] = useState<TaskItem | null>(null);
@@ -68,59 +66,13 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
 
   // 过滤和排序数据
   const filteredData = useMemo(() => {
-    let filtered = allData.filter(item => {
+    return allData.filter(item => {
       const matchesSearch = item.task.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesJob = jobFilter === "all" || item.jobType === jobFilter;
       const matchesFloor = floorFilter === "all" || item.floor.toString() === floorFilter;
       return matchesSearch && matchesJob && matchesFloor;
     });
-
-    // 排序
-    filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
-
-      switch (sortBy) {
-        case "task": {
-          // 自定义楼层排序：1-9层 -> 10层 -> 跨楼层(0/负数)
-          const floorRank = (f?: number) => {
-            if (!f || f <= 0) return 101; // 跨楼层最后
-            if (f === 10) return 100;     // 10层排在普通楼层之后
-            return f;                     // 1-9层按数字
-          };
-          const ra = floorRank(a.floor);
-          const rb = floorRank(b.floor);
-          if (ra !== rb) return ra - rb;
-          // 同楼层时再按任务名称
-          aValue = a.task;
-          bValue = b.task;
-          break;
-        }
-        case "duration":
-          aValue = a.actualWorkDays;
-          bValue = b.actualWorkDays;
-          break;
-        case "workerCount":
-          aValue = a.workerCount;
-          bValue = b.workerCount;
-          break;
-        case "totalCost":
-          aValue = a.totalCost;
-          bValue = b.totalCost;
-          break;
-        default:
-          aValue = a.task;
-          bValue = b.task;
-      }
-
-      if (sortOrder === "asc") {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-      }
-    });
-
-    return filtered;
-  }, [allData, searchTerm, jobFilter, floorFilter, sortBy, sortOrder]);
+  }, [allData, searchTerm, jobFilter, floorFilter]);
 
   // 分页数据
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -365,7 +317,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   // 重置分页当搜索条件改变时
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, jobFilter, floorFilter, sortBy, sortOrder]);
+  }, [searchTerm, jobFilter, floorFilter, ]);
 
   useEffect(() => {
     const handleRefresh = () => {
