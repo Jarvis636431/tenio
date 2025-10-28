@@ -23,7 +23,7 @@ interface Message {
 
 type ConnectionStatus = "idle" | "connecting" | "open" | "closed" | "error";
 
-const AI_WS_URL = import.meta.env.VITE_AI_WEBSOCKET_URL || "";
+const AI_WS_URL = import.meta.env.VITE_SOCKET_URL ||"";
 
 function createMessageId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -226,6 +226,10 @@ export function AIAssistant() {
     const { type } = data || {};
 
     switch (type) {
+      case "chunk": {
+        setIsThinking(true);
+        break;
+      }
       case "done": {
         setIsThinking(false);
         if (data?.text) {
