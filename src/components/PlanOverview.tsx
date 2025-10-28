@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
-import { Calendar, BarChart3, DollarSign, Package, Users, Wrench, ChevronRight } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { Calendar, BarChart3 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { GanttChart } from "@/components/GanttChart";
+import { useProjectSchedule, ProjectScheduleItem } from "@/hooks/useProjectSchedule";
 
 interface PlanOverviewProps {
   showExpandButton?: boolean;
@@ -32,120 +32,51 @@ interface ScheduleData {
   };
 }
 
-// 解析CSV行，处理引号包围的字段
-const parseCsvRow = (row: string): string[] => {
-  const result: string[] = [];
-  let current = '';
-  let inQuotes = false;
-  
-  for (let i = 0; i < row.length; i++) {
-    const char = row[i];
-    
-    if (char === '"') {
-      if (inQuotes && row[i + 1] === '"') {
-        // 转义的引号
-        current += '"';
-        i++; // 跳过下一个引号
-      } else {
-        // 切换引号状态
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',' && !inQuotes) {
-      // 字段分隔符
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  
-  // 添加最后一个字段
-  result.push(current.trim());
-  return result;
+const getWorkerBadgeColor = (worker: string) => {
+  const colors: Record<string, string> = {
+    "木工": "bg-category-blue-100 text-category-blue-800",
+    "混凝土工": "bg-category-orange-100 text-category-orange-800",
+    "砌筑工": "bg-category-green-100 text-category-green-800",
+    "抹灰工": "bg-category-purple-100 text-category-purple-800",
+    "安装工": "bg-pink-100 text-pink-800",
+  };
+  return colors[worker] || "bg-gray-100 text-gray-800";
 };
 
-// 从任务总表CSV加载数据（预计约753条）
-const loadScheduleData = async (): Promise<ScheduleData[]> => {
-  try {
-    const csvUrl = '/Database/10层mock数据.csv';
-    const resp = await fetch(csvUrl);
-    if (!resp.ok) {
-      console.error('Failed to fetch CSV:', resp.status, resp.statusText);
-      return [];
-    }
-    const text = await resp.text();
-    const lines = text.trim().split(/\r?\n/);
-    if (lines.length <= 1) return [];
+const formatCurrency = (amount: number) => `¥${amount.toLocaleString()}`;
 
-    const headers = parseCsvRow(lines[0]);
-    const get = (arr: string[], key: string) => {
-      const idx = headers.indexOf(key);
-      if (idx === -1) return '';
-      return arr[idx] ?? '';
-    };
+export function PlanOverview({ showExpandButton = false, onExpandSidebar }: PlanOverviewProps) {
+  const { scheduleItems, isLoading, error } = useProjectSchedule();
 
-    const scheduleData: ScheduleData[] = [];
-    let id = 1;
+  const scheduleData = useMemo<ScheduleData[]>(() => {
+    return scheduleItems.map((item: ProjectScheduleItem) => {
+      const materialCost = item.materialCost || 0;
+      const laborCost = item.laborCost || 0;
+      const totalCost = item.totalCost || 0;
+      const equipmentCost = Math.max(0, totalCost - materialCost - laborCost);
 
-    for (let i = 1; i < lines.length; i++) {
-      const row = lines[i];
-      if (!row) continue;
-      const cols = parseCsvRow(row);
-
-      const task = get(cols, '任务');
-      if (!task) continue;
-      const startDate = get(cols, '开始时间');
-      const endDate = get(cols, '结束时间');
-      const duration = get(cols, '持续时长') || '';
-      const worker = get(cols, '工种') || '其他';
-      const count = Number(get(cols, '施工人数')) || 0;
-      const totalCost = Number(get(cols, '总成本')) || 0;
-      const materialCost = Number(get(cols, '材料价格')) || 0;
-      const laborCost = Number(get(cols, '劳动力成本')) || 0;
-
-      scheduleData.push({
-        id: id++,
-        task,
-        startDate,
-        endDate,
-        duration,
-        worker,
-        count,
+      return {
+        id: item.id,
+        task: item.task || `任务${item.id}`,
+        startDate: item.startTime || "",
+        endDate: item.endTime || "",
+        duration: item.duration || "",
+        worker: item.jobType || "其他",
+        count: item.workerCount || 0,
         totalCost,
         costDetails: {
           materialCost,
           laborCost,
-          equipmentCost: Math.max(0, totalCost - materialCost - laborCost),
-          materialDesc: '材料费用',
-          laborDesc: '劳务费用',
-          equipmentDesc: '设备/其他费用'
-        }
-      });
-    }
+          equipmentCost,
+          materialDesc: "材料费用",
+          laborDesc: "劳务费用",
+          equipmentDesc: "设备/其他费用",
+        },
+      };
+    });
+  }, [scheduleItems]);
 
-    console.log('Loaded schedule data from CSV:', scheduleData.length);
-    return scheduleData;
-  } catch (error) {
-    console.error('Error loading schedule data:', error);
-    return [];
-  }
-};
-
-export function PlanOverview({ showExpandButton = false, onExpandSidebar }: PlanOverviewProps) {
-  const [scheduleData, setScheduleData] = useState<ScheduleData[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      const data = await loadScheduleData();
-      setScheduleData(data);
-      setLoading(false);
-    };
-    loadData();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -156,23 +87,24 @@ export function PlanOverview({ showExpandButton = false, onExpandSidebar }: Plan
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center space-y-2 text-muted-foreground">
+          <p>无法获取项目施工数据</p>
+          <p className="text-sm">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
-const getWorkerBadgeColor = (worker: string) => {
-  const colors: {
-    [key: string]: string;
-  } = {
-    "木工": "bg-category-blue-100 text-category-blue-800",
-    "混凝土工": "bg-category-orange-100 text-category-orange-800",
-    "砌筑工": "bg-category-green-100 text-category-green-800",
-    "抹灰工": "bg-category-purple-100 text-category-purple-800",
-    "安装工": "bg-pink-100 text-pink-800"
-  };
-  return colors[worker] || "bg-gray-100 text-gray-800";
-};
-
-const formatCurrency = (amount: number) => {
-  return `¥${amount.toLocaleString()}`;
-};
+  if (scheduleData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        当前项目暂无施工计划数据
+      </div>
+    );
+  }
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ScheduleData | null>(null);
