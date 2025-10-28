@@ -549,7 +549,6 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                     {renderField("开始时间", selectedItem.startTime, "startTime")}
                     {renderField("结束时间", selectedItem.endTime, "endTime")}
                     {renderField("持续时长", selectedItem.duration, "duration")}
-                    {renderField("实际工作天数", `${selectedItem.actualWorkDays}天`, "actualWorkDays")}
                     {renderField("是否加班", selectedItem.overtime, "overtime")}
                     {renderField("施工情况", selectedItem.constructionSituation, "constructionSituation")}
                   </div>
@@ -564,9 +563,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     {renderField("任务名称", selectedItem.task, "task")}
-                    {renderField("所属专业", selectedItem.specialty || "无", "specialty")}
                     {renderField("施工方式", selectedItem.constructionMethod, "constructionMethod")}
-                    {renderField("构件", selectedItem.component, "component")}
                     {renderField("工种", selectedItem.jobType || "无", "jobType")}
                     {renderField("施工人数", String(selectedItem.workerCount), "workerCount")}
                     {renderField("层数", `${selectedItem.floor}层`, "floor")}
@@ -584,10 +581,6 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                   <div className="grid grid-cols-2 gap-4">
                     {renderField("前置工序", selectedItem.prerequisiteProcess || "无", "prerequisiteProcess")}
                     {renderField("直接依赖任务", selectedItem.directDependency, "directDependency")}
-                    {renderField("工程量", `${selectedItem.quantity} ${selectedItem.quantityUnit}`, "quantity")}
-                    {renderField("材料价格", `¥${selectedItem.materialCost.toLocaleString()}`, "materialCost")}
-                    {renderField("劳动力成本", `¥${selectedItem.laborCost.toLocaleString()}`, "laborCost")}
-                    {renderField("总成本", `¥${selectedItem.totalCost.toLocaleString()}`, "totalCost")}
                     <div className="col-span-2">
                       {renderField("备注", selectedItem.remarks || "无", "remarks")}
                     </div>
