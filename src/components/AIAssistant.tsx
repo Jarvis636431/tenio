@@ -117,6 +117,18 @@ export function AIAssistant() {
         setConnectionStatus("open");
         setErrorHint(null);
         console.debug(DEBUG_TAG, "connection opened");
+
+        const initPayload = {
+          type: "init",
+          project_id: projectId,
+          token,
+        };
+        try {
+          ws.send(JSON.stringify(initPayload));
+          console.debug(DEBUG_TAG, "sent init payload", initPayload);
+        } catch (err) {
+          console.error("send init payload error", err);
+        }
       };
 
       ws.onmessage = (event) => {
