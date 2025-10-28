@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Eye, Loader2, ShieldAlert } from "lucide-react";
 import { getProcessInfo, OrderInfoData } from "@/services/project-service";
 import { useAuth } from "@/contexts/AuthContext";

@@ -72,9 +72,21 @@ export function AIAssistant() {
       setErrorHint("未配置 AI WebSocket 地址，请联系管理员");
       return;
     }
+    if (!projectId || !token) {
+      setConnectionStatus("error");
+      setErrorHint("缺少项目或登录信息，无法连接 AI 服务");
+      return;
+    }
+
+    const buildUrl = () => {
+      const url = new URL(AI_WS_URL, window.location.origin);
+      url.searchParams.set("project_id", projectId);
+      url.searchParams.set("token", token);
+      return url.toString();
+    };
 
     setConnectionStatus("connecting");
-    const ws = new WebSocket(AI_WS_URL);
+    const ws = new WebSocket(buildUrl());
     socketRef.current = ws;
 
     ws.onopen = () => {
@@ -107,7 +119,7 @@ export function AIAssistant() {
       ws.close();
       socketRef.current = null;
     };
-  }, []);
+  }, [projectId, token]);
 
   useEffect(() => {
     if (!scrollAreaRef.current) return;
@@ -317,9 +329,6 @@ export function AIAssistant() {
       const body = {
         type: "hitl_decision",
         approved: true,
-        project_id: projectId,
-        token,
-        payload,
       };
       ws.send(JSON.stringify(body));
       setMessages((prev) =>
