@@ -1,58 +1,345 @@
 
-import { useState } from "react";
-import { Sparkles, X, Send } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Sparkles, X, Send, WifiOff, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useProject } from "@/contexts/ProjectContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 
 interface Message {
   id: string;
   content: string;
-  sender: "user" | "ai";
+  sender: "user" | "ai" | "system";
   timestamp: Date;
+  status?: "pending" | "streaming" | "done" | "error";
+  requiresApproval?: boolean;
+  approvalPayload?: unknown;
+  approvalResolved?: boolean;
+  metadata?: Record<string, unknown>;
+}
+
+type ConnectionStatus = "idle" | "connecting" | "open" | "closed" | "error";
+
+const AI_WS_URL = import.meta.env.VITE_AI_WEBSOCKET_URL || "";
+
+function createMessageId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "您好！我是天友智管平台的AI助手，您可以通过自然语言告诉我如何调整施工进度表，比如：'将钢筋绑扎任务延期3天'或'添加新的装修任务'。",
-      sender: "ai",
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const welcomeId = createMessageId();
+    return [
+      {
+        id: welcomeId,
+        content:
+          "您好！我是天友智管平台的 AI 助手，您可以告诉我如何调整施工进度，如“将钢筋绑扎任务延期 3 天”或“添加新的装修任务”。",
+        sender: "ai",
+        timestamp: new Date(),
+        status: "done",
+      },
+    ];
+  });
   const [inputMessage, setInputMessage] = useState("");
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("idle");
+  const [errorHint, setErrorHint] = useState<string | null>(null);
+  const [isThinking, setIsThinking] = useState(false);
+  const [isAwaitingApprovalResponse, setIsAwaitingApprovalResponse] = useState(false);
+  const socketRef = useRef<WebSocket | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const { currentProject } = useProject();
+  const { token } = useAuth();
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  const projectId = currentProject?.id || "";
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: inputMessage,
-      sender: "user",
-      timestamp: new Date()
+  const isConnected = connectionStatus === "open";
+
+  const showApprovalBanner = useMemo(
+    () => messages.some((msg) => msg.requiresApproval && !msg.approvalResolved),
+    [messages]
+  );
+
+  useEffect(() => {
+    if (!AI_WS_URL) {
+      setConnectionStatus("error");
+      setErrorHint("未配置 AI WebSocket 地址，请联系管理员");
+      return;
+    }
+
+    setConnectionStatus("connecting");
+    const ws = new WebSocket(AI_WS_URL);
+    socketRef.current = ws;
+
+    ws.onopen = () => {
+      setConnectionStatus("open");
+      setErrorHint(null);
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage("");
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        handleServerMessage(data);
+      } catch (err) {
+        console.error("AI message parse error", err);
+      }
+    };
 
-    // 模拟AI回复
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "我了解您的需求，正在为您处理...",
-        sender: "ai",
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    }, 1000);
+    ws.onerror = (event) => {
+      console.error("AI WebSocket error", event);
+      setConnectionStatus("error");
+      setErrorHint("AI 服务连接异常，请检查网络或稍后再试");
+    };
+
+    ws.onclose = () => {
+      setConnectionStatus("closed");
+      setIsThinking(false);
+      setErrorHint("AI 服务已断开，请稍后重试");
+    };
+
+    return () => {
+      ws.close();
+      socketRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!scrollAreaRef.current) return;
+    scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+  }, [messages, isThinking]);
+
+  useEffect(() => {
+    const handler = () => {
+      const ws = socketRef.current;
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: "ping" }));
+    };
+    const interval = setInterval(handler, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSendMessage = () => {
+    const trimmed = inputMessage.trim();
+    if (!trimmed) return;
+    if (!projectId || !token) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: createMessageId(),
+          content: "无法发送消息，缺少项目或登录信息。",
+          sender: "system",
+          timestamp: new Date(),
+          status: "error",
+        },
+      ]);
+      return;
+    }
+
+    const ws = socketRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: createMessageId(),
+          content: "发送失败：AI 服务未连接，请检查网络",
+          sender: "system",
+          timestamp: new Date(),
+          status: "error",
+        },
+      ]);
+      return;
+    }
+
+    const userMessage: Message = {
+      id: createMessageId(),
+      content: trimmed,
+      sender: "user",
+      timestamp: new Date(),
+      status: "done",
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setIsThinking(true);
+
+    const payload = {
+      type: "user",
+      project_id: projectId,
+      token,
+      text: trimmed,
+    };
+
+    try {
+      ws.send(JSON.stringify(payload));
+    } catch (err) {
+      console.error("send message error", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: createMessageId(),
+          content: "发送失败：网络异常",
+          sender: "system",
+          timestamp: new Date(),
+          status: "error",
+        },
+      ]);
+      setIsThinking(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleSendMessage();
+    }
+  };
+
+  const appendAIMessage = (content: string) => {
+    const aiMessage: Message = {
+      id: createMessageId(),
+      content,
+      sender: "ai",
+      timestamp: new Date(),
+      status: "done",
+    };
+    setMessages((prev) => [...prev, aiMessage]);
+  };
+
+  const handleServerMessage = (data: any) => {
+    const { type } = data || {};
+
+    switch (type) {
+      case "done": {
+        setIsThinking(false);
+        if (data?.text) {
+          appendAIMessage(String(data.text));
+        }
+
+        if (isAwaitingApprovalResponse) {
+          setIsAwaitingApprovalResponse(false);
+          window.dispatchEvent(new CustomEvent("plan:refresh-request"));
+        }
+        break;
+      }
+      case "approval": {
+        const approvalMessage: Message = {
+          id: createMessageId(),
+          content: String(data?.text ?? "AI 建议执行以下修改，是否确认？"),
+          sender: "ai",
+          timestamp: new Date(),
+          status: "done",
+          requiresApproval: true,
+          approvalPayload: data,
+        };
+        setMessages((prev) => [...prev, approvalMessage]);
+        setIsAwaitingApprovalResponse(true);
+        setIsThinking(false);
+        break;
+      }
+      case "error": {
+        const errorMsg = String(data?.text || "AI 服务返回错误");
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: createMessageId(),
+            content: errorMsg,
+            sender: "system",
+            timestamp: new Date(),
+            status: "error",
+          },
+        ]);
+        setIsThinking(false);
+        break;
+      }
+      case "info": {
+        const text = String(data?.text || "");
+        if (text) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: createMessageId(),
+              content: text,
+              sender: "system",
+              timestamp: new Date(),
+              status: "done",
+            },
+          ]);
+        }
+        break;
+      }
+      default: {
+        if (data?.text) {
+          appendAIMessage(String(data.text));
+          setIsThinking(false);
+        }
+      }
+    }
+  };
+
+  const handleApproveChange = (messageId: string, payload: unknown) => {
+    if (!projectId || !token) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId
+            ? {
+                ...msg,
+                status: "error",
+                content: `${msg.content}\n\n（无法提交审批结果，缺少项目或登录信息）`,
+              }
+            : msg
+        )
+      );
+      return;
+    }
+
+    const ws = socketRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId
+            ? {
+                ...msg,
+                status: "error",
+                content: `${msg.content}\n\n（发送审批结果失败，AI 服务未连接）`,
+              }
+            : msg
+        )
+      );
+      return;
+    }
+
+    try {
+      const body = {
+        type: "hitl_decision",
+        approved: true,
+        project_id: projectId,
+        token,
+        payload,
+      };
+      ws.send(JSON.stringify(body));
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, approvalResolved: true } : msg
+        )
+      );
+    } catch (error) {
+      console.error("approval send error", error);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId
+            ? {
+                ...msg,
+                status: "error",
+                content: `${msg.content}\n\n（发送审批结果失败，网络异常）`,
+              }
+            : msg
+        )
+      );
     }
   };
 
@@ -76,67 +363,132 @@ export function AIAssistant() {
             : "scale-95 opacity-0 translate-y-4 pointer-events-none"
         }`}
       >
-        <Card className="h-full shadow-2xl border-2">
+        <Card className="h-full shadow-2xl border-2 flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-category-blue-600" />
               AI助手
             </CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(false)}
-              className="h-8 w-8"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {connectionStatus !== "open" && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <WifiOff className="w-3 h-3" />
+                  {connectionStatus === "connecting"
+                    ? "连接中..."
+                    : connectionStatus === "error"
+                    ? "连接异常"
+                    : "已断开"}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+                className="h-8 w-8"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </CardHeader>
           
-          <CardContent className="p-0 flex flex-col h-[calc(100%-5rem)]">
-            {/* 消息区域 */}
-            <ScrollArea className="flex-1 px-4">
+          <CardContent className="px-0 flex-1">
+            <ScrollArea className="h-full px-4" ref={scrollAreaRef}>
               <div className="space-y-4 py-4">
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${
-                      message.sender === "user" ? "justify-end" : "justify-start"
-                    }`}
+                    className={cn("flex", {
+                      "justify-end": message.sender === "user",
+                      "justify-start": message.sender !== "user",
+                    })}
                   >
                     <div
-                      className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                        message.sender === "user"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      }`}
+                      className={cn(
+                        "max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-line",
+                        {
+                          "bg-primary text-primary-foreground": message.sender === "user",
+                          "bg-muted text-muted-foreground":
+                            message.sender === "ai",
+                          "border border-destructive/60 text-destructive bg-destructive/10":
+                            message.status === "error",
+                          "bg-secondary text-secondary-foreground":
+                            message.sender === "system" && message.status !== "error",
+                        }
+                      )}
                     >
-                      {message.content}
+                      <div>{message.content}</div>
+                      {message.requiresApproval && !message.approvalResolved && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              handleApproveChange(message.id, message.approvalPayload)
+                            }
+                          >
+                            <Check className="w-4 h-4 mr-1" />
+                            确认修改
+                          </Button>
+                          <span className="text-xs text-muted-foreground">
+                            请确认 AI 修改建议
+                          </span>
+                        </div>
+                      )}
+                      {message.approvalResolved && (
+                        <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                          <Check className="w-3 h-3" />
+                          已确认，等待执行结果
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
+                {isThinking && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    AI 正在思考中...
+                  </div>
+                )}
               </div>
             </ScrollArea>
-
-            {/* 输入区域 */}
-            <div className="p-4 border-t">
-              <div className="flex space-x-2">
-                <Input
-                  placeholder="输入调整指令，如：'将钢筋绑扎延期3天'"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  size="icon"
-                  disabled={!inputMessage.trim()}
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
           </CardContent>
+
+          {errorHint && (
+            <div className="px-4 pb-2 text-xs text-destructive flex items-center gap-2">
+              <WifiOff className="w-3 h-3" />
+              {errorHint}
+            </div>
+          )}
+
+          {showApprovalBanner && !isAwaitingApprovalResponse && (
+            <div className="px-4 pb-2 text-xs text-muted-foreground">
+              请确认 AI 的修改建议以继续后续操作。
+            </div>
+          )}
+
+          <CardFooter className="border-t px-4 py-3 flex flex-col gap-2">
+            <div className="flex space-x-2 w-full">
+              <Input
+                placeholder="输入调整指令，如：'将钢筋绑扎延期3天'"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="flex-1"
+                disabled={!isConnected}
+              />
+              <Button
+                onClick={handleSendMessage}
+                size="icon"
+                disabled={!inputMessage.trim() || !isConnected}
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+            {!isConnected && (
+              <span className="text-[11px] text-muted-foreground">
+                AI 服务连接不可用，无法发送消息。
+              </span>
+            )}
+          </CardFooter>
         </Card>
       </div>
     </>

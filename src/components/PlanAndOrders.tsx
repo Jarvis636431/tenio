@@ -43,7 +43,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   // 根据URL参数确定显示的内容
   const activeView = searchParams.get('tab') || 'task-overview';
 
-  const { scheduleItems, isLoading, error } = useProjectSchedule();
+  const { scheduleItems, isLoading, error, refetch } = useProjectSchedule();
   const allData = scheduleItems;
 
   // 工种类型
@@ -359,6 +359,14 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, jobFilter, floorFilter, sortBy, sortOrder]);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      refetch();
+    };
+    window.addEventListener("plan:refresh-request", handleRefresh);
+    return () => window.removeEventListener("plan:refresh-request", handleRefresh);
+  }, [refetch]);
 
   if (isLoading) {
     return (
