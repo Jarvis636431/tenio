@@ -73,11 +73,9 @@ export function TaskDetailDialog({
   const workDescription = orderInfo?.["工单内容"];
   const safetyNote = orderInfo?.["安全交底"];
   const technicalNote = orderInfo?.["技术验收标准"];
-  const highlightedComponentIds = useMemo(() => {
-    const raw = orderInfo?.["构件"];
-    if (!raw) return [];
-    return Array.isArray(raw) ? raw : [raw];
-  }, [orderInfo]);
+  const highlightedComponentIds = orderInfo?.["构件"] || [];
+
+  console.log("highlightedComponentIds:", highlightedComponentIds);
 
   if (!task) {
     return (
