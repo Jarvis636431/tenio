@@ -59,14 +59,30 @@ export interface UploadDocsResponse {
   parse_ids: string[];
 }
 
+export interface ScheduleRow {
+  背景?: string;
+  序号?: number | string;
+  施工工序?: string;
+  施工方式?: string;
+  施工情况?: string;
+  施工情况系数?: number[] | string;
+  工期?: number | string;
+  开始时间?: string;
+  结束时间?: string;
+  持续时长?: string;
+  实际工作天数?: string | number;
+  直接依赖任务?: string;
+  [key: string]: unknown;
+}
+
+export interface ProjectInfoRow {
+  [key: string]: unknown;
+}
+
 export interface ProjectDetailResponse {
-  project_id: string;
-  name: string;
-  description?: string;
-  config?: Record<string, unknown>;
-  status: string;
-  created_at: string;
-  updated_at?: string;
+  filename: string;
+  schedule: ScheduleRow[];
+  project_info: ProjectInfoRow[];
 }
 
 export interface ProcessInfoResponse {
