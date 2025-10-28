@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Loader2, ShieldAlert } from "lucide-react";
-import { getProcessInfo, OrderInfoData } from "@/services/project-service";
+import { getProcessInfo, OrderInfoData, ProcessInfoData } from "@/services/project-service";
 import { useAuth } from "@/contexts/AuthContext";
 import { ModelViewer } from "@/components/ModelViewer";
 
@@ -75,6 +75,11 @@ export function TaskDetailDialog({
   const workDescription = orderInfo?.["工单内容"];
   const safetyNote = orderInfo?.["安全交底"];
   const technicalNote = orderInfo?.["技术验收标准"];
+  const highlightedComponentIds = useMemo(() => {
+    const raw = orderInfo?.["构件"];
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw : [raw];
+  }, [orderInfo]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -99,6 +104,7 @@ export function TaskDetailDialog({
           <TabsContent value="3d" className="mt-4 flex-1">
             <ModelViewer
               src="/models/1012.ifc"
+              highlightIds={highlightedComponentIds}
               className="h-full"
             />
           </TabsContent>
