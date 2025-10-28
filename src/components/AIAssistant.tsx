@@ -24,6 +24,8 @@ type ConnectionStatus = "idle" | "connecting" | "open" | "closed" | "error";
 
 const AI_WS_URL = import.meta.env.VITE_SOCKET_URL ||"";
 const DEBUG_TAG = "[ai-ws-debug]";
+const INITIAL_RECONNECT_DELAY = 1000;
+const MAX_RECONNECT_DELAY = 30000;
 
 function createMessageId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -54,6 +56,8 @@ export function AIAssistant() {
   const [isAwaitingApprovalResponse, setIsAwaitingApprovalResponse] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef(0);
   const { currentProject } = useProject();
   const { token } = useAuth();
 
@@ -78,6 +82,15 @@ export function AIAssistant() {
       return;
     }
 
+    let shouldReconnect = true;
+
+    const clearReconnectTimer = () => {
+      if (reconnectTimeoutRef.current !== null) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+    };
+
     const buildUrl = () => {
       const url = new URL(AI_WS_URL, window.location.origin);
       url.searchParams.set("project_id", projectId);
@@ -85,48 +98,92 @@ export function AIAssistant() {
       return url.toString();
     };
 
-    setConnectionStatus("connecting");
-    console.debug(DEBUG_TAG, "attempting connection", { projectId, hasToken: Boolean(token) });
-    const ws = new WebSocket(buildUrl());
-    socketRef.current = ws;
-
-    ws.onopen = () => {
-      setConnectionStatus("open");
-      setErrorHint(null);
-      console.debug(DEBUG_TAG, "connection opened");
-    };
-
-    ws.onmessage = (event) => {
-      console.debug(DEBUG_TAG, "raw message", event.data);
-      try {
-        const data = JSON.parse(event.data);
-        handleServerMessage(data);
-      } catch (err) {
-        console.error("AI message parse error", err);
-      }
-    };
-
-    ws.onerror = (event) => {
-      console.error("AI WebSocket error", event);
-      setConnectionStatus("error");
-      setErrorHint("AI 服务连接异常，请检查网络或稍后再试");
-      console.debug(DEBUG_TAG, "socket error event", event);
-    };
-
-    ws.onclose = (event) => {
-      console.debug(DEBUG_TAG, "connection closed", {
-        code: event.code,
-        reason: event.reason,
-        wasClean: event.wasClean,
+    const connect = () => {
+      if (!shouldReconnect) return;
+      clearReconnectTimer();
+      setConnectionStatus("connecting");
+      console.debug(DEBUG_TAG, "attempting connection", {
+        projectId,
+        hasToken: Boolean(token),
+        attempt: reconnectAttemptsRef.current + 1,
       });
-      setConnectionStatus("closed");
-      setIsThinking(false);
-      setErrorHint("AI 服务已断开，请稍后重试");
+
+      const ws = new WebSocket(buildUrl());
+      socketRef.current = ws;
+
+      ws.onopen = () => {
+        reconnectAttemptsRef.current = 0;
+        clearReconnectTimer();
+        setConnectionStatus("open");
+        setErrorHint(null);
+        console.debug(DEBUG_TAG, "connection opened");
+      };
+
+      ws.onmessage = (event) => {
+        console.debug(DEBUG_TAG, "raw message", event.data);
+        try {
+          const data = JSON.parse(event.data);
+          handleServerMessage(data);
+        } catch (err) {
+          console.error("AI message parse error", err);
+        }
+      };
+
+      ws.onerror = (event) => {
+        console.error("AI WebSocket error", event);
+        setConnectionStatus("error");
+        setErrorHint("AI 服务连接异常，请检查网络或稍后再试");
+        console.debug(DEBUG_TAG, "socket error event", event);
+      };
+
+      ws.onclose = (event) => {
+        console.debug(DEBUG_TAG, "connection closed", {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+        });
+        setIsThinking(false);
+
+        if (!shouldReconnect) {
+          setConnectionStatus("closed");
+          setErrorHint(null);
+          return;
+        }
+
+        setConnectionStatus("connecting");
+        setErrorHint(null);
+
+        const nextAttempt = reconnectAttemptsRef.current + 1;
+        reconnectAttemptsRef.current = nextAttempt;
+        const delay = Math.min(
+          INITIAL_RECONNECT_DELAY * Math.pow(2, nextAttempt - 1),
+          MAX_RECONNECT_DELAY
+        );
+
+        console.debug(DEBUG_TAG, "scheduling reconnect", { nextAttempt, delay });
+        clearReconnectTimer();
+        reconnectTimeoutRef.current = window.setTimeout(() => {
+          reconnectTimeoutRef.current = null;
+          connect();
+        }, delay);
+      };
     };
+
+    connect();
 
     return () => {
-      console.debug(DEBUG_TAG, "cleanup: closing socket");
-      ws.close();
+      shouldReconnect = false;
+      clearReconnectTimer();
+      reconnectAttemptsRef.current = 0;
+      const ws = socketRef.current;
+      if (ws) {
+        ws.onopen = null;
+        ws.onmessage = null;
+        ws.onerror = null;
+        ws.onclose = null;
+        console.debug(DEBUG_TAG, "cleanup: closing socket");
+        ws.close();
+      }
       socketRef.current = null;
     };
   }, [projectId, token]);
@@ -394,14 +451,10 @@ export function AIAssistant() {
               AI助手
             </CardTitle>
             <div className="flex items-center gap-2">
-              {connectionStatus !== "open" && (
+              {connectionStatus === "error" && (
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <WifiOff className="w-3 h-3" />
-                  {connectionStatus === "connecting"
-                    ? "连接中..."
-                    : connectionStatus === "error"
-                    ? "连接异常"
-                    : "已断开"}
+                  {errorHint || "连接异常"}
                 </span>
               )}
               <Button
@@ -507,7 +560,7 @@ export function AIAssistant() {
                 <Send className="w-4 h-4" />
               </Button>
             </div>
-            {!isConnected && (
+            {connectionStatus === "error" && (
               <span className="text-[11px] text-muted-foreground">
                 AI 服务连接不可用，无法发送消息。
               </span>
