@@ -494,7 +494,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
                       >
                         {/* 任务条 - 可点击 */}
                         <div
-                          className="absolute top-1 h-10 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200 hover:brightness-110"
+                          className="absolute top-1 h-10 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg transition-all duration-200 hover:brightness-110"
                           style={{
                             left: `${item.startOffset * columnWidth}px`,
                             width: `${item.spanUnits * columnWidth}px`,
