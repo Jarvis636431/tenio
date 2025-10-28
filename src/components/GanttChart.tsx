@@ -67,26 +67,69 @@ const getWorkerBadgeClass = (worker: string): string => {
 };
 
 const parseDate = (dateStr: string): Date => {
-  // 解析 "2025/09/01" 格式的日期
-  if (dateStr.includes('/')) {
-    const parts = dateStr.split('/');
+  if (!dateStr) {
+    return new Date(2024, 0, 1);
+  }
+
+  const trimmed = dateStr.trim();
+
+  // 解析 "2025/09/01" 或 "2025/09/01 08:00" 格式的日期
+  if (trimmed.includes("/")) {
+    const [datePart, timePart] = trimmed.split(/\s+/);
+    const parts = datePart.split("/");
     if (parts.length === 3) {
-      const year = parseInt(parts[0]);
-      const month = parseInt(parts[1]) - 1; // JavaScript月份从0开始
-      const day = parseInt(parts[2]);
-      return new Date(year, month, day);
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const date = new Date(year, month, day);
+      if (timePart) {
+        const [hours, minutes] = timePart.split(":").map((v) => parseInt(v, 10));
+        if (!Number.isNaN(hours)) {
+          date.setHours(hours);
+        }
+        if (!Number.isNaN(minutes)) {
+          date.setMinutes(minutes);
+        }
+      }
+      return date;
     }
   }
-  
-  // 兼容旧的 "8月1日" 格式
-  const match = dateStr.match(/(\d+)月(\d+)日/);
-  if (match) {
-    const month = parseInt(match[1]) - 1; // JavaScript月份从0开始
-    const day = parseInt(match[2]);
-    return new Date(2024, month, day); // 假设是2024年
+
+  // 解析相对格式 "第X天 08:00" 或 "第X天08:00"
+  const relativeMatch = trimmed.match(/第\s*(\d+)\s*天\s*([0-9]{1,2})(?::([0-9]{2}))?/);
+  if (relativeMatch) {
+    const day = parseInt(relativeMatch[1], 10);
+    const hours = relativeMatch[2] ? parseInt(relativeMatch[2], 10) : 0;
+    const minutes = relativeMatch[3] ? parseInt(relativeMatch[3], 10) : 0;
+    const base = new Date(2024, 0, 1);
+    if (!Number.isNaN(day) && day > 0) {
+      base.setDate(base.getDate() + day - 1);
+    }
+    base.setHours(hours || 0, minutes || 0, 0, 0);
+    return base;
   }
-  
-  return new Date();
+
+  const relativeMatchNoTime = trimmed.match(/第\s*(\d+)\s*天/);
+  if (relativeMatchNoTime) {
+    const day = parseInt(relativeMatchNoTime[1], 10);
+    const base = new Date(2024, 0, 1);
+    if (!Number.isNaN(day) && day > 0) {
+      base.setDate(base.getDate() + day - 1);
+    }
+    base.setHours(0, 0, 0, 0);
+    return base;
+  }
+
+  // 兼容旧的 "8月1日" 格式
+  const match = trimmed.match(/(\d+)月(\d+)日/);
+  if (match) {
+    const month = parseInt(match[1], 10) - 1;
+    const day = parseInt(match[2], 10);
+    return new Date(2024, month, day);
+  }
+
+  // 如果无法解析，返回基准日期避免 NaN
+  return new Date(2024, 0, 1);
 };
 
 export function GanttChart({ data, onTaskDetail, onAddTask }: GanttChartProps) {
