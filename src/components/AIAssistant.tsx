@@ -18,6 +18,11 @@ interface Message {
   approvalPayload?: unknown;
   approvalResolved?: boolean;
   metadata?: Record<string, unknown>;
+  approvalDetails?: {
+    title?: string;
+    toolName?: string;
+    proposedArgs?: unknown;
+  };
 }
 
 type ConnectionStatus = "idle" | "connecting" | "open" | "closed" | "error";
@@ -32,6 +37,28 @@ function createMessageId() {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function extractApprovalContent(payload: any) {
+  const rawText =
+    typeof payload?.ai_message?.text === "string"
+      ? payload.ai_message.text
+      : typeof payload?.text === "string"
+      ? payload.text
+      : "AI 建议执行以下修改，是否确认？";
+
+  const [summaryText] = rawText.split(/PROPOSED_ARGS/i);
+
+  return {
+    text: summaryText.trim(),
+    title: typeof payload?.title === "string" ? payload.title : undefined,
+    toolName:
+      typeof payload?.pending_update_call?.tool_name === "string"
+        ? payload.pending_update_call.tool_name
+        : undefined,
+    proposedArgs:
+      payload?.pending_update_call?.args ?? payload?.pending_update_call ?? null,
+  };
 }
 
 export function AIAssistant() {
@@ -329,14 +356,20 @@ export function AIAssistant() {
         break;
       }
       case "approval": {
+        const parsed = extractApprovalContent(data);
         const approvalMessage: Message = {
           id: createMessageId(),
-          content: String(data?.text ?? "AI 建议执行以下修改，是否确认？"),
+          content: parsed.text || "AI 建议执行以下修改，是否确认？",
           sender: "ai",
           timestamp: new Date(),
           status: "done",
           requiresApproval: true,
           approvalPayload: data,
+          approvalDetails: {
+            title: parsed.title,
+            toolName: parsed.toolName,
+            proposedArgs: parsed.proposedArgs ?? undefined,
+          },
         };
         setMessages((prev) => [...prev, approvalMessage]);
         setIsAwaitingApprovalResponse(true);
@@ -511,7 +544,38 @@ export function AIAssistant() {
                         }
                       )}
                     >
-                      <div>{message.content}</div>
+                      <div className="space-y-2">
+                        {message.approvalDetails ? (
+                          <>
+                            {message.approvalDetails.title && (
+                              <div className="font-semibold text-foreground whitespace-normal">
+                                {message.approvalDetails.title}
+                              </div>
+                            )}
+                            <div className="text-sm whitespace-pre-line">
+                              {message.content}
+                            </div>
+                            {message.approvalDetails.proposedArgs && (
+                              <div className="rounded border border-border/60 bg-background/80 mt-2">
+                                <div className="px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border/60">
+                                  {message.approvalDetails.toolName
+                                    ? `计划调用：${message.approvalDetails.toolName}`
+                                    : "计划执行参数"}
+                                </div>
+                                <pre className="px-3 py-2 text-xs overflow-x-auto whitespace-pre-wrap">
+                                  {JSON.stringify(
+                                    message.approvalDetails.proposedArgs,
+                                    null,
+                                    2
+                                  )}
+                                </pre>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div>{message.content}</div>
+                        )}
+                      </div>
                       {message.requiresApproval && !message.approvalResolved && (
                         <div className="mt-3 flex items-center gap-2">
                           <Button
