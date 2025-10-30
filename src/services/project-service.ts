@@ -133,6 +133,16 @@ export interface ProjectConfigResponse {
   [key: string]: unknown;
 }
 
+export interface TimeSeriesData<T extends number | string = number> {
+  name: string;
+  date?: T[];
+  data: number[];
+  [key: string]: unknown;
+}
+
+export type CrewData = TimeSeriesData<number>;
+export type BudgetData = TimeSeriesData<number>;
+
 export interface ProcessInfoData {
   [key: string]: unknown;
   施工工序?: string;
@@ -341,4 +351,30 @@ export async function getProjectConfig(projectId: string, token?: string): Promi
   });
 
   return parseResponse<ProjectConfigResponse>(response);
+}
+
+export async function getCrewData(projectId: string, token?: string): Promise<CrewData[]> {
+  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/mgmt/crew`);
+  url.searchParams.set("project_id", projectId);
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      ...authHeaders(token),
+    },
+  });
+
+  return parseResponse<CrewData[]>(response);
+}
+
+export async function getBudgetData(projectId: string, token?: string): Promise<BudgetData[]> {
+  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/mgmt/budget`);
+  url.searchParams.set("project_id", projectId);
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      ...authHeaders(token),
+    },
+  });
+
+  return parseResponse<BudgetData[]>(response);
 }
