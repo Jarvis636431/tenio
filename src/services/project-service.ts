@@ -85,14 +85,52 @@ export interface ProjectDetailResponse {
   project_info: ProjectInfoRow[];
 }
 
-export interface ProjectConfig {
-  project_id: string;
+export interface ShutdownEventTime {
+  day: number;
+  hour: number;
+}
+
+export interface ShutdownEventConfig {
   name: string;
+  start_time: ShutdownEventTime;
+  end_time: ShutdownEventTime;
+  a_level_tasks: string[];
+  b_level_tasks: string[];
+  [key: string]: unknown;
+}
+
+export interface ConstructionMethodConfig {
+  task_name: string;
+  method_index: number;
+  [key: string]: unknown;
+}
+
+export interface CompressStrategyConfig {
+  target_days: number;
+  add_carpenter_first: boolean;
+  [key: string]: unknown;
+}
+
+export interface ProjectConfig {
+  construction_methods: ConstructionMethodConfig[];
+  overtime_tasks: string[];
+  shutdown_events: ShutdownEventConfig[];
+  work_start_hour: number;
+  work_end_hour: number;
+  backgrounds: string[];
+  compress: CompressStrategyConfig;
+  [key: string]: unknown;
+}
+
+export interface ProjectConfigResponse {
+  project_id: string;
+  name?: string;
   description?: string;
-  config: Record<string, unknown>;
   status?: string;
   created_at?: string;
   updated_at?: string;
+  config: ProjectConfig;
+  [key: string]: unknown;
 }
 
 export interface ProcessInfoData {
@@ -292,7 +330,7 @@ export async function addProcess(
   return parseResponse<AddProcessResponse>(response);
 }
 
-export async function getProjectConfig(projectId: string, token?: string): Promise<ProjectConfig> {
+export async function getProjectConfig(projectId: string, token?: string): Promise<ProjectConfigResponse> {
   const url = new URL(`${PROJECT_SERVICE_BASE_URL}/project_config`);
   url.searchParams.set("project_id", projectId);
 
@@ -302,5 +340,5 @@ export async function getProjectConfig(projectId: string, token?: string): Promi
     },
   });
 
-  return parseResponse<ProjectConfig>(response);
+  return parseResponse<ProjectConfigResponse>(response);
 }
