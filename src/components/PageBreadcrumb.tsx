@@ -44,7 +44,8 @@ export function PageBreadcrumb() {
           'plan-and-orders': '施工总览',
           'real-time-monitoring': '实时监测',
           'craftsman-management': '工匠管理',
-          'communication-collaboration': '沟通协作'
+          'communication-collaboration': '沟通协作',
+          'funding-materials': '资金物料'
         };
 
         const tabLabels: { [key: string]: string } = {

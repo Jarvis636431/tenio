@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Settings, Home, Calendar, BarChart3, Activity, Users, Info, Plus, User, LogOut, ChevronLeft, ChevronRight, DollarSign, ClipboardList } from "lucide-react";
+import { Settings, Home, Calendar, BarChart3, Activity, Users, Info, Plus, User, LogOut, ChevronLeft, ChevronRight, DollarSign, ClipboardList, Package } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,14 @@ const projectMenuItems = [{
 }, {
   id: "craftsman-management",
   label: "工匠管理",
+  icon: Users
+}, {
+  id: "funding-materials",
+  label: "资金物料",
+  icon: Package
+}, {
+  id: "communication-collaboration",
+  label: "沟通协作",
   icon: Users
 }];
 

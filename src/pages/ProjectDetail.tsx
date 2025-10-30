@@ -10,6 +10,7 @@ import { useProject } from "@/contexts/ProjectContext";
 import { PageHeader } from "@/components/PageHeader";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import type { ProjectInfoRow } from "@/services/project-service";
+import { FundingMaterials } from "@/components/FundingMaterials";
 
 
 export default function ProjectDetail() {
@@ -103,6 +104,8 @@ export default function ProjectDetail() {
         return "工匠管理";
       case "communication-collaboration":
         return "沟通协作";
+      case "funding-materials":
+        return "资金物料";
       default:
         return "项目主页";
     }
@@ -124,6 +127,8 @@ export default function ProjectDetail() {
         return "管理项目工匠团队";
       case "communication-collaboration":
         return "团队沟通与协作";
+      case "funding-materials":
+        return "资金使用与物料库存概览";
       default:
         return "项目整体进展和快速入口";
     }
@@ -157,6 +162,8 @@ export default function ProjectDetail() {
         return <CraftsmanManagement {...commonProps} />;
       case "communication-collaboration":
         return <CommunicationCollaboration {...commonProps} />;
+      case "funding-materials":
+        return <FundingMaterials {...commonProps} />;
       default:
         return <ProjectHomepage projectId={id || ""} projectName={currentProject?.name || "未知项目"} />;
     }

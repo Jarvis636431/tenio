@@ -2,15 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, Edit, X, FileText, ChevronRight, Building, MapPin, Shield, Wrench, TreePine, File, Upload, Download, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Building, MapPin, Shield, Wrench, TreePine, ChevronUp} from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // 移除 Tabs，改用右侧锚点导航
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
