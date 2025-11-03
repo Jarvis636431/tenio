@@ -1,7 +1,8 @@
 import { TOKEN_STORAGE_KEY } from "@/services/user-service";
 
 const PROJECT_SERVICE_BASE_URL =
-  import.meta.env.VITE_PROJECT_SERVICE_URL?.replace(/\/$/, "") || "http://localhost:8002";
+  import.meta.env.VITE_PROJECT_SERVICE_URL?.replace(/\/$/, "") ||
+  "http://localhost:8002";
 
 function authHeaders(token?: string) {
   const resolvedToken = token ?? localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -31,7 +32,10 @@ async function parseResponse<T>(response: Response): Promise<T> {
     if (data?.detail) {
       throw new Error(
         Array.isArray(data.detail)
-          ? data.detail.map((item: any) => item?.msg).filter(Boolean).join("; ")
+          ? data.detail
+              .map((item: any) => item?.msg)
+              .filter(Boolean)
+              .join("; ")
           : data.detail
       );
     }
@@ -251,7 +255,10 @@ export async function uploadProjectDocs(
   return parseResponse<UploadDocsResponse>(response);
 }
 
-export async function getProjectDetail(projectId: string, token?: string): Promise<ProjectDetailResponse> {
+export async function getProjectDetail(
+  projectId: string,
+  token?: string
+): Promise<ProjectDetailResponse> {
   const url = new URL(`${PROJECT_SERVICE_BASE_URL}/view`);
   url.searchParams.set("project_id", projectId);
 
@@ -286,7 +293,10 @@ export async function getProcessInfo(
   return parseResponse<ProcessInfoResponse>(response);
 }
 
-export async function getProjectList(token?: string, userId?: string): Promise<ProjectListResponse> {
+export async function getProjectList(
+  token?: string,
+  userId?: string
+): Promise<ProjectListResponse> {
   const url = new URL(`${PROJECT_SERVICE_BASE_URL}/project_list`);
   if (userId) {
     url.searchParams.set("user_id", userId);
@@ -340,7 +350,10 @@ export async function addProcess(
   return parseResponse<AddProcessResponse>(response);
 }
 
-export async function getProjectConfig(projectId: string, token?: string): Promise<ProjectConfigResponse> {
+export async function getProjectConfig(
+  projectId: string,
+  token?: string
+): Promise<ProjectConfigResponse> {
   const url = new URL(`${PROJECT_SERVICE_BASE_URL}/project_config`);
   url.searchParams.set("project_id", projectId);
 
@@ -353,8 +366,11 @@ export async function getProjectConfig(projectId: string, token?: string): Promi
   return parseResponse<ProjectConfigResponse>(response);
 }
 
-export async function getCrewData(projectId: string, token?: string): Promise<CrewData[]> {
-  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/mgmt/crew`);
+export async function getCrewData(
+  projectId: string,
+  token?: string
+): Promise<CrewData[]> {
+  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/crew`);
   url.searchParams.set("project_id", projectId);
 
   const response = await fetch(url.toString(), {
@@ -366,8 +382,11 @@ export async function getCrewData(projectId: string, token?: string): Promise<Cr
   return parseResponse<CrewData[]>(response);
 }
 
-export async function getBudgetData(projectId: string, token?: string): Promise<BudgetData[]> {
-  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/mgmt/budget`);
+export async function getBudgetData(
+  projectId: string,
+  token?: string
+): Promise<BudgetData[]> {
+  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/budget`);
   url.searchParams.set("project_id", projectId);
 
   const response = await fetch(url.toString(), {
