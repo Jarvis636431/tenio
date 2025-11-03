@@ -26,7 +26,7 @@ interface GanttChartProps {
 
 export type TimelineScale = "day" | "hour" | "week" | "month";
 
-const BASELINE_DATE = new Date(2025, 9, 1); // 2025-10-01
+const BASELINE_DATE = new Date(2025, 0, 1); // 2025-10-01
 const MS_IN_HOUR = 1000 * 60 * 60;
 const MS_IN_DAY = MS_IN_HOUR * 24;
 const MS_IN_WEEK = MS_IN_DAY * 7;
