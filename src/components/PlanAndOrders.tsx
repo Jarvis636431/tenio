@@ -26,6 +26,7 @@ type TaskItem = ProjectScheduleItem;
 const TIMELINE_SCALE_LABELS: Record<TimelineScale, string> = {
   day: "天",
   hour: "小时",
+  week: "周",
   month: "月",
 };
 

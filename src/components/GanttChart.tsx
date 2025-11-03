@@ -1,8 +1,7 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, Plus, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { NewTaskDialog } from "./NewTaskDialog";
 import { TaskDetailDialog } from "./TaskDetailDialog";
 import { useProject } from "@/contexts/ProjectContext";
@@ -25,21 +24,24 @@ interface GanttChartProps {
   scale?: TimelineScale;
 }
 
-export type TimelineScale = "day" | "hour" | "month";
+export type TimelineScale = "day" | "hour" | "week" | "month";
 
 const BASELINE_DATE = new Date(2025, 9, 1); // 2025-10-01
 const MS_IN_HOUR = 1000 * 60 * 60;
 const MS_IN_DAY = MS_IN_HOUR * 24;
+const MS_IN_WEEK = MS_IN_DAY * 7;
 
 const COLUMN_WIDTH_MAP: Record<TimelineScale, number> = {
   day: 80,
   hour: 60,
+  week: 100,
   month: 120,
 };
 
 const UNIT_LABELS: Record<TimelineScale, string> = {
   day: "天",
   hour: "小时",
+  week: "周",
   month: "月",
 };
 
@@ -48,6 +50,8 @@ const alignDateToScaleStart = (date: Date, scale: TimelineScale) => {
   if (scale === "month") {
     aligned.setDate(1);
     aligned.setHours(0, 0, 0, 0);
+  } else if (scale === "week") {
+    return getWeekStart(aligned);
   } else if (scale === "day") {
     aligned.setHours(0, 0, 0, 0);
   } else {
@@ -60,6 +64,8 @@ const addUnits = (date: Date, units: number, scale: TimelineScale) => {
   const next = new Date(date.getTime());
   if (scale === "month") {
     next.setMonth(next.getMonth() + units);
+  } else if (scale === "week") {
+    next.setDate(next.getDate() + units * 7);
   } else if (scale === "day") {
     next.setDate(next.getDate() + units);
   } else {
@@ -69,14 +75,35 @@ const addUnits = (date: Date, units: number, scale: TimelineScale) => {
 };
 
 const monthDiff = (start: Date, end: Date) => {
-  return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  return (
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth())
+  );
 };
 
-const calculateTotalUnits = (startAnchor: Date, maxTime: number, scale: TimelineScale) => {
+const getWeekStart = (date: Date) => {
+  const weekStart = new Date(date.getTime());
+  const dayOfWeek = weekStart.getDay();
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 周日为0，需要调整为6天前
+  weekStart.setDate(weekStart.getDate() - daysToMonday);
+  weekStart.setHours(0, 0, 0, 0);
+  return weekStart;
+};
+
+const calculateTotalUnits = (
+  startAnchor: Date,
+  maxTime: number,
+  scale: TimelineScale
+) => {
   if (scale === "month") {
     const endDate = alignDateToScaleStart(new Date(maxTime), "month");
     const diff = monthDiff(startAnchor, endDate);
     return Math.max(1, diff + 1);
+  }
+  if (scale === "week") {
+    const step = MS_IN_WEEK;
+    const diff = Math.max(0, maxTime - startAnchor.getTime());
+    return Math.max(1, Math.ceil(diff / step) + 1);
   }
   const step = scale === "day" ? MS_IN_DAY : MS_IN_HOUR;
   const diff = Math.max(0, maxTime - startAnchor.getTime());
@@ -87,6 +114,11 @@ const calculateStartOffset = (start: Date, startAnchor: Date, scale: TimelineSca
   if (scale === "month") {
     const alignedStart = alignDateToScaleStart(start, "month");
     return Math.max(0, monthDiff(startAnchor, alignedStart));
+  }
+  if (scale === "week") {
+    const step = MS_IN_WEEK;
+    const diff = start.getTime() - startAnchor.getTime();
+    return Math.max(0, Math.floor(diff / step));
   }
   const step = scale === "day" ? MS_IN_DAY : MS_IN_HOUR;
   const diff = start.getTime() - startAnchor.getTime();
@@ -102,6 +134,11 @@ const calculateSpanUnits = (start: Date, end: Date, scale: TimelineScale) => {
   }
 
   const diff = end.getTime() - start.getTime();
+  if (scale === "week") {
+    const units = Math.ceil(diff / MS_IN_WEEK) + 1;
+    return Math.max(1, units);
+  }
+  
   if (scale === "day") {
     const units = Math.ceil(diff / MS_IN_DAY) + 1;
     return Math.max(1, units);
@@ -126,7 +163,11 @@ type TimelineRow = ScheduleItem & {
   color: string;
 };
 
-const generateHeaders = (startAnchor: Date, totalUnits: number, scale: TimelineScale): TimelineHeader[] => {
+const generateHeaders = (
+  startAnchor: Date,
+  totalUnits: number,
+  scale: TimelineScale
+): TimelineHeader[] => {
   return Array.from({ length: totalUnits }, (_, index) => {
     const current = addUnits(startAnchor, index, scale);
 
@@ -134,6 +175,16 @@ const generateHeaders = (startAnchor: Date, totalUnits: number, scale: TimelineS
       return {
         key: index,
         primary: `${current.getFullYear()}/${current.getMonth() + 1}`,
+      };
+    }
+
+    if (scale === "week") {
+      const weekEnd = new Date(current);
+      weekEnd.setDate(current.getDate() + 6);
+      return {
+        key: index,
+        primary: `第${index + 1}周`,
+        secondary: `${current.getMonth() + 1}/${current.getDate()}-${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`,
       };
     }
 
@@ -161,19 +212,19 @@ const getWorkerColor = (worker: string): string => {
   const colors: {
     [key: string]: string;
   } = {
-    "钢筋工": "hsl(210, 70%, 65%)", // lighter blue
-    "混凝土工": "hsl(25, 75%, 70%)", // lighter orange
-    "木工": "hsl(40, 80%, 70%)", // lighter yellow
-    "测量员": "hsl(255, 60%, 65%)", // lighter purple
-    "土方工": "hsl(25, 75%, 70%)", // lighter orange
-    "砌筑工": "hsl(165, 60%, 60%)", // lighter green
-    "抹灰工": "hsl(255, 60%, 65%)", // lighter purple
-    "防水工": "hsl(210, 70%, 65%)", // lighter blue
-    "水电工": "hsl(165, 60%, 60%)", // lighter green
-    "油漆工": "hsl(40, 80%, 70%)", // lighter yellow
-    "油工": "hsl(40, 80%, 70%)", // lighter yellow
-    "瓦工": "hsl(355, 70%, 70%)", // lighter red
-    "不限": "#9ca3af"
+    钢筋工: "hsl(210, 70%, 65%)", // lighter blue
+    混凝土工: "hsl(25, 75%, 70%)", // lighter orange
+    木工: "hsl(40, 80%, 70%)", // lighter yellow
+    测量员: "hsl(255, 60%, 65%)", // lighter purple
+    土方工: "hsl(25, 75%, 70%)", // lighter orange
+    砌筑工: "hsl(165, 60%, 60%)", // lighter green
+    抹灰工: "hsl(255, 60%, 65%)", // lighter purple
+    防水工: "hsl(210, 70%, 65%)", // lighter blue
+    水电工: "hsl(165, 60%, 60%)", // lighter green
+    油漆工: "hsl(40, 80%, 70%)", // lighter yellow
+    油工: "hsl(40, 80%, 70%)", // lighter yellow
+    瓦工: "hsl(355, 70%, 70%)", // lighter red
+    不限: "#9ca3af",
   };
   return colors[worker] || "#9ca3af";
 };
@@ -182,21 +233,33 @@ const getWorkerBadgeClass = (worker: string): string => {
   const badgeClasses: {
     [key: string]: string;
   } = {
-    "钢筋工": "bg-category-blue-100 text-category-blue-800 border-category-blue-200 hover:bg-category-blue-100 hover:text-category-blue-800",
-    "混凝土工": "bg-category-orange-100 text-category-orange-800 border-category-orange-200 hover:bg-category-orange-100 hover:text-category-orange-800",
-    "木工": "bg-category-yellow-100 text-category-yellow-800 border-category-yellow-200 hover:bg-category-yellow-100 hover:text-category-yellow-800",
-    "测量员": "bg-category-purple-100 text-category-purple-800 border-category-purple-200 hover:bg-category-purple-100 hover:text-category-purple-800",
-    "土方工": "bg-category-orange-100 text-category-orange-800 border-category-orange-200 hover:bg-category-orange-100 hover:text-category-orange-800",
-    "砌筑工": "bg-category-green-100 text-category-green-800 border-category-green-200 hover:bg-category-green-100 hover:text-category-green-800",
-    "抹灰工": "bg-category-purple-100 text-category-purple-800 border-category-purple-200 hover:bg-category-purple-100 hover:text-category-purple-800",
-    "防水工": "bg-category-blue-100 text-category-blue-800 border-category-blue-200 hover:bg-category-blue-100 hover:text-category-blue-800",
-    "水电工": "bg-category-green-100 text-category-green-800 border-category-green-200 hover:bg-category-green-100 hover:text-category-green-800",
-    "油漆工": "bg-category-yellow-100 text-category-yellow-800 border-category-yellow-200 hover:bg-category-yellow-100 hover:text-category-yellow-800",
-    "油工": "bg-category-yellow-100 text-category-yellow-800 border-category-yellow-200 hover:bg-category-yellow-100 hover:text-category-yellow-800",
-    "瓦工": "bg-category-red-100 text-category-red-800 border-category-red-200 hover:bg-category-red-100 hover:text-category-red-800",
-    "不限": "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-800"
+    钢筋工:
+      "bg-category-blue-100 text-category-blue-800 border-category-blue-200 hover:bg-category-blue-100 hover:text-category-blue-800",
+    混凝土工:
+      "bg-category-orange-100 text-category-orange-800 border-category-orange-200 hover:bg-category-orange-100 hover:text-category-orange-800",
+    木工: "bg-category-yellow-100 text-category-yellow-800 border-category-yellow-200 hover:bg-category-yellow-100 hover:text-category-yellow-800",
+    测量员:
+      "bg-category-purple-100 text-category-purple-800 border-category-purple-200 hover:bg-category-purple-100 hover:text-category-purple-800",
+    土方工:
+      "bg-category-orange-100 text-category-orange-800 border-category-orange-200 hover:bg-category-orange-100 hover:text-category-orange-800",
+    砌筑工:
+      "bg-category-green-100 text-category-green-800 border-category-green-200 hover:bg-category-green-100 hover:text-category-green-800",
+    抹灰工:
+      "bg-category-purple-100 text-category-purple-800 border-category-purple-200 hover:bg-category-purple-100 hover:text-category-purple-800",
+    防水工:
+      "bg-category-blue-100 text-category-blue-800 border-category-blue-200 hover:bg-category-blue-100 hover:text-category-blue-800",
+    水电工:
+      "bg-category-green-100 text-category-green-800 border-category-green-200 hover:bg-category-green-100 hover:text-category-green-800",
+    油漆工:
+      "bg-category-yellow-100 text-category-yellow-800 border-category-yellow-200 hover:bg-category-yellow-100 hover:text-category-yellow-800",
+    油工: "bg-category-yellow-100 text-category-yellow-800 border-category-yellow-200 hover:bg-category-yellow-100 hover:text-category-yellow-800",
+    瓦工: "bg-category-red-100 text-category-red-800 border-category-red-200 hover:bg-category-red-100 hover:text-category-red-800",
+    不限: "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-800",
   };
-  return badgeClasses[worker] || "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-800";
+  return (
+    badgeClasses[worker] ||
+    "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-800"
+  );
 };
 
 const getBaselineDate = () => {
@@ -222,7 +285,9 @@ const parseDate = (dateStr: string): Date => {
       const day = parseInt(parts[2], 10);
       const date = new Date(year, month, day);
       if (timePart) {
-        const [hours, minutes] = timePart.split(":").map((v) => parseInt(v, 10));
+        const [hours, minutes] = timePart
+          .split(":")
+          .map((v) => parseInt(v, 10));
         if (!Number.isNaN(hours)) {
           date.setHours(hours);
         }
@@ -235,7 +300,9 @@ const parseDate = (dateStr: string): Date => {
   }
 
   // 解析相对格式 "第X天 08:00" 或 "第X天08:00"
-  const relativeMatch = trimmed.match(/第\s*(\d+)\s*天\s*([0-9]{1,2})(?::([0-9]{2}))?/);
+  const relativeMatch = trimmed.match(
+    /第\s*(\d+)\s*天\s*([0-9]{1,2})(?::([0-9]{2}))?/
+  );
   if (relativeMatch) {
     const day = parseInt(relativeMatch[1], 10);
     const hours = relativeMatch[2] ? parseInt(relativeMatch[2], 10) : 0;
@@ -274,7 +341,12 @@ const parseDate = (dateStr: string): Date => {
   return getBaselineDate();
 };
 
-export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: GanttChartProps) {
+export function GanttChart({
+  data,
+  onTaskDetail,
+  onAddTask,
+  scale = "day",
+}: GanttChartProps) {
   const taskListRef = useRef<HTMLDivElement>(null);
   const chartContentRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -282,7 +354,8 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
   const [showDetailButton, setShowDetailButton] = useState<number | null>(null);
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
-  const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<ScheduleItem | null>(null);
+  const [selectedTaskForDetail, setSelectedTaskForDetail] =
+    useState<ScheduleItem | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const { currentProject } = useProject();
@@ -291,19 +364,18 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
   const timelineScale = scale;
   const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
 
-  const {
-    timelineData,
-    totalUnits,
-    headers
-  } = useMemo(() => {
+  const { timelineData, totalUnits, headers } = useMemo(() => {
     const baseline = getBaselineDate();
-    const parsedItems = data.map(item => ({
+    const parsedItems = data.map((item) => ({
       item,
       start: parseDate(item.startDate),
-      end: parseDate(item.endDate)
+      end: parseDate(item.endDate),
     }));
 
-    const timePoints = parsedItems.flatMap(({ start, end }) => [start.getTime(), end.getTime()]);
+    const timePoints = parsedItems.flatMap(({ start, end }) => [
+      start.getTime(),
+      end.getTime(),
+    ]);
     timePoints.push(baseline.getTime());
 
     const minTime = Math.min(...timePoints);
@@ -313,23 +385,29 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
     const totalUnits = calculateTotalUnits(startAnchor, maxTime, timelineScale);
     const headers = generateHeaders(startAnchor, totalUnits, timelineScale);
 
-    const timelineData: TimelineRow[] = parsedItems.map(({ item, start, end }) => {
-      const startOffset = calculateStartOffset(start, startAnchor, timelineScale);
-      const spanUnits = calculateSpanUnits(start, end, timelineScale);
+    const timelineData: TimelineRow[] = parsedItems.map(
+      ({ item, start, end }) => {
+        const startOffset = calculateStartOffset(
+          start,
+          startAnchor,
+          timelineScale
+        );
+        const spanUnits = calculateSpanUnits(start, end, timelineScale);
 
-      return {
-        ...item,
-        startOffset,
-        spanUnits,
-        barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
-        color: getWorkerColor(item.worker)
-      };
-    });
+        return {
+          ...item,
+          startOffset,
+          spanUnits,
+          barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
+          color: getWorkerColor(item.worker),
+        };
+      }
+    );
 
     return {
       timelineData,
       totalUnits,
-      headers
+      headers,
     };
   }, [data, timelineScale]);
 
@@ -358,10 +436,12 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
     taskList.scrollTop = 0;
     chartContent.scrollTop = 0;
 
-    chartContent.addEventListener('scroll', handleChartScroll, { passive: true });
+    chartContent.addEventListener("scroll", handleChartScroll, {
+      passive: true,
+    });
 
     return () => {
-      chartContent.removeEventListener('scroll', handleChartScroll);
+      chartContent.removeEventListener("scroll", handleChartScroll);
     };
   }, [data]); // 数据变化时重新建立同步并重置滚动位置
 
@@ -376,7 +456,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
         duration: "1天",
         worker: taskData.jobType,
         count: taskData.workerCount,
-        floor: 1
+        floor: 1,
       };
       onAddTask(newTask);
     }
@@ -389,7 +469,6 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
 
   return (
     <div className="w-full h-full flex flex-col">
-      
       <div className="flex-1 overflow-hidden">
         <div className="border rounded-lg overflow-hidden h-full flex flex-col">
           <div className="flex flex-1 overflow-hidden">
@@ -400,7 +479,10 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
                 任务名称
               </div>
               {/* 任务列表（虚拟高度容器） */}
-              <div ref={taskListRef} className="flex-1 overflow-hidden border-r bg-background relative">
+              <div
+                ref={taskListRef}
+                className="flex-1 overflow-hidden border-r bg-background relative"
+              >
                 <div style={{ height: totalRows * ROW_HEIGHT }} />
                 {visibleRows.map((item, i) => {
                   const rowIndex = startRowIndex + i;
@@ -411,8 +493,12 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
                       className="border-b p-2 flex items-center justify-between h-12 bg-gray-50/50 transition-colors relative group"
                       onMouseEnter={() => {
                         setHoveredTaskId(item.id);
-                        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-                        hoverTimeoutRef.current = setTimeout(() => setShowDetailButton(item.id), 150);
+                        if (hoverTimeoutRef.current)
+                          clearTimeout(hoverTimeoutRef.current);
+                        hoverTimeoutRef.current = setTimeout(
+                          () => setShowDetailButton(item.id),
+                          150
+                        );
                       }}
                       onMouseLeave={() => {
                         setHoveredTaskId(null);
@@ -422,16 +508,31 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
                           hoverTimeoutRef.current = null;
                         }
                       }}
-                      style={{ paddingLeft: '8px', paddingRight: '8px', position: 'absolute', top, left: 0, right: 0 }}
+                      style={{
+                        paddingLeft: "8px",
+                        paddingRight: "8px",
+                        position: "absolute",
+                        top,
+                        left: 0,
+                        right: 0,
+                      }}
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate max-w-[200px]">{item.task}</div>
+                        <div className="font-medium text-sm truncate max-w-[200px]">
+                          {item.task}
+                        </div>
                         <div className="w-px h-4 bg-border flex-shrink-0"></div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge className={`text-xs ${getWorkerBadgeClass(item.worker)}`}>
+                          <Badge
+                            className={`text-xs ${getWorkerBadgeClass(
+                              item.worker
+                            )}`}
+                          >
                             {item.worker}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">{item.count}人</span>
+                          <span className="text-xs text-muted-foreground">
+                            {item.count}人
+                          </span>
                         </div>
                       </div>
                       {showDetailButton === item.id && onTaskDetail && (
@@ -449,23 +550,38 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
                 })}
               </div>
             </div>
-            
+
             {/* 右侧整体滚动区域（虚拟滚动） */}
-            <div ref={chartContentRef} className="flex-1 overflow-auto flex flex-col">
-              <div style={{ minWidth: `${totalUnits * columnWidth}px` }} className="flex-1">
+            <div
+              ref={chartContentRef}
+              className="flex-1 overflow-auto flex flex-col"
+            >
+              <div
+                style={{ minWidth: `${totalUnits * columnWidth}px` }}
+                className="flex-1"
+              >
                 {/* 时间轴表头 */}
                 <div className="bg-muted/50 border-b sticky top-0 z-10">
-                  <div className="grid gap-0 h-12" style={{
-                    gridTemplateColumns: `repeat(${totalUnits}, ${columnWidth}px)`
-                  }}>
-                    {headers.map(header => (
+                  <div
+                    className="grid gap-0 h-12"
+                    style={{
+                      gridTemplateColumns: `repeat(${totalUnits}, ${columnWidth}px)`,
+                    }}
+                  >
+                    {headers.map((header) => (
                       <div
                         key={header.key}
-                        className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${header.isWeekend ? 'bg-muted/70 text-muted-foreground' : ''}`}
+                        className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${
+                          header.isWeekend
+                            ? "bg-muted/70 text-muted-foreground"
+                            : ""
+                        }`}
                       >
                         <div className="font-medium">{header.primary}</div>
                         {header.secondary && (
-                          <div className="text-[10px] text-muted-foreground">{header.secondary}</div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {header.secondary}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -473,12 +589,15 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
                 </div>
 
                 {/* 甘特图内容 */}
-                <div className="flex-1 relative" style={{ height: totalRows * ROW_HEIGHT }}>
+                <div
+                  className="flex-1 relative"
+                  style={{ height: totalRows * ROW_HEIGHT }}
+                >
                   {/* 网格背景使用渐变，避免为每行渲染大量时间单元格 */}
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                      backgroundImage: `repeating-linear-gradient(to right, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${columnWidth}px), repeating-linear-gradient(to bottom, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${ROW_HEIGHT}px)`
+                      backgroundImage: `repeating-linear-gradient(to right, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${columnWidth}px), repeating-linear-gradient(to bottom, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${ROW_HEIGHT}px)`,
                     }}
                   />
                   {visibleRows.map((item, i) => {
@@ -499,7 +618,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
                             left: `${item.startOffset * columnWidth}px`,
                             width: `${item.spanUnits * columnWidth}px`,
                             backgroundColor: item.color,
-                            minWidth: `${columnWidth}px`
+                            minWidth: `${columnWidth}px`,
                           }}
                           onClick={() => onTaskDetail?.(item)}
                         >
@@ -530,13 +649,13 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
           </div>
         </div>
       </div>
-      
+
       {/* 新增任务对话框 */}
       <NewTaskDialog
         open={isNewTaskDialogOpen}
         onOpenChange={setIsNewTaskDialogOpen}
         onAdd={handleAddTask}
-        existingTasks={data.map(item => ({
+        existingTasks={data.map((item) => ({
           id: item.id,
           task: item.task,
           specialty: "",
@@ -559,7 +678,7 @@ export function GanttChart({ data, onTaskDetail, onAddTask, scale = "day" }: Gan
           selectedConstructionMethod: "",
           materialCost: 0,
           laborCost: 0,
-          floor: item.floor || 1
+          floor: item.floor || 1,
         }))}
         projectId={currentProject?.id ?? ""}
       />
