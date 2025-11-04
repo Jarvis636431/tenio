@@ -39,25 +39,23 @@ function createMessageId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function extractApprovalContent(payload: any) {
-  const rawText =
-    typeof payload?.ai_message?.text === "string"
-      ? payload.ai_message.text
-      : typeof payload?.text === "string"
-      ? payload.text
-      : "AI 建议执行以下修改，是否确认？";
+function extractApprovalContent(payload: unknown) {
+  const obj = typeof payload === "object" && payload !== null ? (payload as Record<string, unknown>) : {};
+  const aiMsg = typeof obj.ai_message === "object" && obj.ai_message !== null ? (obj.ai_message as Record<string, unknown>) : undefined;
+  const rawTextCandidate = typeof aiMsg?.text === "string" ? aiMsg.text : typeof obj.text === "string" ? obj.text : undefined;
+  const rawText = rawTextCandidate ?? "AI 建议执行以下修改，是否确认？";
 
   const [summaryText] = rawText.split(/PROPOSED_ARGS/i);
 
+  const puc = typeof obj.pending_update_call === "object" && obj.pending_update_call !== null ? (obj.pending_update_call as Record<string, unknown>) : undefined;
+  const toolName = typeof puc?.tool_name === "string" ? puc.tool_name : undefined;
+  const proposedArgs = (puc && "args" in puc) ? (puc as { args?: unknown }).args ?? puc : obj.pending_update_call ?? null;
+
   return {
     text: summaryText.trim(),
-    title: typeof payload?.title === "string" ? payload.title : undefined,
-    toolName:
-      typeof payload?.pending_update_call?.tool_name === "string"
-        ? payload.pending_update_call.tool_name
-        : undefined,
-    proposedArgs:
-      payload?.pending_update_call?.args ?? payload?.pending_update_call ?? null,
+    title: typeof obj.title === "string" ? obj.title : undefined,
+    toolName,
+    proposedArgs,
   };
 }
 
@@ -335,8 +333,9 @@ export function AIAssistant() {
     setMessages((prev) => [...prev, aiMessage]);
   };
 
-  const handleServerMessage = (data: any) => {
-    const { type } = data || {};
+  const handleServerMessage = (data: unknown) => {
+    const obj = typeof data === "object" && data !== null ? (data as Record<string, unknown>) : {};
+    const type = typeof obj.type === "string" ? obj.type : undefined;
 
     switch (type) {
       case "chunk": {
@@ -345,17 +344,33 @@ export function AIAssistant() {
       }
       case "done": {
         setIsThinking(false);
-        if (data?.text) {
-          appendAIMessage(String(data.text));
+        console.debug("[ai-refresh] received done", {
+          isAwaitingApprovalResponse,
+          hasSentUserMessage: hasSentUserMessageRef.current,
+        });
+        if (typeof obj.text === "string") {
+          appendAIMessage(String(obj.text));
         }
 
-        if (isAwaitingApprovalResponse) {
+        const wasAwaiting = isAwaitingApprovalResponse;
+        if (wasAwaiting) {
           setIsAwaitingApprovalResponse(false);
-          window.dispatchEvent(new CustomEvent("plan:refresh-request"));
         }
+        const dispatched = window.dispatchEvent(
+          new CustomEvent("plan:refresh-request", {
+            detail: { source: "ai-done" },
+          })
+        );
+        console.debug(
+          "[ai-refresh] dispatched plan:refresh-request from done (unconditional)",
+          { dispatched, wasAwaiting }
+        );
         break;
       }
       case "approval": {
+        console.debug("[ai-refresh] received approval", {
+          awaitingBefore: isAwaitingApprovalResponse,
+        });
         const parsed = extractApprovalContent(data);
         const approvalMessage: Message = {
           id: createMessageId(),
@@ -373,11 +388,12 @@ export function AIAssistant() {
         };
         setMessages((prev) => [...prev, approvalMessage]);
         setIsAwaitingApprovalResponse(true);
+        console.debug("[ai-refresh] awaiting approval set true");
         setIsThinking(false);
         break;
       }
       case "error": {
-        const errorMsg = String(data?.text || "AI 服务返回错误");
+        const errorMsg = typeof obj.text === "string" ? obj.text : "AI 服务返回错误";
         setMessages((prev) => [
           ...prev,
           {
@@ -392,13 +408,13 @@ export function AIAssistant() {
         break;
       }
       case "info": {
-        const text = String(data?.text || "");
-        if (text) {
+        const infoText = typeof obj.text === "string" ? obj.text : "";
+        if (infoText) {
           setMessages((prev) => [
             ...prev,
             {
               id: createMessageId(),
-              content: text,
+              content: infoText,
               sender: "system",
               timestamp: new Date(),
               status: "done",
@@ -408,8 +424,8 @@ export function AIAssistant() {
         break;
       }
       default: {
-        if (data?.text) {
-          appendAIMessage(String(data.text));
+        if (typeof obj.text === "string") {
+          appendAIMessage(String(obj.text));
           setIsThinking(false);
         }
       }
@@ -453,11 +469,24 @@ export function AIAssistant() {
         type: "hitl_decision",
         approved: true,
       };
+      console.debug("[ai-refresh] sending approval decision", body);
       ws.send(JSON.stringify(body));
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === messageId ? { ...msg, approvalResolved: true } : msg
         )
+      );
+      console.debug("[ai-refresh] approval resolved set true, waiting for done...");
+
+      // 立即派发一次刷新事件，避免依赖服务端 done 时序
+      const dispatched = window.dispatchEvent(
+        new CustomEvent("plan:refresh-request", {
+          detail: { source: "approval-click" },
+        })
+      );
+      console.debug(
+        "[ai-refresh] dispatched plan:refresh-request from approval click",
+        { dispatched }
       );
     } catch (error) {
       console.error("approval send error", error);

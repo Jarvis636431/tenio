@@ -463,6 +463,12 @@ export function GanttChart({
       .filter(Boolean) as { left: number; width: number; key: string }[];
   }, [shutdownEvents, columnWidth, totalUnits, timelineScale, startAnchor]);
 
+  useEffect(() => {
+    console.debug("[gantt] shutdownEvents changed", {
+      count: shutdownEvents?.length ?? 0,
+    });
+  }, [shutdownEvents]);
+
   const totalRows = timelineData.length;
   const visibleRowCount = 12; // 渲染窗口中的最大行数
   const startRowIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2);
