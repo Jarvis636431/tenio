@@ -5,6 +5,7 @@ import { MoreHorizontal } from "lucide-react";
 import { NewTaskDialog } from "./NewTaskDialog";
 import { TaskDetailDialog } from "./TaskDetailDialog";
 import { useProject } from "@/contexts/ProjectContext";
+import type { ShutdownEventConfig } from "@/services/project-service";
 
 interface ScheduleItem {
   id: number;
@@ -22,6 +23,7 @@ interface GanttChartProps {
   onTaskDetail?: (task: ScheduleItem) => void;
   onAddTask?: (task: Partial<ScheduleItem>) => void;
   scale?: TimelineScale;
+  shutdownEvents?: ShutdownEventConfig[];
 }
 
 export type TimelineScale = "day" | "hour" | "week" | "month";
@@ -162,6 +164,15 @@ type TimelineRow = ScheduleItem & {
   barLabel: string;
   color: string;
 };
+
+// 新增任务的表单数据类型，替代 any
+interface NewTaskFormData {
+  task: string;
+  startTime: string;
+  endTime: string;
+  jobType?: string;
+  workerCount?: number;
+}
 
 const generateHeaders = (
   startAnchor: Date,
@@ -346,6 +357,7 @@ export function GanttChart({
   onTaskDetail,
   onAddTask,
   scale = "day",
+  shutdownEvents = [],
 }: GanttChartProps) {
   const taskListRef = useRef<HTMLDivElement>(null);
   const chartContentRef = useRef<HTMLDivElement>(null);
@@ -364,7 +376,7 @@ export function GanttChart({
   const timelineScale = scale;
   const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
 
-  const { timelineData, totalUnits, headers } = useMemo(() => {
+  const { timelineData, totalUnits, headers, startAnchor } = useMemo(() => {
     const baseline = getBaselineDate();
     const parsedItems = data.map((item) => ({
       item,
@@ -408,8 +420,48 @@ export function GanttChart({
       timelineData,
       totalUnits,
       headers,
+      startAnchor,
     };
   }, [data, timelineScale]);
+
+  // 计算停工期遮罩段，仅用于内容区渲染
+  const shutdownSegments = useMemo(() => {
+    if (!shutdownEvents || shutdownEvents.length === 0) return [] as { left: number; width: number; key: string }[];
+
+    const base = getBaselineDate();
+
+    return shutdownEvents
+      .map((ev, idx) => {
+        const sDay = Math.max(1, Number(ev?.start_time?.day ?? 1));
+        const sHour = Math.max(0, Number(ev?.start_time?.hour ?? 0));
+        const eDay = Math.max(sDay, Number(ev?.end_time?.day ?? sDay));
+        const eHour = Math.max(0, Number(ev?.end_time?.hour ?? sHour));
+
+        const startDate = new Date(base);
+        startDate.setDate(base.getDate() + (sDay - 1));
+        startDate.setHours(sHour, 0, 0, 0);
+
+        const endDate = new Date(base);
+        endDate.setDate(base.getDate() + (eDay - 1));
+        endDate.setHours(eHour, 0, 0, 0);
+
+        const startOffsetUnits = calculateStartOffset(startDate, startAnchor, timelineScale);
+        const spanUnits = calculateSpanUnits(startDate, endDate, timelineScale);
+
+        if (startOffsetUnits >= totalUnits || spanUnits <= 0) {
+          return null;
+        }
+        const maxUnits = Math.max(0, totalUnits - startOffsetUnits);
+        const effectiveUnits = Math.max(0, Math.min(spanUnits, maxUnits));
+
+        return {
+          left: startOffsetUnits * columnWidth,
+          width: Math.max(columnWidth, effectiveUnits * columnWidth),
+          key: `${idx}-${sDay}-${sHour}-${eDay}-${eHour}`,
+        };
+      })
+      .filter(Boolean) as { left: number; width: number; key: string }[];
+  }, [shutdownEvents, columnWidth, totalUnits, timelineScale, startAnchor]);
 
   const totalRows = timelineData.length;
   const visibleRowCount = 12; // 渲染窗口中的最大行数
@@ -447,7 +499,7 @@ export function GanttChart({
 
   // 生成日期标头
 
-  const handleAddTask = (taskData: any) => {
+  const handleAddTask = (taskData: NewTaskFormData) => {
     if (onAddTask) {
       const newTask: Partial<ScheduleItem> = {
         task: taskData.task,
@@ -600,6 +652,15 @@ export function GanttChart({
                       backgroundImage: `repeating-linear-gradient(to right, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${columnWidth}px), repeating-linear-gradient(to bottom, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${ROW_HEIGHT}px)`,
                     }}
                   />
+                  {/* 停工期遮罩：覆盖内容区列，置于任务条下方 */}
+                  {shutdownSegments.map((seg) => (
+                    <div
+                      key={seg.key}
+                      className="absolute top-0 bottom-0 bg-red-200/40 pointer-events-none z-0"
+                      style={{ left: seg.left, width: seg.width }}
+                      aria-hidden="true"
+                    />
+                  ))}
                   {visibleRows.map((item, i) => {
                     const rowIndex = startRowIndex + i;
                     const top = rowIndex * ROW_HEIGHT;
@@ -613,7 +674,7 @@ export function GanttChart({
                       >
                         {/* 任务条 - 可点击 */}
                         <div
-                          className="absolute top-1 h-10 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg transition-all duration-200 hover:brightness-110"
+                          className="absolute top-1 h-10 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg transition-all duration-200 hover:brightness-110 z-10"
                           style={{
                             left: `${item.startOffset * columnWidth}px`,
                             width: `${item.spanUnits * columnWidth}px`,

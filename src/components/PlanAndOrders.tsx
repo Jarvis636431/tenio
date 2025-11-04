@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import type { ProjectScheduleItem } from "@/hooks/useProjectSchedule";
+import { useProjectConfig } from "@/hooks/useProjectConfig";
 import { GanttChart, type TimelineScale } from "@/components/GanttChart";
 import { NewTaskDialog } from "@/components/NewTaskDialog";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
@@ -21,7 +22,40 @@ interface PlanAndOrdersProps {
   onExpandSidebar?: () => void;
 }
 
-type TaskItem = ProjectScheduleItem;
+// 扩展计划项类型以适配页面内使用的附加字段
+type TaskItem = ProjectScheduleItem & {
+  specialty?: string;
+  component?: string;
+  totalCost?: number;
+  constructionSituation?: string;
+  prerequisiteProcess?: string;
+  quantity?: number;
+  quantityUnit?: string;
+  overtime?: string;
+  duration?: string;
+  actualWorkDays?: number;
+  constructionMethod?: string;
+  directDependency?: string;
+  remarks?: string;
+  selectedConstructionMethod?: string;
+  materialCost?: number;
+  laborCost?: number;
+  floor?: number;
+};
+
+// 新增任务的表单数据类型，替代 any
+interface NewTaskFormData {
+  task: string;
+  startTime: string;
+  endTime: string;
+  jobType?: string;
+  workerCount?: number;
+  prerequisiteTasks?: string[];
+  dependentTasks?: string[];
+  prerequisiteProcess?: string;
+  directDependency?: string;
+  remarks?: string;
+}
 
 const TIMELINE_SCALE_LABELS: Record<TimelineScale, string> = {
   day: "天",
@@ -51,6 +85,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   const activeView = searchParams.get('tab') || 'task-overview';
 
   const { scheduleItems, isLoading, error, refetch } = useProjectSchedule();
+  const { config, refetch: refetchConfig } = useProjectConfig();
   const allData = scheduleItems;
 
   // 工种类型
@@ -186,7 +221,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   }, [isEditMode, selectedItem, editedItem]);
 
   // 新增任务处理函数
-  const handleAddTask = (taskData: any) => {
+  const handleAddTask = (taskData: NewTaskFormData) => {
     const nextId =
       allData.length > 0 ? Math.max(...allData.map((item) => item.id)) + 1 : 1;
 
@@ -236,9 +271,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
     // 准备CSV数据
     const csvData = filteredData.map(item => ({
       '任务名称': item.task,
-      '所属专业': item.specialty || '',
       '施工方式': item.constructionMethod,
-      '构件': item.component,
       '工种': item.jobType || '',
       '施工人数': item.workerCount,
       '开始时间': item.startTime,
@@ -330,11 +363,13 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
 
   useEffect(() => {
     const handleRefresh = () => {
+      // 并行刷新视图与配置，确保数据同步更新
       refetch();
+      refetchConfig();
     };
     window.addEventListener("plan:refresh-request", handleRefresh);
     return () => window.removeEventListener("plan:refresh-request", handleRefresh);
-  }, [refetch]);
+  }, [refetch, refetchConfig]);
 
   if (isLoading) {
     return (
@@ -544,6 +579,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
               <GanttChart 
                 data={ganttData} 
                 scale={timelineScale}
+                shutdownEvents={config?.shutdown_events ?? []}
                 onTaskDetail={(task) => {
                   // 将甘特图的任务数据转换为表格数据格式
                   const taskItem = allData.find(item => item.id === task.id);
