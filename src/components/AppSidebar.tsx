@@ -65,6 +65,10 @@ const projectMenuItems = [{
   id: "communication-collaboration",
   label: "沟通协作",
   icon: Users
+}, {
+  id: "reports",
+  label: "时间流程",
+  icon: BarChart3
 }];
 
 export function AppSidebar() {
@@ -101,7 +105,13 @@ export function AppSidebar() {
     );
   };
 
-  const handleMouseEnter = (itemId: string, event: React.MouseEvent) => {
+  type HoverEventLike = {
+    currentTarget: {
+      getBoundingClientRect: () => { top: number; right: number }
+    }
+  };
+
+  const handleMouseEnter = (itemId: string, event: React.MouseEvent<HTMLElement> | HoverEventLike) => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
@@ -405,7 +415,7 @@ export function AppSidebar() {
         <div 
           style={{ top: menuPosition.top, left: menuPosition.left }}
           className="fixed z-[9999] w-48 bg-white border border-gray-200 rounded-md shadow-lg p-2"
-          onMouseEnter={() => handleMouseEnter(hoveredItem, { currentTarget: { getBoundingClientRect: () => menuPosition } } as any)}
+          onMouseEnter={() => handleMouseEnter(hoveredItem, { currentTarget: { getBoundingClientRect: () => ({ top: menuPosition.top, right: menuPosition.left }) } })}
           onMouseLeave={handleMouseLeave}
         >
           <div className="space-y-1">

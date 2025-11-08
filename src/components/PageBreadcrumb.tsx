@@ -45,7 +45,8 @@ export function PageBreadcrumb() {
           'real-time-monitoring': '实时监测',
           'craftsman-management': '工匠管理',
           'communication-collaboration': '沟通协作',
-          'funding-materials': '资金物料'
+          'funding-materials': '资金物料',
+          'reports': '时间流程'
         };
 
         const tabLabels: { [key: string]: string } = {

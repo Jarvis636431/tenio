@@ -11,14 +11,15 @@ import { PageHeader } from "@/components/PageHeader";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import type { ProjectInfoRow } from "@/services/project-service";
 import { FundingMaterials } from "@/components/FundingMaterials";
-
+import ReportsCenter from "@/components/ReportsCenter";
 
 export default function ProjectDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const [activeView, setActiveView] = useState("homepage");
   const { projects } = useProject();
-  const [basicInfoActions, setBasicInfoActions] = useState<React.ReactNode>(null);
+  const [basicInfoActions, setBasicInfoActions] =
+    useState<React.ReactNode>(null);
   const { projectInfo } = useProjectSchedule();
 
   const totalDurationLabel = useMemo(() => {
@@ -36,11 +37,17 @@ export default function ProjectDetail() {
     }
 
     const valueKey = Object.keys(totalDurationRow).find((key) => {
-      if (key === "项目信息" || key === "项目统计" || key.toLowerCase().includes("index")) {
+      if (
+        key === "项目信息" ||
+        key === "项目统计" ||
+        key.toLowerCase().includes("index")
+      ) {
         return false;
       }
       const value = totalDurationRow[key];
-      return value !== undefined && value !== null && String(value).trim() !== "";
+      return (
+        value !== undefined && value !== null && String(value).trim() !== ""
+      );
     });
 
     if (!valueKey) {
@@ -52,13 +59,17 @@ export default function ProjectDetail() {
     return result.trim();
   }, [projectInfo]);
 
-  const planViews = useMemo(() => new Set([
-    "plan-and-orders",
-    "task-overview",
-    "gantt-chart",
-    "plan-overview",
-    "order-management"
-  ]), []);
+  const planViews = useMemo(
+    () =>
+      new Set([
+        "plan-and-orders",
+        "task-overview",
+        "gantt-chart",
+        "plan-overview",
+        "order-management",
+      ]),
+    []
+  );
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
@@ -70,8 +81,8 @@ export default function ProjectDetail() {
   }, [searchParams]);
 
   const getViewTitle = () => {
-    const tab = searchParams.get('tab');
-    
+    const tab = searchParams.get("tab");
+
     switch (activeView) {
       case "homepage":
         return "项目主页";
@@ -79,9 +90,9 @@ export default function ProjectDetail() {
         return "基础信息";
       case "plan-and-orders":
         // 如果有tab参数，显示具体的tab标题
-        if (tab === 'task-overview') {
+        if (tab === "task-overview") {
           return "任务总览";
-        } else if (tab === 'gantt-chart') {
+        } else if (tab === "gantt-chart") {
           return "施工工序甘特图";
         }
         return "施工总览";
@@ -90,9 +101,9 @@ export default function ProjectDetail() {
         return "施工总览";
       case "real-time-monitoring":
         // 根据tab参数显示具体标题
-        if (tab === 'labor') {
+        if (tab === "labor") {
           return "施工人数";
-        } else if (tab === 'cost') {
+        } else if (tab === "cost") {
           return "人工成本";
         }
         return "实时监测";
@@ -106,6 +117,8 @@ export default function ProjectDetail() {
         return "沟通协作";
       case "funding-materials":
         return "资金物料";
+      case "reports":
+        return "时间流程";
       default:
         return "项目主页";
     }
@@ -118,9 +131,9 @@ export default function ProjectDetail() {
       case "basic-info":
         return "查看和编辑项目的基本信息";
       case "plan-and-orders":
-    case "plan-overview":
-    case "order-management":
-      return "管理施工进度，追踪工单";
+      case "plan-overview":
+      case "order-management":
+        return "管理施工进度，追踪工单";
       case "labor-monitoring":
         return "实时监控劳动力配置和人工费用";
       case "craftsman-management":
@@ -137,17 +150,24 @@ export default function ProjectDetail() {
   const renderContent = () => {
     const commonProps = {
       showExpandButton: false,
-      onExpandSidebar: () => {}
+      onExpandSidebar: () => {},
     };
 
     // 获取当前项目信息
-    const currentProject = projects.find(p => p.id === id);
+    const currentProject = projects.find((p) => p.id === id);
 
     switch (activeView) {
       case "homepage":
-        return <ProjectHomepage projectId={id || ""} projectName={currentProject?.name || "未知项目"} />;
+        return (
+          <ProjectHomepage
+            projectId={id || ""}
+            projectName={currentProject?.name || "未知项目"}
+          />
+        );
       case "basic-info":
-        return <BasicInfo {...commonProps} onActionsChange={setBasicInfoActions} />;
+        return (
+          <BasicInfo {...commonProps} onActionsChange={setBasicInfoActions} />
+        );
       case "plan-and-orders":
       case "task-overview":
       case "gantt-chart":
@@ -164,14 +184,21 @@ export default function ProjectDetail() {
         return <CommunicationCollaboration {...commonProps} />;
       case "funding-materials":
         return <FundingMaterials {...commonProps} />;
+      case "reports":
+        return <ReportsCenter />;
       default:
-        return <ProjectHomepage projectId={id || ""} projectName={currentProject?.name || "未知项目"} />;
+        return (
+          <ProjectHomepage
+            projectId={id || ""}
+            projectName={currentProject?.name || "未知项目"}
+          />
+        );
     }
   };
 
   // 项目主页使用特殊布局 - 显示项目名称作为标题
   if (activeView === "homepage") {
-    const currentProject = projects.find(p => p.id === id);
+    const currentProject = projects.find((p) => p.id === id);
     return (
       <div className="h-full flex flex-col overflow-hidden bg-white">
         <div className="px-6">
@@ -179,36 +206,43 @@ export default function ProjectDetail() {
         </div>
         {/* 主内容区域 - 直接显示，无标题区域 */}
         <div className="flex-1 overflow-hidden px-6 pb-6">
-          <div className="h-full overflow-auto">
-            {renderContent()}
-          </div>
+          <div className="h-full overflow-auto">{renderContent()}</div>
         </div>
       </div>
     );
   }
 
   // 基础信息、施工总览和实时监测页面使用特殊布局 - 无白色卡片包装
-  if (activeView === "basic-info" || activeView === "plan-and-orders" || activeView === "task-overview" || activeView === "gantt-chart" || activeView === "real-time-monitoring" || activeView === "labor" || activeView === "cost") {
+  if (
+    activeView === "basic-info" ||
+    activeView === "plan-and-orders" ||
+    activeView === "task-overview" ||
+    activeView === "gantt-chart" ||
+    activeView === "real-time-monitoring" ||
+    activeView === "labor" ||
+    activeView === "cost"
+  ) {
     return (
       <div className="h-full flex flex-col overflow-hidden bg-white">
         <div className="px-6 pt-6">
-          <PageHeader 
-            title={getViewTitle()} 
-            actions={activeView === "basic-info" ? basicInfoActions : undefined} 
-            titleExtra={planViews.has(activeView) && totalDurationLabel ? `总工期：${totalDurationLabel}` : undefined}
+          <PageHeader
+            title={getViewTitle()}
+            actions={activeView === "basic-info" ? basicInfoActions : undefined}
+            titleExtra={
+              planViews.has(activeView) && totalDurationLabel
+                ? `总工期：${totalDurationLabel}`
+                : undefined
+            }
           />
         </div>
 
         {/* 主内容区域 - 直接显示，无白色卡片包装 */}
         <div className="flex-1 overflow-hidden px-6 pb-6">
-          <div className="h-full overflow-auto">
-            {renderContent()}
-          </div>
+          <div className="h-full overflow-auto">{renderContent()}</div>
         </div>
       </div>
     );
   }
-
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
@@ -219,9 +253,7 @@ export default function ProjectDetail() {
       {/* 主内容区域 - 白色卡片容器 */}
       <div className="flex-1 overflow-hidden px-6 pb-6">
         <div className="h-full bg-white rounded-lg overflow-hidden">
-          <div className="h-full overflow-auto">
-            {renderContent()}
-          </div>
+          <div className="h-full overflow-auto">{renderContent()}</div>
         </div>
       </div>
     </div>
