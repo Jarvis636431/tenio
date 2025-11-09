@@ -33,6 +33,9 @@ export function ModelViewer({
   const ifcLoaderRef = useRef<IFCLoader | null>(null);
 const modelRef = useRef<(THREE.Object3D & { modelID: number }) | null>(null);
 const productIndexReadyRef = useRef(false);
+const highlightRetryTimeoutRef = useRef<number | null>(null);
+const MAX_HIGHLIGHT_RETRY = 20;
+const HIGHLIGHT_RETRY_DELAY = 750;
   const raycasterRef = useRef<THREE.Raycaster | null>(null);
   const mouseRef = useRef<THREE.Vector2 | null>(null);
   const infoDivRef = useRef<HTMLDivElement | null>(null);
@@ -83,9 +86,20 @@ const productIndexReadyRef = useRef(false);
     infoDivRef.current = null;
     selectionSubsetRef.current = null;
     highlightSubsetRef.current = null;
-    ifcLoaderRef.current = null;
+    if (ifcLoaderRef.current) {
+      try {
+        ifcLoaderRef.current.ifcManager?.dispose();
+      } catch (disposeError) {
+        console.warn('[ModelViewer] 卸载IFC实例时出错:', disposeError);
+      }
+      ifcLoaderRef.current = null;
+    }
     isInitializedRef.current = false;
     productIndexReadyRef.current = false;
+    if (highlightRetryTimeoutRef.current) {
+      clearTimeout(highlightRetryTimeoutRef.current);
+      highlightRetryTimeoutRef.current = null;
+    }
 
     console.log('[ModelViewer] 资源清理完成');
   }, []);
@@ -300,12 +314,37 @@ const productIndexReadyRef = useRef(false);
   };
 
   // 应用高亮
-  const applyHighlight = async (ifcLoader: IFCLoader, model: THREE.Object3D & { modelID: number }) => {
+  const scheduleHighlightRetry = (nextAttempt: number) => {
+    if (highlightRetryTimeoutRef.current) {
+      clearTimeout(highlightRetryTimeoutRef.current);
+    }
+    highlightRetryTimeoutRef.current = window.setTimeout(() => {
+      highlightRetryTimeoutRef.current = null;
+      if (ifcLoaderRef.current && modelRef.current) {
+        applyHighlight(ifcLoaderRef.current, modelRef.current as THREE.Object3D & { modelID: number }, nextAttempt);
+      }
+    }, HIGHLIGHT_RETRY_DELAY);
+  };
+
+  const applyHighlight = async (
+    ifcLoader: IFCLoader,
+    model: THREE.Object3D & { modelID: number },
+    attempt = 0
+  ) => {
     const hasHighlightRequest = Array.isArray(highlightIds) && highlightIds.length > 0;
 
     try {
       const modelID = model.modelID;
       console.log('[ModelViewer] 开始应用高亮，模型ID:', modelID);
+
+      if (!hasHighlightRequest) {
+        if (highlightSubsetRef.current && modelRef.current) {
+          modelRef.current.remove(highlightSubsetRef.current);
+          highlightSubsetRef.current = null;
+        }
+        console.log('[ModelViewer] 当前没有高亮ID，等待后续更新');
+        return;
+      }
 
       // 获取所有产品元素的 expressID 列表
       const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(
@@ -350,8 +389,13 @@ const productIndexReadyRef = useRef(false);
       }
 
       if (!allProductIds.length) {
-        console.warn('[ModelViewer] 未能从模型中解析到可高亮的构件，跳过高亮');
         productIndexReadyRef.current = false;
+        if (attempt >= MAX_HIGHLIGHT_RETRY) {
+          console.warn('[ModelViewer] 多次尝试后仍无法解析构件，放弃高亮');
+          return;
+        }
+        console.warn('[ModelViewer] 构件索引尚未准备好，稍后重试 (attempt %d)', attempt + 1);
+        scheduleHighlightRetry(attempt + 1);
         return;
       }
 
@@ -373,18 +417,18 @@ const productIndexReadyRef = useRef(false);
       console.log('[ModelViewer] 已映射GlobalId数量:', globalIdToExpressId.size);
 
       if (globalIdToExpressId.size === 0) {
-        console.warn('[ModelViewer] GlobalId 映射为空，暂不应用高亮');
         productIndexReadyRef.current = false;
+        if (attempt >= MAX_HIGHLIGHT_RETRY) {
+          console.warn('[ModelViewer] GlobalId 映射始终为空，放弃高亮');
+          return;
+        }
+        console.warn('[ModelViewer] GlobalId 映射为空，稍后重试 (attempt %d)', attempt + 1);
+        scheduleHighlightRetry(attempt + 1);
         return;
       }
 
       if (!productIndexReadyRef.current) {
         productIndexReadyRef.current = true;
-      }
-
-      if (!hasHighlightRequest || !highlightIds) {
-        console.log('[ModelViewer] 当前没有高亮ID，等待后续更新');
-        return;
       }
 
       // 转换highlightIds为expressIds
@@ -674,12 +718,7 @@ const productIndexReadyRef = useRef(false);
 
   // 高亮变化effect
   useEffect(() => {
-    if (
-      isInitializedRef.current &&
-      ifcLoaderRef.current &&
-      modelRef.current &&
-      productIndexReadyRef.current
-    ) {
+    if (isInitializedRef.current && ifcLoaderRef.current && modelRef.current) {
       console.log('[ModelViewer] 高亮ID变化，重新应用高亮');
       applyHighlight(ifcLoaderRef.current, modelRef.current as THREE.Object3D & { modelID: number });
     }
