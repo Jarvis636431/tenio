@@ -65,10 +65,6 @@ const projectMenuItems = [{
   id: "communication-collaboration",
   label: "沟通协作",
   icon: Users
-}, {
-  id: "reports",
-  label: "时间流程",
-  icon: BarChart3
 }];
 
 export function AppSidebar() {

@@ -11,7 +11,6 @@ import { PageHeader } from "@/components/PageHeader";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import type { ProjectInfoRow } from "@/services/project-service";
 import { FundingMaterials } from "@/components/FundingMaterials";
-import ReportsCenter from "@/components/ReportsCenter";
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -117,8 +116,6 @@ export default function ProjectDetail() {
         return "沟通协作";
       case "funding-materials":
         return "资金物料";
-      case "reports":
-        return "时间流程";
       default:
         return "项目主页";
     }
@@ -184,8 +181,6 @@ export default function ProjectDetail() {
         return <CommunicationCollaboration {...commonProps} />;
       case "funding-materials":
         return <FundingMaterials {...commonProps} />;
-      case "reports":
-        return <ReportsCenter />;
       default:
         return (
           <ProjectHomepage
