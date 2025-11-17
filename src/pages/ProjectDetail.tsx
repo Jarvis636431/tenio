@@ -121,29 +121,6 @@ export default function ProjectDetail() {
     }
   };
 
-  const getViewDescription = () => {
-    switch (activeView) {
-      case "homepage":
-        return "项目整体进展和快速入口";
-      case "basic-info":
-        return "查看和编辑项目的基本信息";
-      case "plan-and-orders":
-      case "plan-overview":
-      case "order-management":
-        return "管理施工进度，追踪工单";
-      case "labor-monitoring":
-        return "实时监控劳动力配置和人工费用";
-      case "craftsman-management":
-        return "管理项目工匠团队";
-      case "communication-collaboration":
-        return "团队沟通与协作";
-      case "funding-materials":
-        return "资金使用与物料库存概览";
-      default:
-        return "项目整体进展和快速入口";
-    }
-  };
-
   const renderContent = () => {
     const commonProps = {
       showExpandButton: false,
