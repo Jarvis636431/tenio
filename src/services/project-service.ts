@@ -76,6 +76,7 @@ export interface ScheduleRow {
   持续时长?: string;
   实际工作天数?: string | number;
   直接依赖任务?: string;
+  highlight_ids?: Array<number | string>;
   [key: string]: unknown;
 }
 
@@ -87,6 +88,7 @@ export interface ProjectDetailResponse {
   filename: string;
   schedule: ScheduleRow[];
   project_info: ProjectInfoRow[];
+  process_guid_mapping?: Record<string, Array<number | string>>;
 }
 
 export interface ShutdownEventTime {

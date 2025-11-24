@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { BarChart3 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import { ModelViewer } from "@/components/ModelViewer";
 
@@ -11,7 +11,7 @@ interface ProjectHomepageProps {
 }
 
 export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps) {
-  const { scheduleItems, projectInfo, filename, isLoading, error } = useProjectSchedule();
+  const { scheduleItems, projectInfo, filename, isLoading, error, processGuidMapping } = useProjectSchedule();
 
   const stats = useMemo(() => {
     const totalTasks = scheduleItems.length;
@@ -42,17 +42,44 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
       return typeof v === "string" ? v.trim() : String(v ?? "").trim();
     })();
 
+    const itemsWithHighlights = scheduleItems.filter((i) => {
+      const raw = (processGuidMapping?.[i.task] as unknown);
+      const arr = Array.isArray(raw) ? raw : [];
+      const hasValid = arr.some((id) => {
+        if (typeof id === "number") {
+          return Number.isFinite(id);
+        }
+        if (typeof id === "string") {
+          const trimmed = id.trim();
+          if (!trimmed) return false;
+          if (/^\d+$/.test(trimmed)) {
+            return !Number.isNaN(parseInt(trimmed, 10));
+          }
+          return true; // 非空字符串，作为 GlobalId 使用
+        }
+        return false;
+      });
+      return hasValid;
+    });
+
     const highlightSet = new Set<number | string>();
-    scheduleItems.forEach((i) => {
-      const raw = (i as any).extra?.["highlight_ids"] as unknown;
+    itemsWithHighlights.forEach((i) => {
+      const raw = (processGuidMapping?.[i.task] as unknown);
       const arr = Array.isArray(raw) ? raw : [];
       arr.forEach((id) => {
-        if (typeof id === "number") {
+        if (typeof id === "number" && Number.isFinite(id)) {
           highlightSet.add(id);
-        } else if (typeof id === "string") {
+          return;
+        }
+        if (typeof id === "string") {
           const trimmed = id.trim();
-          const numLike = /^\d+$/.test(trimmed);
-          highlightSet.add(numLike ? parseInt(trimmed, 10) : trimmed);
+          if (!trimmed) return;
+          if (/^\d+$/.test(trimmed)) {
+            const n = parseInt(trimmed, 10);
+            if (!Number.isNaN(n)) highlightSet.add(n);
+          } else {
+            highlightSet.add(trimmed);
+          }
         }
       });
     });
@@ -68,6 +95,22 @@ export function ProjectHomepage({ projectId, projectName }: ProjectHomepageProps
       highlightIds: Array.from(highlightSet),
     };
   }, [scheduleItems, projectInfo]);
+
+  useEffect(() => {
+    const withIds = scheduleItems
+      .map((i) => ({ task: i.task, ids: Array.isArray(processGuidMapping?.[i.task]) ? (processGuidMapping?.[i.task] as Array<number | string>) : [] }))
+      .filter(({ ids }) => {
+        const arr = Array.isArray(ids) ? ids : [];
+        return arr.some((id) => {
+          if (typeof id === "number") return Number.isFinite(id);
+          if (typeof id === "string") return id.trim().length > 0;
+          return false;
+        });
+      });
+    if (withIds.length > 0) {
+      console.log("[ProjectHomepage] 工序含有映射ID:", withIds);
+    }
+  }, [scheduleItems, processGuidMapping]);
 
   return (
     <div className="h-full flex flex-col space-y-6">

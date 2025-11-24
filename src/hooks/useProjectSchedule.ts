@@ -81,6 +81,7 @@ export function useProjectSchedule() {
     scheduleItems,
     projectInfo: query.data?.project_info ?? [],
     filename: query.data?.filename ?? "",
+    processGuidMapping: (query.data?.process_guid_mapping ?? {}) as Record<string, Array<number | string>>,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.error as Error | null,
