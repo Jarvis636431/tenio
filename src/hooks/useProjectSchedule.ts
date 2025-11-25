@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useProject } from "@/contexts/ProjectContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { getProjectDetail, ScheduleRow } from "@/services/project-service";
+import { getProjectDetail, getProcessGuidMapping, ScheduleRow } from "@/services/project-service";
 
 export interface ProjectScheduleItem {
   id: number;
@@ -72,6 +72,19 @@ export function useProjectSchedule() {
     refetchOnWindowFocus: false,
   });
 
+  const mappingQuery = useQuery({
+    queryKey: ["process-guid-mapping", currentProject?.id, token],
+    queryFn: async () => {
+      if (!currentProject?.id) {
+        throw new Error("当前没有选中的项目");
+      }
+      return getProcessGuidMapping(currentProject.id, token || undefined);
+    },
+    enabled: Boolean(currentProject?.id && token),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   const scheduleItems = useMemo(() => {
     if (!query.data?.schedule) return [];
     return query.data.schedule.map(mapScheduleRow);
@@ -81,7 +94,7 @@ export function useProjectSchedule() {
     scheduleItems,
     projectInfo: query.data?.project_info ?? [],
     filename: query.data?.filename ?? "",
-    processGuidMapping: (query.data?.process_guid_mapping ?? {}) as Record<string, Array<number | string>>,
+    processGuidMapping: (mappingQuery.data?.process_guid_mapping ?? {}) as Record<string, Array<number | string>>,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.error as Error | null,

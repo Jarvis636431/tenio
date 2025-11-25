@@ -91,6 +91,11 @@ export interface ProjectDetailResponse {
   process_guid_mapping?: Record<string, Array<number | string>>;
 }
 
+export interface ProcessGuidMappingResponse {
+  project_id: string;
+  process_guid_mapping: Record<string, Array<number | string>>;
+}
+
 export interface ShutdownEventTime {
   day: number;
   hour: number;
@@ -366,6 +371,22 @@ export async function getProjectConfig(
   });
 
   return parseResponse<ProjectConfigResponse>(response);
+}
+
+export async function getProcessGuidMapping(
+  projectId: string,
+  token?: string
+): Promise<ProcessGuidMappingResponse> {
+  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/process_guid_mapping`);
+  url.searchParams.set("project_id", projectId);
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      ...authHeaders(token),
+    },
+  });
+
+  return parseResponse<ProcessGuidMappingResponse>(response);
 }
 
 export async function getCrewData(
