@@ -13,7 +13,6 @@ interface ProjectHomepageProps {
 
 export function ProjectHomepage({
   projectId,
-  projectName,
 }: ProjectHomepageProps) {
   const {
     scheduleItems,
@@ -160,22 +159,26 @@ export function ProjectHomepage({
             />
 
             <div className="relative w-full h-[500px]">
-              <div className="absolute inset-0">
-                <ModelViewer
-                  src="/models/0923.ifc"
-                  highlightIds={completedIds}
-                  highlightColor="#22c55e"
-                  className="h-full"
-                />
-              </div>
-              <div className="absolute inset-0">
-                <ModelViewer
-                  src="/models/0923.ifc"
-                  highlightIds={inProgressIds}
-                  highlightColor="#f59e0b"
-                  className="h-full"
-                />
-              </div>
+              {completedIds.length > 0 && (
+                <div className="absolute inset-0">
+                  <ModelViewer
+                    src="/models/0923.ifc"
+                    highlightIds={completedIds}
+                    highlightColor="#22c55e"
+                    className="h-full"
+                  />
+                </div>
+              )}
+              {inProgressIds.length > 0 && (
+                <div className="absolute inset-0">
+                  <ModelViewer
+                    src="/models/0923.ifc"
+                    highlightIds={inProgressIds}
+                    highlightColor="#f59e0b"
+                    className="h-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
