@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useProject } from "@/contexts/ProjectContext";
@@ -58,6 +57,28 @@ const mapScheduleRow = (row: ScheduleRow, index: number): ProjectScheduleItem =>
 export function useProjectSchedule() {
   const { currentProject } = useProject();
   const { token } = useAuth();
+  const CACHE_PREFIX = "processGuidMappingCache:";
+  const CACHE_TTL = 6 * 60 * 60 * 1000;
+
+  const readCache = (projectId: string): { ts: number; data: Record<string, Array<number | string>> } | null => {
+    try {
+      const raw = localStorage.getItem(CACHE_PREFIX + projectId);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed.ts !== "number" || typeof parsed.data !== "object") return null;
+      if (Date.now() - parsed.ts > CACHE_TTL) return null;
+      return parsed as { ts: number; data: Record<string, Array<number | string>> };
+    } catch {
+      return null;
+    }
+  };
+
+  const writeCache = (projectId: string, data: Record<string, Array<number | string>>) => {
+    try {
+      const payload = JSON.stringify({ ts: Date.now(), data });
+      localStorage.setItem(CACHE_PREFIX + projectId, payload);
+    } catch {}
+  };
 
   const query = useQuery({
     queryKey: ["project-detail", currentProject?.id, token],
@@ -72,6 +93,8 @@ export function useProjectSchedule() {
     refetchOnWindowFocus: false,
   });
 
+  const cached = currentProject?.id ? readCache(currentProject.id) : null;
+
   const mappingQuery = useQuery({
     queryKey: ["process-guid-mapping", currentProject?.id, token],
     queryFn: async () => {
@@ -81,9 +104,28 @@ export function useProjectSchedule() {
       return getProcessGuidMapping(currentProject.id, token || undefined);
     },
     enabled: Boolean(currentProject?.id && token),
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE_TTL,
+    gcTime: CACHE_TTL * 2,
     refetchOnWindowFocus: false,
+    initialData: cached && currentProject?.id
+      ? { project_id: currentProject.id, process_guid_mapping: cached.data }
+      : undefined,
+    initialDataUpdatedAt: cached?.ts,
+    onSuccess: (data) => {
+      const pid = currentProject?.id;
+      const mapping = data?.process_guid_mapping ?? {};
+      if (pid && mapping && typeof mapping === "object") {
+        writeCache(pid, mapping as Record<string, Array<number | string>>);
+      }
+    },
   });
+
+  const forceRefreshMapping = async () => {
+    if (currentProject?.id) {
+      try { localStorage.removeItem(CACHE_PREFIX + currentProject.id); } catch {}
+    }
+    return mappingQuery.refetch();
+  };
 
   const scheduleItems = useMemo(() => {
     if (!query.data?.schedule) return [];
@@ -99,6 +141,9 @@ export function useProjectSchedule() {
     isFetching: query.isFetching,
     error: query.error as Error | null,
     refetch: query.refetch,
+    isMappingFetching: mappingQuery.isFetching,
+    refetchMapping: mappingQuery.refetch,
+    forceRefreshMapping,
     raw: query.data,
   };
 }

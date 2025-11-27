@@ -174,7 +174,10 @@ export default function ProjectDetail() {
     return (
       <div className="h-full flex flex-col overflow-hidden bg-white">
         <div className="px-6">
-          <PageHeader title={currentProject?.name || "项目主页"} />
+          <PageHeader
+            title={currentProject?.name || "项目主页"}
+            titleExtra={totalDurationLabel ? `总工期：${totalDurationLabel}` : undefined}
+          />
         </div>
         {/* 主内容区域 - 直接显示，无标题区域 */}
         <div className="flex-1 overflow-hidden px-6 pb-6">
