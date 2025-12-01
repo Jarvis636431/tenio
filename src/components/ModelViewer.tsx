@@ -5,6 +5,13 @@ import { IFCLoader } from 'web-ifc-three/IFCLoader';
 import { IFCPRODUCT } from 'web-ifc';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
+interface HighlightGroup {
+  ids: Array<number | string>;
+  color: string;
+  opacity?: number;
+  customID: string;
+}
+
 interface ModelViewerProps {
   src?: string;
   allowUpload?: boolean;
@@ -12,6 +19,8 @@ interface ModelViewerProps {
   highlightIds?: Array<number | string>;
   highlightColor?: string;
   baseColor?: string;
+  // 新增：支持多组高亮
+  highlightGroups?: HighlightGroup[];
 }
 
 export function ModelViewer({
@@ -21,6 +30,7 @@ export function ModelViewer({
   highlightIds = [],
   highlightColor = "#ff9800",
   baseColor = "#808080",
+  highlightGroups,
 }: ModelViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInitializedRef = useRef(false);
@@ -41,6 +51,7 @@ const HIGHLIGHT_RETRY_DELAY = 750;
   const infoDivRef = useRef<HTMLDivElement | null>(null);
   const selectionSubsetRef = useRef<(THREE.Mesh & { renderOrder: number }) | null>(null);
   const highlightSubsetRef = useRef<(THREE.Mesh & { renderOrder: number }) | null>(null);
+  const highlightSubsetsRef = useRef<Map<string, THREE.Mesh & { renderOrder: number }>>(new Map());
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +97,7 @@ const HIGHLIGHT_RETRY_DELAY = 750;
     infoDivRef.current = null;
     selectionSubsetRef.current = null;
     highlightSubsetRef.current = null;
+    highlightSubsetsRef.current.clear();
     if (ifcLoaderRef.current) {
       try {
         ifcLoaderRef.current.ifcManager?.dispose();
@@ -331,17 +343,27 @@ const HIGHLIGHT_RETRY_DELAY = 750;
     model: THREE.Object3D & { modelID: number },
     attempt = 0
   ) => {
-    const hasHighlightRequest = Array.isArray(highlightIds) && highlightIds.length > 0;
+    // 优先使用 highlightGroups，如果没有则使用旧的单组模式
+    const hasHighlightRequest = 
+      (highlightGroups && highlightGroups.length > 0) || 
+      (Array.isArray(highlightIds) && highlightIds.length > 0);
 
     try {
       const modelID = model.modelID;
       console.log('[ModelViewer] 开始应用高亮，模型ID:', modelID);
 
       if (!hasHighlightRequest) {
+        // 清理所有高亮子集
         if (highlightSubsetRef.current && modelRef.current) {
           modelRef.current.remove(highlightSubsetRef.current);
           highlightSubsetRef.current = null;
         }
+        highlightSubsetsRef.current.forEach((subset) => {
+          if (modelRef.current) {
+            modelRef.current.remove(subset);
+          }
+        });
+        highlightSubsetsRef.current.clear();
         console.log('[ModelViewer] 当前没有高亮ID，等待后续更新');
         return;
       }
@@ -415,6 +437,66 @@ const HIGHLIGHT_RETRY_DELAY = 750;
       }
 
       console.log('[ModelViewer] 已映射GlobalId数量:', globalIdToExpressId.size);
+
+      // 如果使用多组高亮模式
+      if (highlightGroups && highlightGroups.length > 0) {
+        // 清理旧的子集
+        highlightSubsetsRef.current.forEach((subset) => {
+          if (modelRef.current) {
+            modelRef.current.remove(subset);
+          }
+        });
+        highlightSubsetsRef.current.clear();
+
+        // 为每组创建高亮
+        highlightGroups.forEach((group, index) => {
+          const idsToHighlight: number[] = [];
+          for (const id of group.ids) {
+            if (typeof id === 'number') {
+              idsToHighlight.push(id);
+            } else if (typeof id === 'string') {
+              const isPureNumber = /^\d+$/.test(id.trim());
+              if (isPureNumber) {
+                idsToHighlight.push(parseInt(id, 10));
+              } else {
+                const expressId = globalIdToExpressId.get(id);
+                if (expressId !== undefined) {
+                  idsToHighlight.push(expressId);
+                }
+              }
+            }
+          }
+
+          if (idsToHighlight.length === 0) return;
+
+          const material = new THREE.MeshStandardMaterial({
+            color: new THREE.Color(group.color),
+            transparent: true,
+            opacity: group.opacity ?? 0.8,
+            depthWrite: true,
+            depthTest: true,
+            metalness: 0,
+            roughness: 0.6,
+          });
+
+          const subset = ifcLoader.ifcManager.createSubset({
+            modelID,
+            ids: idsToHighlight,
+            material: material,
+            removePrevious: false,
+            customID: group.customID,
+          } as { modelID: number; ids: number[]; material: THREE.Material; removePrevious: boolean; customID: string });
+
+          if (subset) {
+            (subset as THREE.Mesh & { renderOrder: number }).renderOrder = index + 1;
+            model.add(subset);
+            highlightSubsetsRef.current.set(group.customID, subset as THREE.Mesh & { renderOrder: number });
+            console.log(`[ModelViewer] 创建高亮组 ${group.customID} 成功，数量:`, idsToHighlight.length);
+          }
+        });
+
+        return;
+      }
 
       if (globalIdToExpressId.size === 0) {
         productIndexReadyRef.current = false;
@@ -722,7 +804,7 @@ const HIGHLIGHT_RETRY_DELAY = 750;
       console.log('[ModelViewer] 高亮ID变化，重新应用高亮');
       applyHighlight(ifcLoaderRef.current, modelRef.current as THREE.Object3D & { modelID: number });
     }
-  }, [highlightIds, highlightColor]);
+  }, [highlightIds, highlightColor, highlightGroups]);
 
   // 窗口大小变化effect
   useEffect(() => {

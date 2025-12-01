@@ -159,26 +159,24 @@ export function ProjectHomepage({
             />
 
             <div className="relative w-full h-[500px]">
-              {completedIds.length > 0 && (
-                <div className="absolute inset-0">
-                  <ModelViewer
-                    src="/models/0923.ifc"
-                    highlightIds={completedIds}
-                    highlightColor="#22c55e"
-                    className="h-full"
-                  />
-                </div>
-              )}
-              {inProgressIds.length > 0 && (
-                <div className="absolute inset-0">
-                  <ModelViewer
-                    src="/models/0923.ifc"
-                    highlightIds={inProgressIds}
-                    highlightColor="#f59e0b"
-                    className="h-full"
-                  />
-                </div>
-              )}
+              <ModelViewer
+                src="/models/0923.ifc"
+                highlightGroups={[
+                  {
+                    ids: completedIds,
+                    color: "#22c55e",
+                    opacity: 0.8,
+                    customID: "completed",
+                  },
+                  {
+                    ids: inProgressIds,
+                    color: "#f59e0b",
+                    opacity: 0.9,
+                    customID: "inProgress",
+                  },
+                ]}
+                className="h-full"
+              />
             </div>
           </div>
         </CardContent>
