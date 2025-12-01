@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Large model files
+*.ifc
+public/models/*.ifc
+public/models/
+
+# Other large files
+*.glb
+*.gltf
+*.obj
+*.fbx
