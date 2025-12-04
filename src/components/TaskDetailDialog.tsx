@@ -104,12 +104,13 @@ export function TaskDetailDialog({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-[calc(90vh-120px)] flex flex-col">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="3d">三维模型</TabsTrigger>
             <TabsTrigger value="drawings">图纸</TabsTrigger>
             <TabsTrigger value="details">节点大样</TabsTrigger>
             <TabsTrigger value="disclaimer">交底文件</TabsTrigger>
             <TabsTrigger value="tutorial">施工教程</TabsTrigger>
+            <TabsTrigger value="acceptance">验收</TabsTrigger>
           </TabsList>
 
           <TabsContent value="3d" className="mt-4 flex-1">
@@ -235,6 +236,15 @@ export function TaskDetailDialog({
                 </div>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="acceptance" className="mt-4 flex-1">
+            <div className="h-full bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <div className="text-4xl mb-2">✅</div>
+                <p>验收功能开发中...</p>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
 
