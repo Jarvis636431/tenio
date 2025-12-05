@@ -41,11 +41,11 @@ export function ModelViewer({
   const animateIdRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const ifcLoaderRef = useRef<IFCLoader | null>(null);
-const modelRef = useRef<(THREE.Object3D & { modelID: number }) | null>(null);
-const productIndexReadyRef = useRef(false);
-const highlightRetryTimeoutRef = useRef<number | null>(null);
-const MAX_HIGHLIGHT_RETRY = 20;
-const HIGHLIGHT_RETRY_DELAY = 750;
+  const modelRef = useRef<(THREE.Object3D & { modelID: number }) | null>(null);
+  const productIndexReadyRef = useRef(false);
+  const highlightRetryTimeoutRef = useRef<number | null>(null);
+  const MAX_HIGHLIGHT_RETRY = 20;
+  const HIGHLIGHT_RETRY_DELAY = 750;
   const raycasterRef = useRef<THREE.Raycaster | null>(null);
   const mouseRef = useRef<THREE.Vector2 | null>(null);
   const infoDivRef = useRef<HTMLDivElement | null>(null);
