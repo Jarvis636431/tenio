@@ -238,11 +238,98 @@ export function TaskDetailDialog({
             )}
           </TabsContent>
 
-          <TabsContent value="acceptance" className="mt-4 flex-1">
-            <div className="h-full bg-gray-100 rounded-lg flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <div className="text-4xl mb-2">✅</div>
-                <p>验收功能开发中...</p>
+          <TabsContent value="acceptance" className="mt-4 flex-1 overflow-auto">
+            <div className="space-y-6 pr-2">
+              {/* 施工准备标题 */}
+              <div className="bg-gray-300 px-4 py-2 rounded">
+                <h3 className="text-lg font-semibold text-gray-800">施工准备</h3>
+              </div>
+
+              {/* 流程步骤 */}
+              <div className="relative">
+                {/* 连接线 */}
+                <div className="absolute top-8 left-8 right-8 h-0.5 bg-blue-500" />
+                
+                <div className="grid grid-cols-4 gap-4 relative">
+                  {/* 步骤1 - 已完成 */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-blue-500 border-4 border-blue-500 flex items-center justify-center mb-4 relative z-10">
+                      <div className="w-2 h-2 bg-white rounded-full" />
+                    </div>
+                    <div className="bg-gray-200 px-3 py-2 rounded text-center text-sm">
+                      临时围墙、<br />大门完成
+                    </div>
+                  </div>
+
+                  {/* 步骤2 - 未完成 */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-white border-4 border-blue-500 flex items-center justify-center mb-4 relative z-10">
+                      <div className="w-full h-0.5 bg-blue-500" />
+                    </div>
+                    <div className="bg-gray-200 px-3 py-2 rounded text-center text-sm">
+                      临时道路及<br />路上设施完<br />成
+                    </div>
+                  </div>
+
+                  {/* 步骤3 - 未完成 */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-white border-4 border-blue-500 flex items-center justify-center mb-4 relative z-10">
+                      <div className="w-full h-0.5 bg-blue-500" />
+                    </div>
+                    <div className="bg-gray-200 px-3 py-2 rounded text-center text-sm">
+                      临建完成
+                    </div>
+                  </div>
+
+                  {/* 步骤4 - 未完成 */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-white border-4 border-blue-500 flex items-center justify-center mb-4 relative z-10">
+                      <div className="w-full h-0.5 bg-blue-500" />
+                    </div>
+                    <div className="bg-gray-200 px-3 py-2 rounded text-center text-sm">
+                      临水、临电<br />及临设完成
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 拍摄要求和现场照片区域 */}
+              <div className="grid grid-cols-4 gap-4">
+                {/* 左侧 3 列 - 拍摄要求和现场照片 */}
+                <div className="col-span-3 space-y-4">
+                  {/* 拍摄位置要求 */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-blue-500 text-white p-6 rounded-lg flex items-center justify-center h-32">
+                      <p className="text-center font-medium">拍摄位置要求</p>
+                    </div>
+                    <div className="bg-blue-500 text-white p-6 rounded-lg flex items-center justify-center h-32">
+                      <p className="text-center font-medium">拍摄位置要求</p>
+                    </div>
+                    <div className="bg-blue-500 text-white p-6 rounded-lg flex items-center justify-center h-32">
+                      <p className="text-center font-medium">拍摄位置要求</p>
+                    </div>
+                  </div>
+
+                  {/* 现场照片 */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-blue-500 text-white p-6 rounded-lg flex items-center justify-center h-48">
+                      <p className="text-center font-medium">现场照片 1</p>
+                    </div>
+                    <div className="bg-blue-500 text-white p-6 rounded-lg flex items-center justify-center h-48">
+                      <p className="text-center font-medium">现场照片 2</p>
+                    </div>
+                    <div className="bg-blue-500 text-white p-6 rounded-lg flex items-center justify-center h-48">
+                      <p className="text-center font-medium">现场照片 3</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 右侧 1 列 - 人像 */}
+                <div className="col-span-1">
+                  <div className="bg-blue-500 text-white rounded-lg flex items-center justify-center h-full">
+                    <p className="text-center font-medium text-xl">人像</p>
+                  </div>
+                </div>
               </div>
             </div>
           </TabsContent>
