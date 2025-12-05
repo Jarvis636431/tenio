@@ -228,6 +228,15 @@ const HIGHLIGHT_RETRY_DELAY = 750;
         return;
       }
 
+      // TODO: 性能优化 - 使用 Web Worker 避免阻塞主线程
+      // 当前问题：ifcLoader.parse() 是 CPU 密集型操作，会阻塞主线程数秒
+      // 导致加载期间 UI 完全无响应（包括侧边栏点击）
+      // 解决方案：
+      // 1. 创建 Worker 线程执行 IFC 解析
+      // 2. 通过 postMessage 传递 ArrayBuffer
+      // 3. Worker 返回解析后的模型数据
+      // 4. 主线程只负责渲染
+      // 参考：https://github.com/IFCjs/web-ifc-three/issues/XXX
       const model = await ifcLoader.parse(data) as THREE.Object3D & { modelID: number };
 
       // 检查是否已被取消
@@ -235,6 +244,12 @@ const HIGHLIGHT_RETRY_DELAY = 750;
         return;
       }
 
+      // TODO: 性能优化 - 优化模型遍历操作
+      // 当前问题：traverse() 同步遍历整个模型树，对大模型会进一步延长阻塞时间
+      // 建议方案：
+      // 1. 配合 Web Worker 方案，在 Worker 中完成遍历
+      // 2. 或使用 requestIdleCallback 分帧处理
+      // 3. 或延迟到渲染后按需处理
       // 优化模型
       model.traverse((child: THREE.Object3D) => {
         if (child instanceof THREE.Mesh) {
