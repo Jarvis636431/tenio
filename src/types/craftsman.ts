@@ -1,4 +1,22 @@
 
+// 班组数据类型
+export interface Team {
+  id: number;
+  name: string;              // 班组名称
+  leader: string;            // 负责人姓名
+  leaderPhone: string;       // 负责人电话
+  trade: string;             // 工种
+  memberCount: number;       // 班组人数
+  status: 'active' | 'inactive' | 'departed';
+  contractStatus: string;    // 合同状态
+  certificationStatus: string; // 认证状态
+  entryCount: number;        // 进场次数
+  createdAt: string;
+  updatedAt: string;
+  remarks?: string;
+}
+
+// 保留原工匠类型（向后兼容）
 export interface Craftsman {
   id: number;
   name: string;

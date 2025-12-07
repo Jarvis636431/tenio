@@ -14,93 +14,87 @@ import { ImportCraftsmanDialog } from "@/components/ImportCraftsmanDialog";
 import { BatchOperationDialog } from "@/components/BatchOperationDialog";
 import { ExportDropdown } from "@/components/ExportDropdown";
 import { useToast } from "@/hooks/use-toast";
-import type { Craftsman } from "@/types/craftsman";
+import type { Craftsman, Team } from "@/types/craftsman";
+
 interface CraftsmanManagementProps {
   showExpandButton?: boolean;
   onExpandSidebar?: () => void;
 }
-const mockCraftsmen: Craftsman[] = [{
-  id: 1,
-  name: "张师傅",
-  trade: "木工",
-  level: 3,
-  status: 'active',
-  contractStatus: "已签署",
-  certificationStatus: "已认证",
-  avatar: undefined,
-  gender: "男",
-  age: 35,
-  bio: "拥有15年木工经验，擅长各类木制结构施工和精细木工工艺。",
-  phone: "138****1234",
-  entryCount: 23,
-  createdAt: "2024-01-15T08:00:00Z",
-  updatedAt: "2024-07-20T16:30:00Z",
-  remarks: "技术骨干，工作认真负责"
-}, {
-  id: 2,
-  name: "李师傅",
-  trade: "电工",
-  level: 4,
-  status: 'active',
-  contractStatus: "已签署",
-  certificationStatus: "已认证",
-  avatar: undefined,
-  gender: "男",
-  age: 42,
-  bio: "资深电工，持有高级电工证书，专业从事建筑电气安装和维护。",
-  phone: "139****5678",
-  entryCount: 31,
-  createdAt: "2024-01-10T08:00:00Z",
-  updatedAt: "2024-07-20T16:30:00Z"
-}, {
-  id: 3,
-  name: "王师傅",
-  trade: "钢筋工",
-  level: 2,
-  status: 'active',
-  contractStatus: "已签署",
-  certificationStatus: "待认证",
-  avatar: undefined,
-  gender: "男",
-  age: 28,
-  bio: "钢筋绑扎和焊接技术熟练，有多个大型项目施工经验。",
-  phone: "137****9012",
-  entryCount: 18,
-  createdAt: "2024-02-01T08:00:00Z",
-  updatedAt: "2024-07-20T16:30:00Z"
-}, {
-  id: 4,
-  name: "刘师傅",
-  trade: "混凝土工",
-  level: 3,
-  status: 'inactive',
-  contractStatus: "已签署",
-  certificationStatus: "已认证",
-  avatar: undefined,
-  gender: "男",
-  age: 39,
-  bio: "混凝土浇筑和养护专家，确保工程质量符合标准。",
-  phone: "136****3456",
-  entryCount: 15,
-  createdAt: "2024-01-20T08:00:00Z",
-  updatedAt: "2024-07-20T16:30:00Z"
-}, {
-  id: 5,
-  name: "赵师傅",
-  trade: "木工",
-  level: 1,
-  status: 'active',
-  contractStatus: "待签署",
-  certificationStatus: "已认证",
-  avatar: undefined,
-  gender: "男",
-  age: 24,
-  bio: "新入职木工，学习能力强，积极上进。",
-  phone: "135****7890",
-  entryCount: 8,
-  createdAt: "2024-03-01T08:00:00Z",
-  updatedAt: "2024-07-20T16:30:00Z"
-}];
+
+// 班组 Mock 数据
+const mockTeams: Team[] = [
+  {
+    id: 1,
+    name: "木工一班",
+    leader: "张师傅",
+    leaderPhone: "138****1234",
+    trade: "木工",
+    memberCount: 8,
+    status: 'active',
+    contractStatus: "已签署",
+    certificationStatus: "已认证",
+    entryCount: 23,
+    createdAt: "2024-01-15T08:00:00Z",
+    updatedAt: "2024-07-20T16:30:00Z",
+    remarks: "技术骨干班组，工作认真负责"
+  },
+  {
+    id: 2,
+    name: "电工专业班",
+    leader: "李师傅",
+    leaderPhone: "139****5678",
+    trade: "电工",
+    memberCount: 6,
+    status: 'active',
+    contractStatus: "已签署",
+    certificationStatus: "已认证",
+    entryCount: 31,
+    createdAt: "2024-01-10T08:00:00Z",
+    updatedAt: "2024-07-20T16:30:00Z",
+  },
+  {
+    id: 3,
+    name: "钢筋工二班",
+    leader: "王师傅",
+    leaderPhone: "137****9012",
+    trade: "钢筋工",
+    memberCount: 10,
+    status: 'active',
+    contractStatus: "已签署",
+    certificationStatus: "待认证",
+    entryCount: 18,
+    createdAt: "2024-02-01T08:00:00Z",
+    updatedAt: "2024-07-20T16:30:00Z",
+  },
+  {
+    id: 4,
+    name: "混凝土专业组",
+    leader: "刘师傅",
+    leaderPhone: "136****3456",
+    trade: "混凝土工",
+    memberCount: 12,
+    status: 'inactive',
+    contractStatus: "已签署",
+    certificationStatus: "已认证",
+    entryCount: 15,
+    createdAt: "2024-01-20T08:00:00Z",
+    updatedAt: "2024-07-20T16:30:00Z",
+  },
+  {
+    id: 5,
+    name: "木工二班",
+    leader: "赵师傅",
+    leaderPhone: "135****7890",
+    trade: "木工",
+    memberCount: 5,
+    status: 'active',
+    contractStatus: "待签署",
+    certificationStatus: "已认证",
+    entryCount: 8,
+    createdAt: "2024-03-01T08:00:00Z",
+    updatedAt: "2024-07-20T16:30:00Z",
+  },
+];
 export function CraftsmanManagement({
   showExpandButton,
   onExpandSidebar
@@ -108,8 +102,8 @@ export function CraftsmanManagement({
   const {
     toast
   } = useToast();
-  const [craftsmen, setCraftsmen] = useState<Craftsman[]>(mockCraftsmen);
-  const [selectedCraftsman, setSelectedCraftsman] = useState<Craftsman | null>(null);
+  const [teams, setTeams] = useState<Team[]>(mockTeams);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [certificationDialogOpen, setCertificationDialogOpen] = useState(false);
   const [entryExitDialogOpen, setEntryExitDialogOpen] = useState(false);
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
@@ -120,57 +114,59 @@ export function CraftsmanManagement({
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeFilter, setTradeFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const filteredCraftsmen = useMemo(() => {
-    return craftsmen.filter(craftsman => {
-      const matchesSearch = craftsman.name.toLowerCase().includes(searchTerm.toLowerCase()) || craftsman.trade.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesTrade = tradeFilter === "all" || craftsman.trade === tradeFilter;
+  const filteredTeams = useMemo(() => {
+    return teams.filter(team => {
+      const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           team.leader.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           team.trade.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesTrade = tradeFilter === "all" || team.trade === tradeFilter;
       return matchesSearch && matchesTrade;
     });
-  }, [craftsmen, searchTerm, tradeFilter]);
-  const selectedCraftsmen = useMemo(() => {
-    return craftsmen.filter(craftsman => selectedIds.includes(craftsman.id));
-  }, [craftsmen, selectedIds]);
+  }, [teams, searchTerm, tradeFilter]);
+  const selectedTeams = useMemo(() => {
+    return teams.filter(team => selectedIds.includes(team.id));
+  }, [teams, selectedIds]);
   const stats = useMemo(() => {
-    const totalCraftsmen = craftsmen.length;
-    const activeCraftsmen = craftsmen.filter(c => c.status === 'active').length;
-    const certifiedCraftsmen = craftsmen.filter(c => c.certificationStatus === '已认证').length;
-    const certificationRate = totalCraftsmen > 0 ? Math.round(certifiedCraftsmen / totalCraftsmen * 100) : 0;
+    const totalTeams = teams.length;
+    const activeTeams = teams.filter(t => t.status === 'active').length;
+    const certifiedTeams = teams.filter(t => t.certificationStatus === '已认证').length;
+    const certificationRate = totalTeams > 0 ? Math.round(certifiedTeams / totalTeams * 100) : 0;
     return {
-      total: totalCraftsmen,
-      active: activeCraftsmen,
-      certified: certifiedCraftsmen,
+      total: totalTeams,
+      active: activeTeams,
+      certified: certifiedTeams,
       certificationRate
     };
-  }, [craftsmen]);
+  }, [teams]);
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(filteredCraftsmen.map(c => c.id));
+      setSelectedIds(filteredTeams.map(t => t.id));
     } else {
       setSelectedIds([]);
     }
   };
-  const handleSelectOne = (craftsmanId: number, checked: boolean) => {
+  const handleSelectOne = (teamId: number, checked: boolean) => {
     if (checked) {
-      setSelectedIds(prev => [...prev, craftsmanId]);
+      setSelectedIds(prev => [...prev, teamId]);
     } else {
-      setSelectedIds(prev => prev.filter(id => id !== craftsmanId));
+      setSelectedIds(prev => prev.filter(id => id !== teamId));
     }
   };
-  const handleEdit = (craftsman: Craftsman) => {
-    setSelectedCraftsman(craftsman);
+  const handleEdit = (team: Team) => {
+    setSelectedTeam(team);
     setEditDialogOpen(true);
   };
-  const handleSaveCraftsman = (updatedCraftsman: Craftsman) => {
-    setCraftsmen(prev => prev.map(c => c.id === updatedCraftsman.id ? updatedCraftsman : c));
+  const handleSaveTeam = (updatedTeam: Team) => {
+    setTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
   };
-  const handleImport = (newCraftsmen: Craftsman[]) => {
-    setCraftsmen(prev => [...prev, ...newCraftsmen]);
+  const handleImport = (newTeams: Team[]) => {
+    setTeams(prev => [...prev, ...newTeams]);
   };
   const handleBatchOperation = (operation: 'outbound' | 'delete') => {
     if (selectedIds.length === 0) {
       toast({
-        title: "请选择工匠",
-        description: "请先选择要操作的工匠",
+        title: "请选择班组",
+        description: "请先选择要操作的班组",
         variant: "destructive"
       });
       return;
@@ -178,16 +174,16 @@ export function CraftsmanManagement({
     setBatchOperation(operation);
     setBatchDialogOpen(true);
   };
-  const handleBatchConfirm = (craftsmen: Craftsman[], remarks?: string) => {
+  const handleBatchConfirm = (teams: Team[], remarks?: string) => {
     if (batchOperation === 'delete') {
-      setCraftsmen(prev => prev.filter(c => !selectedIds.includes(c.id)));
+      setTeams(prev => prev.filter(t => !selectedIds.includes(t.id)));
     } else if (batchOperation === 'outbound') {
-      setCraftsmen(prev => prev.map(c => selectedIds.includes(c.id) ? {
-        ...c,
+      setTeams(prev => prev.map(t => selectedIds.includes(t.id) ? {
+        ...t,
         status: 'departed' as const,
-        remarks: remarks || c.remarks,
+        remarks: remarks || t.remarks,
         updatedAt: new Date().toISOString()
-      } : c));
+      } : t));
     }
     setSelectedIds([]);
   };
@@ -208,7 +204,7 @@ export function CraftsmanManagement({
   const getLevelDisplay = (level: number) => {
     return "★".repeat(level) + "☆".repeat(4 - level);
   };
-  const allSelected = filteredCraftsmen.length > 0 && filteredCraftsmen.every(c => selectedIds.includes(c.id));
+  const allSelected = filteredTeams.length > 0 && filteredTeams.every(t => selectedIds.includes(t.id));
   const someSelected = selectedIds.length > 0;
   return <div className="h-full flex flex-col space-y-6">
 
@@ -220,7 +216,7 @@ export function CraftsmanManagement({
               <div className="flex items-center gap-3">
                 
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">总工匠数</p>
+                  <p className="text-sm font-medium text-muted-foreground">总班组数</p>
                   <p className="text-xl font-bold">{stats.total}</p>
                 </div>
               </div>
@@ -232,7 +228,7 @@ export function CraftsmanManagement({
               <div className="flex items-center gap-3">
                 
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">在场人数</p>
+                  <p className="text-sm font-medium text-muted-foreground">在场班组</p>
                   <p className="text-xl font-bold">{stats.active}</p>
                 </div>
               </div>
@@ -271,7 +267,7 @@ export function CraftsmanManagement({
           <div className="flex gap-4 flex-1">
             <div className="flex-1 relative max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input type="text" placeholder="搜索工匠姓名或工种..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+              <input type="text" placeholder="搜索班组名称、负责人或工种..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
             </div>
             <Select value={tradeFilter} onValueChange={setTradeFilter}>
               <SelectTrigger className="w-48 bg-background">
@@ -292,7 +288,7 @@ export function CraftsmanManagement({
               <Upload className="h-4 w-4 mr-2" />
               批量导入
             </Button>
-            <ExportDropdown allCraftsmen={craftsmen} filteredCraftsmen={filteredCraftsmen} selectedCraftsmen={selectedCraftsmen} />
+            <ExportDropdown allCraftsmen={teams as unknown as Craftsman[]} filteredCraftsmen={filteredTeams as unknown as Craftsman[]} selectedCraftsmen={selectedTeams as unknown as Craftsman[]} />
           </div>
             </div>
           </CardContent>
@@ -303,7 +299,7 @@ export function CraftsmanManagement({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium">
-                  已选中 {selectedIds.length} 名工匠
+                  已选中 {selectedIds.length} 个班组
                 </span>
                 <div className="flex gap-2">
                   <Button size="sm" onClick={() => handleBatchOperation('outbound')}>
@@ -330,9 +326,10 @@ export function CraftsmanManagement({
                 <TableHead className="w-12">
                   <Checkbox checked={allSelected} onCheckedChange={handleSelectAll} aria-label="全选" />
                 </TableHead>
-                <TableHead>姓名</TableHead>
+                <TableHead>班组名称</TableHead>
+                <TableHead>负责人</TableHead>
                 <TableHead>工种</TableHead>
-                <TableHead>等级</TableHead>
+                <TableHead>人数</TableHead>
                 <TableHead>状态</TableHead>
                 <TableHead>认证状态</TableHead>
                 <TableHead>进场次数</TableHead>
@@ -340,52 +337,58 @@ export function CraftsmanManagement({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCraftsmen.map(craftsman => <TableRow key={craftsman.id}>
+              {filteredTeams.map(team => <TableRow key={team.id}>
                   <TableCell>
-                    <Checkbox checked={selectedIds.includes(craftsman.id)} onCheckedChange={checked => handleSelectOne(craftsman.id, checked as boolean)} aria-label={`选择${craftsman.name}`} />
+                    <Checkbox checked={selectedIds.includes(team.id)} onCheckedChange={checked => handleSelectOne(team.id, checked as boolean)} aria-label={`选择${team.name}`} />
                   </TableCell>
-                  <TableCell className="font-medium">{craftsman.name}</TableCell>
+                  <TableCell className="font-medium">{team.name}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={getTradeColor(craftsman.trade)}>
-                      {craftsman.trade}
+                    <div className="flex flex-col">
+                      <span className="font-medium">{team.leader}</span>
+                      <span className="text-xs text-muted-foreground">{team.leaderPhone}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className={getTradeColor(team.trade)}>
+                      {team.trade}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm text-muted-foreground">{craftsman.level}级</span>
+                    <span className="text-sm">{team.memberCount}人</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${craftsman.status === 'active' ? 'bg-category-green-600' : craftsman.status === 'departed' ? 'bg-category-orange-600' : 'bg-gray-400'}`} />
+                      <div className={`w-2 h-2 rounded-full ${team.status === 'active' ? 'bg-category-green-600' : team.status === 'departed' ? 'bg-category-orange-600' : 'bg-gray-400'}`} />
                       <span className="text-sm">
-                        {craftsman.status === 'active' ? '在场' : craftsman.status === 'departed' ? '已出库' : '离场'}
+                        {team.status === 'active' ? '在场' : team.status === 'departed' ? '已出库' : '离场'}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={craftsman.certificationStatus === '已认证' ? 'default' : 'secondary'} className={craftsman.certificationStatus === '已认证' ? 'bg-category-green-100 text-category-green-800' : 'bg-category-yellow-100 text-category-yellow-800'}>
-                      {craftsman.certificationStatus}
+                    <Badge variant={team.certificationStatus === '已认证' ? 'default' : 'secondary'} className={team.certificationStatus === '已认证' ? 'bg-category-green-100 text-category-green-800' : 'bg-category-yellow-100 text-category-yellow-800'}>
+                      {team.certificationStatus}
                     </Badge>
                   </TableCell>
-                  <TableCell>{craftsman.entryCount}</TableCell>
+                  <TableCell>{team.entryCount}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(craftsman)}>
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(team)}>
                         编辑
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => {
-                    setSelectedCraftsman(craftsman);
+                    setSelectedTeam(team);
                     setContractDialogOpen(true);
                   }}>
                         合同
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => {
-                    setSelectedCraftsman(craftsman);
+                    setSelectedTeam(team);
                     setCertificationDialogOpen(true);
                   }}>
                         资格认证
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => {
-                    setSelectedCraftsman(craftsman);
+                    setSelectedTeam(team);
                     setEntryExitDialogOpen(true);
                   }}>
                         进出场记录
@@ -399,16 +402,16 @@ export function CraftsmanManagement({
         </Card>
       </div>
 
-      {/* Dialogs */}
-      {selectedCraftsman && <>
-          <CertificationDialog open={certificationDialogOpen} onOpenChange={setCertificationDialogOpen} craftsman={selectedCraftsman} />
-          <EntryExitDialog open={entryExitDialogOpen} onOpenChange={setEntryExitDialogOpen} craftsman={selectedCraftsman} />
-          <ContractDialog open={contractDialogOpen} onOpenChange={setContractDialogOpen} craftsman={selectedCraftsman} />
-          <EditCraftsmanDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} craftsman={selectedCraftsman} onSave={handleSaveCraftsman} />
+      {/* Dialogs - 使用 team 作为 craftsman 参数以兼容现有对话框组件 */}
+      {selectedTeam && <>
+          <CertificationDialog open={certificationDialogOpen} onOpenChange={setCertificationDialogOpen} craftsman={selectedTeam as unknown as Craftsman} />
+          <EntryExitDialog open={entryExitDialogOpen} onOpenChange={setEntryExitDialogOpen} craftsman={selectedTeam as unknown as Craftsman} />
+          <ContractDialog open={contractDialogOpen} onOpenChange={setContractDialogOpen} craftsman={selectedTeam as unknown as Craftsman} />
+          <EditCraftsmanDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} craftsman={selectedTeam as unknown as Craftsman} onSave={handleSaveTeam as unknown as (c: Craftsman) => void} />
         </>}
 
-      <ImportCraftsmanDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport} />
+      <ImportCraftsmanDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport as unknown as (c: Craftsman[]) => void} />
 
-      <BatchOperationDialog open={batchDialogOpen} onOpenChange={setBatchDialogOpen} selectedCraftsmen={selectedCraftsmen} operation={batchOperation} onConfirm={handleBatchConfirm} />
+      <BatchOperationDialog open={batchDialogOpen} onOpenChange={setBatchDialogOpen} selectedCraftsmen={selectedTeams as unknown as Craftsman[]} operation={batchOperation} onConfirm={handleBatchConfirm as unknown as (c: Craftsman[], r?: string) => void} />
     </div>;
 }
