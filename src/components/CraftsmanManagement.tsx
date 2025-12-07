@@ -4,11 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Upload, X } from "lucide-react";
+import { Search, Upload } from "lucide-react";
 import { EditCraftsmanDialog } from "@/components/EditCraftsmanDialog";
 import { ImportCraftsmanDialog } from "@/components/ImportCraftsmanDialog";
-import { ExportDropdown } from "@/components/ExportDropdown";
 import { useToast } from "@/hooks/use-toast";
 import type { Craftsman, Team } from "@/types/craftsman";
 
@@ -104,7 +102,6 @@ export function CraftsmanManagement({
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeFilter, setTradeFilter] = useState("all");
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const filteredTeams = useMemo(() => {
     return teams.filter(team => {
       const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -114,9 +111,6 @@ export function CraftsmanManagement({
       return matchesSearch && matchesTrade;
     });
   }, [teams, searchTerm, tradeFilter]);
-  const selectedTeams = useMemo(() => {
-    return teams.filter(team => selectedIds.includes(team.id));
-  }, [teams, selectedIds]);
   const stats = useMemo(() => {
     const totalTeams = teams.length;
     const totalMembers = teams.reduce((sum, t) => sum + t.memberCount, 0);
@@ -125,20 +119,6 @@ export function CraftsmanManagement({
       totalMembers
     };
   }, [teams]);
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(filteredTeams.map(t => t.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-  const handleSelectOne = (teamId: number, checked: boolean) => {
-    if (checked) {
-      setSelectedIds(prev => [...prev, teamId]);
-    } else {
-      setSelectedIds(prev => prev.filter(id => id !== teamId));
-    }
-  };
   const handleEdit = (team: Team) => {
     setSelectedTeam(team);
     setEditDialogOpen(true);
@@ -148,22 +128,6 @@ export function CraftsmanManagement({
   };
   const handleImport = (newTeams: Team[]) => {
     setTeams(prev => [...prev, ...newTeams]);
-  };
-  const handleDelete = () => {
-    if (selectedIds.length === 0) {
-      toast({
-        title: "请选择班组",
-        description: "请先选择要删除的班组",
-        variant: "destructive"
-      });
-      return;
-    }
-    setTeams(prev => prev.filter(t => !selectedIds.includes(t.id)));
-    setSelectedIds([]);
-    toast({
-      title: "删除成功",
-      description: `已删除 ${selectedIds.length} 个班组`
-    });
   };
   const getTradeColor = (trade: string) => {
     switch (trade) {
@@ -179,7 +143,6 @@ export function CraftsmanManagement({
         return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
   };
-  const allSelected = filteredTeams.length > 0 && filteredTeams.every(t => selectedIds.includes(t.id));
   return <div className="h-full flex flex-col space-y-6">
 
       {/* Stats Cards */}
@@ -236,31 +199,10 @@ export function CraftsmanManagement({
               <Upload className="h-4 w-4 mr-2" />
               批量导入
             </Button>
-            <ExportDropdown allCraftsmen={teams as unknown as Craftsman[]} filteredCraftsmen={filteredTeams as unknown as Craftsman[]} selectedCraftsmen={selectedTeams as unknown as Craftsman[]} />
           </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* Batch Operations Toolbar */}
-        {selectedIds.length > 0 && <div className="bg-category-blue-50 border border-category-blue-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium">
-                  已选中 {selectedIds.length} 个班组
-                </span>
-                <div className="flex gap-2">
-                  <Button variant="destructive" size="sm" onClick={handleDelete}>
-                    批量删除
-                  </Button>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
-                <X className="h-4 w-4 mr-2" />
-                取消选择
-              </Button>
-            </div>
-          </div>}
 
         {/* Table */}
         <Card>
@@ -268,9 +210,6 @@ export function CraftsmanManagement({
             <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox checked={allSelected} onCheckedChange={handleSelectAll} aria-label="全选" />
-                </TableHead>
                 <TableHead>班组名称</TableHead>
                 <TableHead>负责人</TableHead>
                 <TableHead>工种</TableHead>
@@ -280,9 +219,6 @@ export function CraftsmanManagement({
             </TableHeader>
             <TableBody>
               {filteredTeams.map(team => <TableRow key={team.id}>
-                  <TableCell>
-                    <Checkbox checked={selectedIds.includes(team.id)} onCheckedChange={checked => handleSelectOne(team.id, checked as boolean)} aria-label={`选择${team.name}`} />
-                  </TableCell>
                   <TableCell className="font-medium">{team.name}</TableCell>
                   <TableCell>
                     <div className="flex flex-col">
