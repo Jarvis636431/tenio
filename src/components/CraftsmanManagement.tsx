@@ -6,8 +6,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Upload, X } from "lucide-react";
-import { CertificationDialog } from "@/components/CertificationDialog";
-import { ContractDialog } from "@/components/ContractDialog";
 import { EditCraftsmanDialog } from "@/components/EditCraftsmanDialog";
 import { ImportCraftsmanDialog } from "@/components/ImportCraftsmanDialog";
 import { ExportDropdown } from "@/components/ExportDropdown";
@@ -102,8 +100,6 @@ export function CraftsmanManagement({
   } = useToast();
   const [teams, setTeams] = useState<Team[]>(mockTeams);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-  const [certificationDialogOpen, setCertificationDialogOpen] = useState(false);
-  const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -123,12 +119,10 @@ export function CraftsmanManagement({
   }, [teams, selectedIds]);
   const stats = useMemo(() => {
     const totalTeams = teams.length;
-    const certifiedTeams = teams.filter(t => t.certificationStatus === '已认证').length;
-    const certificationRate = totalTeams > 0 ? Math.round(certifiedTeams / totalTeams * 100) : 0;
+    const totalMembers = teams.reduce((sum, t) => sum + t.memberCount, 0);
     return {
       total: totalTeams,
-      certified: certifiedTeams,
-      certificationRate
+      totalMembers
     };
   }, [teams]);
   const handleSelectAll = (checked: boolean) => {
@@ -190,7 +184,7 @@ export function CraftsmanManagement({
 
       {/* Stats Cards */}
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -206,19 +200,8 @@ export function CraftsmanManagement({
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">已认证</p>
-                  <p className="text-xl font-bold">{stats.certified}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">认证完成率</p>
-                  <p className="text-xl font-bold">{stats.certificationRate}%</p>
+                  <p className="text-sm font-medium text-muted-foreground">总人数</p>
+                  <p className="text-xl font-bold">{stats.totalMembers}</p>
                 </div>
               </div>
             </CardContent>
@@ -292,8 +275,6 @@ export function CraftsmanManagement({
                 <TableHead>负责人</TableHead>
                 <TableHead>工种</TableHead>
                 <TableHead>人数</TableHead>
-                <TableHead>认证状态</TableHead>
-                <TableHead>合同状态</TableHead>
                 <TableHead>操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -318,33 +299,9 @@ export function CraftsmanManagement({
                     <span className="text-sm">{team.memberCount}人</span>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={team.certificationStatus === '已认证' ? 'default' : 'secondary'} className={team.certificationStatus === '已认证' ? 'bg-category-green-100 text-category-green-800' : 'bg-category-yellow-100 text-category-yellow-800'}>
-                      {team.certificationStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={team.contractStatus === '已签署' ? 'default' : 'secondary'}>
-                      {team.contractStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(team)}>
-                        编辑
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => {
-                    setSelectedTeam(team);
-                    setContractDialogOpen(true);
-                  }}>
-                        合同
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => {
-                    setSelectedTeam(team);
-                    setCertificationDialogOpen(true);
-                  }}>
-                        资格认证
-                      </Button>
-                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(team)}>
+                      编辑
+                    </Button>
                   </TableCell>
                 </TableRow>)}
             </TableBody>
@@ -353,12 +310,8 @@ export function CraftsmanManagement({
         </Card>
       </div>
 
-      {/* Dialogs - 使用 team 作为 craftsman 参数以兼容现有对话框组件 */}
-      {selectedTeam && <>
-          <CertificationDialog open={certificationDialogOpen} onOpenChange={setCertificationDialogOpen} craftsman={selectedTeam as unknown as Craftsman} />
-          <ContractDialog open={contractDialogOpen} onOpenChange={setContractDialogOpen} craftsman={selectedTeam as unknown as Craftsman} />
-          <EditCraftsmanDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} craftsman={selectedTeam as unknown as Craftsman} onSave={handleSaveTeam as unknown as (c: Craftsman) => void} />
-        </>}
+      {/* Dialogs */}
+      {selectedTeam && <EditCraftsmanDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} craftsman={selectedTeam as unknown as Craftsman} onSave={handleSaveTeam as unknown as (c: Craftsman) => void} />}
 
       <ImportCraftsmanDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport as unknown as (c: Craftsman[]) => void} />
     </div>;
