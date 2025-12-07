@@ -5,13 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Users, UserCheck, Award, Clock, Search, Upload, Edit, Menu, X } from "lucide-react";
+import { Search, Upload, X } from "lucide-react";
 import { CertificationDialog } from "@/components/CertificationDialog";
-import { EntryExitDialog } from "@/components/EntryExitDialog";
 import { ContractDialog } from "@/components/ContractDialog";
 import { EditCraftsmanDialog } from "@/components/EditCraftsmanDialog";
 import { ImportCraftsmanDialog } from "@/components/ImportCraftsmanDialog";
-import { BatchOperationDialog } from "@/components/BatchOperationDialog";
 import { ExportDropdown } from "@/components/ExportDropdown";
 import { useToast } from "@/hooks/use-toast";
 import type { Craftsman, Team } from "@/types/craftsman";
@@ -105,12 +103,9 @@ export function CraftsmanManagement({
   const [teams, setTeams] = useState<Team[]>(mockTeams);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [certificationDialogOpen, setCertificationDialogOpen] = useState(false);
-  const [entryExitDialogOpen, setEntryExitDialogOpen] = useState(false);
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
-  const [batchOperation, setBatchOperation] = useState<'outbound' | 'delete'>('outbound');
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeFilter, setTradeFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -128,12 +123,10 @@ export function CraftsmanManagement({
   }, [teams, selectedIds]);
   const stats = useMemo(() => {
     const totalTeams = teams.length;
-    const activeTeams = teams.filter(t => t.status === 'active').length;
     const certifiedTeams = teams.filter(t => t.certificationStatus === '已认证').length;
     const certificationRate = totalTeams > 0 ? Math.round(certifiedTeams / totalTeams * 100) : 0;
     return {
       total: totalTeams,
-      active: activeTeams,
       certified: certifiedTeams,
       certificationRate
     };
@@ -162,30 +155,21 @@ export function CraftsmanManagement({
   const handleImport = (newTeams: Team[]) => {
     setTeams(prev => [...prev, ...newTeams]);
   };
-  const handleBatchOperation = (operation: 'outbound' | 'delete') => {
+  const handleDelete = () => {
     if (selectedIds.length === 0) {
       toast({
         title: "请选择班组",
-        description: "请先选择要操作的班组",
+        description: "请先选择要删除的班组",
         variant: "destructive"
       });
       return;
     }
-    setBatchOperation(operation);
-    setBatchDialogOpen(true);
-  };
-  const handleBatchConfirm = (teams: Team[], remarks?: string) => {
-    if (batchOperation === 'delete') {
-      setTeams(prev => prev.filter(t => !selectedIds.includes(t.id)));
-    } else if (batchOperation === 'outbound') {
-      setTeams(prev => prev.map(t => selectedIds.includes(t.id) ? {
-        ...t,
-        status: 'departed' as const,
-        remarks: remarks || t.remarks,
-        updatedAt: new Date().toISOString()
-      } : t));
-    }
+    setTeams(prev => prev.filter(t => !selectedIds.includes(t.id)));
     setSelectedIds([]);
+    toast({
+      title: "删除成功",
+      description: `已删除 ${selectedIds.length} 个班组`
+    });
   };
   const getTradeColor = (trade: string) => {
     switch (trade) {
@@ -201,20 +185,15 @@ export function CraftsmanManagement({
         return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
   };
-  const getLevelDisplay = (level: number) => {
-    return "★".repeat(level) + "☆".repeat(4 - level);
-  };
   const allSelected = filteredTeams.length > 0 && filteredTeams.every(t => selectedIds.includes(t.id));
-  const someSelected = selectedIds.length > 0;
   return <div className="h-full flex flex-col space-y-6">
 
       {/* Stats Cards */}
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">总班组数</p>
                   <p className="text-xl font-bold">{stats.total}</p>
@@ -226,19 +205,6 @@ export function CraftsmanManagement({
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">在场班组</p>
-                  <p className="text-xl font-bold">{stats.active}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">已认证</p>
                   <p className="text-xl font-bold">{stats.certified}</p>
@@ -250,7 +216,6 @@ export function CraftsmanManagement({
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">认证完成率</p>
                   <p className="text-xl font-bold">{stats.certificationRate}%</p>
@@ -302,10 +267,7 @@ export function CraftsmanManagement({
                   已选中 {selectedIds.length} 个班组
                 </span>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={() => handleBatchOperation('outbound')}>
-                    批量出库
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleBatchOperation('delete')}>
+                  <Button variant="destructive" size="sm" onClick={handleDelete}>
                     批量删除
                   </Button>
                 </div>
@@ -330,9 +292,8 @@ export function CraftsmanManagement({
                 <TableHead>负责人</TableHead>
                 <TableHead>工种</TableHead>
                 <TableHead>人数</TableHead>
-                <TableHead>状态</TableHead>
                 <TableHead>认证状态</TableHead>
-                <TableHead>进场次数</TableHead>
+                <TableHead>合同状态</TableHead>
                 <TableHead>操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -357,19 +318,15 @@ export function CraftsmanManagement({
                     <span className="text-sm">{team.memberCount}人</span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${team.status === 'active' ? 'bg-category-green-600' : team.status === 'departed' ? 'bg-category-orange-600' : 'bg-gray-400'}`} />
-                      <span className="text-sm">
-                        {team.status === 'active' ? '在场' : team.status === 'departed' ? '已出库' : '离场'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
                     <Badge variant={team.certificationStatus === '已认证' ? 'default' : 'secondary'} className={team.certificationStatus === '已认证' ? 'bg-category-green-100 text-category-green-800' : 'bg-category-yellow-100 text-category-yellow-800'}>
                       {team.certificationStatus}
                     </Badge>
                   </TableCell>
-                  <TableCell>{team.entryCount}</TableCell>
+                  <TableCell>
+                    <Badge variant={team.contractStatus === '已签署' ? 'default' : 'secondary'}>
+                      {team.contractStatus}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       <Button variant="outline" size="sm" onClick={() => handleEdit(team)}>
@@ -387,12 +344,6 @@ export function CraftsmanManagement({
                   }}>
                         资格认证
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => {
-                    setSelectedTeam(team);
-                    setEntryExitDialogOpen(true);
-                  }}>
-                        进出场记录
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>)}
@@ -405,13 +356,10 @@ export function CraftsmanManagement({
       {/* Dialogs - 使用 team 作为 craftsman 参数以兼容现有对话框组件 */}
       {selectedTeam && <>
           <CertificationDialog open={certificationDialogOpen} onOpenChange={setCertificationDialogOpen} craftsman={selectedTeam as unknown as Craftsman} />
-          <EntryExitDialog open={entryExitDialogOpen} onOpenChange={setEntryExitDialogOpen} craftsman={selectedTeam as unknown as Craftsman} />
           <ContractDialog open={contractDialogOpen} onOpenChange={setContractDialogOpen} craftsman={selectedTeam as unknown as Craftsman} />
           <EditCraftsmanDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} craftsman={selectedTeam as unknown as Craftsman} onSave={handleSaveTeam as unknown as (c: Craftsman) => void} />
         </>}
 
       <ImportCraftsmanDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport as unknown as (c: Craftsman[]) => void} />
-
-      <BatchOperationDialog open={batchDialogOpen} onOpenChange={setBatchDialogOpen} selectedCraftsmen={selectedTeams as unknown as Craftsman[]} operation={batchOperation} onConfirm={handleBatchConfirm as unknown as (c: Craftsman[], r?: string) => void} />
     </div>;
 }
