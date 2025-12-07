@@ -2,11 +2,12 @@ import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Upload } from "lucide-react";
+import { Search, Upload, User } from "lucide-react";
 import { EditCraftsmanDialog } from "@/components/EditCraftsmanDialog";
 import { ImportCraftsmanDialog } from "@/components/ImportCraftsmanDialog";
+import { TeamDetailDialog } from "@/components/TeamDetailDialog";
 import { useToast } from "@/hooks/use-toast";
 import type { Craftsman, Team } from "@/types/craftsman";
 
@@ -99,6 +100,7 @@ export function CraftsmanManagement({
   const [teams, setTeams] = useState<Team[]>(mockTeams);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeFilter, setTradeFilter] = useState("all");
@@ -122,6 +124,10 @@ export function CraftsmanManagement({
   const handleEdit = (team: Team) => {
     setSelectedTeam(team);
     setEditDialogOpen(true);
+  };
+  const handleViewDetail = (team: Team) => {
+    setSelectedTeam(team);
+    setDetailDialogOpen(true);
   };
   const handleSaveTeam = (updatedTeam: Team) => {
     setTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
@@ -204,50 +210,81 @@ export function CraftsmanManagement({
           </CardContent>
         </Card>
 
-        {/* Table */}
-        <Card>
-          <div className="overflow-auto max-h-[calc(100vh-400px)]">
-            <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>班组名称</TableHead>
-                <TableHead>负责人</TableHead>
-                <TableHead>工种</TableHead>
-                <TableHead>人数</TableHead>
-                <TableHead>操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTeams.map(team => <TableRow key={team.id}>
-                  <TableCell className="font-medium">{team.name}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{team.leader}</span>
-                      <span className="text-xs text-muted-foreground">{team.leaderPhone}</span>
+        {/* Team Cards */}
+        <div className="space-y-3">
+          {filteredTeams.map(team => {
+            // 计算结算进度（示例数据）
+            const paidAmount = team.id * 10000; // Mock 数据
+            const totalAmount = team.memberCount * 15000; // Mock 数据
+            const progress = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0;
+            
+            return <Card key={team.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    {/* 头像 */}
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-category-blue-400 to-category-blue-600 flex items-center justify-center">
+                        <User className="w-8 h-8 text-white" />
+                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className={getTradeColor(team.trade)}>
-                      {team.trade}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{team.memberCount}人</span>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(team)}>
-                      编辑
-                    </Button>
-                  </TableCell>
-                </TableRow>)}
-            </TableBody>
-            </Table>
-          </div>
-        </Card>
+
+                    {/* 中间区域 */}
+                    <div className="flex-1 min-w-0">
+                      {/* 名称和信息 */}
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold">{team.name}</h3>
+                        <span className="text-gray-600">-</span>
+                        <span className="font-medium text-gray-700">{team.leader}</span>
+                      </div>
+                      
+                      {/* 联系方式和标签 */}
+                      <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
+                        <span>📞 {team.leaderPhone}</span>
+                        <span className="text-gray-400">|</span>
+                        <Badge variant="secondary" className={getTradeColor(team.trade)}>
+                          👷 {team.trade}
+                        </Badge>
+                        <span className="text-gray-400">|</span>
+                        <span>👥 {team.memberCount}人</span>
+                      </div>
+
+                      {/* 结算进度条 */}
+                      <div className="space-y-1">
+                        <Progress value={progress} className="h-2" />
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>已结算: ¥{paidAmount.toLocaleString()}</span>
+                          <span>应结算: ¥{totalAmount.toLocaleString()} ({progress}%)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 右侧按钮 */}
+                    <div className="flex-shrink-0 flex gap-2">
+                      <Button variant="outline" onClick={() => handleEdit(team)}>
+                        编辑
+                      </Button>
+                      <Button onClick={() => handleViewDetail(team)}>
+                        工作详情
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>;
+          })}
+          
+          {filteredTeams.length === 0 && <Card>
+              <CardContent className="p-8 text-center text-gray-500">
+                暂无班组数据
+              </CardContent>
+            </Card>}
+        </div>
       </div>
 
       {/* Dialogs */}
-      {selectedTeam && <EditCraftsmanDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} craftsman={selectedTeam as unknown as Craftsman} onSave={handleSaveTeam as unknown as (c: Craftsman) => void} />}
+      {selectedTeam && <>
+          <EditCraftsmanDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} craftsman={selectedTeam as unknown as Craftsman} onSave={handleSaveTeam as unknown as (c: Craftsman) => void} />
+          <TeamDetailDialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen} team={selectedTeam} />
+        </>}
 
       <ImportCraftsmanDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport as unknown as (c: Craftsman[]) => void} />
     </div>;
