@@ -491,13 +491,15 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                     <Table>
                       <TableHeader className="sticky top-0 bg-white z-30 shadow-sm">
                         <TableRow>
+                          <TableHead className="w-[60px] bg-white">
+                            序号
+                          </TableHead>
                           <TableHead className="w-[234px] bg-white">
                             任务
                           </TableHead>
                           <TableHead className="w-[100px] bg-white">人数</TableHead>
                           <TableHead className="w-[120px] bg-white">工种</TableHead>
                           <TableHead className="w-[120px] bg-white">施工方式</TableHead>
-                          <TableHead className="w-[120px] bg-white">总成本</TableHead>
                           <TableHead className="w-[120px] bg-white">开始时间</TableHead>
                           <TableHead className="w-[120px] bg-white">结束时间</TableHead>
                           <TableHead className="w-[216px] bg-white">
@@ -506,8 +508,11 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {paginatedData.map(item => (
+                        {paginatedData.map((item, index) => (
                           <TableRow key={item.id} className="border-b h-12">
+                            <TableCell className="w-[60px] bg-white py-2 text-center text-gray-600">
+                              {(currentPage - 1) * itemsPerPage + index + 1}
+                            </TableCell>
                             <TableCell className="sticky left-0 z-20 w-[234px] bg-white py-2">
                               <div className="text-sm">{item.task}</div>
                             </TableCell>
@@ -520,7 +525,6 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
                               )}
                             </TableCell>
                             <TableCell className="w-[120px] bg-white py-2">{item.constructionMethod || "--"}</TableCell>
-                            <TableCell className="w-[120px] bg-white py-2">¥{item.totalCost.toLocaleString()}</TableCell>
                             <TableCell className="w-[120px] bg-white py-2">{item.startTime}</TableCell>
                             <TableCell className="w-[120px] bg-white py-2">{item.endTime}</TableCell>
                             <TableCell className="sticky right-0 z-20 w-[216px] bg-white py-2">
