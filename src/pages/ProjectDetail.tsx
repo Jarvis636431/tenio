@@ -7,6 +7,9 @@ import { CommunicationCollaboration } from "@/components/CommunicationCollaborat
 import { PlanAndOrders } from "@/components/PlanAndOrders";
 import { ProjectHomepage } from "@/components/ProjectHomepage";
 import { PersonnelTransfer } from "@/components/PersonnelTransfer";
+import { QualityInspection } from "@/components/QualityInspection";
+import { DailyLog } from "@/components/DailyLog";
+import { KnowledgeQA } from "@/components/KnowledgeQA";
 import { useProject } from "@/contexts/ProjectContext";
 import { PageHeader } from "@/components/PageHeader";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
@@ -119,6 +122,22 @@ export default function ProjectDetail() {
         return "沟通协作";
       case "funding-materials":
         return "资金物料";
+      case "toolbox":
+        // 根据tab参数显示具体标题
+        if (tab === "quality-inspection") {
+          return "质量检测";
+        } else if (tab === "daily-log") {
+          return "每日日志";
+        } else if (tab === "knowledge-qa") {
+          return "知识问答";
+        }
+        return "工具箱";
+      case "quality-inspection":
+        return "质量检测";
+      case "daily-log":
+        return "每日日志";
+      case "knowledge-qa":
+        return "知识问答";
       default:
         return "项目主页";
     }
@@ -163,6 +182,13 @@ export default function ProjectDetail() {
         return <CommunicationCollaboration {...commonProps} />;
       case "funding-materials":
         return <FundingMaterials {...commonProps} />;
+      case "toolbox":
+      case "quality-inspection":
+        return <QualityInspection />;
+      case "daily-log":
+        return <DailyLog />;
+      case "knowledge-qa":
+        return <KnowledgeQA />;
       default:
         return (
           <ProjectHomepage

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Settings, Home, Calendar, BarChart3, Activity, Users, Info, Plus, User, LogOut, ChevronLeft, ChevronRight, DollarSign, ClipboardList, Package, UserCog } from "lucide-react";
+import { Settings, Home, Calendar, BarChart3, Activity, Users, Info, Plus, User, LogOut, ChevronLeft, ChevronRight, DollarSign, ClipboardList, Package, UserCog, Wrench, CheckCircle, BookOpen, MessageCircleQuestion } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -69,6 +69,23 @@ const projectMenuItems = [{
   id: "communication-collaboration",
   label: "沟通协作",
   icon: Users
+}, {
+  id: "toolbox",
+  label: "工具箱",
+  icon: Wrench,
+  subItems: [{
+    id: "quality-inspection",
+    label: "质量检测",
+    icon: CheckCircle
+  }, {
+    id: "daily-log",
+    label: "每日日志",
+    icon: BookOpen
+  }, {
+    id: "knowledge-qa",
+    label: "知识问答",
+    icon: MessageCircleQuestion
+  }]
 }];
 
 export function AppSidebar() {
@@ -78,7 +95,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(["plan-and-orders", "real-time-monitoring"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["plan-and-orders", "real-time-monitoring", "toolbox"]);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{top: number, left: number} | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -159,7 +176,7 @@ export function AppSidebar() {
               ) : (
                 <div className="flex items-center space-x-3 cursor-pointer transition-opacity hover:opacity-80" onClick={handleLogoClick}>
                   <img src="/lovable-uploads/Frame 2147224672.svg" alt="天友" className="h-8 w-8" />
-                  <h1 className="text-lg font-semibold text-slate-700 whitespace-nowrap">A.PM 智慧建管</h1>
+                  <h1 className="text-lg font-semibold text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">A.PM 智慧建管</h1>
                 </div>
               )}
               {/* 展开状态下显示收起按钮 */}
@@ -177,7 +194,7 @@ export function AppSidebar() {
           </SidebarHeader>
 
           {/* 主要内容区域 */}
-          <div className="flex-1 overflow-y-auto py-1" style={isCollapsed ? { paddingLeft: '12px', paddingRight: '12px' } : { paddingLeft: '8px', paddingRight: '8px' }}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden py-1" style={isCollapsed ? { paddingLeft: '12px', paddingRight: '12px' } : { paddingLeft: '8px', paddingRight: '8px' }}>
 
             {/* 主导航菜单 - 移除SidebarGroupLabel */}
             <SidebarGroup>
@@ -203,7 +220,7 @@ export function AppSidebar() {
                           <SidebarMenuButton asChild isActive={location.pathname === item.url}>
                             <NavLink to={item.url}>
                               <Icon className="h-4 w-4 text-muted-foreground" />
-                              <span className="whitespace-nowrap">{item.title}</span>
+                              <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.title}</span>
                             </NavLink>
                           </SidebarMenuButton>
                         )}
@@ -256,7 +273,7 @@ export function AppSidebar() {
                                 >
                                   <div className="flex items-center gap-2">
                                     <Icon className="h-4 w-4 text-muted-foreground" />
-                                    <span className="whitespace-nowrap">{item.label}</span>
+                                    <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
                                   </div>
                                   <ChevronRight 
                                     className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
@@ -281,7 +298,7 @@ export function AppSidebar() {
                                 <SidebarMenuButton asChild isActive={isActive}>
                                   <NavLink to={`/project/${currentProject.id}?view=${item.id}`}>
                                     <Icon className="h-4 w-4 text-muted-foreground" />
-                                    <span className="whitespace-nowrap">{item.label}</span>
+                                    <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
                                   </NavLink>
                                 </SidebarMenuButton>
                               )
@@ -299,7 +316,7 @@ export function AppSidebar() {
                                     <SidebarMenuButton asChild isActive={isSubActive}>
                                       <NavLink to={`/project/${currentProject.id}?view=${item.id}&tab=${subItem.id}`}>
                                         <SubIcon className="h-4 w-4 text-muted-foreground" />
-                                        <span className="whitespace-nowrap">{subItem.label}</span>
+                                        <span className="whitespace-nowrap overflow-hidden text-ellipsis">{subItem.label}</span>
                                       </NavLink>
                                     </SidebarMenuButton>
                                   </SidebarMenuItem>
