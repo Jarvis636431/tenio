@@ -94,18 +94,56 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
     return Array.from(types);
   }, [allData]);
 
-  // 楼层类型 - 10层排在最后，但在跨楼层之前
+  // 楼层类型 - 从工序名称中提取楼层信息
   const floorTypes = useMemo(() => {
-    const floors = new Set(allData.map(item => item.floor));
-    const floorArray = Array.from(floors);
+    const floorSet = new Set<string>();
+    let hasOthers = false; // 标记是否有无法匹配的工序
     
-    // 分离普通楼层和特殊楼层
-    const normalFloors = floorArray.filter(f => f > 0 && f < 10).sort((a, b) => a - b);
-    const floor10 = floorArray.filter(f => f === 10);
-    const crossFloors = floorArray.filter(f => f === 0 || f < 0); // 跨楼层或特殊楼层
+    // 遍历所有任务，从名称中提取楼层信息
+    allData.forEach(item => {
+      // 匹配常见的楼层格式："1层"、"1F"、"11层"、"基础层"、"地下1层" 等
+      const floorMatches = item.task.match(/(?:地下)?(\d+)(?:层|F|楼)|基础层|屋面层|顶层/gi);
+      if (floorMatches) {
+        floorMatches.forEach(match => {
+          floorSet.add(match);
+        });
+      } else {
+        // 如果没有匹配到楼层信息，标记为有"其他"分类
+        hasOthers = true;
+      }
+    });
     
-    // 按顺序排列：普通楼层 -> 10层 -> 跨楼层
-    return [...normalFloors, ...floor10, ...crossFloors];
+    const floors = Array.from(floorSet);
+    
+    // 排序：数字楼层按数字排序，特殊楼层放后面
+    const sortedFloors = floors.sort((a, b) => {
+      // 提取数字
+      const numA = parseInt(a.match(/\d+/)?.[0] || '999');
+      const numB = parseInt(b.match(/\d+/)?.[0] || '999');
+      
+      // 特殊楼层判断
+      const isSpecialA = a.includes('基础') || a.includes('屋面');
+      const isSpecialB = b.includes('基础') || b.includes('屋面');
+      
+      if (isSpecialA && !isSpecialB) return 1;
+      if (!isSpecialA && isSpecialB) return -1;
+      
+      // 地下楼层排在前面
+      const isUndergroundA = a.includes('地下');
+      const isUndergroundB = b.includes('地下');
+      
+      if (isUndergroundA && !isUndergroundB) return -1;
+      if (!isUndergroundA && isUndergroundB) return 1;
+      
+      return numA - numB;
+    });
+    
+    // 如果有无法匹配的工序，在最后添加"其他"选项
+    if (hasOthers) {
+      sortedFloors.push('其他');
+    }
+    
+    return sortedFloors;
   }, [allData]);
 
   // 过滤和排序数据
@@ -113,7 +151,20 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
     return allData.filter(item => {
       const matchesSearch = item.task.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesJob = jobFilter === "all" || item.jobType === jobFilter;
-      const matchesFloor = floorFilter === "all" || item.floor.toString() === floorFilter;
+      
+      // 楼层筛选：检查任务名称中是否包含选中的楼层文本
+      let matchesFloor = false;
+      if (floorFilter === "all") {
+        matchesFloor = true;
+      } else if (floorFilter === "其他") {
+        // 如果选择"其他"，显示所有没有匹配到楼层信息的工序
+        const hasFloorInfo = /(?:地下)?(\d+)(?:层|F|楼)|基础层|屋面层/gi.test(item.task);
+        matchesFloor = !hasFloorInfo;
+      } else {
+        // 普通楼层筛选
+        matchesFloor = item.task.includes(floorFilter);
+      }
+      
       return matchesSearch && matchesJob && matchesFloor;
     });
   }, [allData, searchTerm, jobFilter, floorFilter]);
@@ -359,7 +410,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   // 重置分页当搜索条件改变时
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, jobFilter, floorFilter, ]);
+  }, [searchTerm, jobFilter, floorFilter]);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -424,14 +475,14 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
             </SelectContent>
           </Select>
           <Select value={floorFilter} onValueChange={setFloorFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="选择楼层" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[300px]">
               <SelectItem value="all">全部楼层</SelectItem>
               {floorTypes.map(floor => (
-                <SelectItem key={floor} value={floor.toString()}>
-                  {floor === 0 ? "基础层" : `${floor}层`}
+                <SelectItem key={floor} value={floor}>
+                  {floor}
                 </SelectItem>
               ))}
             </SelectContent>
