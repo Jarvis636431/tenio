@@ -192,23 +192,86 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
   };
 
   const getDisplayData = () => {
+    // 先获取所有数据并计算原始值和计划值
+    let allData;
     if (selectedJobType === "all") {
-      // 显示总计数据
-      return totalData.map(item => ({
-        date: item.date,
-        value: dataType === 'labor' ? item.actualLabor : item.actualCost,
-        plan: dataType === 'labor' ? item.totalLabor : item.totalCost
-      }));
+      allData = totalData.map(item => {
+        return {
+          date: item.date,
+          originalValue: dataType === 'labor' ? item.actualLabor : item.actualCost,
+          planValue: dataType === 'labor' ? item.totalLabor : item.totalCost
+        };
+      });
     } else {
-      // 显示特定工种数据
-      const jobTypeName = selectedJobType; // 直接使用工种名称
+      const jobTypeName = selectedJobType;
       const filteredData = jobTypeData.filter(item => item.jobType === jobTypeName);
-      return filteredData.map(item => ({
-        date: item.date,
-        value: dataType === 'labor' ? item.actualLabor : item.actualCost,
-        plan: dataType === 'labor' ? item.planLabor : item.planCost
-      }));
+      allData = filteredData.map(item => {
+        return {
+          date: item.date,
+          originalValue: dataType === 'labor' ? item.actualLabor : item.actualCost,
+          planValue: dataType === 'labor' ? item.planLabor : item.planCost
+        };
+      });
     }
+    
+    // 获取需要显示实际值的日期列表
+    let datesToShowActual = [];
+    
+    // 计算当前数据类型差异最大的日期
+    const currentTypeOverDays = allData.filter(item => item.originalValue > item.planValue);
+    currentTypeOverDays.sort((a, b) => ((b.originalValue - b.planValue) / b.planValue) - ((a.originalValue - a.planValue) / a.planValue));
+    if (currentTypeOverDays.length > 0) {
+      datesToShowActual.push(currentTypeOverDays[0].date);
+    }
+    
+    // 如果当前是成本页面，还需要添加施工人数超计划的日期
+    if (dataType === 'cost') {
+      let laborOverDays;
+      if (selectedJobType === "all") {
+        laborOverDays = totalData.map(item => {
+          return {
+            date: item.date,
+            originalValue: item.actualLabor,
+            planValue: item.totalLabor
+          };
+        });
+      } else {
+        const jobTypeName = selectedJobType;
+        const filteredData = jobTypeData.filter(item => item.jobType === jobTypeName);
+        laborOverDays = filteredData.map(item => {
+          return {
+            date: item.date,
+            originalValue: item.actualLabor,
+            planValue: item.planLabor
+          };
+        });
+      }
+      
+      // 计算施工人数差异最大的日期
+      laborOverDays = laborOverDays.filter(item => item.originalValue > item.planValue);
+      laborOverDays.sort((a, b) => ((b.originalValue - b.planValue) / b.planValue) - ((a.originalValue - a.planValue) / a.planValue));
+      
+      // 如果施工人数有超计划的日期，添加到结果中
+      if (laborOverDays.length > 0) {
+        datesToShowActual.push(laborOverDays[0].date);
+      }
+      
+      // 去重
+      datesToShowActual = [...new Set(datesToShowActual)];
+    }
+    
+    // 生成显示数据
+    return allData.map(item => {
+      // 需要显示实际值的日期列表中的日期显示实际值，其他日期显示计划值
+      const displayValue = datesToShowActual.includes(item.date) ? item.originalValue : item.planValue;
+      
+      return {
+        date: item.date,
+        value: displayValue,
+        plan: item.planValue,
+        originalValue: item.originalValue
+      };
+    });
   };
 
 
@@ -236,9 +299,11 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
     return value.toString();
   };
 
-  const getVarianceColor = (actual: number, plan: number) => {
-    if (actual > plan) return "text-category-red-600";
-    if (actual < plan) return "text-category-green-600";
+  const getVarianceColor = (actual: number, plan: number, originalValue?: number) => {
+    // 使用原始实际值来判断是否超计划
+    if (originalValue && originalValue > plan) return "text-category-red-600";
+    if (actual === plan) return "text-gray-600";
+    // 实际数小于计划数的情况也使用灰色
     return "text-gray-600";
   };
 
@@ -272,17 +337,97 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
     return calendarDays;
   };
 
+  // 计算差异并排序，只保留差异最大的1个为红色
+  const getOverDays = () => {
+    let overDates = [];
+    
+    // 获取当前数据类型的超计划日期
+    let currentTypeOverDays;
+    if (selectedJobType === "all") {
+      currentTypeOverDays = totalData.map(item => {
+        return {
+          date: item.date,
+          originalValue: dataType === 'labor' ? item.actualLabor : item.actualCost,
+          planValue: dataType === 'labor' ? item.totalLabor : item.totalCost
+        };
+      });
+    } else {
+      const jobTypeName = selectedJobType;
+      const filteredData = jobTypeData.filter(item => item.jobType === jobTypeName);
+      currentTypeOverDays = filteredData.map(item => {
+        return {
+          date: item.date,
+          originalValue: dataType === 'labor' ? item.actualLabor : item.actualCost,
+          planValue: dataType === 'labor' ? item.planLabor : item.planCost
+        };
+      });
+    }
+    
+    // 计算当前类型差异最大的日期
+    currentTypeOverDays = currentTypeOverDays.filter(item => item.originalValue > item.planValue);
+    currentTypeOverDays.sort((a, b) => ((b.originalValue - b.planValue) / b.planValue) - ((a.originalValue - a.planValue) / a.planValue));
+    
+    // 只保留当前类型差异最大的1个日期
+    if (currentTypeOverDays.length > 0) {
+      overDates.push(currentTypeOverDays[0].date);
+    }
+    
+    // 如果当前是成本页面，还需要添加施工人数超计划的日期
+    if (dataType === 'cost') {
+      let laborOverDays;
+      if (selectedJobType === "all") {
+        laborOverDays = totalData.map(item => {
+          return {
+            date: item.date,
+            originalValue: item.actualLabor,
+            planValue: item.totalLabor
+          };
+        });
+      } else {
+        const jobTypeName = selectedJobType;
+        const filteredData = jobTypeData.filter(item => item.jobType === jobTypeName);
+        laborOverDays = filteredData.map(item => {
+          return {
+            date: item.date,
+            originalValue: item.actualLabor,
+            planValue: item.planLabor
+          };
+        });
+      }
+      
+      // 计算施工人数差异最大的日期
+      laborOverDays = laborOverDays.filter(item => item.originalValue > item.planValue);
+      laborOverDays.sort((a, b) => ((b.originalValue - b.planValue) / b.planValue) - ((a.originalValue - a.planValue) / a.planValue));
+      
+      // 如果施工人数有超计划的日期，添加到结果中
+      if (laborOverDays.length > 0) {
+        overDates.push(laborOverDays[0].date);
+      }
+      
+      // 去重
+      overDates = [...new Set(overDates)];
+    }
+    
+    return overDates;
+  };
+
+  const overDays = getOverDays();
+
   const getDayStatus = (dayData: any) => {
     if (!dayData) return 'no-data';
-    if (dayData.value > dayData.plan) return 'over';
-    if (dayData.value < dayData.plan) return 'under';
+    // 使用原始实际值来判断是否超计划
+    if (dayData.originalValue > dayData.plan && overDays.includes(dayData.date)) return 'over';
+    // 实际数等于计划数的情况显示正常灰色
+    if (dayData.value === dayData.plan) return 'normal';
+    // 实际数小于计划数的情况也显示正常灰色
     return 'normal';
   };
 
   const getDayColor = (status: string) => {
     switch (status) {
       case 'over': return 'bg-category-red-50 text-category-red-800';
-      case 'under': return 'bg-category-green-50 text-category-green-800';
+      // 将绿色改为灰色
+      case 'under': return 'bg-gray-50 text-gray-800';
       case 'normal': return 'bg-gray-50 text-gray-800';
       default: return 'bg-gray-50 text-gray-500';
     }
@@ -312,7 +457,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
       weeklyData.push({
         day: weekDays[i],
         date: dateStr,
-        actual: dayData ? dayData.value : 0,
+        actual: dayData ? dayData.value : 0, // 使用处理后的值，确保非红色部分显示计划值
         plan: dayData ? dayData.plan : 0,
         hasData: !!dayData
       });
@@ -480,11 +625,11 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                           <TableCell>
                             {dataType === 'labor' ? `${item.plan.toFixed(1)}人` : `¥${item.plan.toLocaleString()}`}
                           </TableCell>
-                          <TableCell className={getVarianceColor(item.value, item.plan)}>
+                          <TableCell className={getVarianceColor(item.value, item.plan, item.originalValue)}>
                             {variance > 0 ? '+' : ''}{dataType === 'labor' ? `${variance.toFixed(1)}人` : `¥${variance.toLocaleString()}`}
                           </TableCell>
                           <TableCell>
-                            <span className={getVarianceColor(item.value, item.plan)}>
+                            <span className={getVarianceColor(item.value, item.plan, item.originalValue)}>
                               {completionRate}%
                             </span>
                           </TableCell>
