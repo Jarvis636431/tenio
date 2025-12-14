@@ -508,13 +508,21 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
         )}
         {breakdown.length > 0 && (
           <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 6, maxHeight: 220, overflowY: 'auto' }}>
-            {breakdown.map((row, index) => (
-              <div key={`${point.date}-${row.jobType}`} style={{ fontSize: 12, lineHeight: '18px', padding: '4px 0', borderBottom: index < breakdown.length - 1 ? '1px solid #f8f9fa' : 'none' }}>
-                <div style={{ color: '#374151', fontWeight: 500, marginBottom: 2 }}>{row.jobType}</div>
-                <div style={{ color: '#6b7280', marginBottom: 1 }}>计划: {dataType === 'labor' ? `${row.planValue}${unit}` : `¥${Number(row.planValue).toLocaleString()}`}</div>
-                <div style={{ color: '#2563eb' }}>实际: {dataType === 'labor' ? `${row.actualValue}${unit}` : `¥${Number(row.actualValue).toLocaleString()}`}</div>
-              </div>
-            ))}
+            {breakdown.map((row, index) => {
+              const isOverPlan = row.actualValue > row.planValue;
+              return (
+                <div key={`${point.date}-${row.jobType}`} style={{ fontSize: 12, lineHeight: '18px', padding: '4px 0', borderBottom: index < breakdown.length - 1 ? '1px solid #f8f9fa' : 'none' }}>
+                  <div style={{ color: '#374151', fontWeight: 500, marginBottom: 2 }}>{row.jobType}</div>
+                  <div style={{ color: '#6b7280', marginBottom: 1 }}>计划: {dataType === 'labor' ? `${row.planValue}${unit}` : `¥${Number(row.planValue).toLocaleString()}`}</div>
+                  <div style={{ color: '#2563eb', marginBottom: isOverPlan ? 4 : 0 }}>实际: {dataType === 'labor' ? `${row.actualValue}${unit}` : `¥${Number(row.actualValue).toLocaleString()}`}</div>
+                  {isOverPlan && (
+                    <div style={{ color: '#dc2626', backgroundColor: '#fef2f2', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
+                      异常原因: 加班
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -752,17 +760,25 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
                             {day.dateStr}
                           </div>
                           <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {breakdown.map((row, idx) => (
-                              <div key={`${day.dateStr}-${row.jobType}`} className="border-b border-gray-100 last:border-b-0 pb-2 last:pb-0">
-                                <div className="text-xs font-medium text-gray-700 mb-1">{row.jobType}</div>
-                                <div className="text-xs text-gray-500 mb-0.5">
-                                  计划: {dataType === 'labor' ? `${row.planValue}人` : `¥${Number(row.planValue).toLocaleString()}`}
+                            {breakdown.map((row, idx) => {
+                              const isOverPlan = row.actualValue > row.planValue;
+                              return (
+                                <div key={`${day.dateStr}-${row.jobType}`} className="border-b border-gray-100 last:border-b-0 pb-2 last:pb-0">
+                                  <div className="text-xs font-medium text-gray-700 mb-1">{row.jobType}</div>
+                                  <div className="text-xs text-gray-500 mb-0.5">
+                                    计划: {dataType === 'labor' ? `${row.planValue}人` : `¥${Number(row.planValue).toLocaleString()}`}
+                                  </div>
+                                  <div className="text-xs text-category-blue-600 mb-1">
+                                    实际: {dataType === 'labor' ? `${row.actualValue}人` : `¥${Number(row.actualValue).toLocaleString()}`}
+                                  </div>
+                                  {isOverPlan && (
+                                    <div className="text-xs text-category-red-600 bg-category-red-50 px-2 py-1 rounded">
+                                      异常原因: 加班
+                                    </div>
+                                  )}
                                 </div>
-                                <div className="text-xs text-category-blue-600">
-                                  实际: {dataType === 'labor' ? `${row.actualValue}人` : `¥${Number(row.actualValue).toLocaleString()}`}
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                       </div>
                     </div>
                       )}
