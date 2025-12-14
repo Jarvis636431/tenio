@@ -319,8 +319,11 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
     const currentDate = new Date(startDate);
     
     for (let i = 0; i < 42; i++) {
-      // 格式化为 YYYY-MM-DD 格式以匹配数据
-      const dateStr = currentDate.toISOString().split('T')[0];
+      // 格式化为 YYYY-MM-DD 格式以匹配数据，避免时区问题
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
       const dayData = displayData.find(item => item.date === dateStr);
       
       calendarDays.push({
@@ -449,7 +452,11 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
     for (let i = 0; i < 7; i++) {
       const dayDate = new Date(weekStart);
       dayDate.setDate(weekStart.getDate() + i);
-      const dateStr = dayDate.toISOString().split('T')[0];
+      // 避免时区问题的日期格式化
+      const year = dayDate.getFullYear();
+      const month = String(dayDate.getMonth() + 1).padStart(2, '0');
+      const day = String(dayDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
       
       // 查找对应日期的数据
       const dayData = data.find(item => item.date === dateStr);
