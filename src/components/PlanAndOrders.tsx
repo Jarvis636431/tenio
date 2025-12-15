@@ -101,8 +101,8 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
     
     // 遍历所有任务，从名称中提取楼层信息
     allData.forEach(item => {
-      // 匹配常见的楼层格式："1层"、"1F"、"11层"、"基础层"、"地下1层" 等
-      const floorMatches = item.task.match(/(?:地下)?(\d+)(?:层|F|楼)|基础层|屋面层|顶层/gi);
+      // 匹配常见的楼层格式："1层"、"1F"、"11层"、"基础层"、"首层"、"地下1层"、"负一层"、"负二层" 等
+      const floorMatches = item.task.match(/(?:地下|负[一二三四五六七八九十]*)?(\d+)(?:层|F|楼)|负[一二三四五六七八九十]+层|基础层|首层|屋面层|顶层/gi);
       if (floorMatches) {
         floorMatches.forEach(match => {
           floorSet.add(match);
@@ -115,26 +115,88 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
     
     const floors = Array.from(floorSet);
     
-    // 排序：数字楼层按数字排序，特殊楼层放后面
+    // 排序：地下楼层 → 首层 → 数字楼层 → 其他特殊楼层
     const sortedFloors = floors.sort((a, b) => {
-      // 提取数字
-      const numA = parseInt(a.match(/\d+/)?.[0] || '999');
-      const numB = parseInt(b.match(/\d+/)?.[0] || '999');
+      // 提取数字（处理负数楼层）
+      const getFloorNum = (floor: string) => {
+        if (floor.includes('负')) {
+          // 处理中文数字
+          const chineseNum = floor.match(/负([一二三四五六七八九十]+)/)?.[1];
+          if (chineseNum) {
+            const chineseToNum: { [key: string]: number } = {
+              '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+              '六': 6, '七': 7, '八': 8, '九': 9, '十': 10
+            };
+            return -(chineseToNum[chineseNum] || 1);
+          }
+          // 处理阿拉伯数字
+          const arabicNum = floor.match(/负(\d+)/)?.[1];
+          if (arabicNum) {
+            return -parseInt(arabicNum);
+          }
+        }
+        return parseInt(floor.match(/\d+/)?.[0] || '999');
+      };
       
-      // 特殊楼层判断
-      const isSpecialA = a.includes('基础') || a.includes('屋面');
-      const isSpecialB = b.includes('基础') || b.includes('屋面');
+      const numA = getFloorNum(a);
+      const numB = getFloorNum(b);
       
-      if (isSpecialA && !isSpecialB) return 1;
-      if (!isSpecialA && isSpecialB) return -1;
-      
-      // 地下楼层排在前面
-      const isUndergroundA = a.includes('地下');
-      const isUndergroundB = b.includes('地下');
+      // 地下楼层（包括负数楼层）排在最前面
+      const isUndergroundA = a.includes('地下') || a.includes('负');
+      const isUndergroundB = b.includes('地下') || b.includes('负');
       
       if (isUndergroundA && !isUndergroundB) return -1;
       if (!isUndergroundA && isUndergroundB) return 1;
       
+      // 如果都是地下楼层，按数字排序（负数楼层需要特殊处理）
+      if (isUndergroundA && isUndergroundB) {
+        // 处理负数楼层的数字提取
+        const getFloorNumber = (floor: string) => {
+          if (floor.includes('负')) {
+            // 处理中文数字转换
+            const chineseNum = floor.match(/负([一二三四五六七八九十]+)/)?.[1];
+            if (chineseNum) {
+              const chineseToNum: { [key: string]: number } = {
+                '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+                '六': 6, '七': 7, '八': 8, '九': 9, '十': 10
+              };
+              return -(chineseToNum[chineseNum] || 1);
+            }
+            // 处理阿拉伯数字
+            const arabicNum = floor.match(/负(\d+)/)?.[1];
+            if (arabicNum) {
+              return -parseInt(arabicNum);
+            }
+          }
+          // 普通地下楼层
+          return parseInt(floor.match(/\d+/)?.[0] || '0');
+        };
+        
+        const floorNumA = getFloorNumber(a);
+        const floorNumB = getFloorNumber(b);
+        return floorNumA - floorNumB;
+      }
+      
+      // 首层排在地下楼层之后，数字楼层之前
+      const isFirstFloorA = a.includes('首层');
+      const isFirstFloorB = b.includes('首层');
+      
+      if (isFirstFloorA && !isFirstFloorB && !isUndergroundB) return -1;
+      if (!isFirstFloorA && isFirstFloorB && !isUndergroundA) return 1;
+      
+      // 基础层和屋面层等特殊楼层排在后面
+      const isOtherSpecialA = a.includes('基础') || a.includes('屋面') || a.includes('顶层');
+      const isOtherSpecialB = b.includes('基础') || b.includes('屋面') || b.includes('顶层');
+      
+      if (isOtherSpecialA && !isOtherSpecialB) return 1;
+      if (!isOtherSpecialA && isOtherSpecialB) return -1;
+      
+      // 如果都是特殊楼层，按字母排序
+      if (isOtherSpecialA && isOtherSpecialB) {
+        return a.localeCompare(b);
+      }
+      
+      // 普通数字楼层按数字排序
       return numA - numB;
     });
     
@@ -158,7 +220,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
         matchesFloor = true;
       } else if (floorFilter === "其他") {
         // 如果选择"其他"，显示所有没有匹配到楼层信息的工序
-        const hasFloorInfo = /(?:地下)?(\d+)(?:层|F|楼)|基础层|屋面层/gi.test(item.task);
+        const hasFloorInfo = /(?:地下|负[一二三四五六七八九十]*)?(\d+)(?:层|F|楼)|负[一二三四五六七八九十]+层|基础层|首层|屋面层|顶层/gi.test(item.task);
         matchesFloor = !hasFloorInfo;
       } else {
         // 普通楼层筛选
