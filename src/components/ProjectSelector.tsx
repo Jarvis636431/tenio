@@ -4,7 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useProject } from "@/contexts/ProjectContext";
+import { useProject } from "@/hooks/useProject";
 import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { useState } from "react";
 

@@ -10,7 +10,7 @@ import { PersonnelTransfer } from "@/components/PersonnelTransfer";
 import { QualityInspection } from "@/components/QualityInspection";
 import { DailyLog } from "@/components/DailyLog";
 import { KnowledgeQA } from "@/components/KnowledgeQA";
-import { useProject } from "@/contexts/ProjectContext";
+import { useProject } from "@/hooks/useProject";
 import { PageHeader } from "@/components/PageHeader";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import type { ProjectInfoRow } from "@/services/project-service";

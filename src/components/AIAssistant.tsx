@@ -4,7 +4,7 @@ import { Sparkles, X, Send, WifiOff, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useProject } from "@/contexts/ProjectContext";
+import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 

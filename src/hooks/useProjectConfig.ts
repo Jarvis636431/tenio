@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useProject } from "@/contexts/ProjectContext";
+import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
 import { getProjectConfig, ProjectConfigResponse } from "@/services/project-service";
 

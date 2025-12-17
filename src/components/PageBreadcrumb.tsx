@@ -1,5 +1,5 @@
 import { useLocation, useParams } from "react-router-dom";
-import { useProject } from "@/contexts/ProjectContext";
+import { useProject } from "@/hooks/useProject";
 import {
   Breadcrumb,
   BreadcrumbItem,

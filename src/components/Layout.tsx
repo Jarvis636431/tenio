@@ -1,10 +1,8 @@
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AIAssistant } from "@/components/AIAssistant";
-import { ProjectProvider } from "@/contexts/ProjectContext";
 import { SidebarToggle } from "@/components/SidebarToggle";
 import { PageBreadcrumb } from "@/components/PageBreadcrumb";
-import { useLocation } from "react-router-dom";
 interface LayoutProps {
   children: React.ReactNode;
 }
@@ -33,11 +31,9 @@ function LayoutContent({ children }: LayoutProps) {
 export function Layout({
   children
 }: LayoutProps) {
-  const location = useLocation();
-  
-  return <ProjectProvider>
-      <SidebarProvider defaultOpen={true}>
-        <LayoutContent>{children}</LayoutContent>
-      </SidebarProvider>
-    </ProjectProvider>;
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <LayoutContent>{children}</LayoutContent>
+    </SidebarProvider>
+  );
 }

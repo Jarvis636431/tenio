@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Search, Plus, Download, Calendar, Filter, Edit, Eye, BarChart3, Save, X, MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useProject } from "@/contexts/ProjectContext";
+import { useProject } from "@/hooks/useProject";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import type { ProjectScheduleItem } from "@/hooks/useProjectSchedule";
 import { useProjectConfig } from "@/hooks/useProjectConfig";

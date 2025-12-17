@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ReactECharts from "echarts-for-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useProject } from "@/contexts/ProjectContext";
+import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
 import { getCrewData, getBudgetData, CrewData, BudgetData } from "@/services/project-service";
 import { Skeleton } from "@/components/ui/skeleton";

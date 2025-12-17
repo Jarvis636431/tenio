@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Plus, Building2, Activity, FileText, BarChart3, Users, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useProject } from "@/contexts/ProjectContext";
+import { useProject } from "@/hooks/useProject";
 import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { useState } from "react";
