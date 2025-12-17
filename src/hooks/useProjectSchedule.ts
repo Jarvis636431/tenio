@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useProject } from "@/contexts/ProjectContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { getProjectDetail, getProcessGuidMapping, ScheduleRow } from "@/services/project-service";
 
 export interface ProjectScheduleItem {

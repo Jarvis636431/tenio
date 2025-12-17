@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Loader2, ShieldAlert, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { getProcessInfo, OrderInfoData, ProcessInfoData } from "@/services/project-service";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { ModelViewer } from "@/components/ModelViewer";
 
 // 验收数据接口
