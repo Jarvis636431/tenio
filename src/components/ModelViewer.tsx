@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { IFCLoader } from 'web-ifc-three/IFCLoader';
 import { IFCPRODUCT } from 'web-ifc';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { useIFCWorker } from '@/hooks/useIFCWorker';
+import type { SerializedModel, LoadingState } from '@/types/worker.types';
 
 interface HighlightGroup {
   ids: Array<number | string>;
@@ -53,203 +55,200 @@ export function ModelViewer({
   const highlightSubsetRef = useRef<(THREE.Mesh & { renderOrder: number }) | null>(null);
   const highlightSubsetsRef = useRef<Map<string, THREE.Mesh & { renderOrder: number }>>(new Map());
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingState, setLoadingState] = useState<LoadingState>({
+    isLoading: false,
+    progress: 0,
+    message: '',
+    error: null,
+  });
 
-  // 清理函数
-  const cleanup = useCallback(() => {
-    console.log('[ModelViewer] 开始清理资源');
+  // Worker hook
+  const { parseIFC, cancel: cancelWorker, isWorkerAvailable } = useIFCWorker({
+    onProgress: (progress, message) => {
+      console.log(`[ModelViewer] Worker 进度: ${progress}% - ${message}`);
+      setLoadingState(prev => ({
+        ...prev,
+        progress,
+        message,
+      }));
+    },
+    onSuccess: (modelData) => {
+      console.log('[ModelViewer] Worker 解析成功');
+      handleWorkerSuccess(modelData);
+    },
+    onError: (error) => {
+      console.error('[ModelViewer] Worker 错误:', error);
+      // 不要设置错误状态，因为可能只是 Worker 不可用
+      // 主线程降级会在 initViewer 中处理
+    },
+  });
+
+  // 反序列化模型数据
+  const deserializeModel = useCallback((serialized: SerializedModel): THREE.Object3D & { modelID: number } => {
+    console.log('[ModelViewer] 开始反序列化模型');
     
-    // 取消动画循环
-    if (animateIdRef.current) {
-      cancelAnimationFrame(animateIdRef.current);
-      animateIdRef.current = null;
-    }
+    const group = new THREE.Group() as any;
+    group.modelID = serialized.modelID;
 
-    // 取消网络请求
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-
-    // 清理Three.js资源
-    if (rendererRef.current) {
-      rendererRef.current.dispose();
-      rendererRef.current = null;
-    }
-
-    if (controlsRef.current) {
-      controlsRef.current.dispose();
-      controlsRef.current = null;
-    }
-
-    // 清理容器
-    if (containerRef.current) {
-      containerRef.current.innerHTML = '';
-    }
-
-    // 重置refs
-    sceneRef.current = null;
-    cameraRef.current = null;
-    modelRef.current = null;
-    raycasterRef.current = null;
-    mouseRef.current = null;
-    infoDivRef.current = null;
-    selectionSubsetRef.current = null;
-    highlightSubsetRef.current = null;
-    highlightSubsetsRef.current.clear();
-    if (ifcLoaderRef.current) {
+    serialized.meshes.forEach((meshData, index) => {
       try {
-        ifcLoaderRef.current.ifcManager?.dispose();
-      } catch (disposeError) {
-        console.warn('[ModelViewer] 卸载IFC实例时出错:', disposeError);
-      }
-      ifcLoaderRef.current = null;
-    }
-    isInitializedRef.current = false;
-    productIndexReadyRef.current = false;
-    if (highlightRetryTimeoutRef.current) {
-      clearTimeout(highlightRetryTimeoutRef.current);
-      highlightRetryTimeoutRef.current = null;
-    }
+        // 创建几何体
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(meshData.geometry.positions, 3));
+        
+        if (meshData.geometry.normals) {
+          geometry.setAttribute('normal', new THREE.BufferAttribute(meshData.geometry.normals, 3));
+        }
+        
+        if (meshData.geometry.indices) {
+          geometry.setIndex(new THREE.BufferAttribute(meshData.geometry.indices, 1));
+        }
+        
+        geometry.uuid = meshData.geometry.uuid;
+        geometry.computeBoundingSphere();
+        geometry.computeBoundingBox();
 
-    console.log('[ModelViewer] 资源清理完成');
+        // 创建材质
+        const material = new THREE.MeshStandardMaterial({
+          color: meshData.material.color,
+          opacity: meshData.material.opacity,
+          transparent: meshData.material.transparent,
+          side: meshData.material.side as THREE.Side,
+          depthWrite: true,
+          depthTest: true,
+          metalness: 0,
+          roughness: 0.6,
+        });
+        // material.uuid = meshData.material.uuid; // uuid 是只读的
+
+        // 创建网格
+        const mesh = new THREE.Mesh(geometry, material) as THREE.Mesh & { expressID?: number };
+        mesh.matrix.fromArray(meshData.matrix);
+        mesh.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
+        
+        if (meshData.expressID !== undefined) {
+          mesh.expressID = meshData.expressID;
+        }
+        
+        mesh.name = meshData.name || `Mesh_${index}`;
+        mesh.visible = meshData.visible;
+        mesh.renderOrder = meshData.renderOrder;
+
+        group.add(mesh);
+      } catch (error) {
+        console.warn('[ModelViewer] 反序列化网格失败:', error);
+      }
+    });
+
+    console.log(`[ModelViewer] 反序列化完成，共 ${group.children.length} 个网格`);
+    return group;
   }, []);
 
-  // 初始化viewer
-  const initViewer = useCallback(async () => {
-    if (isInitializedRef.current || !containerRef.current || !src) {
+  // 处理 Worker 成功
+  const handleWorkerSuccess = useCallback((modelData: SerializedModel) => {
+    if (!sceneRef.current || !cameraRef.current || !rendererRef.current || !containerRef.current) {
+      console.error('[ModelViewer] 场景未初始化');
       return;
     }
 
-    console.log('[ModelViewer] 开始初始化viewer');
-    setIsLoading(true);
-    setError(null);
-
     try {
-      // 创建新的AbortController用于取消下载
-      abortControllerRef.current = new AbortController();
+      // 反序列化模型
+      const model = deserializeModel(modelData);
+      modelRef.current = model;
 
-      const container = containerRef.current;
-      container.innerHTML = '';
+      // 添加到场景
+      sceneRef.current.add(model);
 
-      // 创建场景
-      const scene = new THREE.Scene();
-      scene.background = null;
-      scene.fog = null;
-
-      // 创建相机
-      const camera = new THREE.PerspectiveCamera(
-        75,
-        container.clientWidth / container.clientHeight,
-        0.01,
-        2000
-      );
-      camera.position.set(20, 20, 20);
-      camera.lookAt(0, 0, 0);
-      camera.near = 0.01;
-      camera.far = 2000;
-      camera.updateProjectionMatrix();
-
-      // 创建渲染器
-      const renderer = new THREE.WebGLRenderer({
-        antialias: false,
-        powerPreference: 'high-performance',
-        stencil: false,
-        depth: true,
-        alpha: true,
+      // 应用基础材质
+      const workerBaseMaterial = new THREE.MeshStandardMaterial({
+        color: 0x808080,
+        transparent: true,
+        opacity: 0.3,
+        depthWrite: false,
+        metalness: 0,
+        roughness: 1,
       });
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.shadowMap.enabled = false;
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      container.appendChild(renderer.domElement);
+      
+      model.traverse((child: THREE.Object3D) => {
+        if (child instanceof THREE.Mesh) {
+          child.material = workerBaseMaterial;
+          child.renderOrder = 0;
+        }
+      });
 
-      // 添加光源
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-      scene.add(ambientLight);
+      // 设置相机和控制器
+      setupCameraAndControls(model, cameraRef.current, rendererRef.current);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      directionalLight.position.set(10, 10, 10);
-      scene.add(directionalLight);
+      // 设置交互
+      setupInteraction(ifcLoaderRef.current!, model, cameraRef.current, rendererRef.current);
 
-      // 创建IFC加载器
-      const ifcLoader = new IFCLoader();
-      ifcLoader.ifcManager.setWasmPath('/wasm/');
-      ifcLoaderRef.current = ifcLoader;
+      // 开始渲染循环
+      startRenderLoop(sceneRef.current, cameraRef.current, rendererRef.current);
 
-      // 加载模型
-      await loadModel(ifcLoader, scene, camera, renderer, container);
+      // 更新加载状态
+      setLoadingState({
+        isLoading: false,
+        progress: 90,
+        message: '正在应用高亮...',
+        error: null,
+      });
 
-      isInitializedRef.current = true;
-      setIsLoading(false);
-      console.log('[ModelViewer] Viewer初始化完成');
+      // 应用高亮
+      if (ifcLoaderRef.current) {
+        applyHighlight(ifcLoaderRef.current, model);
+      }
 
-    } catch (err) {
-      console.error('[ModelViewer] 初始化失败:', err);
-      setError(err instanceof Error ? err.message : '初始化失败');
-      setIsLoading(false);
+      // 完成
+      setLoadingState({
+        isLoading: false,
+        progress: 100,
+        message: '加载完成',
+        error: null,
+      });
+
+      console.log('[ModelViewer] 模型加载完成');
+    } catch (error) {
+      console.error('[ModelViewer] 处理模型失败:', error);
+      setLoadingState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : '处理模型失败',
+      }));
     }
-  }, [src]);
+  }, [deserializeModel]);
 
-  // 加载模型
-  const loadModel = async (
-    ifcLoader: IFCLoader,
+  // 主线程降级加载
+  const loadModelInMainThread = useCallback(async (
+    data: ArrayBuffer,
     scene: THREE.Scene,
     camera: THREE.PerspectiveCamera,
     renderer: THREE.WebGLRenderer,
     container: HTMLDivElement
   ) => {
     try {
-      console.log('[ModelViewer] 开始加载模型:', src);
+      if (!ifcLoaderRef.current) {
+        throw new Error('IFC Loader 未初始化');
+      }
+
+      setLoadingState(prev => ({
+        ...prev,
+        progress: 40,
+        message: '正在解析模型（主线程）...',
+      }));
+
+      const model = await ifcLoaderRef.current.parse(data) as THREE.Object3D & { modelID: number };
 
       // 检查是否已被取消
       if (abortControllerRef.current?.signal.aborted) {
         return;
       }
 
-      const response = await fetch(src!, {
-        signal: abortControllerRef.current?.signal,
-      });
+      setLoadingState(prev => ({
+        ...prev,
+        progress: 70,
+        message: '正在处理模型...',
+      }));
 
-      if (!response.ok) {
-        throw new Error(`请求模型文件失败: ${response.status}`);
-      }
-
-      // 再次检查是否已被取消
-      if (abortControllerRef.current?.signal.aborted) {
-        return;
-      }
-
-      const data = await response.arrayBuffer();
-
-      // 再次检查是否已被取消
-      if (abortControllerRef.current?.signal.aborted) {
-        return;
-      }
-
-      // TODO: 性能优化 - 使用 Web Worker 避免阻塞主线程
-      // 当前问题：ifcLoader.parse() 是 CPU 密集型操作，会阻塞主线程数秒
-      // 导致加载期间 UI 完全无响应（包括侧边栏点击）
-      // 解决方案：
-      // 1. 创建 Worker 线程执行 IFC 解析
-      // 2. 通过 postMessage 传递 ArrayBuffer
-      // 3. Worker 返回解析后的模型数据
-      // 4. 主线程只负责渲染
-      // 参考：https://github.com/IFCjs/web-ifc-three/issues/XXX
-      const model = await ifcLoader.parse(data) as THREE.Object3D & { modelID: number };
-
-      // 检查是否已被取消
-      if (abortControllerRef.current?.signal.aborted) {
-        return;
-      }
-
-      // TODO: 性能优化 - 优化模型遍历操作
-      // 当前问题：traverse() 同步遍历整个模型树，对大模型会进一步延长阻塞时间
-      // 建议方案：
-      // 1. 配合 Web Worker 方案，在 Worker 中完成遍历
-      // 2. 或使用 requestIdleCallback 分帧处理
-      // 3. 或延迟到渲染后按需处理
       // 优化模型
       model.traverse((child: THREE.Object3D) => {
         if (child instanceof THREE.Mesh) {
@@ -305,7 +304,7 @@ export function ModelViewer({
       }
 
       // 应用基础材质（半透明灰色）
-      const baseMaterial = new THREE.MeshStandardMaterial({
+      const mainThreadBaseMaterial = new THREE.MeshStandardMaterial({
         color: 0x808080,
         transparent: true,
         opacity: 0.3,
@@ -313,32 +312,257 @@ export function ModelViewer({
         metalness: 0,
         roughness: 1,
       });
+      
       model.traverse((child: THREE.Object3D) => {
         if (child instanceof THREE.Mesh) {
-          child.material = baseMaterial;
+          child.material = mainThreadBaseMaterial;
           child.renderOrder = 0;
         }
       });
-
-      // 应用高亮
-      await applyHighlight(ifcLoader, model);
 
       // 设置相机和控制器
       setupCameraAndControls(model, camera, renderer);
 
       // 设置交互
-      setupInteraction(ifcLoader, model, camera, renderer);
+      setupInteraction(ifcLoaderRef.current!, model, camera, renderer);
 
       // 开始渲染循环
       startRenderLoop(scene, camera, renderer);
 
-      console.log('[ModelViewer] 模型加载完成');
+      setLoadingState(prev => ({
+        ...prev,
+        progress: 90,
+        message: '正在应用高亮...',
+      }));
+
+      // 应用高亮
+      await applyHighlight(ifcLoaderRef.current!, model);
+
+      setLoadingState({
+        isLoading: false,
+        progress: 100,
+        message: '加载完成',
+        error: null,
+      });
+
+      console.log('[ModelViewer] 模型加载完成（主线程）');
 
     } catch (err) {
-      console.error('[ModelViewer] 加载模型失败:', err);
+      console.error('[ModelViewer] 主线程加载失败:', err);
       throw err;
     }
-  };
+  }, []);
+
+  // 清理函数
+  const cleanup = useCallback(() => {
+    console.log('[ModelViewer] 开始清理资源');
+    
+    // 取消 Worker
+    cancelWorker();
+    
+    // 取消动画循环
+    if (animateIdRef.current) {
+      cancelAnimationFrame(animateIdRef.current);
+      animateIdRef.current = null;
+    }
+
+    // 取消网络请求
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    // 清理Three.js资源
+    if (rendererRef.current) {
+      rendererRef.current.dispose();
+      rendererRef.current = null;
+    }
+
+    if (controlsRef.current) {
+      controlsRef.current.dispose();
+      controlsRef.current = null;
+    }
+
+    // 清理容器
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '';
+    }
+
+    // 重置refs
+    sceneRef.current = null;
+    cameraRef.current = null;
+    modelRef.current = null;
+    raycasterRef.current = null;
+    mouseRef.current = null;
+    infoDivRef.current = null;
+    selectionSubsetRef.current = null;
+    highlightSubsetRef.current = null;
+    highlightSubsetsRef.current.clear();
+    if (ifcLoaderRef.current) {
+      try {
+        ifcLoaderRef.current.ifcManager?.dispose();
+      } catch (disposeError) {
+        console.warn('[ModelViewer] 卸载IFC实例时出错:', disposeError);
+      }
+      ifcLoaderRef.current = null;
+    }
+    isInitializedRef.current = false;
+    productIndexReadyRef.current = false;
+    if (highlightRetryTimeoutRef.current) {
+      clearTimeout(highlightRetryTimeoutRef.current);
+      highlightRetryTimeoutRef.current = null;
+    }
+
+    console.log('[ModelViewer] 资源清理完成');
+  }, [cancelWorker]);
+
+  // 初始化viewer
+  const initViewer = useCallback(async () => {
+    if (isInitializedRef.current || !containerRef.current || !src) {
+      return;
+    }
+
+    console.log('[ModelViewer] 开始初始化viewer');
+    setLoadingState({
+      isLoading: true,
+      progress: 0,
+      message: '正在初始化...',
+      error: null,
+    });
+
+    try {
+      // 创建新的AbortController用于取消下载
+      abortControllerRef.current = new AbortController();
+
+      const container = containerRef.current;
+      container.innerHTML = '';
+
+      // 创建场景
+      const scene = new THREE.Scene();
+      scene.background = null;
+      scene.fog = null;
+
+      // 创建相机
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        container.clientWidth / container.clientHeight,
+        0.01,
+        2000
+      );
+      camera.position.set(20, 20, 20);
+      camera.lookAt(0, 0, 0);
+      camera.near = 0.01;
+      camera.far = 2000;
+      camera.updateProjectionMatrix();
+
+      // 创建渲染器
+      const renderer = new THREE.WebGLRenderer({
+        antialias: false,
+        powerPreference: 'high-performance',
+        stencil: false,
+        depth: true,
+        alpha: true,
+      });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = false;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      container.appendChild(renderer.domElement);
+
+      // 添加光源
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(10, 10, 10);
+      scene.add(directionalLight);
+
+      // 创建IFC加载器（用于高亮和交互）
+      const ifcLoader = new IFCLoader();
+      ifcLoader.ifcManager.setWasmPath('/wasm/');
+      ifcLoaderRef.current = ifcLoader;
+
+      // 保存场景引用
+      sceneRef.current = scene;
+      cameraRef.current = camera;
+      rendererRef.current = renderer;
+
+      // 加载模型（内联）
+      console.log('[ModelViewer] 开始加载模型:', src);
+
+      // 更新进度：开始下载
+      setLoadingState(prev => ({
+        ...prev,
+        progress: 10,
+        message: '正在下载模型...',
+      }));
+
+      // 检查是否已被取消
+      if (abortControllerRef.current?.signal.aborted) {
+        console.log('[ModelViewer] 加载已取消（下载前）');
+        return;
+      }
+
+      const response = await fetch(src!, {
+        signal: abortControllerRef.current?.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`请求模型文件失败: ${response.status}`);
+      }
+
+      // 再次检查是否已被取消
+      if (abortControllerRef.current?.signal.aborted) {
+        console.log('[ModelViewer] 加载已取消（下载后）');
+        return;
+      }
+
+      const data = await response.arrayBuffer();
+
+      // 再次检查是否已被取消
+      if (abortControllerRef.current?.signal.aborted) {
+        console.log('[ModelViewer] 加载已取消（数据获取后）');
+        return;
+      }
+
+      // 更新进度：下载完成
+      setLoadingState(prev => ({
+        ...prev,
+        progress: 30,
+        message: '下载完成，准备解析...',
+      }));
+
+      // 使用 Worker 解析（如果可用）
+      console.log('[ModelViewer] isWorkerAvailable:', isWorkerAvailable);
+      if (isWorkerAvailable) {
+        console.log('[ModelViewer] 使用 Worker 解析，数据大小:', data.byteLength, 'bytes');
+        parseIFC(data, '/wasm/');
+        // Worker 会通过回调处理后续流程
+        console.log('[ModelViewer] Worker 解析请求已发送');
+      } else {
+        // 降级：使用主线程解析
+        console.warn('[ModelViewer] Worker 不可用，使用主线程解析');
+        await loadModelInMainThread(data, scene, camera, renderer, container);
+      }
+
+      isInitializedRef.current = true;
+      console.log('[ModelViewer] Viewer初始化完成');
+
+    } catch (err) {
+      // 忽略 AbortError
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('[ModelViewer] 初始化被取消');
+        return;
+      }
+      console.error('[ModelViewer] 初始化失败:', err);
+      setLoadingState({
+        isLoading: false,
+        progress: 0,
+        message: '',
+        error: err instanceof Error ? err.message : '初始化失败',
+      });
+    }
+  }, [src, isWorkerAvailable, parseIFC, handleWorkerSuccess, loadModelInMainThread]);
 
   // 应用高亮
   const scheduleHighlightRetry = (nextAttempt: number) => {
@@ -810,8 +1034,11 @@ export function ModelViewer({
       initViewer();
     }
 
-    return cleanup;
-  }, [src, initViewer, cleanup]);
+    return () => {
+      cleanup();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src]); // 只依赖 src，避免无限循环
 
   // 高亮变化effect
   useEffect(() => {
@@ -835,19 +1062,26 @@ export function ModelViewer({
         style={{ minHeight: '400px' }}
       />
       
-      {isLoading && (
+      {loadingState.isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            <p className="text-sm text-gray-600">加载模型中...</p>
+          <div className="text-center w-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-sm text-gray-600 mb-2">{loadingState.message || '加载模型中...'}</p>
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${loadingState.progress}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-gray-500">{loadingState.progress}%</p>
           </div>
         </div>
       )}
 
-      {error && (
+      {loadingState.error && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
           <div className="text-center text-red-600">
-            <p className="text-sm">加载失败: {error}</p>
+            <p className="text-sm">加载失败: {loadingState.error}</p>
           </div>
         </div>
       )}
