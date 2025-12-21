@@ -1,12 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, TrendingUp, Users, DollarSign } from "lucide-react";
+import { RefreshCcw, TrendingUp, Users, DollarSign, Calendar } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import { ModelViewer } from "@/components/ModelViewer";
 import { Slider } from "@/components/ui/slider";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 interface ProjectHomepageProps {
   projectId: string;
@@ -24,8 +26,71 @@ export function ProjectHomepage({
     forceRefreshMapping,
     isMappingFetching,
   } = useProjectSchedule();
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [currentDay, setCurrentDay] = useState(1);
   const [chartDataType, setChartDataType] = useState<'cost' | 'labor'>('cost');
+
+  // 计算项目时间范围 - 处理相对时间
+  const timeRange = useMemo(() => {
+    if (!scheduleItems.length) {
+      console.log('[ProjectHomepage] 没有工序数据');
+      return null;
+    }
+    
+    console.log('[ProjectHomepage] 工序数据:', scheduleItems.map(item => ({
+      task: item.task,
+      startTime: item.startTime,
+      endTime: item.endTime
+    })));
+    
+    // 解析相对时间（如"第1天"、"1"、"Day 1"等格式）
+    const parseRelativeTime = (timeStr: string): number | null => {
+      if (!timeStr || !timeStr.trim()) return null;
+      
+      // 尝试多种相对时间格式
+      const patterns = [
+        /第(\d+)天/,           // "第1天"
+        /Day\s*(\d+)/i,       // "Day 1" 或 "day 1"
+        /^\s*(\d+)\s*$/,      // 纯数字 "1"
+        /天数\s*(\d+)/,       // "天数1"
+      ];
+      
+      for (const pattern of patterns) {
+        const match = timeStr.match(pattern);
+        if (match) {
+          const day = parseInt(match[1], 10);
+          return isNaN(day) ? null : day;
+        }
+      }
+      
+      // 如果都不匹配，尝试直接解析数字
+      const num = parseInt(timeStr.trim(), 10);
+      return isNaN(num) ? null : num;
+    };
+    
+    const startDays = scheduleItems
+      .map(item => parseRelativeTime(item.startTime))
+      .filter(day => day !== null) as number[];
+    
+    const endDays = scheduleItems
+      .map(item => parseRelativeTime(item.endTime))
+      .filter(day => day !== null) as number[];
+    
+    console.log('[ProjectHomepage] 解析的开始天数:', startDays);
+    console.log('[ProjectHomepage] 解析的结束天数:', endDays);
+    
+    if (!startDays.length || !endDays.length) {
+      console.log('[ProjectHomepage] 没有有效的相对时间数据，使用默认范围');
+      return { startDay: 1, endDay: 30, totalDays: 30 };
+    }
+    
+    const minDay = Math.min(...startDays);
+    const maxDay = Math.max(...endDays);
+    const totalDays = maxDay - minDay + 1;
+    
+    console.log('[ProjectHomepage] 项目天数范围:', { startDay: minDay, endDay: maxDay, totalDays });
+    
+    return { startDay: minDay, endDay: maxDay, totalDays };
+  }, [scheduleItems]);
 
   const highlightInfo = useMemo(() => {
     const all: Array<number | string> = [];
@@ -71,19 +136,84 @@ export function ProjectHomepage({
     return out;
   };
 
-  const orderedTasks = useMemo(
-    () => scheduleItems.map((i) => i.task),
-    [scheduleItems]
-  );
+  // 根据当前天数计算工序状态
+  const taskStatusByTime = useMemo(() => {
+    if (!timeRange) return { completed: [], inProgress: [], upcoming: [] };
+    
+    const completed: string[] = [];
+    const inProgress: string[] = [];
+    const upcoming: string[] = [];
+    
+    // 解析相对时间的辅助函数
+    const parseRelativeTime = (timeStr: string): number | null => {
+      if (!timeStr || !timeStr.trim()) return null;
+      
+      const patterns = [
+        /第(\d+)天/,           // "第1天"
+        /Day\s*(\d+)/i,       // "Day 1" 或 "day 1"
+        /^\s*(\d+)\s*$/,      // 纯数字 "1"
+        /天数\s*(\d+)/,       // "天数1"
+      ];
+      
+      for (const pattern of patterns) {
+        const match = timeStr.match(pattern);
+        if (match) {
+          const day = parseInt(match[1], 10);
+          return isNaN(day) ? null : day;
+        }
+      }
+      
+      const num = parseInt(timeStr.trim(), 10);
+      return isNaN(num) ? null : num;
+    };
+    
+    scheduleItems.forEach((item, index) => {
+      const startDay = parseRelativeTime(item.startTime);
+      const endDay = parseRelativeTime(item.endTime);
+      
+      if (startDay === null || endDay === null) {
+        // 如果没有有效的相对时间数据，根据序号模拟状态
+        const totalTasks = scheduleItems.length;
+        const progressRatio = (currentDay - timeRange.startDay) / (timeRange.endDay - timeRange.startDay);
+        const currentTaskIndex = Math.floor(progressRatio * totalTasks);
+        
+        if (index < currentTaskIndex) {
+          completed.push(item.task);
+        } else if (index === currentTaskIndex) {
+          inProgress.push(item.task);
+        } else {
+          upcoming.push(item.task);
+        }
+        return;
+      }
+      
+      // 基于相对天数判断状态
+      if (currentDay < startDay) {
+        // 尚未开始
+        upcoming.push(item.task);
+      } else if (currentDay > endDay) {
+        // 已完成
+        completed.push(item.task);
+      } else {
+        // 进行中
+        inProgress.push(item.task);
+      }
+    });
+    
+    console.log('[ProjectHomepage] 工序状态 (第' + currentDay + '天):', { completed, inProgress, upcoming });
+    
+    return { completed, inProgress, upcoming };
+  }, [scheduleItems, currentDay, timeRange]);
+
   const completedIds = useMemo(() => {
-    return orderedTasks
-      .slice(0, Math.max(0, activeIndex))
-      .flatMap((name) => sanitizeIds(processGuidMapping?.[name]));
-  }, [orderedTasks, activeIndex, processGuidMapping]);
-  const inProgressIds = useMemo(
-    () => sanitizeIds(processGuidMapping?.[orderedTasks[activeIndex]]),
-    [orderedTasks, activeIndex, processGuidMapping]
-  );
+    return taskStatusByTime.completed
+      .flatMap((taskName) => sanitizeIds(processGuidMapping?.[taskName]));
+  }, [taskStatusByTime.completed, processGuidMapping]);
+  
+  const inProgressIds = useMemo(() => {
+    return taskStatusByTime.inProgress
+      .flatMap((taskName) => sanitizeIds(processGuidMapping?.[taskName]));
+  }, [taskStatusByTime.inProgress, processGuidMapping]);
 
   // 图表数据处理
   const chartData = useMemo(() => {
@@ -148,6 +278,13 @@ export function ProjectHomepage({
     return null;
   };
 
+  // 初始化当前天数为项目开始天数
+  useEffect(() => {
+    if (timeRange && currentDay === 1) {
+      setCurrentDay(timeRange.startDay);
+    }
+  }, [timeRange]);
+
   useEffect(() => {
     const withIds = scheduleItems
       .map((i) => ({
@@ -200,29 +337,69 @@ export function ProjectHomepage({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                工序位置：{activeIndex + 1} / {orderedTasks.length}
+                {timeRange ? (
+                  <>
+                    项目周期：第 {timeRange.startDay} 天 - 第 {timeRange.endDay} 天 (共 {timeRange.totalDays} 天)
+                    <br />
+                    当前进度：第 {currentDay} 天
+                    {scheduleItems.some(item => {
+                      const parseRelativeTime = (timeStr: string): number | null => {
+                        if (!timeStr || !timeStr.trim()) return null;
+                        const patterns = [/第(\d+)天/, /Day\s*(\d+)/i, /^\s*(\d+)\s*$/, /天数\s*(\d+)/];
+                        for (const pattern of patterns) {
+                          const match = timeStr.match(pattern);
+                          if (match) {
+                            const day = parseInt(match[1], 10);
+                            return isNaN(day) ? null : day;
+                          }
+                        }
+                        const num = parseInt(timeStr.trim(), 10);
+                        return isNaN(num) ? null : num;
+                      };
+                      return parseRelativeTime(item.startTime) === null || parseRelativeTime(item.endTime) === null;
+                    }) && (
+                      <>
+                        <br />
+                        <span className="text-amber-600">⚠️ 部分工序缺少时间数据，使用模拟进度</span>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  '正在加载时间数据...'
+                )}
               </div>
               <div className="text-sm">
                 <span className="mr-3">
-                  进行中：{inProgressIds.length} 构件
+                  进行中：{inProgressIds.length} 构件 ({taskStatusByTime.inProgress.length} 工序)
                 </span>
-                <span>已完成：{completedIds.length} 构件</span>
+                <span>已完成：{completedIds.length} 构件 ({taskStatusByTime.completed.length} 工序)</span>
                 <span className="ml-3 text-muted-foreground">
                   高亮构件：{highlightInfo.highlightCount}
                 </span>
               </div>
             </div>
-            <Slider
-              value={[
-                Math.min(activeIndex, Math.max(0, orderedTasks.length - 1)),
-              ]}
-              min={0}
-              max={Math.max(0, orderedTasks.length - 1)}
-              step={1}
-              onValueChange={(v) =>
-                setActiveIndex(Array.isArray(v) ? v[0] ?? 0 : 0)
-              }
-            />
+            
+            {timeRange && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium">项目进度控制</div>
+                  <div className="text-xs text-muted-foreground">
+                    拖动滑块查看不同天数的施工状态
+                  </div>
+                </div>
+                <Slider
+                  value={[currentDay]}
+                  min={timeRange.startDay}
+                  max={timeRange.endDay}
+                  step={1}
+                  onValueChange={(v) => setCurrentDay(v[0])}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>第 {timeRange.startDay} 天</span>
+                  <span>第 {timeRange.endDay} 天</span>
+                </div>
+              </div>
+            )}
 
             <div className="relative w-full h-[500px]">
               <ModelViewer
