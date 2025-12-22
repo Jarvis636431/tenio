@@ -6,7 +6,6 @@ import { CraftsmanManagement } from "@/components/CraftsmanManagement";
 import { CommunicationCollaboration } from "@/components/CommunicationCollaboration";
 import { PlanAndOrders } from "@/components/PlanAndOrders";
 import { ProjectHomepage } from "@/components/ProjectHomepage";
-import { PersonnelTransfer } from "@/components/PersonnelTransfer";
 import { QualityInspection } from "@/components/QualityInspection";
 import { DailyLog } from "@/components/DailyLog";
 import { KnowledgeQA } from "@/components/KnowledgeQA";
@@ -116,8 +115,6 @@ export default function ProjectDetail() {
         return "人工成本";
       case "craftsman-management":
         return "工匠管理";
-      case "personnel-transfer":
-        return "人员流转";
       case "communication-collaboration":
         return "沟通协作";
       case "funding-materials":
@@ -176,8 +173,6 @@ export default function ProjectDetail() {
         return <RealTimeMonitoring {...commonProps} />;
       case "craftsman-management":
         return <CraftsmanManagement {...commonProps} />;
-      case "personnel-transfer":
-        return <PersonnelTransfer {...commonProps} />;
       case "communication-collaboration":
         return <CommunicationCollaboration {...commonProps} />;
       case "funding-materials":
