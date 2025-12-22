@@ -438,7 +438,6 @@ export function AppSidebar() {
             <div className="border-t pt-1">
               {projectMenuItems.find(item => item.id === hoveredItem)?.subItems?.map((subItem) => {
                 const SubIcon = subItem.icon;
-                const isSubActive = location.search.includes(`view=${hoveredItem}&tab=${subItem.id}`);
                 return (
                   <Button
                     key={subItem.id}

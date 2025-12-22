@@ -1,14 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, TrendingUp, Users, DollarSign, Calendar } from "lucide-react";
+import { RefreshCcw, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import { ModelViewer } from "@/components/ModelViewer";
 import { Slider } from "@/components/ui/slider";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 interface ProjectHomepageProps {
   projectId: string;
@@ -252,7 +250,7 @@ export function ProjectHomepage({
   }, [chartData]);
 
   // 自定义 Tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
