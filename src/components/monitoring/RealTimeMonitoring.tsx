@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Users, DollarSign, Plus, Calendar, Table as TableIcon, BarChart3, Eye, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -136,15 +137,20 @@ export function RealTimeMonitoring() {
 
   const { addDataEntry, getDataEntries } = useDataEntry();
 
-  // 加载数据
+  // 使用 React Query 加载数据
+  const { data, isLoading } = useQuery({
+    queryKey: ["real-time-monitoring-data"],
+    queryFn: loadRealData,
+    staleTime: 5 * 60 * 1000, // 5分钟缓存
+    refetchOnWindowFocus: false,
+  });
+
   useEffect(() => {
-    const loadData = async () => {
-      const data = await loadRealData();
+    if (data) {
       setTotalData(data.totalData);
       setJobTypeData(data.jobTypeData);
-    };
-    loadData();
-  }, []);
+    }
+  }, [data]);
 
   // 监听路径变化，更新数据类型 (不再需要，因为 dataType 现在是直接从 render 中计算的)
   // useEffect(() => {

@@ -9,55 +9,16 @@
  * @returns 新的项目路径
  */
 export function getProjectPath(projectId: string, viewId?: string, tabId?: string): string {
-  const basePath = `/project/${projectId}`;
-  
   if (!viewId) {
-    return basePath; // 项目主页
+    return `/project/${projectId}`;
   }
   
-  // 映射表：(viewId, tabId) => 路径
-  const pathMap: Record<string, Record<string, string> | string> = {
-    'homepage': '',
-    'basic-info': 'basic-info',
-    'plan-and-orders': {
-      '': 'plan',
-      'task-overview': 'plan/overview',
-      'gantt-chart': 'plan/gantt',
-    },
-    'task-overview': 'plan/overview',
-    'gantt-chart': 'plan/gantt',
-    'real-time-monitoring': {
-      '': 'monitoring',
-      'labor': 'monitoring/labor',
-      'cost': 'monitoring/cost',
-    },
-    'labor': 'monitoring/labor',
-    'cost': 'monitoring/cost',
-    'craftsman-management': 'craftsman',
-    'communication-collaboration': 'communication',
-    'funding-materials': 'funding',
-    'toolbox': {
-      '': 'toolbox',
-      'quality-inspection': 'toolbox/quality',
-      'daily-log': 'toolbox/daily-log',
-      'knowledge-qa': 'toolbox/qa',
-    },
-    'quality-inspection': 'toolbox/quality',
-    'daily-log': 'toolbox/daily-log',
-    'knowledge-qa': 'toolbox/qa',
-  };
+  // IDs now directly match the URL segments, so simple concatenation is enough
+  const basePath = `/project/${projectId}/${viewId}`;
   
-  const mapping = pathMap[viewId];
-  
-  if (typeof mapping === 'string') {
-    // 简单映射
-    return `${basePath}/${mapping}`.replace(/\/$/, '');
-  } else if (mapping && typeof mapping === 'object') {
-    // 带 tab 的映射
-    const subPath = mapping[tabId || ''] || mapping[''];
-    return `${basePath}/${subPath}`.replace(/\/$/, '');
+  if (tabId) {
+    return `${basePath}/${tabId}`;
   }
   
-  // 默认返回主页
   return basePath;
 }

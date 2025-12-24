@@ -29,20 +29,20 @@ const projectMenuItems = [{
   label: "基础信息",
   icon: Info
 }, {
-  id: "plan-and-orders",
+  id: "plan",
   label: "施工总览",
   icon: ClipboardList,
   subItems: [{
-    id: "task-overview",
+    id: "overview",
     label: "任务总览",
     icon: Calendar
   }, {
-    id: "gantt-chart",
+    id: "gantt",
     label: "施工工序甘特图",
     icon: BarChart3
   }]
 }, {
-  id: "real-time-monitoring",
+  id: "monitoring",
   label: "实时监测",
   icon: Activity,
   subItems: [{
@@ -55,15 +55,15 @@ const projectMenuItems = [{
     icon: DollarSign
   }]
 }, {
-  id: "craftsman-management",
+  id: "craftsman",
   label: "工匠管理",
   icon: Users
 }, {
-  id: "funding-materials",
+  id: "funding",
   label: "资金物料",
   icon: Package
 }, {
-  id: "communication-collaboration",
+  id: "communication",
   label: "沟通协作",
   icon: Users
 }, {
@@ -71,7 +71,7 @@ const projectMenuItems = [{
   label: "工具箱",
   icon: Wrench,
   subItems: [{
-    id: "quality-inspection",
+    id: "quality",
     label: "质量检测",
     icon: CheckCircle
   }, {
@@ -79,7 +79,7 @@ const projectMenuItems = [{
     label: "每日日志",
     icon: BookOpen
   }, {
-    id: "knowledge-qa",
+    id: "qa",
     label: "知识问答",
     icon: MessageCircleQuestion
   }]
@@ -92,7 +92,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(["plan-and-orders", "real-time-monitoring", "toolbox"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["plan", "monitoring", "toolbox"]);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{top: number, left: number} | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);

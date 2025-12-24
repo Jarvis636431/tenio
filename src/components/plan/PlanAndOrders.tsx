@@ -74,8 +74,8 @@ export function PlanAndOrders() {
   const { tab } = useParams();
   
   // 从路径参数获取视图类型
-  // 映射: overview -> task-overview, gantt -> gantt-chart
-  const activeView = tab === 'gantt' ? 'gantt-chart' : 'task-overview';
+  // 映射: overview -> overview, gantt -> gantt (now 1:1)
+  const activeView = tab === 'gantt' ? 'gantt' : 'overview';
 
   // State declarations
   const [searchTerm, setSearchTerm] = useState("");
@@ -395,7 +395,7 @@ export function PlanAndOrders() {
       <div className="h-full flex flex-col">
         {/* 可滚动的内容区域 - 自适应高度 */}
         <div className="flex-1 overflow-hidden">
-          {activeView === 'task-overview' && (
+          {activeView === 'overview' && (
             <TaskOverview
               paginatedData={paginatedData}
               currentPage={currentPage}
@@ -409,7 +409,7 @@ export function PlanAndOrders() {
             />
           )}
 
-          {activeView === 'gantt-chart' && (
+          {activeView === 'gantt' && (
             <div className="h-[calc(100vh-200px)]">
               <GanttChart 
                 data={ganttData} 

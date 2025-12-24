@@ -33,7 +33,7 @@ export function TaskActions({
 }: TaskActionsProps) {
   return (
     <div className="flex items-center space-x-4">
-      {activeView === 'gantt-chart' && (
+      {activeView === 'gantt' && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="min-w-[140px] justify-between">
@@ -54,7 +54,7 @@ export function TaskActions({
         </DropdownMenu>
       )}
       <div className="text-sm text-muted-foreground">
-        {activeView === 'gantt-chart' ? `显示 ${ganttDataLength} 个任务` : `显示 ${filteredDataLength} 个任务`}
+        {activeView === 'gantt' ? `显示 ${ganttDataLength} 个任务` : `显示 ${filteredDataLength} 个任务`}
       </div>
       <div className="flex items-center space-x-2">
         <Button variant="outline" size="sm" onClick={onExportCSV}>
