@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, Loader2, ShieldAlert, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { getProcessInfo, OrderInfoData, ProcessInfoData } from "@/services/project-service";
 import { useAuth } from "@/hooks/useAuth";
-import { ModelViewer } from "@/components/ModelViewer";
+import { ModelViewer } from "@/components/model/ModelViewer";
 
 // 验收数据接口
 interface AcceptanceData {

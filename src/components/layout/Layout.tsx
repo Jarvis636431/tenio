@@ -1,8 +1,8 @@
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
-import { AIAssistant } from "@/components/AIAssistant";
-import { SidebarToggle } from "@/components/SidebarToggle";
-import { PageBreadcrumb } from "@/components/PageBreadcrumb";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { AIAssistant } from "@/components/ai/AIAssistant";
+import { SidebarToggle } from "@/components/layout/SidebarToggle";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 interface LayoutProps {
   children: React.ReactNode;
 }

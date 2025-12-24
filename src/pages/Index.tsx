@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, Building2, Activity, FileText, BarChart3, Users, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/hooks/useProject";
-import { NewProjectDialog } from "@/components/NewProjectDialog";
-import { PageHeader } from "@/components/PageHeader";
+import { NewProjectDialog } from "@/components/project/NewProjectDialog";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { useState } from "react";
 
 const Index = () => {

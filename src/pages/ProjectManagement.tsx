@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { useProject } from "@/hooks/useProject";
 import { Skeleton } from "@/components/ui/skeleton";
 

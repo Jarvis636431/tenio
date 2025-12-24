@@ -4,10 +4,10 @@ import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ProjectSelector } from "@/components/ProjectSelector";
+import { ProjectSelector } from "@/components/project/ProjectSelector";
 import { useProject } from "@/hooks/useProject";
 import { useNavigate } from "react-router-dom";
-import { NewProjectDialog } from "@/components/NewProjectDialog";
+import { NewProjectDialog } from "@/components/project/NewProjectDialog";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

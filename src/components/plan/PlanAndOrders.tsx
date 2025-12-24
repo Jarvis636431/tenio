@@ -12,9 +12,9 @@ import { useProject } from "@/hooks/useProject";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import type { ProjectScheduleItem } from "@/hooks/useProjectSchedule";
 import { useProjectConfig } from "@/hooks/useProjectConfig";
-import { GanttChart, type TimelineScale } from "@/components/GanttChart";
-import { NewTaskDialog } from "@/components/NewTaskDialog";
-import { TaskDetailDialog } from "@/components/TaskDetailDialog";
+import { GanttChart, type TimelineScale } from "@/components/plan/GanttChart";
+import { NewTaskDialog } from "@/components/plan/NewTaskDialog";
+import { TaskDetailDialog } from "@/components/plan/TaskDetailDialog";
 import { useSearchParams } from "react-router-dom";
 
 interface PlanAndOrdersProps {

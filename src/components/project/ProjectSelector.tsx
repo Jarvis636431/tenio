@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/hooks/useProject";
-import { NewProjectDialog } from "@/components/NewProjectDialog";
+import { NewProjectDialog } from "@/components/project/NewProjectDialog";
 import { useState } from "react";
 
 interface ProjectSelectorProps {

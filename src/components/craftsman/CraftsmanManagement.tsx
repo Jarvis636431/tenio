@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Upload, User } from "lucide-react";
-import { EditCraftsmanDialog } from "@/components/EditCraftsmanDialog";
-import { ImportCraftsmanDialog } from "@/components/ImportCraftsmanDialog";
-import { TeamDetailDialog } from "@/components/TeamDetailDialog";
+import { EditCraftsmanDialog } from "@/components/craftsman/EditCraftsmanDialog";
+import { ImportCraftsmanDialog } from "@/components/craftsman/ImportCraftsmanDialog";
+import { TeamDetailDialog } from "@/components/craftsman/TeamDetailDialog";
 import { useToast } from "@/hooks/use-toast";
 import type { Craftsman, Team } from "@/types/craftsman";
 

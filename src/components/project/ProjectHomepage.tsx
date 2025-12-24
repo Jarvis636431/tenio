@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCcw, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
-import { ModelViewer } from "@/components/ModelViewer";
+import { ModelViewer } from "@/components/model/ModelViewer";
 import { Slider } from "@/components/ui/slider";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

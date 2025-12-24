@@ -1,19 +1,19 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import BasicInfo from "@/components/BasicInfo";
-import { RealTimeMonitoring } from "@/components/RealTimeMonitoring";
-import { CraftsmanManagement } from "@/components/CraftsmanManagement";
-import { CommunicationCollaboration } from "@/components/CommunicationCollaboration";
-import { PlanAndOrders } from "@/components/PlanAndOrders";
-import { ProjectHomepage } from "@/components/ProjectHomepage";
-import { QualityInspection } from "@/components/QualityInspection";
-import { DailyLog } from "@/components/DailyLog";
-import { KnowledgeQA } from "@/components/KnowledgeQA";
+import BasicInfo from "@/components/project/BasicInfo";
+import { RealTimeMonitoring } from "@/components/monitoring/RealTimeMonitoring";
+import { CraftsmanManagement } from "@/components/craftsman/CraftsmanManagement";
+import { CommunicationCollaboration } from "@/components/communication/CommunicationCollaboration";
+import { PlanAndOrders } from "@/components/plan/PlanAndOrders";
+import { ProjectHomepage } from "@/components/project/ProjectHomepage";
+import { QualityInspection } from "@/components/quality/QualityInspection";
+import { DailyLog } from "@/components/quality/DailyLog";
+import { KnowledgeQA } from "@/components/quality/KnowledgeQA";
 import { useProject } from "@/hooks/useProject";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import type { ProjectInfoRow } from "@/services/project-service";
-import { FundingMaterials } from "@/components/FundingMaterials";
+import { FundingMaterials } from "@/components/funding/FundingMaterials";
 
 export default function ProjectDetail() {
   const { id } = useParams();
