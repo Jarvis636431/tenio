@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
@@ -77,7 +77,9 @@ export function useProjectSchedule() {
     try {
       const payload = JSON.stringify({ ts: Date.now(), data });
       localStorage.setItem(CACHE_PREFIX + projectId, payload);
-    } catch {}
+    } catch {
+      // 忽略 localStorage 写入错误（可能是配额限制或隐私模式）
+    }
   };
 
   const query = useQuery({
@@ -111,18 +113,26 @@ export function useProjectSchedule() {
       ? { project_id: currentProject.id, process_guid_mapping: cached.data }
       : undefined,
     initialDataUpdatedAt: cached?.ts,
-    onSuccess: (data) => {
+  });
+
+  // 使用 useEffect 替代废弃的 onSuccess 回调
+  useEffect(() => {
+    if (mappingQuery.data && mappingQuery.isSuccess) {
       const pid = currentProject?.id;
-      const mapping = data?.process_guid_mapping ?? {};
+      const mapping = mappingQuery.data?.process_guid_mapping ?? {};
       if (pid && mapping && typeof mapping === "object") {
         writeCache(pid, mapping as Record<string, Array<number | string>>);
       }
-    },
-  });
+    }
+  }, [mappingQuery.data, mappingQuery.isSuccess, currentProject?.id]);
 
   const forceRefreshMapping = async () => {
     if (currentProject?.id) {
-      try { localStorage.removeItem(CACHE_PREFIX + currentProject.id); } catch {}
+      try {
+        localStorage.removeItem(CACHE_PREFIX + currentProject.id);
+      } catch {
+        // 忽略 localStorage 删除错误
+      }
     }
     return mappingQuery.refetch();
   };

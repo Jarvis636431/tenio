@@ -45,6 +45,34 @@ const TIMELINE_SCALE_LABELS: Record<TimelineScale, string> = {
   month: "月",
 };
 
+// 中文数字映射表（共享）
+const CHINESE_NUMBER_MAP: Record<string, number> = {
+  '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+  '六': 6, '七': 7, '八': 8, '九': 9, '十': 10
+};
+
+/**
+ * 从楼层文本中提取数字
+ * 支持：负一层、负1层、1层、地下1层等格式
+ */
+function extractFloorNumber(floor: string): number {
+  if (floor.includes('负')) {
+    // 处理中文数字：负一层、负二层等
+    const chineseNum = floor.match(/负([一二三四五六七八九十]+)/)?.[1];
+    if (chineseNum) {
+      return -(CHINESE_NUMBER_MAP[chineseNum] || 1);
+    }
+    // 处理阿拉伯数字：负1层、负2层等
+    const arabicNum = floor.match(/负(\d+)/)?.[1];
+    if (arabicNum) {
+      return -parseInt(arabicNum);
+    }
+  }
+  // 普通楼层或地下楼层
+  return parseInt(floor.match(/\d+/)?.[0] || '0');
+}
+
+
 export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: PlanAndOrdersProps) {
   const { currentProject } = useProject();
   const [searchParams] = useSearchParams();
@@ -98,29 +126,8 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
     
     // 排序：地下楼层 → 首层 → 数字楼层 → 其他特殊楼层
     const sortedFloors = floors.sort((a, b) => {
-      // 提取数字（处理负数楼层）
-      const getFloorNum = (floor: string) => {
-        if (floor.includes('负')) {
-          // 处理中文数字
-          const chineseNum = floor.match(/负([一二三四五六七八九十]+)/)?.[1];
-          if (chineseNum) {
-            const chineseToNum: { [key: string]: number } = {
-              '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
-              '六': 6, '七': 7, '八': 8, '九': 9, '十': 10
-            };
-            return -(chineseToNum[chineseNum] || 1);
-          }
-          // 处理阿拉伯数字
-          const arabicNum = floor.match(/负(\d+)/)?.[1];
-          if (arabicNum) {
-            return -parseInt(arabicNum);
-          }
-        }
-        return parseInt(floor.match(/\d+/)?.[0] || '999');
-      };
-      
-      const numA = getFloorNum(a);
-      const numB = getFloorNum(b);
+      const numA = extractFloorNumber(a);
+      const numB = extractFloorNumber(b);
       
       // 地下楼层（包括负数楼层）排在最前面
       const isUndergroundA = a.includes('地下') || a.includes('负');
@@ -129,32 +136,10 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
       if (isUndergroundA && !isUndergroundB) return -1;
       if (!isUndergroundA && isUndergroundB) return 1;
       
-      // 如果都是地下楼层，按数字排序（负数楼层需要特殊处理）
+      // 如果都是地下楼层，按数字排序
       if (isUndergroundA && isUndergroundB) {
-        // 处理负数楼层的数字提取
-        const getFloorNumber = (floor: string) => {
-          if (floor.includes('负')) {
-            // 处理中文数字转换
-            const chineseNum = floor.match(/负([一二三四五六七八九十]+)/)?.[1];
-            if (chineseNum) {
-              const chineseToNum: { [key: string]: number } = {
-                '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
-                '六': 6, '七': 7, '八': 8, '九': 9, '十': 10
-              };
-              return -(chineseToNum[chineseNum] || 1);
-            }
-            // 处理阿拉伯数字
-            const arabicNum = floor.match(/负(\d+)/)?.[1];
-            if (arabicNum) {
-              return -parseInt(arabicNum);
-            }
-          }
-          // 普通地下楼层
-          return parseInt(floor.match(/\d+/)?.[0] || '0');
-        };
-        
-        const floorNumA = getFloorNumber(a);
-        const floorNumB = getFloorNumber(b);
+        const floorNumA = extractFloorNumber(a);
+        const floorNumB = extractFloorNumber(b);
         return floorNumA - floorNumB;
       }
       
