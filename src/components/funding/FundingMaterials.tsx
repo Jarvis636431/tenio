@@ -8,12 +8,9 @@ import { getCrewData, getBudgetData, CrewData, BudgetData } from "@/services/pro
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 
-interface FundingMaterialsProps {
-  showExpandButton?: boolean;
-  onExpandSidebar?: () => void;
-}
+interface FundingMaterialsProps {}
 
-export function FundingMaterials(_: FundingMaterialsProps) {
+export function FundingMaterials({}: FundingMaterialsProps) {
   const { currentProject } = useProject();
   const { token } = useAuth();
 

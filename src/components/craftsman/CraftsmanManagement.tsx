@@ -12,8 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Craftsman, Team } from "@/types/craftsman";
 
 interface CraftsmanManagementProps {
-  showExpandButton?: boolean;
-  onExpandSidebar?: () => void;
+  onActionsChange?: (actions: React.ReactNode) => void;
 }
 
 // 班组 Mock 数据
@@ -90,10 +89,7 @@ const mockTeams: Team[] = [
     updatedAt: "2024-07-20T16:30:00Z",
   },
 ];
-export function CraftsmanManagement({
-  showExpandButton,
-  onExpandSidebar
-}: CraftsmanManagementProps) {
+export function CraftsmanManagement({}: CraftsmanManagementProps) {
   const {
     toast
   } = useToast();

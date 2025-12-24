@@ -82,14 +82,12 @@ function AppRoutes() {
         <Route path="basic-info" element={<BasicInfo />} />
         
         {/* 施工总览 */}
-        <Route path="plan" element={<PlanAndOrders />} />
-        <Route path="plan/overview" element={<PlanAndOrders />} />
-        <Route path="plan/gantt" element={<PlanAndOrders />} />
+        <Route path="plan" element={<Navigate to="overview" replace />} />
+        <Route path="plan/:tab" element={<PlanAndOrders />} />
         
         {/* 实时监测 */}
-        <Route path="monitoring" element={<RealTimeMonitoring />} />
-        <Route path="monitoring/labor" element={<RealTimeMonitoring />} />
-        <Route path="monitoring/cost" element={<RealTimeMonitoring />} />
+        <Route path="monitoring" element={<Navigate to="labor" replace />} />
+        <Route path="monitoring/:tab" element={<RealTimeMonitoring />} />
         
         {/* 工匠管理 */}
         <Route path="craftsman" element={<CraftsmanManagement />} />

@@ -245,7 +245,11 @@ export function AppSidebar() {
                   <SidebarMenu>
                     {projectMenuItems.map((item) => {
                       const Icon = item.icon;
-                      const isActive = location.search.includes(`view=${item.id}`);
+                      const targetPath = getProjectPath(currentProject.id, item.id);
+                      // 使用 pathname 判断是否激活，避免匹配 query params
+                      // 对于带有子项的菜单，只要当前路径以该菜单路径开头就算激活
+                      // 对于没有子项的菜单，使用精确匹配或前缀匹配（视情况而定）
+                      const isActive = location.pathname === targetPath || (location.pathname.startsWith(targetPath + '/') && location.pathname !== targetPath);
                       const isExpanded = expandedItems.includes(item.id);
                       const hasSubItems = item.subItems && item.subItems.length > 0;
                       

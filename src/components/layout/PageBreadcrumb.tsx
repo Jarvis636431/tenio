@@ -9,15 +9,29 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
-import { getProjectPath } from "@/utils/routeHelpers";
+
 
 export function PageBreadcrumb() {
   const location = useLocation();
   const { id } = useParams();
   const { currentProject } = useProject();
-  const searchParams = new URLSearchParams(location.search);
-  const view = searchParams.get('view');
-  const tab = searchParams.get('tab');
+  // 路径片段到名称的映射
+  const segmentNameMap: { [key: string]: string } = {
+    // 一级导航
+    'plan': '施工总览',
+    'monitoring': '实时监测',
+    'craftsman': '工匠管理',
+    'communication': '沟通协作',
+    'funding': '资金物料',
+    
+    // 二级导航 (Tabs)
+    'overview': '任务总览',
+    'gantt': '施工工序甘特图',
+    'procurement': '采购进度',
+    'labor': '施工人数',
+    'cost': '人工成本',
+    'materials': '物料供应'
+  };
 
   // 根据当前路径生成面包屑
   const getBreadcrumbItems = () => {
@@ -29,6 +43,7 @@ export function PageBreadcrumb() {
     }
 
     // 项目详情页面
+    // 路径格式: /project/:id/:view/:tab
     if (location.pathname.startsWith('/project/') && id) {
       if (currentProject) {
         items.push({ 
@@ -38,47 +53,31 @@ export function PageBreadcrumb() {
         });
       }
 
-      // 根据view和tab参数添加子页面
-      if (view) {
-        const viewLabels: { [key: string]: string } = {
-          'basic-info': '基础信息',
-          'plan-and-orders': '施工总览',
-          'real-time-monitoring': '实时监测',
-          'craftsman-management': '工匠管理',
-          'communication-collaboration': '沟通协作',
-          'funding-materials': '资金物料'
-        };
+      // 解析路径片段
+      // /project/123/plan/gantt -> ["project", "123", "plan", "gantt"]
+      // 过滤掉空字符串
+      const segments = location.pathname.split('/').filter(Boolean);
+      
+      // 第0个是 "project", 第1个是 id, 第2个是 view, 第3个是 tab
+      const viewSegment = segments[2];
+      const tabSegment = segments[3];
 
-        const tabLabels: { [key: string]: string } = {
-          'task-overview': '任务总览',
-          'gantt-chart': '施工工序甘特图',
-          'procurement': '采购进度',
-          'labor': '施工人数',
-          'cost': '人工成本',
-          'funding': '资金使用',
-          'materials': '物料供应'
-        };
+      if (viewSegment && segmentNameMap[viewSegment]) {
+        // 添加一级导航面包屑
+        const isLast = !tabSegment;
+        items.push({
+          label: segmentNameMap[viewSegment],
+          href: !isLast ? `/project/${id}/${viewSegment}` : undefined,
+          isCurrent: isLast
+        });
 
-        // 如果有tab参数，显示tab对应的页面
-        if (tab && tabLabels[tab]) {
-          items.push({ 
-            label: tabLabels[tab], 
-            href: getProjectPath(id, view, tab), 
-            isCurrent: true 
+        // 如果有二级导航，添加二级导航面包屑
+        if (tabSegment && segmentNameMap[tabSegment]) {
+          items.push({
+            label: segmentNameMap[tabSegment],
+            href: undefined, // 最后一级通常不可点击或就是当前页
+            isCurrent: true
           });
-        } else {
-          // 否则显示view对应的页面
-          const viewLabel = viewLabels[view] || view;
-          items.push({ 
-            label: viewLabel, 
-            href: getProjectPath(id, view), 
-            isCurrent: true 
-          });
-        }
-      } else {
-        // 如果没有view参数，当前项目就是当前页面
-        if (items.length > 0) {
-          items[items.length - 1].isCurrent = true;
         }
       }
     }

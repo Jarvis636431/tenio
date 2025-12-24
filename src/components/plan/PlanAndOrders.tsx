@@ -10,12 +10,7 @@ import { TaskFilters } from "@/components/plan/TaskFilters";
 import { TaskActions } from "@/components/plan/TaskActions";
 import { TaskOverview } from "@/components/plan/TaskOverview";
 import { TaskDetailSheet } from "@/components/plan/TaskDetailSheet";
-import { useSearchParams, useLocation } from "react-router-dom";
-
-interface PlanAndOrdersProps {
-  showExpandButton?: boolean;
-  onExpandSidebar?: () => void;
-}
+import { useLocation, useParams } from "react-router-dom";
 
 // 扩展计划项类型以适配页面内使用的附加字段
 type TaskItem = ProjectScheduleItem & {
@@ -73,26 +68,14 @@ function extractFloorNumber(floor: string): number {
 }
 
 
-export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: PlanAndOrdersProps) {
+export function PlanAndOrders() {
   const { currentProject } = useProject();
-  const [searchParams] = useSearchParams();
   const location = useLocation();
+  const { tab } = useParams();
   
-  // 从 URL 路径获取视图类型
-  const getViewFromPath = (): string => {
-    const pathSegments = location.pathname.split('/').filter(Boolean);
-    const lastSegment = pathSegments[pathSegments.length - 1];
-    
-    // 映射路径到视图
-    if (lastSegment === 'gantt') return 'gantt-chart';
-    if (lastSegment === 'overview') return 'task-overview';
-    
-    // 默认为 task-overview
-    return 'task-overview';
-  };
-  
-  // 根据URL路径确定显示的内容
-  const activeView = getViewFromPath();
+  // 从路径参数获取视图类型
+  // 映射: overview -> task-overview, gantt -> gantt-chart
+  const activeView = tab === 'gantt' ? 'gantt-chart' : 'task-overview';
 
   // State declarations
   const [searchTerm, setSearchTerm] = useState("");

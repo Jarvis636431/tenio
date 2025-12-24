@@ -13,10 +13,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { CommunicationRecord, coordinationTypeColors } from "@/types/communication";
 import { useToast } from "@/hooks/use-toast";
 
-interface CommunicationCollaborationProps {
-  showExpandButton?: boolean;
-  onExpandSidebar?: () => void;
-}
+// interface CommunicationCollaborationProps {} 
+// (由于没有其他 props，我们可以直接移除接口或保留空的，但这里原代码是 interface CommunicationCollaborationProps { ... })
+// 考虑到可能未来有 props，或者按照之前的模式，我看看是否有其他 props。
+// 并没有其他 props。所以：
+
+interface CommunicationCollaborationProps {}
 
 // 模拟数据
 const mockData: CommunicationRecord[] = [
@@ -50,7 +52,7 @@ const mockData: CommunicationRecord[] = [
   }
 ];
 
-export function CommunicationCollaboration({ showExpandButton, onExpandSidebar }: CommunicationCollaborationProps) {
+export function CommunicationCollaboration({}: CommunicationCollaborationProps) {
   const [data, setData] = useState<CommunicationRecord[]>(mockData);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");

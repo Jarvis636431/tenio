@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { Users, DollarSign, Plus, Calendar, Table as TableIcon, BarChart3, Eye, EyeOff } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { DataEntryForm } from "@/components/monitoring/DataEntryForm";
 import { useDataEntry } from "@/hooks/useDataEntry";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, LabelList } from "recharts";
 
 // 工种数据 - 基于真实CSV数据
@@ -117,21 +115,12 @@ const loadRealData = async () => {
   return { totalData, jobTypeData };
 };
 
-interface RealTimeMonitoringProps {
-  showExpandButton?: boolean;
-  onExpandSidebar?: () => void;
-}
-
-export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }: RealTimeMonitoringProps) {
-  const [searchParams] = useSearchParams();
+export function RealTimeMonitoring() {
   const location = useLocation();
+  const { tab } = useParams();
   
-  // 从路径获取数据类型
-  const getDataTypeFromPath = (): 'labor' | 'cost' => {
-    const pathSegments = location.pathname.split('/').filter(Boolean);
-    const lastSegment = pathSegments[pathSegments.length - 1];
-    return lastSegment === 'cost' ? 'cost' : 'labor';
-  };
+  // 从路径参数获取数据类型
+  const dataType = tab === 'cost' ? 'cost' : 'labor';
   
   const [selectedJobType, setSelectedJobType] = useState<keyof typeof jobTypes>("all");
   const [isDataEntryOpen, setIsDataEntryOpen] = useState(false);
@@ -139,7 +128,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'table' | 'calendar' | 'weekly'>('calendar');
   const [selectedDate, setSelectedDate] = useState(new Date(2025, 8, 1)); // 初始定位到2025年9月
-  const [dataType, setDataType] = useState<'labor' | 'cost'>(getDataTypeFromPath());
+  // const [dataType, setDataType] = useState<'labor' | 'cost'>(getDataTypeFromPath()); // 不再需要 State，直接使用派生变量
   const [detailForDate, setDetailForDate] = useState<string | null>(null);
   const [totalData, setTotalData] = useState<DailyData[]>([]);
   const [jobTypeData, setJobTypeData] = useState<JobTypeData[]>([]);
@@ -157,10 +146,10 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
     loadData();
   }, []);
 
-  // 监听路径变化，更新数据类型
-  useEffect(() => {
-    setDataType(getDataTypeFromPath());
-  }, [location.pathname]);
+  // 监听路径变化，更新数据类型 (不再需要，因为 dataType 现在是直接从 render 中计算的)
+  // useEffect(() => {
+  //   setDataType(getDataTypeFromPath());
+  // }, [location.pathname]);
 
   const handleDataEntrySubmit = (entryData: any) => {
     if (!currentEntryContext) return;
