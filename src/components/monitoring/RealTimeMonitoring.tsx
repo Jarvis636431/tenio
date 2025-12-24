@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { Users, DollarSign, Plus, Calendar, Table as TableIcon, BarChart3, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -124,7 +124,14 @@ interface RealTimeMonitoringProps {
 
 export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }: RealTimeMonitoringProps) {
   const [searchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get('tab');
+  const location = useLocation();
+  
+  // 从路径获取数据类型
+  const getDataTypeFromPath = (): 'labor' | 'cost' => {
+    const pathSegments = location.pathname.split('/').filter(Boolean);
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    return lastSegment === 'cost' ? 'cost' : 'labor';
+  };
   
   const [selectedJobType, setSelectedJobType] = useState<keyof typeof jobTypes>("all");
   const [isDataEntryOpen, setIsDataEntryOpen] = useState(false);
@@ -132,7 +139,7 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'table' | 'calendar' | 'weekly'>('calendar');
   const [selectedDate, setSelectedDate] = useState(new Date(2025, 8, 1)); // 初始定位到2025年9月
-  const [dataType, setDataType] = useState<'labor' | 'cost'>(tabFromUrl === 'cost' ? 'cost' : 'labor');
+  const [dataType, setDataType] = useState<'labor' | 'cost'>(getDataTypeFromPath());
   const [detailForDate, setDetailForDate] = useState<string | null>(null);
   const [totalData, setTotalData] = useState<DailyData[]>([]);
   const [jobTypeData, setJobTypeData] = useState<JobTypeData[]>([]);
@@ -150,14 +157,10 @@ export function RealTimeMonitoring({ showExpandButton = false, onExpandSidebar }
     loadData();
   }, []);
 
-  // 监听URL变化，更新数据类型
+  // 监听路径变化，更新数据类型
   useEffect(() => {
-    if (tabFromUrl === 'cost') {
-      setDataType('cost');
-    } else {
-      setDataType('labor');
-    }
-  }, [tabFromUrl]);
+    setDataType(getDataTypeFromPath());
+  }, [location.pathname]);
 
   const handleDataEntrySubmit = (entryData: any) => {
     if (!currentEntryContext) return;

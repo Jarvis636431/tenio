@@ -10,7 +10,7 @@ import { TaskFilters } from "@/components/plan/TaskFilters";
 import { TaskActions } from "@/components/plan/TaskActions";
 import { TaskOverview } from "@/components/plan/TaskOverview";
 import { TaskDetailSheet } from "@/components/plan/TaskDetailSheet";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 
 interface PlanAndOrdersProps {
   showExpandButton?: boolean;
@@ -76,6 +76,25 @@ function extractFloorNumber(floor: string): number {
 export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: PlanAndOrdersProps) {
   const { currentProject } = useProject();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  
+  // 从 URL 路径获取视图类型
+  const getViewFromPath = (): string => {
+    const pathSegments = location.pathname.split('/').filter(Boolean);
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    
+    // 映射路径到视图
+    if (lastSegment === 'gantt') return 'gantt-chart';
+    if (lastSegment === 'overview') return 'task-overview';
+    
+    // 默认为 task-overview
+    return 'task-overview';
+  };
+  
+  // 根据URL路径确定显示的内容
+  const activeView = getViewFromPath();
+
+  // State declarations
   const [searchTerm, setSearchTerm] = useState("");
   const [jobFilter, setJobFilter] = useState("all");
   const [floorFilter, setFloorFilter] = useState("all");
@@ -89,9 +108,7 @@ export function PlanAndOrders({ showExpandButton = false, onExpandSidebar }: Pla
   const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
   const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<TaskItem | null>(null);
   const [timelineScale, setTimelineScale] = useState<TimelineScale>("day");
-  
-  // 根据URL参数确定显示的内容
-  const activeView = searchParams.get('tab') || 'task-overview';
+
 
   const { scheduleItems, isLoading, error, refetch } = useProjectSchedule();
   const { config, refetch: refetchConfig } = useProjectConfig();

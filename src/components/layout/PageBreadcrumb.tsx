@@ -9,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
+import { getProjectPath } from "@/utils/routeHelpers";
 
 export function PageBreadcrumb() {
   const location = useLocation();
@@ -62,7 +63,7 @@ export function PageBreadcrumb() {
         if (tab && tabLabels[tab]) {
           items.push({ 
             label: tabLabels[tab], 
-            href: `/project/${id}?view=${view}&tab=${tab}`, 
+            href: getProjectPath(id, view, tab), 
             isCurrent: true 
           });
         } else {
@@ -70,7 +71,7 @@ export function PageBreadcrumb() {
           const viewLabel = viewLabels[view] || view;
           items.push({ 
             label: viewLabel, 
-            href: `/project/${id}?view=${view}`, 
+            href: getProjectPath(id, view), 
             isCurrent: true 
           });
         }

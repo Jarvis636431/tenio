@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { getProjectPath } from "@/utils/routeHelpers";
 import { Settings, Home, Calendar, BarChart3, Activity, Users, Info, Plus, User, LogOut, ChevronLeft, ChevronRight, DollarSign, ClipboardList, Package, Wrench, CheckCircle, BookOpen, MessageCircleQuestion } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -281,7 +282,7 @@ export function AppSidebar() {
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="w-full h-8">
-                                      <NavLink to={`/project/${currentProject.id}?view=${item.id}`}>
+                                      <NavLink to={getProjectPath(currentProject.id, item.id)}>
                                         <Icon className="h-4 w-4 text-muted-foreground" />
                                       </NavLink>
                                     </Button>
@@ -292,7 +293,7 @@ export function AppSidebar() {
                                 </Tooltip>
                               ) : (
                                 <SidebarMenuButton asChild isActive={isActive}>
-                                  <NavLink to={`/project/${currentProject.id}?view=${item.id}`}>
+                                  <NavLink to={getProjectPath(currentProject.id, item.id)}>
                                     <Icon className="h-4 w-4 text-muted-foreground" />
                                     <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
                                   </NavLink>
@@ -306,11 +307,13 @@ export function AppSidebar() {
                             <div className="ml-4 space-y-1">
                               {item.subItems.map((subItem) => {
                                 const SubIcon = subItem.icon;
-                                const isSubActive = location.search.includes(`view=${item.id}&tab=${subItem.id}`);
+                                // 检查当前路径是否匹配此子项
+                                const expectedPath = getProjectPath(currentProject.id, item.id, subItem.id);
+                                const isSubActive = location.pathname === expectedPath;
                                 return (
                                   <SidebarMenuItem key={subItem.id}>
                                     <SidebarMenuButton asChild isActive={isSubActive}>
-                                      <NavLink to={`/project/${currentProject.id}?view=${item.id}&tab=${subItem.id}`}>
+                                      <NavLink to={getProjectPath(currentProject.id, item.id, subItem.id)}>
                                         <SubIcon className="h-4 w-4 text-muted-foreground" />
                                         <span className="whitespace-nowrap overflow-hidden text-ellipsis">{subItem.label}</span>
                                       </NavLink>
@@ -445,7 +448,7 @@ export function AppSidebar() {
                     className="w-full justify-start h-8 px-2 text-sm"
                     asChild
                   >
-                    <NavLink to={`/project/${currentProject?.id}?view=${hoveredItem}&tab=${subItem.id}`}>
+                    <NavLink to={getProjectPath(currentProject?.id || '', hoveredItem, subItem.id)}>
                       <SubIcon className="h-4 w-4 mr-2" />
                       {subItem.label}
                     </NavLink>

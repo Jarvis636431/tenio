@@ -53,7 +53,7 @@ function AppRoutes() {
           </Layout>
         </ProtectedRoute>
       } />
-      <Route path="/project/:id" element={
+      <Route path="/project/:id/*" element={
         <ProtectedRoute>
           <Layout>
             <ProjectDetail />

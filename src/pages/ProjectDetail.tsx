@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, useLocation, useNavigate } from "react-router-dom";
 import BasicInfo from "@/components/project/BasicInfo";
 import { RealTimeMonitoring } from "@/components/monitoring/RealTimeMonitoring";
 import { CraftsmanManagement } from "@/components/craftsman/CraftsmanManagement";
@@ -15,9 +15,40 @@ import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import type { ProjectInfoRow } from "@/services/project-service";
 import { FundingMaterials } from "@/components/funding/FundingMaterials";
 
+// URL 路径映射表：路径 → 视图名称
+const URL_MAPPING: Record<string, string> = {
+  '': 'homepage',
+  'basic-info': 'basic-info',
+  'plan': 'plan-and-orders',
+  'plan/overview': 'task-overview',
+  'plan/gantt': 'gantt-chart',
+  'monitoring': 'real-time-monitoring',
+  'monitoring/labor': 'labor',
+  'monitoring/cost': 'cost',
+  'craftsman': 'craftsman-management',
+  'communication': 'communication-collaboration',
+  'funding': 'funding-materials',
+  'toolbox': 'toolbox',
+  'toolbox/quality': 'quality-inspection',
+  'toolbox/daily-log': 'daily-log',
+  'toolbox/qa': 'knowledge-qa',
+};
+
+// 反向映射：视图名称 → URL 路径（用于重定向）
+const VIEW_TO_URL: Record<string, string> = Object.entries(URL_MAPPING).reduce(
+  (acc, [path, view]) => {
+    acc[view] = path;
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
+
 export default function ProjectDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeView, setActiveView] = useState("homepage");
   const { projects } = useProject();
   const [basicInfoActions, setBasicInfoActions] =
@@ -73,14 +104,38 @@ export default function ProjectDetail() {
     []
   );
 
+  // 获取当前视图：优先使用路径参数，兼容查询参数
   useEffect(() => {
-    const viewParam = searchParams.get("view");
-    if (viewParam) {
-      setActiveView(viewParam);
+    // 从路径中提取视图路径
+    const pathSegments = location.pathname
+      .replace(`/project/${id}`, '')
+      .replace(/^\//, '')
+      .replace(/\/$/, '');
+    
+    // 优先使用路径参数
+    const viewFromPath = URL_MAPPING[pathSegments];
+    
+    if (viewFromPath) {
+      // 使用路径参数确定的视图
+      setActiveView(viewFromPath);
     } else {
-      setActiveView("homepage");
+      // 兼容旧的查询参数（临时）
+      const viewParam = searchParams.get('view');
+      if (viewParam) {
+        // 使用查询参数的视图
+        setActiveView(viewParam);
+        
+        // 自动重定向到新的路径参数 URL
+        const newPath = VIEW_TO_URL[viewParam];
+        if (newPath !== undefined) {
+          navigate(`/project/${id}/${newPath}`, { replace: true });
+        }
+      } else {
+        // 默认显示主页
+        setActiveView('homepage');
+      }
     }
-  }, [searchParams]);
+  }, [location.pathname, searchParams, id, navigate]);
 
   const getViewTitle = () => {
     const tab = searchParams.get("tab");
