@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { Slider } from "@/components/ui/slider";
@@ -9,13 +10,16 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ProjectHomepageProps {
-  projectId: string;
-  projectName: string;
+  projectId?: string;
+  projectName?: string;
 }
 
 export function ProjectHomepage({
-  projectId,
-}: ProjectHomepageProps) {
+  projectId: propsProjectId,
+}: ProjectHomepageProps = {}) {
+  const { id: paramProjectId } = useParams();
+  // 优先使用路由参数，其次使用props
+  const projectId = paramProjectId || propsProjectId || '';
   const {
     scheduleItems,
     isLoading,
