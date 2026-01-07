@@ -1,5 +1,4 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { getProjectPath } from "@/utils/routeHelpers";
 import { Settings, Home, Calendar, BarChart3, Activity, Users, Info, Plus, User, LogOut, ChevronLeft, ChevronRight, DollarSign, ClipboardList, Package, Wrench, CheckCircle, BookOpen, MessageCircleQuestion } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -245,7 +244,7 @@ export function AppSidebar() {
                   <SidebarMenu>
                     {projectMenuItems.map((item) => {
                       const Icon = item.icon;
-                      const targetPath = getProjectPath(currentProject.id, item.id);
+                      const targetPath = `/project/${currentProject.id}/${item.id}`;
                       // 使用 pathname 判断是否激活，避免匹配 query params
                       // 对于带有子项的菜单，只要当前路径以该菜单路径开头就算激活
                       // 对于没有子项的菜单，使用精确匹配或前缀匹配（视情况而定）
@@ -286,7 +285,7 @@ export function AppSidebar() {
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="w-full h-8">
-                                      <NavLink to={getProjectPath(currentProject.id, item.id)}>
+                                      <NavLink to={`/project/${currentProject.id}/${item.id}`}>
                                         <Icon className="h-4 w-4 text-muted-foreground" />
                                       </NavLink>
                                     </Button>
@@ -297,7 +296,7 @@ export function AppSidebar() {
                                 </Tooltip>
                               ) : (
                                 <SidebarMenuButton asChild isActive={isActive}>
-                                  <NavLink to={getProjectPath(currentProject.id, item.id)}>
+                                  <NavLink to={`/project/${currentProject.id}/${item.id}`}>
                                     <Icon className="h-4 w-4 text-muted-foreground" />
                                     <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
                                   </NavLink>
@@ -312,12 +311,12 @@ export function AppSidebar() {
                               {item.subItems.map((subItem) => {
                                 const SubIcon = subItem.icon;
                                 // 检查当前路径是否匹配此子项
-                                const expectedPath = getProjectPath(currentProject.id, item.id, subItem.id);
+                                const expectedPath = `/project/${currentProject.id}/${item.id}/${subItem.id}`;
                                 const isSubActive = location.pathname === expectedPath;
                                 return (
                                   <SidebarMenuItem key={subItem.id}>
                                     <SidebarMenuButton asChild isActive={isSubActive}>
-                                      <NavLink to={getProjectPath(currentProject.id, item.id, subItem.id)}>
+                                      <NavLink to={`/project/${currentProject.id}/${item.id}/${subItem.id}`}>
                                         <SubIcon className="h-4 w-4 text-muted-foreground" />
                                         <span className="whitespace-nowrap overflow-hidden text-ellipsis">{subItem.label}</span>
                                       </NavLink>
@@ -452,7 +451,7 @@ export function AppSidebar() {
                     className="w-full justify-start h-8 px-2 text-sm"
                     asChild
                   >
-                    <NavLink to={getProjectPath(currentProject?.id || '', hoveredItem, subItem.id)}>
+                    <NavLink to={`/project/${currentProject?.id || ''}/${hoveredItem}/${subItem.id}`}>
                       <SubIcon className="h-4 w-4 mr-2" />
                       {subItem.label}
                     </NavLink>
