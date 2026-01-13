@@ -54,6 +54,8 @@ export function ModelViewer({
   const selectionSubsetRef = useRef<(THREE.Mesh & { renderOrder: number }) | null>(null);
   const highlightSubsetRef = useRef<(THREE.Mesh & { renderOrder: number }) | null>(null);
   const highlightSubsetsRef = useRef<Map<string, THREE.Mesh & { renderOrder: number }>>(new Map());
+  const clickHandlerRef = useRef<((event: MouseEvent) => void) | null>(null);
+  const clickTargetRef = useRef<HTMLCanvasElement | null>(null);
 
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
@@ -381,6 +383,12 @@ export function ModelViewer({
     if (controlsRef.current) {
       controlsRef.current.dispose();
       controlsRef.current = null;
+    }
+
+    if (clickHandlerRef.current && clickTargetRef.current) {
+      clickTargetRef.current.removeEventListener('click', clickHandlerRef.current);
+      clickHandlerRef.current = null;
+      clickTargetRef.current = null;
     }
 
     // 清理容器
@@ -968,6 +976,11 @@ export function ModelViewer({
       }
     };
 
+    if (clickHandlerRef.current && clickTargetRef.current) {
+      clickTargetRef.current.removeEventListener('click', clickHandlerRef.current);
+    }
+    clickHandlerRef.current = handleClick;
+    clickTargetRef.current = renderer.domElement;
     renderer.domElement.addEventListener('click', handleClick);
   };
 
