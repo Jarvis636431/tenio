@@ -8,11 +8,11 @@ import type { SerializedModel, LoadingState } from '@/types/worker.types';
 import { buildIdCaches } from './utils/ifcCaches';
 import { setupCameraAndControls } from './utils/cameraControls';
 import { startRenderLoop } from './utils/renderLoop';
-import { useHighlight, HighlightGroup } from './utils/highlight';
-import { useMainThreadLoader } from './utils/mainThreadLoader';
-import { useCleanup } from './utils/cleanup';
-import { useWorkerModel } from './utils/workerModel';
-import { initViewer as initViewerUtil } from './utils/initViewer';
+import { useHighlight, HighlightGroup } from './hooks/useHighlight';
+import { useMainThreadLoader } from './hooks/useMainThreadLoader';
+import { useCleanup } from './hooks/useCleanup';
+import { useWorkerModel } from './hooks/useWorkerModel';
+import { useInitViewer } from './hooks/useInitViewer';
 import { handleResize as handleResizeUtil } from './utils/resize';
 
 // TODO: 继续优化：在加载阶段预建 ExpressID/GlobalId/索引映射，交互阶段仅查表并通过 visible/material/drawRange 切换渲染，减少 createSubset 与属性遍历开销；同时完善子集/材质的统一释放策略。
@@ -172,23 +172,20 @@ export function ModelViewer({
     highlightRetryTimeoutRef,
   });
 
-  // 初始化viewer
-  const initViewer = useCallback(async () => {
-    await initViewerUtil({
-      src,
-      containerRef,
-      isInitializedRef,
-      abortControllerRef,
-      setLoadingState,
-      sceneRef,
-      cameraRef,
-      rendererRef,
-      ifcLoaderRef,
-      isWorkerAvailable,
-      parseIFC,
-      loadModelInMainThread,
-    });
-  }, [src, isWorkerAvailable, parseIFC, loadModelInMainThread]);
+  const { initViewer } = useInitViewer({
+    src,
+    containerRef,
+    isInitializedRef,
+    abortControllerRef,
+    setLoadingState,
+    sceneRef,
+    cameraRef,
+    rendererRef,
+    ifcLoaderRef,
+    isWorkerAvailable,
+    parseIFC,
+    loadModelInMainThread,
+  });
 
   // 处理窗口大小变化
   const handleResize = useCallback(() => {

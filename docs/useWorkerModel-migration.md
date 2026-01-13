@@ -4,7 +4,7 @@
 本文记录将 worker 成功处理逻辑从独立 util 改造为 React hook 的变更与原因。
 
 ## 发生的变化
-- 原 API：`handleWorkerSuccess(params)`，位于 `src/components/model/ModelViewer/utils/workerModel.ts`。
+- 原 API：`handleWorkerSuccess(params)`，位于 `src/components/model/ModelViewer/hooks/useWorkerModel.ts` 之前的 util。
 - 新 API：`useWorkerModel(...)` 返回 `{ handleWorkerSuccess }`。
 - 调用方改为通过 hook 获取 `handleWorkerSuccess`。
 
@@ -18,5 +18,5 @@
 - 变化仅在调用方式：util 调用改为 hook 返回函数。
 
 ## 相关文件
-- `src/components/model/ModelViewer/utils/workerModel.ts`
+- `src/components/model/ModelViewer/hooks/useWorkerModel.ts`
 - `src/components/model/ModelViewer/index.tsx`

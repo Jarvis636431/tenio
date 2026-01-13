@@ -4,7 +4,7 @@
 本文记录将主线程加载逻辑从独立 util 改造为 React hook 的变更与原因。
 
 ## 发生的变化
-- 原 API：`loadModelInMainThread(data, scene, camera, renderer, container)`，位于 `src/components/model/ModelViewer/utils/mainThreadLoader.ts`。
+- 原 API：`loadModelInMainThread(data, scene, camera, renderer, container)`，位于 `src/components/model/ModelViewer/hooks/useMainThreadLoader.ts` 之前的 util。
 - 新 API：`useMainThreadLoader(...)` 返回 `{ loadModelInMainThread }`。
 - 调用方改为通过 hook 获取 `loadModelInMainThread`。
 
@@ -18,5 +18,5 @@
 - 变化仅在调用方式：util 调用改为 hook 返回函数。
 
 ## 相关文件
-- `src/components/model/ModelViewer/utils/mainThreadLoader.ts`
+- `src/components/model/ModelViewer/hooks/useMainThreadLoader.ts`
 - `src/components/model/ModelViewer/index.tsx`

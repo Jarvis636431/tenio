@@ -4,7 +4,7 @@
 本文记录将高亮逻辑从独立 util 改造为 React hook 的变更与原因。
 
 ## 发生的变化
-- 原 API：`applyHighlight(params)`，位于 `src/components/model/ModelViewer/utils/highlight.ts`。
+- 原 API：`applyHighlight(params)`，位于 `src/components/model/ModelViewer/hooks/useHighlight.ts` 之前的 util。
 - 新 API：`useHighlight(...)` 返回 `{ applyHighlight }`，签名为 `applyHighlight(model, attempt?)`。
 - 重试调度逻辑内聚到 hook 内部，调用方不再传入 `scheduleHighlightRetry`。
 - 调用方从“传入大量依赖参数”改为“仅传 model”，减少调用噪音。
@@ -20,7 +20,7 @@
 - 变化仅在“调度位置”：由调用方调度重试改为 hook 内部调度。
 
 ## 相关文件
-- `src/components/model/ModelViewer/utils/highlight.ts`
+- `src/components/model/ModelViewer/hooks/useHighlight.ts`
 - `src/components/model/ModelViewer/index.tsx`
-- `src/components/model/ModelViewer/utils/mainThreadLoader.ts`
-- `src/components/model/ModelViewer/utils/workerModel.ts`
+- `src/components/model/ModelViewer/hooks/useMainThreadLoader.ts`
+- `src/components/model/ModelViewer/hooks/useWorkerModel.ts`

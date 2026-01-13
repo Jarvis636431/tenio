@@ -4,7 +4,7 @@
 本文记录将清理逻辑从独立 util 改造为 React hook 的变更与原因。
 
 ## 发生的变化
-- 原 API：`cleanup(params)`，位于 `src/components/model/ModelViewer/utils/cleanup.ts`。
+- 原 API：`cleanup(params)`，位于 `src/components/model/ModelViewer/hooks/useCleanup.ts` 之前的 util。
 - 新 API：`useCleanup(...)` 返回 `{ cleanup }`。
 - 调用方改为通过 hook 获取 `cleanup`，不再直接调用 util。
 
@@ -18,5 +18,5 @@
 - 变化仅在调用方式：util 调用改为 hook 返回函数。
 
 ## 相关文件
-- `src/components/model/ModelViewer/utils/cleanup.ts`
+- `src/components/model/ModelViewer/hooks/useCleanup.ts`
 - `src/components/model/ModelViewer/index.tsx`
