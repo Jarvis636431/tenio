@@ -11,7 +11,7 @@ import { startRenderLoop } from './utils/renderLoop';
 import { setupInteraction } from './utils/interaction';
 import { useHighlight, HighlightGroup } from './utils/highlight';
 import { loadModelInMainThread as loadModelInMainThreadUtil } from './utils/mainThreadLoader';
-import { cleanup as cleanupUtil } from './utils/cleanup';
+import { useCleanup } from './utils/cleanup';
 import { handleWorkerSuccess as handleWorkerSuccessUtil } from './utils/workerModel';
 import { initViewer as initViewerUtil } from './utils/initViewer';
 import { handleResize as handleResizeUtil } from './utils/resize';
@@ -198,36 +198,33 @@ export function ModelViewer({
     }
   }, [applyHighlight, buildIdCaches]);
 
-  // 清理函数
-  const cleanup = useCallback(() => {
-    cleanupUtil({
-      cancelWorker,
-      animateIdRef,
-      abortControllerRef,
-      rendererRef,
-      controlsRef,
-      containerRef,
-      sceneRef,
-      cameraRef,
-      modelRef,
-      raycasterRef,
-      mouseRef,
-      infoDivRef,
-      selectionSubsetRef,
-      highlightSubsetRef,
-      highlightSubsetsRef,
-      productIdsRef,
-      globalIdMapRef,
-      globalIdMapModelIdRef,
-      expressIdIndexMapRef,
-      ifcLoaderRef,
-      isInitializedRef,
-      productIndexReadyRef,
-      highlightRetryTimeoutRef,
-      clickHandlerRef,
-      clickTargetRef,
-    });
-  }, [cancelWorker]);
+  const { cleanup } = useCleanup({
+    cancelWorker,
+    animateIdRef,
+    abortControllerRef,
+    rendererRef,
+    controlsRef,
+    containerRef,
+    sceneRef,
+    cameraRef,
+    modelRef,
+    raycasterRef,
+    mouseRef,
+    infoDivRef,
+    selectionSubsetRef,
+    highlightSubsetRef,
+    highlightSubsetsRef,
+    productIdsRef,
+    globalIdMapRef,
+    globalIdMapModelIdRef,
+    expressIdIndexMapRef,
+    ifcLoaderRef,
+    isInitializedRef,
+    productIndexReadyRef,
+    highlightRetryTimeoutRef,
+    clickHandlerRef,
+    clickTargetRef,
+  });
 
   // 初始化viewer
   const initViewer = useCallback(async () => {

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import type * as THREE from 'three';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { IFCLoader } from 'web-ifc-three/IFCLoader';
@@ -6,7 +7,7 @@ type Ref<T> = { current: T };
 
 type AnyMesh = THREE.Mesh & { renderOrder: number };
 
-interface CleanupParams {
+interface UseCleanupParams {
   cancelWorker: () => void;
   animateIdRef: Ref<number | null>;
   abortControllerRef: Ref<AbortController | null>;
@@ -34,7 +35,7 @@ interface CleanupParams {
   clickTargetRef: Ref<HTMLCanvasElement | null>;
 }
 
-export function cleanup({
+export function useCleanup({
   cancelWorker,
   animateIdRef,
   abortControllerRef,
@@ -60,69 +61,99 @@ export function cleanup({
   highlightRetryTimeoutRef,
   clickHandlerRef,
   clickTargetRef,
-}: CleanupParams) {
-  console.log('[ModelViewer] 开始清理资源');
+}: UseCleanupParams) {
+  const cleanup = useCallback(() => {
+    console.log('[ModelViewer] 开始清理资源');
 
-  cancelWorker();
+    cancelWorker();
 
-  if (animateIdRef.current) {
-    cancelAnimationFrame(animateIdRef.current);
-    animateIdRef.current = null;
-  }
-
-  if (abortControllerRef.current) {
-    abortControllerRef.current.abort();
-    abortControllerRef.current = null;
-  }
-
-  if (rendererRef.current) {
-    rendererRef.current.dispose();
-    rendererRef.current = null;
-  }
-
-  if (controlsRef.current) {
-    controlsRef.current.dispose();
-    controlsRef.current = null;
-  }
-
-  if (clickHandlerRef.current && clickTargetRef.current) {
-    clickTargetRef.current.removeEventListener('click', clickHandlerRef.current);
-    clickHandlerRef.current = null;
-    clickTargetRef.current = null;
-  }
-
-  if (containerRef.current) {
-    containerRef.current.innerHTML = '';
-  }
-
-  sceneRef.current = null;
-  cameraRef.current = null;
-  modelRef.current = null;
-  raycasterRef.current = null;
-  mouseRef.current = null;
-  infoDivRef.current = null;
-  selectionSubsetRef.current = null;
-  highlightSubsetRef.current = null;
-  highlightSubsetsRef.current.clear();
-  productIdsRef.current = null;
-  globalIdMapRef.current = null;
-  globalIdMapModelIdRef.current = null;
-  expressIdIndexMapRef.current = null;
-
-  if (ifcLoaderRef.current) {
-    try {
-      ifcLoaderRef.current.ifcManager?.dispose();
-    } catch (disposeError) {
-      console.warn('[ModelViewer] 卸载IFC实例时出错:', disposeError);
+    if (animateIdRef.current) {
+      cancelAnimationFrame(animateIdRef.current);
+      animateIdRef.current = null;
     }
-    ifcLoaderRef.current = null;
-  }
-  isInitializedRef.current = false;
-  productIndexReadyRef.current = false;
-  if (highlightRetryTimeoutRef.current) {
-    clearTimeout(highlightRetryTimeoutRef.current);
-    highlightRetryTimeoutRef.current = null;
-  }
 
-  console.log('[ModelViewer] 资源清理完成');
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    if (rendererRef.current) {
+      rendererRef.current.dispose();
+      rendererRef.current = null;
+    }
+
+    if (controlsRef.current) {
+      controlsRef.current.dispose();
+      controlsRef.current = null;
+    }
+
+    if (clickHandlerRef.current && clickTargetRef.current) {
+      clickTargetRef.current.removeEventListener('click', clickHandlerRef.current);
+      clickHandlerRef.current = null;
+      clickTargetRef.current = null;
+    }
+
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '';
+    }
+
+    sceneRef.current = null;
+    cameraRef.current = null;
+    modelRef.current = null;
+    raycasterRef.current = null;
+    mouseRef.current = null;
+    infoDivRef.current = null;
+    selectionSubsetRef.current = null;
+    highlightSubsetRef.current = null;
+    highlightSubsetsRef.current.clear();
+    productIdsRef.current = null;
+    globalIdMapRef.current = null;
+    globalIdMapModelIdRef.current = null;
+    expressIdIndexMapRef.current = null;
+
+    if (ifcLoaderRef.current) {
+      try {
+        ifcLoaderRef.current.ifcManager?.dispose();
+      } catch (disposeError) {
+        console.warn('[ModelViewer] 卸载IFC实例时出错:', disposeError);
+      }
+      ifcLoaderRef.current = null;
+    }
+    isInitializedRef.current = false;
+    productIndexReadyRef.current = false;
+    if (highlightRetryTimeoutRef.current) {
+      clearTimeout(highlightRetryTimeoutRef.current);
+      highlightRetryTimeoutRef.current = null;
+    }
+
+    console.log('[ModelViewer] 资源清理完成');
+  }, [
+    cancelWorker,
+    animateIdRef,
+    abortControllerRef,
+    rendererRef,
+    controlsRef,
+    containerRef,
+    sceneRef,
+    cameraRef,
+    modelRef,
+    raycasterRef,
+    mouseRef,
+    infoDivRef,
+    selectionSubsetRef,
+    highlightSubsetRef,
+    highlightSubsetsRef,
+    productIdsRef,
+    globalIdMapRef,
+    globalIdMapModelIdRef,
+    expressIdIndexMapRef,
+    ifcLoaderRef,
+    isInitializedRef,
+    productIndexReadyRef,
+    highlightRetryTimeoutRef,
+    clickHandlerRef,
+    clickTargetRef,
+  ]);
+
+  return { cleanup };
 }
