@@ -12,6 +12,7 @@ import { setupInteraction } from './utils/interaction';
 import { applyHighlight, HighlightGroup } from './utils/highlight';
 import { loadModelInMainThread as loadModelInMainThreadUtil } from './utils/mainThreadLoader';
 import { cleanup as cleanupUtil } from './utils/cleanup';
+import { handleWorkerSuccess as handleWorkerSuccessUtil } from './utils/workerModel';
 
 // TODO: 继续优化：在加载阶段预建 ExpressID/GlobalId/索引映射，交互阶段仅查表并通过 visible/material/drawRange 切换渲染，减少 createSubset 与属性遍历开销；同时完善子集/材质的统一释放策略。
 
@@ -91,197 +92,46 @@ export function ModelViewer({
     },
   });
 
-  // 反序列化模型数据
-  const deserializeModel = useCallback((serialized: SerializedModel): THREE.Object3D & { modelID: number } => {
-    console.log('[ModelViewer] 开始反序列化模型');
-    
-    const group = new THREE.Group() as any;
-    group.modelID = serialized.modelID;
-
-    serialized.meshes.forEach((meshData, index) => {
-      try {
-        // 创建几何体
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.BufferAttribute(meshData.geometry.positions, 3));
-        
-        if (meshData.geometry.normals) {
-          geometry.setAttribute('normal', new THREE.BufferAttribute(meshData.geometry.normals, 3));
-        }
-        
-        if (meshData.geometry.indices) {
-          geometry.setIndex(new THREE.BufferAttribute(meshData.geometry.indices, 1));
-        }
-        
-        geometry.uuid = meshData.geometry.uuid;
-        geometry.computeBoundingSphere();
-        geometry.computeBoundingBox();
-
-        // 创建材质
-        const material = new THREE.MeshStandardMaterial({
-          color: meshData.material.color,
-          opacity: meshData.material.opacity,
-          transparent: meshData.material.transparent,
-          side: meshData.material.side as THREE.Side,
-          depthWrite: true,
-          depthTest: true,
-          metalness: 0,
-          roughness: 0.6,
-        });
-        // material.uuid = meshData.material.uuid; // uuid 是只读的
-
-        // 创建网格
-        const mesh = new THREE.Mesh(geometry, material) as THREE.Mesh & { expressID?: number };
-        mesh.matrix.fromArray(meshData.matrix);
-        mesh.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
-        
-        if (meshData.expressID !== undefined) {
-          mesh.expressID = meshData.expressID;
-        }
-        
-        mesh.name = meshData.name || `Mesh_${index}`;
-        mesh.visible = meshData.visible;
-        mesh.renderOrder = meshData.renderOrder;
-
-        group.add(mesh);
-      } catch (error) {
-        console.warn('[ModelViewer] 反序列化网格失败:', error);
-      }
-    });
-
-    console.log(`[ModelViewer] 反序列化完成，共 ${group.children.length} 个网格`);
-    return group;
-  }, []);
-
   // 处理 Worker 成功
   const handleWorkerSuccess = useCallback(async (modelData: SerializedModel) => {
-    if (!sceneRef.current || !cameraRef.current || !rendererRef.current || !containerRef.current) {
-      console.error('[ModelViewer] 场景未初始化');
-      return;
-    }
-
-    try {
-      // 反序列化模型
-      const model = deserializeModel(modelData);
-      modelRef.current = model;
-
-      // 添加到场景
-      sceneRef.current.add(model);
-
-      // 应用基础材质
-      const workerBaseMaterial = new THREE.MeshStandardMaterial({
-        color: 0x808080,
-        transparent: true,
-        opacity: 0.3,
-        depthWrite: false,
-        metalness: 0,
-        roughness: 1,
-      });
-      
-      model.traverse((child: THREE.Object3D) => {
-        if (child instanceof THREE.Mesh) {
-          child.material = workerBaseMaterial;
-          child.renderOrder = 0;
-        }
-      });
-
-      // 设置相机和控制器
-      setupCameraAndControls({
-        model,
-        camera: cameraRef.current,
-        renderer: rendererRef.current,
-        controlsRef,
-        sceneRef,
-        cameraRef,
-        rendererRef,
-      });
-
-      // 设置交互
-      setupInteraction({
-        ifcLoader: ifcLoaderRef.current!,
-        model,
-        camera: cameraRef.current,
-        renderer: rendererRef.current,
-        raycasterRef,
-        mouseRef,
-        infoDivRef,
-        selectionSubsetRef,
-        modelRef,
-        clickHandlerRef,
-        clickTargetRef,
-      });
-
-      // 开始渲染循环
-      startRenderLoop({
-        scene: sceneRef.current,
-        camera: cameraRef.current,
-        renderer: rendererRef.current,
-        controlsRef,
-        animateIdRef,
-        abortControllerRef,
-        needsRenderRef,
-      });
-
-      // 构建索引缓存（ExpressID 列表 + GlobalId 映射）
-      if (ifcLoaderRef.current) {
-        await buildIdCaches({
-          ifcLoader: ifcLoaderRef.current,
-          modelID: model.modelID,
-          productIdsRef,
-          globalIdMapRef,
-          globalIdMapModelIdRef,
-          productIndexReadyRef,
-          expressIdIndexMapRef,
-        });
-      }
-
-      // 更新加载状态
-      setLoadingState({
-        isLoading: false,
-        progress: 90,
-        message: '正在应用高亮...',
-        error: null,
-      });
-
-      // 应用高亮
-      if (ifcLoaderRef.current) {
-        applyHighlight({
-          ifcLoader: ifcLoaderRef.current,
-          model,
-          attempt: 0,
-          highlightGroups,
-          highlightIds,
-          highlightColor,
-          globalIdMapRef,
-          globalIdMapModelIdRef,
-          productIdsRef,
-          productIndexReadyRef,
-          highlightSubsetRef,
-          highlightSubsetsRef,
-          modelRef,
-          scheduleHighlightRetry,
-          needsRenderRef,
-          maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
-        });
-      }
-
-      // 完成
-      setLoadingState({
-        isLoading: false,
-        progress: 100,
-        message: '加载完成',
-        error: null,
-      });
-
-      console.log('[ModelViewer] 模型加载完成');
-    } catch (error) {
-      console.error('[ModelViewer] 处理模型失败:', error);
-      setLoadingState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error instanceof Error ? error.message : '处理模型失败',
-      }));
-    }
-  }, [deserializeModel]);
+    await handleWorkerSuccessUtil({
+      modelData,
+      sceneRef,
+      cameraRef,
+      rendererRef,
+      containerRef,
+      ifcLoaderRef,
+      modelRef,
+      setLoadingState,
+      setupCameraAndControls,
+      setupInteraction,
+      startRenderLoop,
+      buildIdCaches,
+      applyHighlight,
+      highlightGroups,
+      highlightIds,
+      highlightColor,
+      globalIdMapRef,
+      globalIdMapModelIdRef,
+      productIdsRef,
+      productIndexReadyRef,
+      highlightSubsetRef,
+      highlightSubsetsRef,
+      scheduleHighlightRetry,
+      needsRenderRef,
+      maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
+      controlsRef,
+      animateIdRef,
+      abortControllerRef,
+      raycasterRef,
+      mouseRef,
+      infoDivRef,
+      selectionSubsetRef,
+      clickHandlerRef,
+      clickTargetRef,
+      expressIdIndexMapRef,
+    });
+  }, [highlightGroups, highlightIds, highlightColor]);
 
   // 主线程降级加载
   const loadModelInMainThread = useCallback(async (
