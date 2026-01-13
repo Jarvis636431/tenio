@@ -58,6 +58,8 @@ export function ModelViewer({
   const clickTargetRef = useRef<HTMLCanvasElement | null>(null);
   const globalIdMapRef = useRef<Map<string, number> | null>(null);
   const globalIdMapModelIdRef = useRef<number | null>(null);
+  const productIdsRef = useRef<number[] | null>(null);
+  const expressIdIndexMapRef = useRef<Map<number, { [materialID: number]: number[] }> | null>(null);
   const needsRenderRef = useRef(true);
 
   const [loadingState, setLoadingState] = useState<LoadingState>({
@@ -79,7 +81,7 @@ export function ModelViewer({
     },
     onSuccess: (modelData) => {
       console.log('[ModelViewer] Worker 解析成功');
-      handleWorkerSuccess(modelData);
+      void handleWorkerSuccess(modelData);
     },
     onError: (error) => {
       console.error('[ModelViewer] Worker 错误:', error);
@@ -149,8 +151,84 @@ export function ModelViewer({
     return group;
   }, []);
 
+  const buildIdCaches = useCallback(async (ifcLoader: IFCLoader, modelID: number) => {
+    if (productIdsRef.current && globalIdMapRef.current && globalIdMapModelIdRef.current === modelID) {
+      return;
+    }
+
+    const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(
+      modelID,
+      IFCPRODUCT,
+      true
+    );
+    let allProductIds: number[] = Array.isArray(rawIds)
+      ? (rawIds as number[])
+      : Array.from(rawIds as Iterable<number>);
+
+    console.log('[ModelViewer] 产品总数:', allProductIds.length);
+
+    if (!allProductIds.length) {
+      try {
+        const spatial = await ifcLoader.ifcManager.getSpatialStructure(
+          modelID,
+          true
+        );
+        const idsSet = new Set<number>();
+        const collect = (node: { expressID?: number; items?: { expressID?: number }[]; children?: unknown[] }) => {
+          if (!node) return;
+          if (typeof node.expressID === 'number') idsSet.add(node.expressID);
+          if (Array.isArray(node.items)) {
+            for (const it of node.items) {
+              if (typeof it?.expressID === 'number') idsSet.add(it.expressID);
+            }
+          }
+          if (Array.isArray(node.children)) {
+            for (const ch of node.children) collect(ch);
+          }
+        };
+        collect(spatial);
+        allProductIds = Array.from(idsSet);
+        console.log('[ModelViewer] 通过空间结构获取产品总数:', allProductIds.length);
+      } catch (se) {
+        console.warn('[ModelViewer] 通过空间结构收集ID失败:', se);
+      }
+    }
+
+    if (!allProductIds.length) {
+      productIndexReadyRef.current = false;
+      return;
+    }
+
+    const globalIdToExpressId = new Map<string, number>();
+    for (const expressID of allProductIds) {
+      const props: { GlobalId?: { value?: string } } = await ifcLoader.ifcManager.getItemProperties(
+        modelID,
+        expressID,
+        false
+      );
+      const gid = props?.GlobalId?.value as string | undefined;
+      if (gid) {
+        globalIdToExpressId.set(gid, expressID);
+      }
+    }
+
+    productIdsRef.current = allProductIds;
+    globalIdMapRef.current = globalIdToExpressId;
+    globalIdMapModelIdRef.current = modelID;
+    productIndexReadyRef.current = true;
+    console.log('[ModelViewer] 已映射GlobalId数量:', globalIdToExpressId.size);
+
+    if (ifcLoader.ifcManager.subsets?.items) {
+      ifcLoader.ifcManager.subsets.items.generateGeometryIndexMap(modelID);
+      expressIdIndexMapRef.current = ifcLoader.ifcManager.subsets.items.map[modelID]?.map ?? null;
+      if (!expressIdIndexMapRef.current) {
+        console.warn('[ModelViewer] ExpressId 索引映射不可用');
+      }
+    }
+  }, []);
+
   // 处理 Worker 成功
-  const handleWorkerSuccess = useCallback((modelData: SerializedModel) => {
+  const handleWorkerSuccess = useCallback(async (modelData: SerializedModel) => {
     if (!sceneRef.current || !cameraRef.current || !rendererRef.current || !containerRef.current) {
       console.error('[ModelViewer] 场景未初始化');
       return;
@@ -190,6 +268,11 @@ export function ModelViewer({
       // 开始渲染循环
       startRenderLoop(sceneRef.current, cameraRef.current, rendererRef.current);
 
+      // 构建索引缓存（ExpressID 列表 + GlobalId 映射）
+      if (ifcLoaderRef.current) {
+        await buildIdCaches(ifcLoaderRef.current, model.modelID);
+      }
+
       // 更新加载状态
       setLoadingState({
         isLoading: false,
@@ -220,7 +303,7 @@ export function ModelViewer({
         error: error instanceof Error ? error.message : '处理模型失败',
       }));
     }
-  }, [deserializeModel]);
+  }, [deserializeModel, buildIdCaches]);
 
   // 主线程降级加载
   const loadModelInMainThread = useCallback(async (
@@ -334,6 +417,11 @@ export function ModelViewer({
       // 开始渲染循环
       startRenderLoop(scene, camera, renderer);
 
+      // 构建索引缓存（ExpressID 列表 + GlobalId 映射）
+      if (ifcLoaderRef.current) {
+        await buildIdCaches(ifcLoaderRef.current, model.modelID);
+      }
+
       setLoadingState(prev => ({
         ...prev,
         progress: 90,
@@ -356,7 +444,7 @@ export function ModelViewer({
       console.error('[ModelViewer] 主线程加载失败:', err);
       throw err;
     }
-  }, []);
+  }, [buildIdCaches]);
 
   // 清理函数
   const cleanup = useCallback(() => {
@@ -409,6 +497,10 @@ export function ModelViewer({
     selectionSubsetRef.current = null;
     highlightSubsetRef.current = null;
     highlightSubsetsRef.current.clear();
+    productIdsRef.current = null;
+    globalIdMapRef.current = null;
+    globalIdMapModelIdRef.current = null;
+    expressIdIndexMapRef.current = null;
     if (ifcLoaderRef.current) {
       try {
         ifcLoaderRef.current.ifcManager?.dispose();
@@ -619,52 +711,15 @@ export function ModelViewer({
         return;
       }
 
-      // 获取所有产品元素的 expressID 列表
-      const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(
-        modelID,
-        IFCPRODUCT,
-        true
-      );
-      let allProductIds: number[] = Array.isArray(rawIds)
-        ? (rawIds as number[])
-        : Array.from(rawIds as Iterable<number>);
-
-      console.log('[ModelViewer] 产品总数:', allProductIds.length);
-
-      // 回退：通过空间结构收集 expressID
-      if (!allProductIds.length) {
-        try {
-          const spatial = await ifcLoader.ifcManager.getSpatialStructure(
-            modelID,
-            true
-          );
-          const idsSet = new Set<number>();
-          const collect = (node: { expressID?: number; items?: { expressID?: number }[]; children?: unknown[] }) => {
-            if (!node) return;
-            if (typeof node.expressID === 'number')
-              idsSet.add(node.expressID);
-            if (Array.isArray(node.items)) {
-              for (const it of node.items) {
-                if (typeof it?.expressID === 'number')
-                  idsSet.add(it.expressID);
-              }
-            }
-            if (Array.isArray(node.children)) {
-              for (const ch of node.children) collect(ch);
-            }
-          };
-          collect(spatial);
-          allProductIds = Array.from(idsSet);
-          console.log('[ModelViewer] 通过空间结构获取产品总数:', allProductIds.length);
-        } catch (se) {
-          console.warn('[ModelViewer] 通过空间结构收集ID失败:', se);
-        }
-      }
-
-      if (!allProductIds.length) {
+      const globalIdToExpressId = globalIdMapRef.current;
+      if (
+        globalIdMapModelIdRef.current !== modelID ||
+        !productIdsRef.current ||
+        !globalIdToExpressId
+      ) {
         productIndexReadyRef.current = false;
         if (attempt >= MAX_HIGHLIGHT_RETRY) {
-          console.warn('[ModelViewer] 多次尝试后仍无法解析构件，放弃高亮');
+          console.warn('[ModelViewer] 构件索引尚未准备好，放弃高亮');
           return;
         }
         console.warn('[ModelViewer] 构件索引尚未准备好，稍后重试 (attempt %d)', attempt + 1);
@@ -672,27 +727,6 @@ export function ModelViewer({
         needsRenderRef.current = true;
         return;
       }
-
-      // 建立/复用 GlobalId 到 ExpressId 的映射
-      if (globalIdMapModelIdRef.current !== modelID || !globalIdMapRef.current) {
-        const globalIdToExpressId = new Map<string, number>();
-        for (const expressID of allProductIds) {
-          const props: { GlobalId?: { value?: string } } = await ifcLoader.ifcManager.getItemProperties(
-            modelID,
-            expressID,
-            false
-          );
-          const gid = props?.GlobalId?.value as string | undefined;
-          if (gid) {
-            globalIdToExpressId.set(gid, expressID);
-          }
-        }
-        globalIdMapRef.current = globalIdToExpressId;
-        globalIdMapModelIdRef.current = modelID;
-        console.log('[ModelViewer] 已映射GlobalId数量:', globalIdToExpressId.size);
-      }
-
-      const globalIdToExpressId = globalIdMapRef.current;
 
       // 如果使用多组高亮模式
       if (highlightGroups && highlightGroups.length > 0) {
