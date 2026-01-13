@@ -56,6 +56,8 @@ export function ModelViewer({
   const highlightSubsetsRef = useRef<Map<string, THREE.Mesh & { renderOrder: number }>>(new Map());
   const clickHandlerRef = useRef<((event: MouseEvent) => void) | null>(null);
   const clickTargetRef = useRef<HTMLCanvasElement | null>(null);
+  const globalIdMapRef = useRef<Map<string, number> | null>(null);
+  const globalIdMapModelIdRef = useRef<number | null>(null);
 
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
@@ -668,22 +670,26 @@ export function ModelViewer({
         return;
       }
 
-      // 建立GlobalId到ExpressId的映射
-      const globalIdToExpressId = new Map<string, number>();
-
-      for (const expressID of allProductIds) {
-        const props: { GlobalId?: { value?: string } } = await ifcLoader.ifcManager.getItemProperties(
-          modelID,
-          expressID,
-          false
-        );
-        const gid = props?.GlobalId?.value as string | undefined;
-        if (gid) {
-          globalIdToExpressId.set(gid, expressID);
+      // 建立/复用 GlobalId 到 ExpressId 的映射
+      if (globalIdMapModelIdRef.current !== modelID || !globalIdMapRef.current) {
+        const globalIdToExpressId = new Map<string, number>();
+        for (const expressID of allProductIds) {
+          const props: { GlobalId?: { value?: string } } = await ifcLoader.ifcManager.getItemProperties(
+            modelID,
+            expressID,
+            false
+          );
+          const gid = props?.GlobalId?.value as string | undefined;
+          if (gid) {
+            globalIdToExpressId.set(gid, expressID);
+          }
         }
+        globalIdMapRef.current = globalIdToExpressId;
+        globalIdMapModelIdRef.current = modelID;
+        console.log('[ModelViewer] 已映射GlobalId数量:', globalIdToExpressId.size);
       }
 
-      console.log('[ModelViewer] 已映射GlobalId数量:', globalIdToExpressId.size);
+      const globalIdToExpressId = globalIdMapRef.current;
 
       // 如果使用多组高亮模式
       if (highlightGroups && highlightGroups.length > 0) {
@@ -706,7 +712,7 @@ export function ModelViewer({
               if (isPureNumber) {
                 idsToHighlight.push(parseInt(id, 10));
               } else {
-                const expressId = globalIdToExpressId.get(id);
+                const expressId = globalIdToExpressId?.get(id);
                 if (expressId !== undefined) {
                   idsToHighlight.push(expressId);
                 }
@@ -745,7 +751,7 @@ export function ModelViewer({
         return;
       }
 
-      if (globalIdToExpressId.size === 0) {
+      if (!globalIdToExpressId || globalIdToExpressId.size === 0) {
         productIndexReadyRef.current = false;
         if (attempt >= MAX_HIGHLIGHT_RETRY) {
           console.warn('[ModelViewer] GlobalId 映射始终为空，放弃高亮');
