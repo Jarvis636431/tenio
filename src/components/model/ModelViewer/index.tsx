@@ -11,6 +11,7 @@ import { startRenderLoop } from './utils/renderLoop';
 import { setupInteraction } from './utils/interaction';
 import { applyHighlight, HighlightGroup } from './utils/highlight';
 import { loadModelInMainThread as loadModelInMainThreadUtil } from './utils/mainThreadLoader';
+import { cleanup as cleanupUtil } from './utils/cleanup';
 
 // TODO: 继续优化：在加载阶段预建 ExpressID/GlobalId/索引映射，交互阶段仅查表并通过 visible/material/drawRange 切换渲染，减少 createSubset 与属性遍历开销；同时完善子集/材质的统一释放策略。
 
@@ -343,75 +344,33 @@ export function ModelViewer({
 
   // 清理函数
   const cleanup = useCallback(() => {
-    console.log('[ModelViewer] 开始清理资源');
-    
-    // 取消 Worker
-    cancelWorker();
-    
-    // 取消动画循环
-    if (animateIdRef.current) {
-      cancelAnimationFrame(animateIdRef.current);
-      animateIdRef.current = null;
-    }
-
-    // 取消网络请求
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-
-    // 清理Three.js资源
-    if (rendererRef.current) {
-      rendererRef.current.dispose();
-      rendererRef.current = null;
-    }
-
-    if (controlsRef.current) {
-      controlsRef.current.dispose();
-      controlsRef.current = null;
-    }
-
-    if (clickHandlerRef.current && clickTargetRef.current) {
-      clickTargetRef.current.removeEventListener('click', clickHandlerRef.current);
-      clickHandlerRef.current = null;
-      clickTargetRef.current = null;
-    }
-
-    // 清理容器
-    if (containerRef.current) {
-      containerRef.current.innerHTML = '';
-    }
-
-    // 重置refs
-    sceneRef.current = null;
-    cameraRef.current = null;
-    modelRef.current = null;
-    raycasterRef.current = null;
-    mouseRef.current = null;
-    infoDivRef.current = null;
-    selectionSubsetRef.current = null;
-    highlightSubsetRef.current = null;
-    highlightSubsetsRef.current.clear();
-    productIdsRef.current = null;
-    globalIdMapRef.current = null;
-    globalIdMapModelIdRef.current = null;
-    expressIdIndexMapRef.current = null;
-    if (ifcLoaderRef.current) {
-      try {
-        ifcLoaderRef.current.ifcManager?.dispose();
-      } catch (disposeError) {
-        console.warn('[ModelViewer] 卸载IFC实例时出错:', disposeError);
-      }
-      ifcLoaderRef.current = null;
-    }
-    isInitializedRef.current = false;
-    productIndexReadyRef.current = false;
-    if (highlightRetryTimeoutRef.current) {
-      clearTimeout(highlightRetryTimeoutRef.current);
-      highlightRetryTimeoutRef.current = null;
-    }
-
-    console.log('[ModelViewer] 资源清理完成');
+    cleanupUtil({
+      cancelWorker,
+      animateIdRef,
+      abortControllerRef,
+      rendererRef,
+      controlsRef,
+      containerRef,
+      sceneRef,
+      cameraRef,
+      modelRef,
+      raycasterRef,
+      mouseRef,
+      infoDivRef,
+      selectionSubsetRef,
+      highlightSubsetRef,
+      highlightSubsetsRef,
+      productIdsRef,
+      globalIdMapRef,
+      globalIdMapModelIdRef,
+      expressIdIndexMapRef,
+      ifcLoaderRef,
+      isInitializedRef,
+      productIndexReadyRef,
+      highlightRetryTimeoutRef,
+      clickHandlerRef,
+      clickTargetRef,
+    });
   }, [cancelWorker]);
 
   // 初始化viewer
