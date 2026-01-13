@@ -9,9 +9,9 @@ import { buildIdCaches } from './utils/ifcCaches';
 import { setupCameraAndControls } from './utils/cameraControls';
 import { useRenderLoop } from './hooks/useRenderLoop';
 import { useHighlight, HighlightGroup } from './hooks/useHighlight';
-import { useMainThreadLoader } from './hooks/useMainThreadLoader';
-import { useCleanup } from './hooks/useCleanup';
-import { useWorkerModel } from './hooks/useWorkerModel';
+import { createMainThreadLoader } from './utils/mainThreadLoader';
+import { cleanup as cleanupUtil } from './utils/cleanup';
+import { createWorkerModel } from './utils/workerModel';
 import { useInitViewer } from './hooks/useInitViewer';
 import { useResize } from './hooks/useResize';
 
@@ -114,7 +114,7 @@ export function ModelViewer({
 
   const { handleResize } = useResize({ containerRef, rendererRef, cameraRef });
 
-  const { handleWorkerSuccess } = useWorkerModel({
+  const { handleWorkerSuccess } = createWorkerModel({
     sceneRef,
     cameraRef,
     rendererRef,
@@ -137,7 +137,7 @@ export function ModelViewer({
     expressIdIndexMapRef,
   });
 
-  const { loadModelInMainThread } = useMainThreadLoader({
+  const { loadModelInMainThread } = createMainThreadLoader({
     ifcLoaderRef,
     abortControllerRef,
     modelRef,
@@ -159,27 +159,29 @@ export function ModelViewer({
     expressIdIndexMapRef,
   });
 
-  const { cleanup } = useCleanup({
-    cancelWorker,
-    animateIdRef,
-    abortControllerRef,
-    rendererRef,
-    controlsRef,
-    containerRef,
-    sceneRef,
-    cameraRef,
-    modelRef,
-    highlightSubsetRef,
-    highlightSubsetsRef,
-    productIdsRef,
-    globalIdMapRef,
-    globalIdMapModelIdRef,
-    expressIdIndexMapRef,
-    ifcLoaderRef,
-    isInitializedRef,
-    productIndexReadyRef,
-    highlightRetryTimeoutRef,
-  });
+  const cleanup = () => {
+    cleanupUtil({
+      cancelWorker,
+      animateIdRef,
+      abortControllerRef,
+      rendererRef,
+      controlsRef,
+      containerRef,
+      sceneRef,
+      cameraRef,
+      modelRef,
+      highlightSubsetRef,
+      highlightSubsetsRef,
+      productIdsRef,
+      globalIdMapRef,
+      globalIdMapModelIdRef,
+      expressIdIndexMapRef,
+      ifcLoaderRef,
+      isInitializedRef,
+      productIndexReadyRef,
+      highlightRetryTimeoutRef,
+    });
+  };
 
   const { initViewer } = useInitViewer({
     src,

@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import * as THREE from 'three';
 import type { IFCLoader } from 'web-ifc-three/IFCLoader';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -16,7 +15,7 @@ type LoadModelInMainThread = (
   container: HTMLDivElement
 ) => Promise<void>;
 
-interface UseMainThreadLoaderParams {
+interface MainThreadLoaderParams {
   ifcLoaderRef: Ref<IFCLoader | null>;
   abortControllerRef: Ref<AbortController | null>;
   modelRef: Ref<(THREE.Object3D & { modelID: number }) | null>;
@@ -54,7 +53,7 @@ interface UseMainThreadLoaderParams {
   expressIdIndexMapRef: Ref<Map<number, { [materialID: number]: number[] }> | null>;
 }
 
-export function useMainThreadLoader({
+export function createMainThreadLoader({
   ifcLoaderRef,
   abortControllerRef,
   modelRef,
@@ -74,13 +73,13 @@ export function useMainThreadLoader({
   rendererRef,
   animateIdRef,
   expressIdIndexMapRef,
-}: UseMainThreadLoaderParams) {
-  const loadModelInMainThread = useCallback(async (
-    data: ArrayBuffer,
-    scene: THREE.Scene,
-    camera: THREE.PerspectiveCamera,
-    renderer: THREE.WebGLRenderer,
-    container: HTMLDivElement
+}: MainThreadLoaderParams) {
+  const loadModelInMainThread: LoadModelInMainThread = async (
+    data,
+    scene,
+    camera,
+    renderer,
+    container
   ) => {
     if (!ifcLoaderRef.current) {
       throw new Error('IFC Loader 未初始化');
@@ -189,27 +188,7 @@ export function useMainThreadLoader({
     });
 
     console.log('[ModelViewer] 模型加载完成（主线程）');
-  }, [
-    ifcLoaderRef,
-    abortControllerRef,
-    modelRef,
-    setLoadingState,
-    setupCameraAndControls,
-    startRenderLoop,
-    buildIdCaches,
-    applyHighlight,
-    productIdsRef,
-    globalIdMapRef,
-    globalIdMapModelIdRef,
-    productIndexReadyRef,
-    needsRenderRef,
-    controlsRef,
-    sceneRef,
-    cameraRef,
-    rendererRef,
-    animateIdRef,
-    expressIdIndexMapRef,
-  ]);
+  };
 
   return { loadModelInMainThread };
 }

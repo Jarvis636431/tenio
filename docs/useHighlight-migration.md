@@ -22,5 +22,5 @@
 ## 相关文件
 - `src/components/model/ModelViewer/hooks/useHighlight.ts`
 - `src/components/model/ModelViewer/index.tsx`
-- `src/components/model/ModelViewer/hooks/useMainThreadLoader.ts`
-- `src/components/model/ModelViewer/hooks/useWorkerModel.ts`
+- `src/components/model/ModelViewer/utils/mainThreadLoader.ts`
+- `src/components/model/ModelViewer/utils/workerModel.ts`

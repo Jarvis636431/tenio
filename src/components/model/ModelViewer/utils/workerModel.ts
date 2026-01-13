@@ -1,10 +1,9 @@
-import { useCallback } from 'react';
 import * as THREE from 'three';
 import type { IFCLoader } from 'web-ifc-three/IFCLoader';
 import type { SerializedModel, LoadingState } from '@/types/worker.types';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Dispatch, SetStateAction } from 'react';
-import type { buildIdCaches } from '../utils/ifcCaches';
+import type { buildIdCaches } from './ifcCaches';
 
 type Ref<T> = { current: T };
 
@@ -76,7 +75,7 @@ export function deserializeModel({ serialized }: DeserializeParams): SelectableM
   return group;
 }
 
-interface UseWorkerModelParams {
+interface WorkerModelParams {
   sceneRef: Ref<THREE.Scene | null>;
   cameraRef: Ref<THREE.PerspectiveCamera | null>;
   rendererRef: Ref<THREE.WebGLRenderer | null>;
@@ -107,7 +106,7 @@ interface UseWorkerModelParams {
   expressIdIndexMapRef: Ref<Map<number, { [materialID: number]: number[] }> | null>;
 }
 
-export function useWorkerModel({
+export function createWorkerModel({
   sceneRef,
   cameraRef,
   rendererRef,
@@ -128,8 +127,8 @@ export function useWorkerModel({
   animateIdRef,
   abortControllerRef,
   expressIdIndexMapRef,
-}: UseWorkerModelParams) {
-  const handleWorkerSuccess = useCallback(async (modelData: SerializedModel) => {
+}: WorkerModelParams) {
+  const handleWorkerSuccess = async (modelData: SerializedModel) => {
     if (!sceneRef.current || !cameraRef.current || !rendererRef.current || !containerRef.current) {
       console.error('[ModelViewer] 场景未初始化');
       return;
@@ -157,15 +156,15 @@ export function useWorkerModel({
         }
       });
 
-    setupCameraAndControls({
-      model,
-      camera: cameraRef.current,
-      renderer: rendererRef.current,
-      controlsRef,
-      sceneRef,
-      cameraRef,
-      rendererRef,
-    });
+      setupCameraAndControls({
+        model,
+        camera: cameraRef.current,
+        renderer: rendererRef.current,
+        controlsRef,
+        sceneRef,
+        cameraRef,
+        rendererRef,
+      });
 
       startRenderLoop(sceneRef.current, cameraRef.current, rendererRef.current);
 
@@ -206,28 +205,7 @@ export function useWorkerModel({
         error: error instanceof Error ? error.message : '处理模型失败',
       }));
     }
-  }, [
-    sceneRef,
-    cameraRef,
-    rendererRef,
-    containerRef,
-    ifcLoaderRef,
-    modelRef,
-    setLoadingState,
-    setupCameraAndControls,
-    startRenderLoop,
-    buildIdCaches,
-    applyHighlight,
-    globalIdMapRef,
-    globalIdMapModelIdRef,
-    productIdsRef,
-    productIndexReadyRef,
-    needsRenderRef,
-    controlsRef,
-    animateIdRef,
-    abortControllerRef,
-    expressIdIndexMapRef,
-  ]);
+  };
 
   return { handleWorkerSuccess };
 }
