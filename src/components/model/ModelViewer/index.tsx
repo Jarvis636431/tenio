@@ -14,6 +14,7 @@ import { loadModelInMainThread as loadModelInMainThreadUtil } from './utils/main
 import { cleanup as cleanupUtil } from './utils/cleanup';
 import { handleWorkerSuccess as handleWorkerSuccessUtil } from './utils/workerModel';
 import { initViewer as initViewerUtil } from './utils/initViewer';
+import { handleResize as handleResizeUtil } from './utils/resize';
 
 // TODO: 继续优化：在加载阶段预建 ExpressID/GlobalId/索引映射，交互阶段仅查表并通过 visible/material/drawRange 切换渲染，减少 createSubset 与属性遍历开销；同时完善子集/材质的统一释放策略。
 
@@ -274,15 +275,7 @@ export function ModelViewer({
 
   // 处理窗口大小变化
   const handleResize = useCallback(() => {
-    if (!containerRef.current || !rendererRef.current || !cameraRef.current) return;
-
-    const container = containerRef.current;
-    const camera = cameraRef.current;
-    const renderer = rendererRef.current;
-
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    handleResizeUtil({ containerRef, rendererRef, cameraRef });
   }, []);
 
   // 初始化effect
