@@ -3,13 +3,11 @@ import type { IFCLoader } from 'web-ifc-three/IFCLoader';
 import type { SerializedModel, LoadingState } from '@/types/worker.types';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Dispatch, SetStateAction } from 'react';
-import type { buildIdCaches as buildIdCachesFn } from './ifcCaches';
-
-const buildIdCachesType = buildIdCachesFn;
+import type { buildIdCaches } from './ifcCaches';
 
 type ApplyHighlight = (model: THREE.Object3D & { modelID: number }, attempt?: number) => Promise<void> | void;
 
-type BuildIdCaches = typeof buildIdCachesType;
+type BuildIdCaches = typeof buildIdCaches;
 
 type Ref<T> = { current: T };
 

@@ -94,6 +94,24 @@ export function ModelViewer({
     },
   });
 
+  const { applyHighlight } = useHighlight({
+    highlightGroups,
+    highlightIds,
+    highlightColor,
+    ifcLoaderRef,
+    modelRef,
+    globalIdMapRef,
+    globalIdMapModelIdRef,
+    productIdsRef,
+    productIndexReadyRef,
+    highlightSubsetRef,
+    highlightSubsetsRef,
+    highlightRetryTimeoutRef,
+    needsRenderRef,
+    maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
+    highlightRetryDelay: HIGHLIGHT_RETRY_DELAY,
+  });
+
   // 处理 Worker 成功
   const handleWorkerSuccess = useCallback(async (modelData: SerializedModel) => {
     await handleWorkerSuccessUtil({
@@ -228,24 +246,6 @@ export function ModelViewer({
       loadModelInMainThread,
     });
   }, [src, isWorkerAvailable, parseIFC, loadModelInMainThread]);
-
-  const { applyHighlight } = useHighlight({
-    highlightGroups,
-    highlightIds,
-    highlightColor,
-    ifcLoaderRef,
-    modelRef,
-    globalIdMapRef,
-    globalIdMapModelIdRef,
-    productIdsRef,
-    productIndexReadyRef,
-    highlightSubsetRef,
-    highlightSubsetsRef,
-    highlightRetryTimeoutRef,
-    needsRenderRef,
-    maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
-    highlightRetryDelay: HIGHLIGHT_RETRY_DELAY,
-  });
 
   // 处理窗口大小变化
   const handleResize = useCallback(() => {
