@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import * as THREE from 'three';
 import type { IFCLoader } from 'web-ifc-three/IFCLoader';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -7,13 +8,16 @@ type Ref<T> = { current: T };
 
 type ApplyHighlight = (model: THREE.Object3D & { modelID: number }, attempt?: number) => Promise<void> | void;
 
-interface LoadModelInMainThreadParams {
-  data: ArrayBuffer;
-  scene: THREE.Scene;
-  camera: THREE.PerspectiveCamera;
-  renderer: THREE.WebGLRenderer;
-  container: HTMLDivElement;
-  ifcLoader: IFCLoader;
+type LoadModelInMainThread = (
+  data: ArrayBuffer,
+  scene: THREE.Scene,
+  camera: THREE.PerspectiveCamera,
+  renderer: THREE.WebGLRenderer,
+  container: HTMLDivElement
+) => Promise<void>;
+
+interface UseMainThreadLoaderParams {
+  ifcLoaderRef: Ref<IFCLoader | null>;
   abortControllerRef: Ref<AbortController | null>;
   infoDivRef: Ref<HTMLDivElement | null>;
   modelRef: Ref<(THREE.Object3D & { modelID: number }) | null>;
@@ -77,13 +81,8 @@ interface LoadModelInMainThreadParams {
   expressIdIndexMapRef: Ref<Map<number, { [materialID: number]: number[] }> | null>;
 }
 
-export async function loadModelInMainThread({
-  data,
-  scene,
-  camera,
-  renderer,
-  container,
-  ifcLoader,
+export function useMainThreadLoader({
+  ifcLoaderRef,
   abortControllerRef,
   infoDivRef,
   modelRef,
@@ -109,150 +108,191 @@ export async function loadModelInMainThread({
   clickTargetRef,
   animateIdRef,
   expressIdIndexMapRef,
-}: LoadModelInMainThreadParams) {
-  setLoadingState(prev => ({
-    ...prev,
-    progress: 40,
-    message: '正在解析模型（主线程）...',
-  }));
+}: UseMainThreadLoaderParams) {
+  const loadModelInMainThread = useCallback(async (
+    data: ArrayBuffer,
+    scene: THREE.Scene,
+    camera: THREE.PerspectiveCamera,
+    renderer: THREE.WebGLRenderer,
+    container: HTMLDivElement
+  ) => {
+    if (!ifcLoaderRef.current) {
+      throw new Error('IFC Loader 未初始化');
+    }
 
-  const model = await ifcLoader.parse(data) as THREE.Object3D & { modelID: number };
+    setLoadingState(prev => ({
+      ...prev,
+      progress: 40,
+      message: '正在解析模型（主线程）...',
+    }));
 
-  if (abortControllerRef.current?.signal.aborted) {
-    return;
-  }
+    const model = await ifcLoaderRef.current.parse(data) as THREE.Object3D & { modelID: number };
 
-  setLoadingState(prev => ({
-    ...prev,
-    progress: 70,
-    message: '正在处理模型...',
-  }));
+    if (abortControllerRef.current?.signal.aborted) {
+      return;
+    }
 
-  model.traverse((child: THREE.Object3D) => {
-    if (child instanceof THREE.Mesh) {
-      if (child.geometry) {
-        child.geometry.computeBoundingSphere();
-        child.geometry.computeBoundingBox();
-      }
+    setLoadingState(prev => ({
+      ...prev,
+      progress: 70,
+      message: '正在处理模型...',
+    }));
 
-      if (child.material) {
-        child.material.side = THREE.FrontSide;
-        child.material.transparent = false;
-        child.material.depthWrite = true;
-        child.material.depthTest = true;
-
-        if (child.material.map) {
-          child.material.map.generateMipmaps = false;
-          child.material.map.minFilter = THREE.LinearFilter;
-          child.material.map.magFilter = THREE.LinearFilter;
+    model.traverse((child: THREE.Object3D) => {
+      if (child instanceof THREE.Mesh) {
+        if (child.geometry) {
+          child.geometry.computeBoundingSphere();
+          child.geometry.computeBoundingBox();
         }
+
+        if (child.material) {
+          child.material.side = THREE.FrontSide;
+          child.material.transparent = false;
+          child.material.depthWrite = true;
+          child.material.depthTest = true;
+
+          if (child.material.map) {
+            child.material.map.generateMipmaps = false;
+            child.material.map.minFilter = THREE.LinearFilter;
+            child.material.map.magFilter = THREE.LinearFilter;
+          }
+        }
+
+        child.renderOrder = 0;
       }
+    });
 
-      child.renderOrder = 0;
+    if (abortControllerRef.current?.signal.aborted) {
+      return;
     }
-  });
 
-  if (abortControllerRef.current?.signal.aborted) {
-    return;
-  }
+    scene.add(model);
+    modelRef.current = model;
 
-  scene.add(model);
-  modelRef.current = model;
-
-  if (!infoDivRef.current) {
-    const info = document.createElement('div');
-    info.style.position = 'absolute';
-    info.style.top = '12px';
-    info.style.right = '12px';
-    info.style.maxWidth = '360px';
-    info.style.background = 'rgba(0,0,0,0.65)';
-    info.style.color = '#fff';
-    info.style.padding = '10px 12px';
-    info.style.borderRadius = '8px';
-    info.style.fontSize = '12px';
-    info.style.lineHeight = '1.4';
-    info.style.pointerEvents = 'none';
-    info.style.whiteSpace = 'pre-wrap';
-    info.textContent = '点击构件以查看属性';
-    infoDivRef.current = info;
-    container.style.position = 'relative';
-    container.appendChild(info);
-  }
-
-  const mainThreadBaseMaterial = new THREE.MeshStandardMaterial({
-    color: 0x808080,
-    transparent: true,
-    opacity: 0.3,
-    depthWrite: false,
-    metalness: 0,
-    roughness: 1,
-  });
-
-  model.traverse((child: THREE.Object3D) => {
-    if (child instanceof THREE.Mesh) {
-      child.material = mainThreadBaseMaterial;
-      child.renderOrder = 0;
+    if (!infoDivRef.current) {
+      const info = document.createElement('div');
+      info.style.position = 'absolute';
+      info.style.top = '12px';
+      info.style.right = '12px';
+      info.style.maxWidth = '360px';
+      info.style.background = 'rgba(0,0,0,0.65)';
+      info.style.color = '#fff';
+      info.style.padding = '10px 12px';
+      info.style.borderRadius = '8px';
+      info.style.fontSize = '12px';
+      info.style.lineHeight = '1.4';
+      info.style.pointerEvents = 'none';
+      info.style.whiteSpace = 'pre-wrap';
+      info.textContent = '点击构件以查看属性';
+      infoDivRef.current = info;
+      container.style.position = 'relative';
+      container.appendChild(info);
     }
-  });
 
-  setupCameraAndControls({
-    model,
-    camera,
-    renderer,
-    controlsRef,
-    sceneRef,
-    cameraRef,
-    rendererRef,
-  });
+    const mainThreadBaseMaterial = new THREE.MeshStandardMaterial({
+      color: 0x808080,
+      transparent: true,
+      opacity: 0.3,
+      depthWrite: false,
+      metalness: 0,
+      roughness: 1,
+    });
 
-  setupInteraction({
-    ifcLoader,
-    model,
-    camera,
-    renderer,
-    raycasterRef,
-    mouseRef,
-    infoDivRef,
-    selectionSubsetRef,
-    modelRef,
-    clickHandlerRef,
-    clickTargetRef,
-  });
+    model.traverse((child: THREE.Object3D) => {
+      if (child instanceof THREE.Mesh) {
+        child.material = mainThreadBaseMaterial;
+        child.renderOrder = 0;
+      }
+    });
 
-  startRenderLoop({
-    scene,
-    camera,
-    renderer,
-    controlsRef,
-    animateIdRef,
+    setupCameraAndControls({
+      model,
+      camera,
+      renderer,
+      controlsRef,
+      sceneRef,
+      cameraRef,
+      rendererRef,
+    });
+
+    setupInteraction({
+      ifcLoader: ifcLoaderRef.current,
+      model,
+      camera,
+      renderer,
+      raycasterRef,
+      mouseRef,
+      infoDivRef,
+      selectionSubsetRef,
+      modelRef,
+      clickHandlerRef,
+      clickTargetRef,
+    });
+
+    startRenderLoop({
+      scene,
+      camera,
+      renderer,
+      controlsRef,
+      animateIdRef,
+      abortControllerRef,
+      needsRenderRef,
+    });
+
+    await buildIdCaches({
+      ifcLoader: ifcLoaderRef.current,
+      modelID: model.modelID,
+      productIdsRef,
+      globalIdMapRef,
+      globalIdMapModelIdRef,
+      productIndexReadyRef,
+      expressIdIndexMapRef,
+    });
+
+    setLoadingState(prev => ({
+      ...prev,
+      progress: 90,
+      message: '正在应用高亮...',
+    }));
+
+    await applyHighlight(model);
+
+    setLoadingState({
+      isLoading: false,
+      progress: 100,
+      message: '加载完成',
+      error: null,
+    });
+
+    console.log('[ModelViewer] 模型加载完成（主线程）');
+  }, [
+    ifcLoaderRef,
     abortControllerRef,
-    needsRenderRef,
-  });
-
-  await buildIdCaches({
-    ifcLoader,
-    modelID: model.modelID,
+    infoDivRef,
+    modelRef,
+    setLoadingState,
+    setupCameraAndControls,
+    setupInteraction,
+    startRenderLoop,
+    buildIdCaches,
+    applyHighlight,
     productIdsRef,
     globalIdMapRef,
     globalIdMapModelIdRef,
     productIndexReadyRef,
+    needsRenderRef,
+    controlsRef,
+    sceneRef,
+    cameraRef,
+    rendererRef,
+    raycasterRef,
+    mouseRef,
+    selectionSubsetRef,
+    clickHandlerRef,
+    clickTargetRef,
+    animateIdRef,
     expressIdIndexMapRef,
-  });
+  ]);
 
-  setLoadingState(prev => ({
-    ...prev,
-    progress: 90,
-    message: '正在应用高亮...',
-  }));
-
-  await applyHighlight(model);
-
-  setLoadingState({
-    isLoading: false,
-    progress: 100,
-    message: '加载完成',
-    error: null,
-  });
-
-  console.log('[ModelViewer] 模型加载完成（主线程）');
+  return { loadModelInMainThread };
 }

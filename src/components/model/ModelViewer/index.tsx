@@ -10,7 +10,7 @@ import { setupCameraAndControls } from './utils/cameraControls';
 import { startRenderLoop } from './utils/renderLoop';
 import { setupInteraction } from './utils/interaction';
 import { useHighlight, HighlightGroup } from './utils/highlight';
-import { loadModelInMainThread as loadModelInMainThreadUtil } from './utils/mainThreadLoader';
+import { useMainThreadLoader } from './utils/mainThreadLoader';
 import { useCleanup } from './utils/cleanup';
 import { useWorkerModel } from './utils/workerModel';
 import { initViewer as initViewerUtil } from './utils/initViewer';
@@ -142,57 +142,34 @@ export function ModelViewer({
     expressIdIndexMapRef,
   });
 
-  // 主线程降级加载
-  const loadModelInMainThread = useCallback(async (
-    data: ArrayBuffer,
-    scene: THREE.Scene,
-    camera: THREE.PerspectiveCamera,
-    renderer: THREE.WebGLRenderer,
-    container: HTMLDivElement
-  ) => {
-    try {
-      if (!ifcLoaderRef.current) {
-        throw new Error('IFC Loader 未初始化');
-      }
-
-      await loadModelInMainThreadUtil({
-        data,
-        scene,
-        camera,
-        renderer,
-        container,
-        ifcLoader: ifcLoaderRef.current,
-        abortControllerRef,
-        infoDivRef,
-        modelRef,
-        setLoadingState,
-        setupCameraAndControls,
-        setupInteraction,
-        startRenderLoop,
-        buildIdCaches,
-        applyHighlight,
-        globalIdMapRef,
-        globalIdMapModelIdRef,
-        productIdsRef,
-        productIndexReadyRef,
-        needsRenderRef,
-        controlsRef,
-        sceneRef,
-        cameraRef,
-        rendererRef,
-        raycasterRef,
-        mouseRef,
-        selectionSubsetRef,
-        clickHandlerRef,
-        clickTargetRef,
-        animateIdRef,
-        expressIdIndexMapRef,
-      });
-    } catch (err) {
-      console.error('[ModelViewer] 主线程加载失败:', err);
-      throw err;
-    }
-  }, [applyHighlight, buildIdCaches]);
+  const { loadModelInMainThread } = useMainThreadLoader({
+    ifcLoaderRef,
+    abortControllerRef,
+    infoDivRef,
+    modelRef,
+    setLoadingState,
+    setupCameraAndControls,
+    setupInteraction,
+    startRenderLoop,
+    buildIdCaches,
+    applyHighlight,
+    productIdsRef,
+    globalIdMapRef,
+    globalIdMapModelIdRef,
+    productIndexReadyRef,
+    needsRenderRef,
+    controlsRef,
+    sceneRef,
+    cameraRef,
+    rendererRef,
+    raycasterRef,
+    mouseRef,
+    selectionSubsetRef,
+    clickHandlerRef,
+    clickTargetRef,
+    animateIdRef,
+    expressIdIndexMapRef,
+  });
 
   const { cleanup } = useCleanup({
     cancelWorker,
