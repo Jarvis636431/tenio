@@ -2,10 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import * as THREE from 'three';
 import { IFCLoader } from 'web-ifc-three/IFCLoader';
-import { IFCPRODUCT } from 'web-ifc';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useIFCWorker } from '@/hooks/useIFCWorker';
 import type { SerializedModel, LoadingState } from '@/types/worker.types';
+import { buildIdCaches } from './utils/ifcCaches';
+import { setupCameraAndControls } from './utils/cameraControls';
+import { startRenderLoop } from './utils/renderLoop';
+import { setupInteraction } from './utils/interaction';
 
 // TODO: 继续优化：在加载阶段预建 ExpressID/GlobalId/索引映射，交互阶段仅查表并通过 visible/material/drawRange 切换渲染，减少 createSubset 与属性遍历开销；同时完善子集/材质的统一释放策略。
 
@@ -153,82 +156,6 @@ export function ModelViewer({
     return group;
   }, []);
 
-  const buildIdCaches = useCallback(async (ifcLoader: IFCLoader, modelID: number) => {
-    if (productIdsRef.current && globalIdMapRef.current && globalIdMapModelIdRef.current === modelID) {
-      return;
-    }
-
-    const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(
-      modelID,
-      IFCPRODUCT,
-      true
-    );
-    let allProductIds: number[] = Array.isArray(rawIds)
-      ? (rawIds as number[])
-      : Array.from(rawIds as Iterable<number>);
-
-    console.log('[ModelViewer] 产品总数:', allProductIds.length);
-
-    if (!allProductIds.length) {
-      try {
-        const spatial = await ifcLoader.ifcManager.getSpatialStructure(
-          modelID,
-          true
-        );
-        const idsSet = new Set<number>();
-        const collect = (node: { expressID?: number; items?: { expressID?: number }[]; children?: unknown[] }) => {
-          if (!node) return;
-          if (typeof node.expressID === 'number') idsSet.add(node.expressID);
-          if (Array.isArray(node.items)) {
-            for (const it of node.items) {
-              if (typeof it?.expressID === 'number') idsSet.add(it.expressID);
-            }
-          }
-          if (Array.isArray(node.children)) {
-            for (const ch of node.children) collect(ch);
-          }
-        };
-        collect(spatial);
-        allProductIds = Array.from(idsSet);
-        console.log('[ModelViewer] 通过空间结构获取产品总数:', allProductIds.length);
-      } catch (se) {
-        console.warn('[ModelViewer] 通过空间结构收集ID失败:', se);
-      }
-    }
-
-    if (!allProductIds.length) {
-      productIndexReadyRef.current = false;
-      return;
-    }
-
-    const globalIdToExpressId = new Map<string, number>();
-    for (const expressID of allProductIds) {
-      const props: { GlobalId?: { value?: string } } = await ifcLoader.ifcManager.getItemProperties(
-        modelID,
-        expressID,
-        false
-      );
-      const gid = props?.GlobalId?.value as string | undefined;
-      if (gid) {
-        globalIdToExpressId.set(gid, expressID);
-      }
-    }
-
-    productIdsRef.current = allProductIds;
-    globalIdMapRef.current = globalIdToExpressId;
-    globalIdMapModelIdRef.current = modelID;
-    productIndexReadyRef.current = true;
-    console.log('[ModelViewer] 已映射GlobalId数量:', globalIdToExpressId.size);
-
-    if (ifcLoader.ifcManager.subsets?.items) {
-      ifcLoader.ifcManager.subsets.items.generateGeometryIndexMap(modelID);
-      expressIdIndexMapRef.current = ifcLoader.ifcManager.subsets.items.map[modelID]?.map ?? null;
-      if (!expressIdIndexMapRef.current) {
-        console.warn('[ModelViewer] ExpressId 索引映射不可用');
-      }
-    }
-  }, []);
-
   // 处理 Worker 成功
   const handleWorkerSuccess = useCallback(async (modelData: SerializedModel) => {
     if (!sceneRef.current || !cameraRef.current || !rendererRef.current || !containerRef.current) {
@@ -262,17 +189,53 @@ export function ModelViewer({
       });
 
       // 设置相机和控制器
-      setupCameraAndControls(model, cameraRef.current, rendererRef.current);
+      setupCameraAndControls({
+        model,
+        camera: cameraRef.current,
+        renderer: rendererRef.current,
+        controlsRef,
+        sceneRef,
+        cameraRef,
+        rendererRef,
+      });
 
       // 设置交互
-      setupInteraction(ifcLoaderRef.current!, model, cameraRef.current, rendererRef.current);
+      setupInteraction({
+        ifcLoader: ifcLoaderRef.current!,
+        model,
+        camera: cameraRef.current,
+        renderer: rendererRef.current,
+        raycasterRef,
+        mouseRef,
+        infoDivRef,
+        selectionSubsetRef,
+        modelRef,
+        clickHandlerRef,
+        clickTargetRef,
+      });
 
       // 开始渲染循环
-      startRenderLoop(sceneRef.current, cameraRef.current, rendererRef.current);
+      startRenderLoop({
+        scene: sceneRef.current,
+        camera: cameraRef.current,
+        renderer: rendererRef.current,
+        controlsRef,
+        animateIdRef,
+        abortControllerRef,
+        needsRenderRef,
+      });
 
       // 构建索引缓存（ExpressID 列表 + GlobalId 映射）
       if (ifcLoaderRef.current) {
-        await buildIdCaches(ifcLoaderRef.current, model.modelID);
+        await buildIdCaches({
+          ifcLoader: ifcLoaderRef.current,
+          modelID: model.modelID,
+          productIdsRef,
+          globalIdMapRef,
+          globalIdMapModelIdRef,
+          productIndexReadyRef,
+          expressIdIndexMapRef,
+        });
       }
 
       // 更新加载状态
@@ -305,7 +268,7 @@ export function ModelViewer({
         error: error instanceof Error ? error.message : '处理模型失败',
       }));
     }
-  }, [deserializeModel, buildIdCaches]);
+  }, [deserializeModel]);
 
   // 主线程降级加载
   const loadModelInMainThread = useCallback(async (
@@ -411,17 +374,53 @@ export function ModelViewer({
       });
 
       // 设置相机和控制器
-      setupCameraAndControls(model, camera, renderer);
+      setupCameraAndControls({
+        model,
+        camera,
+        renderer,
+        controlsRef,
+        sceneRef,
+        cameraRef,
+        rendererRef,
+      });
 
       // 设置交互
-      setupInteraction(ifcLoaderRef.current!, model, camera, renderer);
+      setupInteraction({
+        ifcLoader: ifcLoaderRef.current!,
+        model,
+        camera,
+        renderer,
+        raycasterRef,
+        mouseRef,
+        infoDivRef,
+        selectionSubsetRef,
+        modelRef,
+        clickHandlerRef,
+        clickTargetRef,
+      });
 
       // 开始渲染循环
-      startRenderLoop(scene, camera, renderer);
+      startRenderLoop({
+        scene,
+        camera,
+        renderer,
+        controlsRef,
+        animateIdRef,
+        abortControllerRef,
+        needsRenderRef,
+      });
 
       // 构建索引缓存（ExpressID 列表 + GlobalId 映射）
       if (ifcLoaderRef.current) {
-        await buildIdCaches(ifcLoaderRef.current, model.modelID);
+        await buildIdCaches({
+          ifcLoader: ifcLoaderRef.current,
+          modelID: model.modelID,
+          productIdsRef,
+          globalIdMapRef,
+          globalIdMapModelIdRef,
+          productIndexReadyRef,
+          expressIdIndexMapRef,
+        });
       }
 
       setLoadingState(prev => ({
@@ -446,7 +445,7 @@ export function ModelViewer({
       console.error('[ModelViewer] 主线程加载失败:', err);
       throw err;
     }
-  }, [buildIdCaches]);
+  }, []);
 
   // 清理函数
   const cleanup = useCallback(() => {
@@ -859,220 +858,6 @@ export function ModelViewer({
     } catch (error) {
       console.error('[ModelViewer] 应用高亮时出错:', error);
     }
-  };
-
-  // 设置相机和控制器
-  const setupCameraAndControls = (
-    model: THREE.Object3D,
-    camera: THREE.PerspectiveCamera,
-    renderer: THREE.WebGLRenderer
-  ) => {
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = false;
-    controls.dampingFactor = 0.05;
-    controls.enableZoom = true;
-    controls.enablePan = true;
-    controls.enableRotate = true;
-    controls.rotateSpeed = 0.5;
-    controls.zoomSpeed = 0.8;
-    controls.panSpeed = 0.8;
-    controls.maxDistance = 1000;
-    controls.minDistance = 1;
-
-    // 计算模型边界并居中
-    const box = new THREE.Box3().setFromObject(model);
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-
-    model.position.sub(center);
-
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const fov = camera.fov * (Math.PI / 180);
-    const cameraDistance = Math.abs(maxDim / 2 / Math.tan(fov / 2)) * 2.5;
-
-    camera.position.set(cameraDistance, cameraDistance, cameraDistance);
-    camera.lookAt(0, 0, 0);
-
-    controls.target.set(0, 0, 0);
-    controls.update();
-
-    // 调整控制器限制
-    controls.maxDistance = cameraDistance * 3;
-    controls.minDistance = maxDim * 0.1;
-
-    controlsRef.current = controls;
-    sceneRef.current?.add(model);
-    cameraRef.current = camera;
-    rendererRef.current = renderer;
-  };
-
-  // 设置交互
-  const setupInteraction = (
-    ifcLoader: IFCLoader,
-    model: THREE.Object3D & { modelID: number },
-    camera: THREE.PerspectiveCamera,
-    renderer: THREE.WebGLRenderer
-  ) => {
-    raycasterRef.current = new THREE.Raycaster();
-    mouseRef.current = new THREE.Vector2();
-
-    const handleClick = async (event: MouseEvent) => {
-      if (!rendererRef.current || !cameraRef.current || !raycasterRef.current) return;
-
-      const rect = rendererRef.current.domElement.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      mouseRef.current!.set(x, y);
-
-      raycasterRef.current.setFromCamera(mouseRef.current!, cameraRef.current);
-      const targets: THREE.Object3D[] = modelRef.current ? [modelRef.current] : [];
-      const intersects = raycasterRef.current.intersectObjects(targets, true);
-
-      if (!intersects.length) {
-        if (infoDivRef.current) infoDivRef.current.textContent = '未选中构件';
-        // 移除选择子集
-        if (selectionSubsetRef.current && modelRef.current) {
-          modelRef.current.remove(selectionSubsetRef.current);
-          selectionSubsetRef.current = null;
-        }
-        return;
-      }
-
-      const first = intersects[0];
-      if (!first.object || !('geometry' in first.object) || typeof first.faceIndex !== 'number') {
-        if (infoDivRef.current) infoDivRef.current.textContent = '未选中有效面';
-        return;
-      }
-
-      try {
-        const geom = (first.object as THREE.Mesh).geometry as THREE.BufferGeometry;
-        const expressID = ifcLoader.ifcManager.getExpressId(geom, first.faceIndex as number);
-        const modelID = (first.object as THREE.Mesh & { modelID?: number }).modelID ?? model.modelID;
-
-        if (typeof expressID !== 'number' || typeof modelID !== 'number') {
-          if (infoDivRef.current) infoDivRef.current.textContent = '无法解析构件ID';
-          return;
-        }
-
-        const props: {
-          GlobalId?: { value?: string };
-          Name?: { value?: string };
-          ObjectType?: { value?: string };
-          type?: string;
-          PredefinedType?: { value?: string };
-        } = await ifcLoader.ifcManager.getItemProperties(modelID, expressID, true);
-        const gid = props?.GlobalId?.value ?? '';
-        const name = props?.Name?.value ?? '';
-        const type = props?.ObjectType?.value ?? props?.type ?? '';
-        const predef = props?.PredefinedType?.value ?? '';
-
-        console.log('[ModelViewer] 点击选中:', {
-          expressID,
-          GlobalId: gid,
-          Name: name,
-          Type: type,
-          Predefined: predef,
-        });
-
-        if (infoDivRef.current) {
-          infoDivRef.current.innerHTML =
-            `<div><b>ExpressID</b>: ${expressID}</div>` +
-            (gid ? `<div><b>GlobalId</b>: ${gid}</div>` : '') +
-            (name ? `<div><b>Name</b>: ${name}</div>` : '') +
-            (type ? `<div><b>Type</b>: ${type}</div>` : '') +
-            (predef ? `<div><b>Predefined</b>: ${predef}</div>` : '');
-        }
-
-        // 创建选择子集（黄色）
-        try {
-          if (selectionSubsetRef.current && modelRef.current) {
-            modelRef.current.remove(selectionSubsetRef.current);
-            selectionSubsetRef.current = null;
-          }
-
-          const selectMaterial = new THREE.MeshStandardMaterial({
-            color: 0xffff00,
-            transparent: true,
-            opacity: 0.5,
-            depthWrite: false,
-            depthTest: true,
-            metalness: 0,
-            roughness: 0.6,
-          });
-
-          const selectionSubset = ifcLoader.ifcManager.createSubset({
-            modelID,
-            ids: [expressID],
-            material: selectMaterial,
-            removePrevious: true,
-            customID: 'select',
-          } as { modelID: number; ids: number[]; material: THREE.Material; removePrevious: boolean; customID: string });
-
-          if (selectionSubset) {
-            (selectionSubset as THREE.Mesh & { renderOrder: number }).renderOrder = 2;
-            model.add(selectionSubset);
-            selectionSubsetRef.current = selectionSubset as THREE.Mesh & { renderOrder: number };
-          }
-        } catch (se) {
-          console.warn('[ModelViewer] 创建选择子集失败:', se);
-        }
-
-      } catch (e) {
-        if (infoDivRef.current) infoDivRef.current.textContent = '读取属性失败';
-        console.warn('点击读取属性失败', e);
-      }
-    };
-
-    if (clickHandlerRef.current && clickTargetRef.current) {
-      clickTargetRef.current.removeEventListener('click', clickHandlerRef.current);
-    }
-    clickHandlerRef.current = handleClick;
-    clickTargetRef.current = renderer.domElement;
-    renderer.domElement.addEventListener('click', handleClick);
-  };
-
-  // 开始渲染循环
-  const startRenderLoop = (
-    scene: THREE.Scene,
-    camera: THREE.PerspectiveCamera,
-    renderer: THREE.WebGLRenderer
-  ) => {
-    let lastTime = 0;
-    const targetFPS = 60;
-    const frameInterval = 1000 / targetFPS;
-    needsRenderRef.current = true;
-
-    // 当控制器发生变化时，标记需要渲染
-    if (controlsRef.current) {
-      controlsRef.current.addEventListener('change', () => {
-        needsRenderRef.current = true;
-      });
-    }
-
-    const animate = (currentTime: number) => {
-      // 检查是否已被取消
-      if (abortControllerRef.current?.signal.aborted) {
-        return;
-      }
-
-      animateIdRef.current = requestAnimationFrame(animate);
-
-      if (currentTime - lastTime >= frameInterval) {
-        // 更新控制器
-        if (controlsRef.current) {
-          controlsRef.current.update();
-        }
-
-        if (needsRenderRef.current) {
-          renderer.render(scene, camera);
-          needsRenderRef.current = false;
-        }
-
-        lastTime = currentTime;
-      }
-    };
-
-    animate(0);
   };
 
   // 处理窗口大小变化
