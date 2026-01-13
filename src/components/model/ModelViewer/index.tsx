@@ -58,6 +58,7 @@ export function ModelViewer({
   const clickTargetRef = useRef<HTMLCanvasElement | null>(null);
   const globalIdMapRef = useRef<Map<string, number> | null>(null);
   const globalIdMapModelIdRef = useRef<number | null>(null);
+  const needsRenderRef = useRef(true);
 
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
@@ -614,6 +615,7 @@ export function ModelViewer({
         });
         highlightSubsetsRef.current.clear();
         console.log('[ModelViewer] 当前没有高亮ID，等待后续更新');
+        needsRenderRef.current = true;
         return;
       }
 
@@ -667,6 +669,7 @@ export function ModelViewer({
         }
         console.warn('[ModelViewer] 构件索引尚未准备好，稍后重试 (attempt %d)', attempt + 1);
         scheduleHighlightRetry(attempt + 1);
+        needsRenderRef.current = true;
         return;
       }
 
@@ -740,14 +743,15 @@ export function ModelViewer({
             customID: group.customID,
           } as { modelID: number; ids: number[]; material: THREE.Material; removePrevious: boolean; customID: string });
 
-          if (subset) {
-            (subset as THREE.Mesh & { renderOrder: number }).renderOrder = index + 1;
-            model.add(subset);
-            highlightSubsetsRef.current.set(group.customID, subset as THREE.Mesh & { renderOrder: number });
-            console.log(`[ModelViewer] 创建高亮组 ${group.customID} 成功，数量:`, idsToHighlight.length);
-          }
-        });
+      if (subset) {
+        (subset as THREE.Mesh & { renderOrder: number }).renderOrder = index + 1;
+        model.add(subset);
+        highlightSubsetsRef.current.set(group.customID, subset as THREE.Mesh & { renderOrder: number });
+        console.log(`[ModelViewer] 创建高亮组 ${group.customID} 成功，数量:`, idsToHighlight.length);
+      }
+    });
 
+        needsRenderRef.current = true;
         return;
       }
 
@@ -815,6 +819,7 @@ export function ModelViewer({
         console.warn('[ModelViewer] 创建高亮子集失败');
       }
 
+      needsRenderRef.current = true;
     } catch (error) {
       console.error('[ModelViewer] 应用高亮时出错:', error);
     }
@@ -999,12 +1004,12 @@ export function ModelViewer({
     let lastTime = 0;
     const targetFPS = 60;
     const frameInterval = 1000 / targetFPS;
-    let needsRender = true;
+    needsRenderRef.current = true;
 
     // 当控制器发生变化时，标记需要渲染
     if (controlsRef.current) {
       controlsRef.current.addEventListener('change', () => {
-        needsRender = true;
+        needsRenderRef.current = true;
       });
     }
 
@@ -1022,9 +1027,9 @@ export function ModelViewer({
           controlsRef.current.update();
         }
 
-        if (needsRender) {
+        if (needsRenderRef.current) {
           renderer.render(scene, camera);
-          needsRender = false;
+          needsRenderRef.current = false;
         }
 
         lastTime = currentTime;
