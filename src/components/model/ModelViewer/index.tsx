@@ -60,10 +60,6 @@ export function ModelViewer({
   const globalIdMapModelIdRef = useRef<number | null>(null);
   const productIdsRef = useRef<number[] | null>(null);
   const expressIdIndexMapRef = useRef<Map<number, { [materialID: number]: number[] }> | null>(null);
-  const highlightIdsCacheRef = useRef<Set<number>>(new Set());
-  const highlightGroupIdsCacheRef = useRef<Map<string, Set<number>>>(new Map());
-  const highlightMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
-  const highlightGroupMaterialsRef = useRef<Map<string, THREE.MeshStandardMaterial>>(new Map());
   const needsRenderRef = useRef(true);
 
   const [loadingState, setLoadingState] = useState<LoadingState>({
@@ -505,10 +501,6 @@ export function ModelViewer({
     globalIdMapRef.current = null;
     globalIdMapModelIdRef.current = null;
     expressIdIndexMapRef.current = null;
-    highlightIdsCacheRef.current.clear();
-    highlightGroupIdsCacheRef.current.clear();
-    highlightMaterialRef.current = null;
-    highlightGroupMaterialsRef.current.clear();
     if (ifcLoaderRef.current) {
       try {
         ifcLoaderRef.current.ifcManager?.dispose();
@@ -704,16 +696,16 @@ export function ModelViewer({
 
       if (!hasHighlightRequest) {
         // 清理所有高亮子集
-        if (highlightMaterialRef.current) {
-          ifcLoader.ifcManager.removeSubset(modelID, highlightMaterialRef.current, 'highlight');
+        if (highlightSubsetRef.current && modelRef.current) {
+          modelRef.current.remove(highlightSubsetRef.current);
+          highlightSubsetRef.current = null;
         }
-        highlightSubsetRef.current = null;
-        highlightGroupMaterialsRef.current.forEach((material, customID) => {
-          ifcLoader.ifcManager.removeSubset(modelID, material, customID);
+        highlightSubsetsRef.current.forEach((subset) => {
+          if (modelRef.current) {
+            modelRef.current.remove(subset);
+          }
         });
         highlightSubsetsRef.current.clear();
-        highlightIdsCacheRef.current.clear();
-        highlightGroupIdsCacheRef.current.clear();
         console.log('[ModelViewer] 当前没有高亮ID，等待后续更新');
         needsRenderRef.current = true;
         return;
@@ -736,136 +728,62 @@ export function ModelViewer({
         return;
       }
 
-      const ensureMaterial = (
-        materialRef: { current: THREE.MeshStandardMaterial | null },
-        color: string,
-        opacity: number
-      ) => {
-        if (!materialRef.current) {
-          materialRef.current = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(color),
+      // 如果使用多组高亮模式
+      if (highlightGroups && highlightGroups.length > 0) {
+        // 清理旧的子集
+        highlightSubsetsRef.current.forEach((subset) => {
+          if (modelRef.current) {
+            modelRef.current.remove(subset);
+          }
+        });
+        highlightSubsetsRef.current.clear();
+
+        // 为每组创建高亮
+        highlightGroups.forEach((group, index) => {
+          const idsToHighlight: number[] = [];
+          for (const id of group.ids) {
+            if (typeof id === 'number') {
+              idsToHighlight.push(id);
+            } else if (typeof id === 'string') {
+              const isPureNumber = /^\d+$/.test(id.trim());
+              if (isPureNumber) {
+                idsToHighlight.push(parseInt(id, 10));
+              } else {
+                const expressId = globalIdToExpressId?.get(id);
+                if (expressId !== undefined) {
+                  idsToHighlight.push(expressId);
+                }
+              }
+            }
+          }
+
+          if (idsToHighlight.length === 0) return;
+
+          const material = new THREE.MeshStandardMaterial({
+            color: new THREE.Color(group.color),
             transparent: true,
-            opacity,
+            opacity: group.opacity ?? 0.8,
             depthWrite: true,
             depthTest: true,
             metalness: 0,
             roughness: 0.6,
           });
-        } else {
-          materialRef.current.color.set(color);
-          materialRef.current.opacity = opacity;
-        }
-        return materialRef.current;
-      };
 
-      const resolveExpressIds = (ids: Array<number | string>) => {
-        const resolved = new Set<number>();
-        for (const id of ids) {
-          if (typeof id === 'number') {
-            resolved.add(id);
-          } else if (typeof id === 'string') {
-            const trimmed = id.trim();
-            const isPureNumber = /^\d+$/.test(trimmed);
-            if (isPureNumber) {
-              resolved.add(parseInt(trimmed, 10));
-            } else {
-              const expressId = globalIdToExpressId.get(id);
-              if (expressId !== undefined) {
-                resolved.add(expressId);
-              }
-            }
-          }
-        }
-        return resolved;
-      };
-
-      const updateSubset = (
-        customID: string,
-        material: THREE.Material,
-        nextIds: Set<number>,
-        cacheRef: Map<string, Set<number>> | null
-      ) => {
-        const prevIds = cacheRef ? cacheRef.get(customID) ?? new Set<number>() : highlightIdsCacheRef.current;
-        if (prevIds.size === nextIds.size) {
-          let same = true;
-          for (const id of nextIds) {
-            if (!prevIds.has(id)) {
-              same = false;
-              break;
-            }
-          }
-          if (same) return;
-        }
-
-        const added: number[] = [];
-        const removed: number[] = [];
-        nextIds.forEach((id) => {
-          if (!prevIds.has(id)) added.push(id);
-        });
-        prevIds.forEach((id) => {
-          if (!nextIds.has(id)) removed.push(id);
-        });
-
-        if (removed.length) {
-          const subset = ifcLoader.ifcManager.removeFromSubset(modelID, removed, customID, material);
-          if (subset && cacheRef) {
-            highlightSubsetsRef.current.set(customID, subset as THREE.Mesh & { renderOrder: number });
-          } else if (subset) {
-            highlightSubsetRef.current = subset as THREE.Mesh & { renderOrder: number };
-          }
-        }
-        if (added.length) {
           const subset = ifcLoader.ifcManager.createSubset({
             modelID,
-            ids: added,
-            material,
+            ids: idsToHighlight,
+            material: material,
             removePrevious: false,
-            customID,
+            customID: group.customID,
           } as { modelID: number; ids: number[]; material: THREE.Material; removePrevious: boolean; customID: string });
-          if (subset && cacheRef) {
-            highlightSubsetsRef.current.set(customID, subset as THREE.Mesh & { renderOrder: number });
-          } else if (subset) {
-            highlightSubsetRef.current = subset as THREE.Mesh & { renderOrder: number };
-          }
-        }
 
-        if (cacheRef) {
-          cacheRef.set(customID, nextIds);
-        } else {
-          highlightIdsCacheRef.current = nextIds;
-        }
-      };
-
-      // 如果使用多组高亮模式
-      if (highlightGroups && highlightGroups.length > 0) {
-        const activeIds = new Set<string>();
-        highlightGroups.forEach((group) => activeIds.add(group.customID));
-        highlightGroupMaterialsRef.current.forEach((material, customID) => {
-          if (!activeIds.has(customID)) {
-            ifcLoader.ifcManager.removeSubset(modelID, material, customID);
-            highlightGroupMaterialsRef.current.delete(customID);
-            highlightSubsetsRef.current.delete(customID);
-            highlightGroupIdsCacheRef.current.delete(customID);
-          }
-        });
-
-        // 为每组创建高亮
-        highlightGroups.forEach((group, index) => {
-          const nextIds = resolveExpressIds(group.ids);
-          if (nextIds.size === 0) return;
-
-          const materialRef = { current: highlightGroupMaterialsRef.current.get(group.customID) ?? null };
-          const material = ensureMaterial(materialRef, group.color, group.opacity ?? 0.8);
-          highlightGroupMaterialsRef.current.set(group.customID, material);
-
-          updateSubset(group.customID, material, nextIds, highlightGroupIdsCacheRef.current);
-          const subset = highlightSubsetsRef.current.get(group.customID);
-          if (subset) {
-            subset.renderOrder = index + 1;
-            model.add(subset);
-            console.log(`[ModelViewer] 更新高亮组 ${group.customID} 成功，数量:`, nextIds.size);
-          }
-        });
+      if (subset) {
+        (subset as THREE.Mesh & { renderOrder: number }).renderOrder = index + 1;
+        model.add(subset);
+        highlightSubsetsRef.current.set(group.customID, subset as THREE.Mesh & { renderOrder: number });
+        console.log(`[ModelViewer] 创建高亮组 ${group.customID} 成功，数量:`, idsToHighlight.length);
+      }
+    });
 
         needsRenderRef.current = true;
         return;
@@ -886,15 +804,51 @@ export function ModelViewer({
         productIndexReadyRef.current = true;
       }
 
-      const idsToHighlight = resolveExpressIds(highlightIds);
-      console.log('[ModelViewer] 需要高亮的ExpressIds:', Array.from(idsToHighlight));
+      // 转换highlightIds为expressIds
+      const idsToHighlight: number[] = [];
+      for (const id of highlightIds) {
+        if (typeof id === 'number') {
+          idsToHighlight.push(id);
+        } else if (typeof id === 'string') {
+          const isPureNumber = /^\d+$/.test(id.trim());
+          if (isPureNumber) {
+            idsToHighlight.push(parseInt(id, 10));
+          } else {
+            const expressId = globalIdToExpressId.get(id);
+            if (expressId !== undefined) {
+              idsToHighlight.push(expressId);
+            }
+          }
+        }
+      }
 
-      const highlightMaterial = ensureMaterial(highlightMaterialRef, highlightColor, 0.8);
-      updateSubset('highlight', highlightMaterial, idsToHighlight, null);
-      if (highlightSubsetRef.current) {
-        highlightSubsetRef.current.renderOrder = 1;
-        model.add(highlightSubsetRef.current);
-        console.log('[ModelViewer] 更新高亮子集成功，数量:', idsToHighlight.size);
+      console.log('[ModelViewer] 需要高亮的ExpressIds:', idsToHighlight);
+
+      // 创建高亮材质
+      const highlightMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(highlightColor),
+        transparent: true,
+        opacity: 0.8,
+        depthWrite: true,
+        depthTest: true,
+        metalness: 0,
+        roughness: 0.6,
+      });
+
+      // 创建高亮子集
+      const subset = ifcLoader.ifcManager.createSubset({
+        modelID,
+        ids: idsToHighlight,
+        material: highlightMaterial,
+        removePrevious: true,
+        customID: 'highlight',
+      } as { modelID: number; ids: number[]; material: THREE.Material; removePrevious: boolean; customID: string });
+
+      if (subset) {
+        (subset as THREE.Mesh & { renderOrder: number }).renderOrder = 1;
+        model.add(subset);
+        highlightSubsetRef.current = subset as THREE.Mesh & { renderOrder: number };
+        console.log('[ModelViewer] 创建高亮子集成功，数量:', idsToHighlight.length);
       } else {
         console.warn('[ModelViewer] 创建高亮子集失败');
       }
