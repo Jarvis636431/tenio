@@ -8,7 +8,6 @@ import type { SerializedModel, LoadingState } from '@/types/worker.types';
 import { buildIdCaches } from './utils/ifcCaches';
 import { setupCameraAndControls } from './utils/cameraControls';
 import { startRenderLoop } from './utils/renderLoop';
-import { setupInteraction } from './utils/interaction';
 import { useHighlight, HighlightGroup } from './utils/highlight';
 import { useMainThreadLoader } from './utils/mainThreadLoader';
 import { useCleanup } from './utils/cleanup';
@@ -52,14 +51,8 @@ export function ModelViewer({
   const highlightRetryTimeoutRef = useRef<number | null>(null);
   const MAX_HIGHLIGHT_RETRY = 20;
   const HIGHLIGHT_RETRY_DELAY = 750;
-  const raycasterRef = useRef<THREE.Raycaster | null>(null);
-  const mouseRef = useRef<THREE.Vector2 | null>(null);
-  const infoDivRef = useRef<HTMLDivElement | null>(null);
-  const selectionSubsetRef = useRef<(THREE.Mesh & { renderOrder: number }) | null>(null);
   const highlightSubsetRef = useRef<(THREE.Mesh & { renderOrder: number }) | null>(null);
   const highlightSubsetsRef = useRef<Map<string, THREE.Mesh & { renderOrder: number }>>(new Map());
-  const clickHandlerRef = useRef<((event: MouseEvent) => void) | null>(null);
-  const clickTargetRef = useRef<HTMLCanvasElement | null>(null);
   const globalIdMapRef = useRef<Map<string, number> | null>(null);
   const globalIdMapModelIdRef = useRef<number | null>(null);
   const productIdsRef = useRef<number[] | null>(null);
@@ -121,7 +114,6 @@ export function ModelViewer({
     modelRef,
     setLoadingState,
     setupCameraAndControls,
-    setupInteraction,
     startRenderLoop,
     buildIdCaches,
     applyHighlight,
@@ -133,23 +125,15 @@ export function ModelViewer({
     controlsRef,
     animateIdRef,
     abortControllerRef,
-    raycasterRef,
-    mouseRef,
-    infoDivRef,
-    selectionSubsetRef,
-    clickHandlerRef,
-    clickTargetRef,
     expressIdIndexMapRef,
   });
 
   const { loadModelInMainThread } = useMainThreadLoader({
     ifcLoaderRef,
     abortControllerRef,
-    infoDivRef,
     modelRef,
     setLoadingState,
     setupCameraAndControls,
-    setupInteraction,
     startRenderLoop,
     buildIdCaches,
     applyHighlight,
@@ -162,11 +146,6 @@ export function ModelViewer({
     sceneRef,
     cameraRef,
     rendererRef,
-    raycasterRef,
-    mouseRef,
-    selectionSubsetRef,
-    clickHandlerRef,
-    clickTargetRef,
     animateIdRef,
     expressIdIndexMapRef,
   });
@@ -181,10 +160,6 @@ export function ModelViewer({
     sceneRef,
     cameraRef,
     modelRef,
-    raycasterRef,
-    mouseRef,
-    infoDivRef,
-    selectionSubsetRef,
     highlightSubsetRef,
     highlightSubsetsRef,
     productIdsRef,
@@ -195,8 +170,6 @@ export function ModelViewer({
     isInitializedRef,
     productIndexReadyRef,
     highlightRetryTimeoutRef,
-    clickHandlerRef,
-    clickTargetRef,
   });
 
   // 初始化viewer

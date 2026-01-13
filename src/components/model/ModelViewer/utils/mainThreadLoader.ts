@@ -19,7 +19,6 @@ type LoadModelInMainThread = (
 interface UseMainThreadLoaderParams {
   ifcLoaderRef: Ref<IFCLoader | null>;
   abortControllerRef: Ref<AbortController | null>;
-  infoDivRef: Ref<HTMLDivElement | null>;
   modelRef: Ref<(THREE.Object3D & { modelID: number }) | null>;
   setLoadingState: Dispatch<SetStateAction<{ isLoading: boolean; progress: number; message: string; error: string | null }>>;
   setupCameraAndControls: (params: {
@@ -30,19 +29,6 @@ interface UseMainThreadLoaderParams {
     sceneRef: Ref<THREE.Scene | null>;
     cameraRef: Ref<THREE.PerspectiveCamera | null>;
     rendererRef: Ref<THREE.WebGLRenderer | null>;
-  }) => void;
-  setupInteraction: (params: {
-    ifcLoader: IFCLoader;
-    model: THREE.Object3D & { modelID: number };
-    camera: THREE.PerspectiveCamera;
-    renderer: THREE.WebGLRenderer;
-    raycasterRef: Ref<THREE.Raycaster | null>;
-    mouseRef: Ref<THREE.Vector2 | null>;
-    infoDivRef: Ref<HTMLDivElement | null>;
-    selectionSubsetRef: Ref<(THREE.Mesh & { renderOrder: number }) | null>;
-    modelRef: Ref<(THREE.Object3D & { modelID: number }) | null>;
-    clickHandlerRef: Ref<((event: MouseEvent) => void) | null>;
-    clickTargetRef: Ref<HTMLCanvasElement | null>;
   }) => void;
   startRenderLoop: (params: {
     scene: THREE.Scene;
@@ -72,11 +58,6 @@ interface UseMainThreadLoaderParams {
   sceneRef: Ref<THREE.Scene | null>;
   cameraRef: Ref<THREE.PerspectiveCamera | null>;
   rendererRef: Ref<THREE.WebGLRenderer | null>;
-  raycasterRef: Ref<THREE.Raycaster | null>;
-  mouseRef: Ref<THREE.Vector2 | null>;
-  selectionSubsetRef: Ref<(THREE.Mesh & { renderOrder: number }) | null>;
-  clickHandlerRef: Ref<((event: MouseEvent) => void) | null>;
-  clickTargetRef: Ref<HTMLCanvasElement | null>;
   animateIdRef: Ref<number | null>;
   expressIdIndexMapRef: Ref<Map<number, { [materialID: number]: number[] }> | null>;
 }
@@ -84,11 +65,9 @@ interface UseMainThreadLoaderParams {
 export function useMainThreadLoader({
   ifcLoaderRef,
   abortControllerRef,
-  infoDivRef,
   modelRef,
   setLoadingState,
   setupCameraAndControls,
-  setupInteraction,
   startRenderLoop,
   buildIdCaches,
   applyHighlight,
@@ -101,11 +80,6 @@ export function useMainThreadLoader({
   sceneRef,
   cameraRef,
   rendererRef,
-  raycasterRef,
-  mouseRef,
-  selectionSubsetRef,
-  clickHandlerRef,
-  clickTargetRef,
   animateIdRef,
   expressIdIndexMapRef,
 }: UseMainThreadLoaderParams) {
@@ -169,26 +143,6 @@ export function useMainThreadLoader({
     scene.add(model);
     modelRef.current = model;
 
-    if (!infoDivRef.current) {
-      const info = document.createElement('div');
-      info.style.position = 'absolute';
-      info.style.top = '12px';
-      info.style.right = '12px';
-      info.style.maxWidth = '360px';
-      info.style.background = 'rgba(0,0,0,0.65)';
-      info.style.color = '#fff';
-      info.style.padding = '10px 12px';
-      info.style.borderRadius = '8px';
-      info.style.fontSize = '12px';
-      info.style.lineHeight = '1.4';
-      info.style.pointerEvents = 'none';
-      info.style.whiteSpace = 'pre-wrap';
-      info.textContent = '点击构件以查看属性';
-      infoDivRef.current = info;
-      container.style.position = 'relative';
-      container.appendChild(info);
-    }
-
     const mainThreadBaseMaterial = new THREE.MeshStandardMaterial({
       color: 0x808080,
       transparent: true,
@@ -213,20 +167,6 @@ export function useMainThreadLoader({
       sceneRef,
       cameraRef,
       rendererRef,
-    });
-
-    setupInteraction({
-      ifcLoader: ifcLoaderRef.current,
-      model,
-      camera,
-      renderer,
-      raycasterRef,
-      mouseRef,
-      infoDivRef,
-      selectionSubsetRef,
-      modelRef,
-      clickHandlerRef,
-      clickTargetRef,
     });
 
     startRenderLoop({
@@ -268,11 +208,9 @@ export function useMainThreadLoader({
   }, [
     ifcLoaderRef,
     abortControllerRef,
-    infoDivRef,
     modelRef,
     setLoadingState,
     setupCameraAndControls,
-    setupInteraction,
     startRenderLoop,
     buildIdCaches,
     applyHighlight,
@@ -285,11 +223,6 @@ export function useMainThreadLoader({
     sceneRef,
     cameraRef,
     rendererRef,
-    raycasterRef,
-    mouseRef,
-    selectionSubsetRef,
-    clickHandlerRef,
-    clickTargetRef,
     animateIdRef,
     expressIdIndexMapRef,
   ]);

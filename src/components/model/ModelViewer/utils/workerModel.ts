@@ -93,19 +93,6 @@ interface UseWorkerModelParams {
     cameraRef: Ref<THREE.PerspectiveCamera | null>;
     rendererRef: Ref<THREE.WebGLRenderer | null>;
   }) => void;
-  setupInteraction: (params: {
-    ifcLoader: IFCLoader;
-    model: SelectableModel;
-    camera: THREE.PerspectiveCamera;
-    renderer: THREE.WebGLRenderer;
-    raycasterRef: Ref<THREE.Raycaster | null>;
-    mouseRef: Ref<THREE.Vector2 | null>;
-    infoDivRef: Ref<HTMLDivElement | null>;
-    selectionSubsetRef: Ref<AnyMesh | null>;
-    modelRef: Ref<SelectableModel | null>;
-    clickHandlerRef: Ref<((event: MouseEvent) => void) | null>;
-    clickTargetRef: Ref<HTMLCanvasElement | null>;
-  }) => void;
   startRenderLoop: (params: {
     scene: THREE.Scene;
     camera: THREE.PerspectiveCamera;
@@ -125,12 +112,6 @@ interface UseWorkerModelParams {
   controlsRef: Ref<OrbitControls | null>;
   animateIdRef: Ref<number | null>;
   abortControllerRef: Ref<AbortController | null>;
-  raycasterRef: Ref<THREE.Raycaster | null>;
-  mouseRef: Ref<THREE.Vector2 | null>;
-  infoDivRef: Ref<HTMLDivElement | null>;
-  selectionSubsetRef: Ref<AnyMesh | null>;
-  clickHandlerRef: Ref<((event: MouseEvent) => void) | null>;
-  clickTargetRef: Ref<HTMLCanvasElement | null>;
   expressIdIndexMapRef: Ref<Map<number, { [materialID: number]: number[] }> | null>;
 }
 
@@ -143,7 +124,6 @@ export function useWorkerModel({
   modelRef,
   setLoadingState,
   setupCameraAndControls,
-  setupInteraction,
   startRenderLoop,
   buildIdCaches,
   applyHighlight,
@@ -155,12 +135,6 @@ export function useWorkerModel({
   controlsRef,
   animateIdRef,
   abortControllerRef,
-  raycasterRef,
-  mouseRef,
-  infoDivRef,
-  selectionSubsetRef,
-  clickHandlerRef,
-  clickTargetRef,
   expressIdIndexMapRef,
 }: UseWorkerModelParams) {
   const handleWorkerSuccess = useCallback(async (modelData: SerializedModel) => {
@@ -191,29 +165,15 @@ export function useWorkerModel({
         }
       });
 
-      setupCameraAndControls({
-        model,
-        camera: cameraRef.current,
-        renderer: rendererRef.current,
-        controlsRef,
-        sceneRef,
-        cameraRef,
-        rendererRef,
-      });
-
-      setupInteraction({
-        ifcLoader: ifcLoaderRef.current!,
-        model,
-        camera: cameraRef.current,
-        renderer: rendererRef.current,
-        raycasterRef,
-        mouseRef,
-        infoDivRef,
-        selectionSubsetRef,
-        modelRef,
-        clickHandlerRef,
-        clickTargetRef,
-      });
+    setupCameraAndControls({
+      model,
+      camera: cameraRef.current,
+      renderer: rendererRef.current,
+      controlsRef,
+      sceneRef,
+      cameraRef,
+      rendererRef,
+    });
 
       startRenderLoop({
         scene: sceneRef.current,
@@ -271,7 +231,6 @@ export function useWorkerModel({
     modelRef,
     setLoadingState,
     setupCameraAndControls,
-    setupInteraction,
     startRenderLoop,
     buildIdCaches,
     applyHighlight,
@@ -283,12 +242,6 @@ export function useWorkerModel({
     controlsRef,
     animateIdRef,
     abortControllerRef,
-    raycasterRef,
-    mouseRef,
-    infoDivRef,
-    selectionSubsetRef,
-    clickHandlerRef,
-    clickTargetRef,
     expressIdIndexMapRef,
   ]);
 

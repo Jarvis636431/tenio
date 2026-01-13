@@ -17,10 +17,6 @@ interface UseCleanupParams {
   sceneRef: Ref<THREE.Scene | null>;
   cameraRef: Ref<THREE.PerspectiveCamera | null>;
   modelRef: Ref<(THREE.Object3D & { modelID: number }) | null>;
-  raycasterRef: Ref<THREE.Raycaster | null>;
-  mouseRef: Ref<THREE.Vector2 | null>;
-  infoDivRef: Ref<HTMLDivElement | null>;
-  selectionSubsetRef: Ref<AnyMesh | null>;
   highlightSubsetRef: Ref<AnyMesh | null>;
   highlightSubsetsRef: Ref<Map<string, AnyMesh>>;
   productIdsRef: Ref<number[] | null>;
@@ -31,8 +27,6 @@ interface UseCleanupParams {
   isInitializedRef: Ref<boolean>;
   productIndexReadyRef: Ref<boolean>;
   highlightRetryTimeoutRef: Ref<number | null>;
-  clickHandlerRef: Ref<((event: MouseEvent) => void) | null>;
-  clickTargetRef: Ref<HTMLCanvasElement | null>;
 }
 
 export function useCleanup({
@@ -45,10 +39,6 @@ export function useCleanup({
   sceneRef,
   cameraRef,
   modelRef,
-  raycasterRef,
-  mouseRef,
-  infoDivRef,
-  selectionSubsetRef,
   highlightSubsetRef,
   highlightSubsetsRef,
   productIdsRef,
@@ -59,8 +49,6 @@ export function useCleanup({
   isInitializedRef,
   productIndexReadyRef,
   highlightRetryTimeoutRef,
-  clickHandlerRef,
-  clickTargetRef,
 }: UseCleanupParams) {
   const cleanup = useCallback(() => {
     console.log('[ModelViewer] 开始清理资源');
@@ -87,12 +75,6 @@ export function useCleanup({
       controlsRef.current = null;
     }
 
-    if (clickHandlerRef.current && clickTargetRef.current) {
-      clickTargetRef.current.removeEventListener('click', clickHandlerRef.current);
-      clickHandlerRef.current = null;
-      clickTargetRef.current = null;
-    }
-
     if (containerRef.current) {
       containerRef.current.innerHTML = '';
     }
@@ -100,10 +82,6 @@ export function useCleanup({
     sceneRef.current = null;
     cameraRef.current = null;
     modelRef.current = null;
-    raycasterRef.current = null;
-    mouseRef.current = null;
-    infoDivRef.current = null;
-    selectionSubsetRef.current = null;
     highlightSubsetRef.current = null;
     highlightSubsetsRef.current.clear();
     productIdsRef.current = null;
@@ -151,8 +129,6 @@ export function useCleanup({
     isInitializedRef,
     productIndexReadyRef,
     highlightRetryTimeoutRef,
-    clickHandlerRef,
-    clickTargetRef,
   ]);
 
   return { cleanup };
