@@ -7,6 +7,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useIFCWorker } from '@/hooks/useIFCWorker';
 import type { SerializedModel, LoadingState } from '@/types/worker.types';
 
+// TODO: 继续优化：在加载阶段预建 ExpressID/GlobalId/索引映射，交互阶段仅查表并通过 visible/material/drawRange 切换渲染，减少 createSubset 与属性遍历开销；同时完善子集/材质的统一释放策略。
+
 interface HighlightGroup {
   ids: Array<number | string>;
   color: string;
