@@ -9,15 +9,9 @@ import { buildIdCaches } from './utils/ifcCaches';
 import { setupCameraAndControls } from './utils/cameraControls';
 import { startRenderLoop } from './utils/renderLoop';
 import { setupInteraction } from './utils/interaction';
+import { applyHighlight, HighlightGroup } from './utils/highlight';
 
 // TODO: 继续优化：在加载阶段预建 ExpressID/GlobalId/索引映射，交互阶段仅查表并通过 visible/material/drawRange 切换渲染，减少 createSubset 与属性遍历开销；同时完善子集/材质的统一释放策略。
-
-interface HighlightGroup {
-  ids: Array<number | string>;
-  color: string;
-  opacity?: number;
-  customID: string;
-}
 
 interface ModelViewerProps {
   src?: string;
@@ -248,7 +242,24 @@ export function ModelViewer({
 
       // 应用高亮
       if (ifcLoaderRef.current) {
-        applyHighlight(ifcLoaderRef.current, model);
+        applyHighlight({
+          ifcLoader: ifcLoaderRef.current,
+          model,
+          attempt: 0,
+          highlightGroups,
+          highlightIds,
+          highlightColor,
+          globalIdMapRef,
+          globalIdMapModelIdRef,
+          productIdsRef,
+          productIndexReadyRef,
+          highlightSubsetRef,
+          highlightSubsetsRef,
+          modelRef,
+          scheduleHighlightRetry,
+          needsRenderRef,
+          maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
+        });
       }
 
       // 完成
@@ -430,7 +441,24 @@ export function ModelViewer({
       }));
 
       // 应用高亮
-      await applyHighlight(ifcLoaderRef.current!, model);
+      await applyHighlight({
+        ifcLoader: ifcLoaderRef.current!,
+        model,
+        attempt: 0,
+        highlightGroups,
+        highlightIds,
+        highlightColor,
+        globalIdMapRef,
+        globalIdMapModelIdRef,
+        productIdsRef,
+        productIndexReadyRef,
+        highlightSubsetRef,
+        highlightSubsetsRef,
+        modelRef,
+        scheduleHighlightRetry,
+        needsRenderRef,
+        maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
+      });
 
       setLoadingState({
         isLoading: false,
@@ -676,188 +704,26 @@ export function ModelViewer({
     highlightRetryTimeoutRef.current = window.setTimeout(() => {
       highlightRetryTimeoutRef.current = null;
       if (ifcLoaderRef.current && modelRef.current) {
-        applyHighlight(ifcLoaderRef.current, modelRef.current as THREE.Object3D & { modelID: number }, nextAttempt);
+        applyHighlight({
+          ifcLoader: ifcLoaderRef.current,
+          model: modelRef.current as THREE.Object3D & { modelID: number },
+          attempt: nextAttempt,
+          highlightGroups,
+          highlightIds,
+          highlightColor,
+          globalIdMapRef,
+          globalIdMapModelIdRef,
+          productIdsRef,
+          productIndexReadyRef,
+          highlightSubsetRef,
+          highlightSubsetsRef,
+          modelRef,
+          scheduleHighlightRetry,
+          needsRenderRef,
+          maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
+        });
       }
     }, HIGHLIGHT_RETRY_DELAY);
-  };
-
-  const applyHighlight = async (
-    ifcLoader: IFCLoader,
-    model: THREE.Object3D & { modelID: number },
-    attempt = 0
-  ) => {
-    // 优先使用 highlightGroups，如果没有则使用旧的单组模式
-    const hasHighlightRequest = 
-      (highlightGroups && highlightGroups.length > 0) || 
-      (Array.isArray(highlightIds) && highlightIds.length > 0);
-
-    try {
-      const modelID = model.modelID;
-      console.log('[ModelViewer] 开始应用高亮，模型ID:', modelID);
-
-      if (!hasHighlightRequest) {
-        // 清理所有高亮子集
-        if (highlightSubsetRef.current && modelRef.current) {
-          modelRef.current.remove(highlightSubsetRef.current);
-          highlightSubsetRef.current = null;
-        }
-        highlightSubsetsRef.current.forEach((subset) => {
-          if (modelRef.current) {
-            modelRef.current.remove(subset);
-          }
-        });
-        highlightSubsetsRef.current.clear();
-        console.log('[ModelViewer] 当前没有高亮ID，等待后续更新');
-        needsRenderRef.current = true;
-        return;
-      }
-
-      const globalIdToExpressId = globalIdMapRef.current;
-      if (
-        globalIdMapModelIdRef.current !== modelID ||
-        !productIdsRef.current ||
-        !globalIdToExpressId
-      ) {
-        productIndexReadyRef.current = false;
-        if (attempt >= MAX_HIGHLIGHT_RETRY) {
-          console.warn('[ModelViewer] 构件索引尚未准备好，放弃高亮');
-          return;
-        }
-        console.warn('[ModelViewer] 构件索引尚未准备好，稍后重试 (attempt %d)', attempt + 1);
-        scheduleHighlightRetry(attempt + 1);
-        needsRenderRef.current = true;
-        return;
-      }
-
-      // 如果使用多组高亮模式
-      if (highlightGroups && highlightGroups.length > 0) {
-        // 清理旧的子集
-        highlightSubsetsRef.current.forEach((subset) => {
-          if (modelRef.current) {
-            modelRef.current.remove(subset);
-          }
-        });
-        highlightSubsetsRef.current.clear();
-
-        // 为每组创建高亮
-        highlightGroups.forEach((group, index) => {
-          const idsToHighlight: number[] = [];
-          for (const id of group.ids) {
-            if (typeof id === 'number') {
-              idsToHighlight.push(id);
-            } else if (typeof id === 'string') {
-              const isPureNumber = /^\d+$/.test(id.trim());
-              if (isPureNumber) {
-                idsToHighlight.push(parseInt(id, 10));
-              } else {
-                const expressId = globalIdToExpressId?.get(id);
-                if (expressId !== undefined) {
-                  idsToHighlight.push(expressId);
-                }
-              }
-            }
-          }
-
-          if (idsToHighlight.length === 0) return;
-
-          const material = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(group.color),
-            transparent: true,
-            opacity: group.opacity ?? 0.8,
-            depthWrite: true,
-            depthTest: true,
-            metalness: 0,
-            roughness: 0.6,
-          });
-
-          const subset = ifcLoader.ifcManager.createSubset({
-            modelID,
-            ids: idsToHighlight,
-            material: material,
-            removePrevious: false,
-            customID: group.customID,
-          } as { modelID: number; ids: number[]; material: THREE.Material; removePrevious: boolean; customID: string });
-
-      if (subset) {
-        (subset as THREE.Mesh & { renderOrder: number }).renderOrder = index + 1;
-        model.add(subset);
-        highlightSubsetsRef.current.set(group.customID, subset as THREE.Mesh & { renderOrder: number });
-        console.log(`[ModelViewer] 创建高亮组 ${group.customID} 成功，数量:`, idsToHighlight.length);
-      }
-    });
-
-        needsRenderRef.current = true;
-        return;
-      }
-
-      if (!globalIdToExpressId || globalIdToExpressId.size === 0) {
-        productIndexReadyRef.current = false;
-        if (attempt >= MAX_HIGHLIGHT_RETRY) {
-          console.warn('[ModelViewer] GlobalId 映射始终为空，放弃高亮');
-          return;
-        }
-        console.warn('[ModelViewer] GlobalId 映射为空，稍后重试 (attempt %d)', attempt + 1);
-        scheduleHighlightRetry(attempt + 1);
-        return;
-      }
-
-      if (!productIndexReadyRef.current) {
-        productIndexReadyRef.current = true;
-      }
-
-      // 转换highlightIds为expressIds
-      const idsToHighlight: number[] = [];
-      for (const id of highlightIds) {
-        if (typeof id === 'number') {
-          idsToHighlight.push(id);
-        } else if (typeof id === 'string') {
-          const isPureNumber = /^\d+$/.test(id.trim());
-          if (isPureNumber) {
-            idsToHighlight.push(parseInt(id, 10));
-          } else {
-            const expressId = globalIdToExpressId.get(id);
-            if (expressId !== undefined) {
-              idsToHighlight.push(expressId);
-            }
-          }
-        }
-      }
-
-      console.log('[ModelViewer] 需要高亮的ExpressIds:', idsToHighlight);
-
-      // 创建高亮材质
-      const highlightMaterial = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(highlightColor),
-        transparent: true,
-        opacity: 0.8,
-        depthWrite: true,
-        depthTest: true,
-        metalness: 0,
-        roughness: 0.6,
-      });
-
-      // 创建高亮子集
-      const subset = ifcLoader.ifcManager.createSubset({
-        modelID,
-        ids: idsToHighlight,
-        material: highlightMaterial,
-        removePrevious: true,
-        customID: 'highlight',
-      } as { modelID: number; ids: number[]; material: THREE.Material; removePrevious: boolean; customID: string });
-
-      if (subset) {
-        (subset as THREE.Mesh & { renderOrder: number }).renderOrder = 1;
-        model.add(subset);
-        highlightSubsetRef.current = subset as THREE.Mesh & { renderOrder: number };
-        console.log('[ModelViewer] 创建高亮子集成功，数量:', idsToHighlight.length);
-      } else {
-        console.warn('[ModelViewer] 创建高亮子集失败');
-      }
-
-      needsRenderRef.current = true;
-    } catch (error) {
-      console.error('[ModelViewer] 应用高亮时出错:', error);
-    }
   };
 
   // 处理窗口大小变化
@@ -889,7 +755,24 @@ export function ModelViewer({
   useEffect(() => {
     if (isInitializedRef.current && ifcLoaderRef.current && modelRef.current) {
       console.log('[ModelViewer] 高亮ID变化，重新应用高亮');
-      applyHighlight(ifcLoaderRef.current, modelRef.current as THREE.Object3D & { modelID: number });
+      applyHighlight({
+        ifcLoader: ifcLoaderRef.current,
+        model: modelRef.current as THREE.Object3D & { modelID: number },
+        attempt: 0,
+        highlightGroups,
+        highlightIds,
+        highlightColor,
+        globalIdMapRef,
+        globalIdMapModelIdRef,
+        productIdsRef,
+        productIndexReadyRef,
+        highlightSubsetRef,
+        highlightSubsetsRef,
+        modelRef,
+        scheduleHighlightRetry,
+        needsRenderRef,
+        maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
+      });
     }
   }, [highlightIds, highlightColor, highlightGroups]);
 
