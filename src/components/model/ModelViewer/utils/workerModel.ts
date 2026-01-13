@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import * as THREE from 'three';
 import type { IFCLoader } from 'web-ifc-three/IFCLoader';
 import type { SerializedModel, LoadingState } from '@/types/worker.types';
@@ -5,11 +6,11 @@ import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js
 import type { Dispatch, SetStateAction } from 'react';
 import type { buildIdCaches } from './ifcCaches';
 
+type Ref<T> = { current: T };
+
 type ApplyHighlight = (model: THREE.Object3D & { modelID: number }, attempt?: number) => Promise<void> | void;
 
 type BuildIdCaches = typeof buildIdCaches;
-
-type Ref<T> = { current: T };
 
 type SelectableModel = THREE.Object3D & { modelID: number };
 
@@ -75,8 +76,7 @@ export function deserializeModel({ serialized }: DeserializeParams): SelectableM
   return group;
 }
 
-interface HandleWorkerSuccessParams {
-  modelData: SerializedModel;
+interface UseWorkerModelParams {
   sceneRef: Ref<THREE.Scene | null>;
   cameraRef: Ref<THREE.PerspectiveCamera | null>;
   rendererRef: Ref<THREE.WebGLRenderer | null>;
@@ -134,8 +134,7 @@ interface HandleWorkerSuccessParams {
   expressIdIndexMapRef: Ref<Map<number, { [materialID: number]: number[] }> | null>;
 }
 
-export async function handleWorkerSuccess({
-  modelData,
+export function useWorkerModel({
   sceneRef,
   cameraRef,
   rendererRef,
@@ -163,103 +162,135 @@ export async function handleWorkerSuccess({
   clickHandlerRef,
   clickTargetRef,
   expressIdIndexMapRef,
-}: HandleWorkerSuccessParams) {
-  if (!sceneRef.current || !cameraRef.current || !rendererRef.current || !containerRef.current) {
-    console.error('[ModelViewer] 场景未初始化');
-    return;
-  }
-
-  try {
-    const model = deserializeModel({ serialized: modelData });
-    modelRef.current = model;
-
-    sceneRef.current.add(model);
-
-    const workerBaseMaterial = new THREE.MeshStandardMaterial({
-      color: 0x808080,
-      transparent: true,
-      opacity: 0.3,
-      depthWrite: false,
-      metalness: 0,
-      roughness: 1,
-    });
-
-    model.traverse((child: THREE.Object3D) => {
-      if (child instanceof THREE.Mesh) {
-        child.material = workerBaseMaterial;
-        child.renderOrder = 0;
-      }
-    });
-
-    setupCameraAndControls({
-      model,
-      camera: cameraRef.current,
-      renderer: rendererRef.current,
-      controlsRef,
-      sceneRef,
-      cameraRef,
-      rendererRef,
-    });
-
-    setupInteraction({
-      ifcLoader: ifcLoaderRef.current!,
-      model,
-      camera: cameraRef.current,
-      renderer: rendererRef.current,
-      raycasterRef,
-      mouseRef,
-      infoDivRef,
-      selectionSubsetRef,
-      modelRef,
-      clickHandlerRef,
-      clickTargetRef,
-    });
-
-    startRenderLoop({
-      scene: sceneRef.current,
-      camera: cameraRef.current,
-      renderer: rendererRef.current,
-      controlsRef,
-      animateIdRef,
-      abortControllerRef,
-      needsRenderRef,
-    });
-
-    if (ifcLoaderRef.current) {
-      await buildIdCaches({
-        ifcLoader: ifcLoaderRef.current,
-        modelID: model.modelID,
-        productIdsRef,
-        globalIdMapRef,
-        globalIdMapModelIdRef,
-        productIndexReadyRef,
-        expressIdIndexMapRef,
-      });
+}: UseWorkerModelParams) {
+  const handleWorkerSuccess = useCallback(async (modelData: SerializedModel) => {
+    if (!sceneRef.current || !cameraRef.current || !rendererRef.current || !containerRef.current) {
+      console.error('[ModelViewer] 场景未初始化');
+      return;
     }
 
-    setLoadingState({
-      isLoading: false,
-      progress: 90,
-      message: '正在应用高亮...',
-      error: null,
-    });
+    try {
+      const model = deserializeModel({ serialized: modelData });
+      modelRef.current = model;
 
-    applyHighlight(model);
+      sceneRef.current.add(model);
 
-    setLoadingState({
-      isLoading: false,
-      progress: 100,
-      message: '加载完成',
-      error: null,
-    });
+      const workerBaseMaterial = new THREE.MeshStandardMaterial({
+        color: 0x808080,
+        transparent: true,
+        opacity: 0.3,
+        depthWrite: false,
+        metalness: 0,
+        roughness: 1,
+      });
 
-    console.log('[ModelViewer] 模型加载完成');
-  } catch (error) {
-    console.error('[ModelViewer] 处理模型失败:', error);
-    setLoadingState(prev => ({
-      ...prev,
-      isLoading: false,
-      error: error instanceof Error ? error.message : '处理模型失败',
-    }));
-  }
+      model.traverse((child: THREE.Object3D) => {
+        if (child instanceof THREE.Mesh) {
+          child.material = workerBaseMaterial;
+          child.renderOrder = 0;
+        }
+      });
+
+      setupCameraAndControls({
+        model,
+        camera: cameraRef.current,
+        renderer: rendererRef.current,
+        controlsRef,
+        sceneRef,
+        cameraRef,
+        rendererRef,
+      });
+
+      setupInteraction({
+        ifcLoader: ifcLoaderRef.current!,
+        model,
+        camera: cameraRef.current,
+        renderer: rendererRef.current,
+        raycasterRef,
+        mouseRef,
+        infoDivRef,
+        selectionSubsetRef,
+        modelRef,
+        clickHandlerRef,
+        clickTargetRef,
+      });
+
+      startRenderLoop({
+        scene: sceneRef.current,
+        camera: cameraRef.current,
+        renderer: rendererRef.current,
+        controlsRef,
+        animateIdRef,
+        abortControllerRef,
+        needsRenderRef,
+      });
+
+      if (ifcLoaderRef.current) {
+        await buildIdCaches({
+          ifcLoader: ifcLoaderRef.current,
+          modelID: model.modelID,
+          productIdsRef,
+          globalIdMapRef,
+          globalIdMapModelIdRef,
+          productIndexReadyRef,
+          expressIdIndexMapRef,
+        });
+      }
+
+      setLoadingState({
+        isLoading: false,
+        progress: 90,
+        message: '正在应用高亮...',
+        error: null,
+      });
+
+      applyHighlight(model);
+
+      setLoadingState({
+        isLoading: false,
+        progress: 100,
+        message: '加载完成',
+        error: null,
+      });
+
+      console.log('[ModelViewer] 模型加载完成');
+    } catch (error) {
+      console.error('[ModelViewer] 处理模型失败:', error);
+      setLoadingState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : '处理模型失败',
+      }));
+    }
+  }, [
+    sceneRef,
+    cameraRef,
+    rendererRef,
+    containerRef,
+    ifcLoaderRef,
+    modelRef,
+    setLoadingState,
+    setupCameraAndControls,
+    setupInteraction,
+    startRenderLoop,
+    buildIdCaches,
+    applyHighlight,
+    globalIdMapRef,
+    globalIdMapModelIdRef,
+    productIdsRef,
+    productIndexReadyRef,
+    needsRenderRef,
+    controlsRef,
+    animateIdRef,
+    abortControllerRef,
+    raycasterRef,
+    mouseRef,
+    infoDivRef,
+    selectionSubsetRef,
+    clickHandlerRef,
+    clickTargetRef,
+    expressIdIndexMapRef,
+  ]);
+
+  return { handleWorkerSuccess };
 }

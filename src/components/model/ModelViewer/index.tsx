@@ -12,7 +12,7 @@ import { setupInteraction } from './utils/interaction';
 import { useHighlight, HighlightGroup } from './utils/highlight';
 import { loadModelInMainThread as loadModelInMainThreadUtil } from './utils/mainThreadLoader';
 import { useCleanup } from './utils/cleanup';
-import { handleWorkerSuccess as handleWorkerSuccessUtil } from './utils/workerModel';
+import { useWorkerModel } from './utils/workerModel';
 import { initViewer as initViewerUtil } from './utils/initViewer';
 import { handleResize as handleResizeUtil } from './utils/resize';
 
@@ -112,39 +112,35 @@ export function ModelViewer({
     highlightRetryDelay: HIGHLIGHT_RETRY_DELAY,
   });
 
-  // 处理 Worker 成功
-  const handleWorkerSuccess = useCallback(async (modelData: SerializedModel) => {
-    await handleWorkerSuccessUtil({
-      modelData,
-      sceneRef,
-      cameraRef,
-      rendererRef,
-      containerRef,
-      ifcLoaderRef,
-      modelRef,
-      setLoadingState,
-      setupCameraAndControls,
-      setupInteraction,
-      startRenderLoop,
-      buildIdCaches,
-      applyHighlight,
-      globalIdMapRef,
-      globalIdMapModelIdRef,
-      productIdsRef,
-      productIndexReadyRef,
-      needsRenderRef,
-      controlsRef,
-      animateIdRef,
-      abortControllerRef,
-      raycasterRef,
-      mouseRef,
-      infoDivRef,
-      selectionSubsetRef,
-      clickHandlerRef,
-      clickTargetRef,
-      expressIdIndexMapRef,
-    });
-  }, [applyHighlight, buildIdCaches]);
+  const { handleWorkerSuccess } = useWorkerModel({
+    sceneRef,
+    cameraRef,
+    rendererRef,
+    containerRef,
+    ifcLoaderRef,
+    modelRef,
+    setLoadingState,
+    setupCameraAndControls,
+    setupInteraction,
+    startRenderLoop,
+    buildIdCaches,
+    applyHighlight,
+    globalIdMapRef,
+    globalIdMapModelIdRef,
+    productIdsRef,
+    productIndexReadyRef,
+    needsRenderRef,
+    controlsRef,
+    animateIdRef,
+    abortControllerRef,
+    raycasterRef,
+    mouseRef,
+    infoDivRef,
+    selectionSubsetRef,
+    clickHandlerRef,
+    clickTargetRef,
+    expressIdIndexMapRef,
+  });
 
   // 主线程降级加载
   const loadModelInMainThread = useCallback(async (
