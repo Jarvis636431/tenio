@@ -1,16 +1,13 @@
 import * as THREE from 'three';
 import type { IFCLoader } from 'web-ifc-three/IFCLoader';
 import type { SerializedModel, LoadingState } from '@/types/worker.types';
-import type { HighlightGroup } from './highlight';
-import type { applyHighlight as applyHighlightFn } from './highlight';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Dispatch, SetStateAction } from 'react';
 import type { buildIdCaches as buildIdCachesFn } from './ifcCaches';
 
-const applyHighlightType = applyHighlightFn;
 const buildIdCachesType = buildIdCachesFn;
 
-type ApplyHighlight = typeof applyHighlightType;
+type ApplyHighlight = (model: THREE.Object3D & { modelID: number }, attempt?: number) => Promise<void> | void;
 
 type BuildIdCaches = typeof buildIdCachesType;
 
@@ -122,18 +119,11 @@ interface HandleWorkerSuccessParams {
   }) => void;
   buildIdCaches: BuildIdCaches;
   applyHighlight: ApplyHighlight;
-  highlightGroups?: HighlightGroup[];
-  highlightIds: Array<number | string>;
-  highlightColor: string;
   globalIdMapRef: Ref<Map<string, number> | null>;
   globalIdMapModelIdRef: Ref<number | null>;
   productIdsRef: Ref<number[] | null>;
   productIndexReadyRef: Ref<boolean>;
-  highlightSubsetRef: Ref<AnyMesh | null>;
-  highlightSubsetsRef: Ref<Map<string, AnyMesh>>;
-  scheduleHighlightRetry: (nextAttempt: number) => void;
   needsRenderRef: Ref<boolean>;
-  maxHighlightRetry: number;
   controlsRef: Ref<OrbitControls | null>;
   animateIdRef: Ref<number | null>;
   abortControllerRef: Ref<AbortController | null>;
@@ -160,18 +150,11 @@ export async function handleWorkerSuccess({
   startRenderLoop,
   buildIdCaches,
   applyHighlight,
-  highlightGroups,
-  highlightIds,
-  highlightColor,
   globalIdMapRef,
   globalIdMapModelIdRef,
   productIdsRef,
   productIndexReadyRef,
-  highlightSubsetRef,
-  highlightSubsetsRef,
-  scheduleHighlightRetry,
   needsRenderRef,
-  maxHighlightRetry,
   controlsRef,
   animateIdRef,
   abortControllerRef,
@@ -263,26 +246,7 @@ export async function handleWorkerSuccess({
       error: null,
     });
 
-    if (ifcLoaderRef.current) {
-      applyHighlight({
-        ifcLoader: ifcLoaderRef.current,
-        model,
-        attempt: 0,
-        highlightGroups,
-        highlightIds,
-        highlightColor,
-        globalIdMapRef,
-        globalIdMapModelIdRef,
-        productIdsRef,
-        productIndexReadyRef,
-        highlightSubsetRef,
-        highlightSubsetsRef,
-        modelRef,
-        scheduleHighlightRetry,
-        needsRenderRef,
-        maxHighlightRetry,
-      });
-    }
+    applyHighlight(model);
 
     setLoadingState({
       isLoading: false,

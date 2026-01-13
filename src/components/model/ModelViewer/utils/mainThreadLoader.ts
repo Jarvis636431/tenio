@@ -1,12 +1,11 @@
 import * as THREE from 'three';
 import type { IFCLoader } from 'web-ifc-three/IFCLoader';
-import type { HighlightGroup, applyHighlight as applyHighlightFn } from './highlight';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Dispatch, SetStateAction } from 'react';
 
 type Ref<T> = { current: T };
 
-type ApplyHighlight = typeof applyHighlightFn;
+type ApplyHighlight = (model: THREE.Object3D & { modelID: number }, attempt?: number) => Promise<void> | void;
 
 interface LoadModelInMainThreadParams {
   data: ArrayBuffer;
@@ -60,18 +59,11 @@ interface LoadModelInMainThreadParams {
     expressIdIndexMapRef: Ref<Map<number, { [materialID: number]: number[] }> | null>;
   }) => Promise<void>;
   applyHighlight: ApplyHighlight;
-  highlightGroups?: HighlightGroup[];
-  highlightIds: Array<number | string>;
-  highlightColor: string;
+  productIdsRef: Ref<number[] | null>;
   globalIdMapRef: Ref<Map<string, number> | null>;
   globalIdMapModelIdRef: Ref<number | null>;
-  productIdsRef: Ref<number[] | null>;
   productIndexReadyRef: Ref<boolean>;
-  highlightSubsetRef: Ref<(THREE.Mesh & { renderOrder: number }) | null>;
-  highlightSubsetsRef: Ref<Map<string, THREE.Mesh & { renderOrder: number }>>;
-  scheduleHighlightRetry: (nextAttempt: number) => void;
   needsRenderRef: Ref<boolean>;
-  maxHighlightRetry: number;
   controlsRef: Ref<OrbitControls | null>;
   sceneRef: Ref<THREE.Scene | null>;
   cameraRef: Ref<THREE.PerspectiveCamera | null>;
@@ -101,18 +93,11 @@ export async function loadModelInMainThread({
   startRenderLoop,
   buildIdCaches,
   applyHighlight,
-  highlightGroups,
-  highlightIds,
-  highlightColor,
+  productIdsRef,
   globalIdMapRef,
   globalIdMapModelIdRef,
-  productIdsRef,
   productIndexReadyRef,
-  highlightSubsetRef,
-  highlightSubsetsRef,
-  scheduleHighlightRetry,
   needsRenderRef,
-  maxHighlightRetry,
   controlsRef,
   sceneRef,
   cameraRef,
@@ -260,24 +245,7 @@ export async function loadModelInMainThread({
     message: '正在应用高亮...',
   }));
 
-  await applyHighlight({
-    ifcLoader,
-    model,
-    attempt: 0,
-    highlightGroups,
-    highlightIds,
-    highlightColor,
-    globalIdMapRef,
-    globalIdMapModelIdRef,
-    productIdsRef,
-    productIndexReadyRef,
-    highlightSubsetRef,
-    highlightSubsetsRef,
-    modelRef,
-    scheduleHighlightRetry,
-    needsRenderRef,
-    maxHighlightRetry,
-  });
+  await applyHighlight(model);
 
   setLoadingState({
     isLoading: false,

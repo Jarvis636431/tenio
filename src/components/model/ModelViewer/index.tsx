@@ -9,7 +9,7 @@ import { buildIdCaches } from './utils/ifcCaches';
 import { setupCameraAndControls } from './utils/cameraControls';
 import { startRenderLoop } from './utils/renderLoop';
 import { setupInteraction } from './utils/interaction';
-import { applyHighlight, HighlightGroup } from './utils/highlight';
+import { useHighlight, HighlightGroup } from './utils/highlight';
 import { loadModelInMainThread as loadModelInMainThreadUtil } from './utils/mainThreadLoader';
 import { cleanup as cleanupUtil } from './utils/cleanup';
 import { handleWorkerSuccess as handleWorkerSuccessUtil } from './utils/workerModel';
@@ -110,18 +110,11 @@ export function ModelViewer({
       startRenderLoop,
       buildIdCaches,
       applyHighlight,
-      highlightGroups,
-      highlightIds,
-      highlightColor,
       globalIdMapRef,
       globalIdMapModelIdRef,
       productIdsRef,
       productIndexReadyRef,
-      highlightSubsetRef,
-      highlightSubsetsRef,
-      scheduleHighlightRetry,
       needsRenderRef,
-      maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
       controlsRef,
       animateIdRef,
       abortControllerRef,
@@ -133,7 +126,7 @@ export function ModelViewer({
       clickTargetRef,
       expressIdIndexMapRef,
     });
-  }, [highlightGroups, highlightIds, highlightColor]);
+  }, [applyHighlight, buildIdCaches]);
 
   // 主线程降级加载
   const loadModelInMainThread = useCallback(async (
@@ -164,18 +157,11 @@ export function ModelViewer({
         startRenderLoop,
         buildIdCaches,
         applyHighlight,
-        highlightGroups,
-        highlightIds,
-        highlightColor,
         globalIdMapRef,
         globalIdMapModelIdRef,
         productIdsRef,
         productIndexReadyRef,
-        highlightSubsetRef,
-        highlightSubsetsRef,
-        scheduleHighlightRetry,
         needsRenderRef,
-        maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
         controlsRef,
         sceneRef,
         cameraRef,
@@ -192,7 +178,7 @@ export function ModelViewer({
       console.error('[ModelViewer] 主线程加载失败:', err);
       throw err;
     }
-  }, []);
+  }, [applyHighlight, buildIdCaches]);
 
   // 清理函数
   const cleanup = useCallback(() => {
@@ -243,35 +229,23 @@ export function ModelViewer({
     });
   }, [src, isWorkerAvailable, parseIFC, loadModelInMainThread]);
 
-  // 应用高亮
-  const scheduleHighlightRetry = (nextAttempt: number) => {
-    if (highlightRetryTimeoutRef.current) {
-      clearTimeout(highlightRetryTimeoutRef.current);
-    }
-    highlightRetryTimeoutRef.current = window.setTimeout(() => {
-      highlightRetryTimeoutRef.current = null;
-      if (ifcLoaderRef.current && modelRef.current) {
-        applyHighlight({
-          ifcLoader: ifcLoaderRef.current,
-          model: modelRef.current as THREE.Object3D & { modelID: number },
-          attempt: nextAttempt,
-          highlightGroups,
-          highlightIds,
-          highlightColor,
-          globalIdMapRef,
-          globalIdMapModelIdRef,
-          productIdsRef,
-          productIndexReadyRef,
-          highlightSubsetRef,
-          highlightSubsetsRef,
-          modelRef,
-          scheduleHighlightRetry,
-          needsRenderRef,
-          maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
-        });
-      }
-    }, HIGHLIGHT_RETRY_DELAY);
-  };
+  const { applyHighlight } = useHighlight({
+    highlightGroups,
+    highlightIds,
+    highlightColor,
+    ifcLoaderRef,
+    modelRef,
+    globalIdMapRef,
+    globalIdMapModelIdRef,
+    productIdsRef,
+    productIndexReadyRef,
+    highlightSubsetRef,
+    highlightSubsetsRef,
+    highlightRetryTimeoutRef,
+    needsRenderRef,
+    maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
+    highlightRetryDelay: HIGHLIGHT_RETRY_DELAY,
+  });
 
   // 处理窗口大小变化
   const handleResize = useCallback(() => {
@@ -294,26 +268,9 @@ export function ModelViewer({
   useEffect(() => {
     if (isInitializedRef.current && ifcLoaderRef.current && modelRef.current) {
       console.log('[ModelViewer] 高亮ID变化，重新应用高亮');
-      applyHighlight({
-        ifcLoader: ifcLoaderRef.current,
-        model: modelRef.current as THREE.Object3D & { modelID: number },
-        attempt: 0,
-        highlightGroups,
-        highlightIds,
-        highlightColor,
-        globalIdMapRef,
-        globalIdMapModelIdRef,
-        productIdsRef,
-        productIndexReadyRef,
-        highlightSubsetRef,
-        highlightSubsetsRef,
-        modelRef,
-        scheduleHighlightRetry,
-        needsRenderRef,
-        maxHighlightRetry: MAX_HIGHLIGHT_RETRY,
-      });
+      applyHighlight(modelRef.current as THREE.Object3D & { modelID: number });
     }
-  }, [highlightIds, highlightColor, highlightGroups]);
+  }, [applyHighlight]);
 
   // 窗口大小变化effect
   useEffect(() => {
