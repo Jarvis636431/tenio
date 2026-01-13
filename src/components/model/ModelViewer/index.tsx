@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import * as THREE from 'three';
 import { IFCLoader } from 'web-ifc-three/IFCLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { useIFCWorker } from '@/hooks/useIFCWorker';
+import { useIFCWorker } from './hooks/useIFCWorker';
 import type { SerializedModel, LoadingState } from '@/types/worker.types';
 import { buildIdCaches } from './utils/ifcCaches';
 import { setupCameraAndControls } from './utils/cameraControls';
