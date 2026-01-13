@@ -13,6 +13,7 @@ import { applyHighlight, HighlightGroup } from './utils/highlight';
 import { loadModelInMainThread as loadModelInMainThreadUtil } from './utils/mainThreadLoader';
 import { cleanup as cleanupUtil } from './utils/cleanup';
 import { handleWorkerSuccess as handleWorkerSuccessUtil } from './utils/workerModel';
+import { initViewer as initViewerUtil } from './utils/initViewer';
 
 // TODO: 继续优化：在加载阶段预建 ExpressID/GlobalId/索引映射，交互阶段仅查表并通过 visible/material/drawRange 切换渲染，减少 createSubset 与属性遍历开销；同时完善子集/材质的统一释放策略。
 
@@ -225,151 +226,21 @@ export function ModelViewer({
 
   // 初始化viewer
   const initViewer = useCallback(async () => {
-    if (isInitializedRef.current || !containerRef.current || !src) {
-      return;
-    }
-
-    console.log('[ModelViewer] 开始初始化viewer');
-    setLoadingState({
-      isLoading: true,
-      progress: 0,
-      message: '正在初始化...',
-      error: null,
+    await initViewerUtil({
+      src,
+      containerRef,
+      isInitializedRef,
+      abortControllerRef,
+      setLoadingState,
+      sceneRef,
+      cameraRef,
+      rendererRef,
+      ifcLoaderRef,
+      isWorkerAvailable,
+      parseIFC,
+      loadModelInMainThread,
     });
-
-    try {
-      // 创建新的AbortController用于取消下载
-      abortControllerRef.current = new AbortController();
-
-      const container = containerRef.current;
-      container.innerHTML = '';
-
-      // 创建场景
-      const scene = new THREE.Scene();
-      scene.background = null;
-      scene.fog = null;
-
-      // 创建相机
-      const camera = new THREE.PerspectiveCamera(
-        75,
-        container.clientWidth / container.clientHeight,
-        0.01,
-        2000
-      );
-      camera.position.set(20, 20, 20);
-      camera.lookAt(0, 0, 0);
-      camera.near = 0.01;
-      camera.far = 2000;
-      camera.updateProjectionMatrix();
-
-      // 创建渲染器
-      const renderer = new THREE.WebGLRenderer({
-        antialias: false,
-        powerPreference: 'high-performance',
-        stencil: false,
-        depth: true,
-        alpha: true,
-      });
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.shadowMap.enabled = false;
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      container.appendChild(renderer.domElement);
-
-      // 添加光源
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-      scene.add(ambientLight);
-
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      directionalLight.position.set(10, 10, 10);
-      scene.add(directionalLight);
-
-      // 创建IFC加载器（用于高亮和交互）
-      const ifcLoader = new IFCLoader();
-      ifcLoader.ifcManager.setWasmPath('/wasm/');
-      ifcLoaderRef.current = ifcLoader;
-
-      // 保存场景引用
-      sceneRef.current = scene;
-      cameraRef.current = camera;
-      rendererRef.current = renderer;
-
-      // 加载模型（内联）
-      console.log('[ModelViewer] 开始加载模型:', src);
-
-      // 更新进度：开始下载
-      setLoadingState(prev => ({
-        ...prev,
-        progress: 10,
-        message: '正在下载模型...',
-      }));
-
-      // 检查是否已被取消
-      if (abortControllerRef.current?.signal.aborted) {
-        console.log('[ModelViewer] 加载已取消（下载前）');
-        return;
-      }
-
-      const response = await fetch(src!, {
-        signal: abortControllerRef.current?.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`请求模型文件失败: ${response.status}`);
-      }
-
-      // 再次检查是否已被取消
-      if (abortControllerRef.current?.signal.aborted) {
-        console.log('[ModelViewer] 加载已取消（下载后）');
-        return;
-      }
-
-      const data = await response.arrayBuffer();
-
-      // 再次检查是否已被取消
-      if (abortControllerRef.current?.signal.aborted) {
-        console.log('[ModelViewer] 加载已取消（数据获取后）');
-        return;
-      }
-
-      // 更新进度：下载完成
-      setLoadingState(prev => ({
-        ...prev,
-        progress: 30,
-        message: '下载完成，准备解析...',
-      }));
-
-      // 使用 Worker 解析（如果可用）
-      console.log('[ModelViewer] isWorkerAvailable:', isWorkerAvailable);
-      if (isWorkerAvailable) {
-        console.log('[ModelViewer] 使用 Worker 解析，数据大小:', data.byteLength, 'bytes');
-        parseIFC(data, '/wasm/');
-        // Worker 会通过回调处理后续流程
-        console.log('[ModelViewer] Worker 解析请求已发送');
-      } else {
-        // 降级：使用主线程解析
-        console.warn('[ModelViewer] Worker 不可用，使用主线程解析');
-        await loadModelInMainThread(data, scene, camera, renderer, container);
-      }
-
-      isInitializedRef.current = true;
-      console.log('[ModelViewer] Viewer初始化完成');
-
-    } catch (err) {
-      // 忽略 AbortError
-      if (err instanceof Error && err.name === 'AbortError') {
-        console.log('[ModelViewer] 初始化被取消');
-        return;
-      }
-      console.error('[ModelViewer] 初始化失败:', err);
-      setLoadingState({
-        isLoading: false,
-        progress: 0,
-        message: '',
-        error: err instanceof Error ? err.message : '初始化失败',
-      });
-    }
-  }, [src, isWorkerAvailable, parseIFC, handleWorkerSuccess, loadModelInMainThread]);
+  }, [src, isWorkerAvailable, parseIFC, loadModelInMainThread]);
 
   // 应用高亮
   const scheduleHighlightRetry = (nextAttempt: number) => {
