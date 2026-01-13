@@ -30,15 +30,7 @@ interface UseMainThreadLoaderParams {
     cameraRef: Ref<THREE.PerspectiveCamera | null>;
     rendererRef: Ref<THREE.WebGLRenderer | null>;
   }) => void;
-  startRenderLoop: (params: {
-    scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
-    renderer: THREE.WebGLRenderer;
-    controlsRef: Ref<OrbitControls | null>;
-    animateIdRef: Ref<number | null>;
-    abortControllerRef: Ref<AbortController | null>;
-    needsRenderRef: Ref<boolean>;
-  }) => void;
+  startRenderLoop: (scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer) => void;
   buildIdCaches: (params: {
     ifcLoader: IFCLoader;
     modelID: number;
@@ -169,15 +161,7 @@ export function useMainThreadLoader({
       rendererRef,
     });
 
-    startRenderLoop({
-      scene,
-      camera,
-      renderer,
-      controlsRef,
-      animateIdRef,
-      abortControllerRef,
-      needsRenderRef,
-    });
+    startRenderLoop(scene, camera, renderer);
 
     await buildIdCaches({
       ifcLoader: ifcLoaderRef.current,

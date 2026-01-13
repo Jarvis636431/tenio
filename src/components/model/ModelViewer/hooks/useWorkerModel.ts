@@ -4,7 +4,7 @@ import type { IFCLoader } from 'web-ifc-three/IFCLoader';
 import type { SerializedModel, LoadingState } from '@/types/worker.types';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Dispatch, SetStateAction } from 'react';
-import type { buildIdCaches } from './ifcCaches';
+import type { buildIdCaches } from '../utils/ifcCaches';
 
 type Ref<T> = { current: T };
 
@@ -93,15 +93,7 @@ interface UseWorkerModelParams {
     cameraRef: Ref<THREE.PerspectiveCamera | null>;
     rendererRef: Ref<THREE.WebGLRenderer | null>;
   }) => void;
-  startRenderLoop: (params: {
-    scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
-    renderer: THREE.WebGLRenderer;
-    controlsRef: Ref<OrbitControls | null>;
-    animateIdRef: Ref<number | null>;
-    abortControllerRef: Ref<AbortController | null>;
-    needsRenderRef: Ref<boolean>;
-  }) => void;
+  startRenderLoop: (scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer) => void;
   buildIdCaches: BuildIdCaches;
   applyHighlight: ApplyHighlight;
   globalIdMapRef: Ref<Map<string, number> | null>;
@@ -175,15 +167,7 @@ export function useWorkerModel({
       rendererRef,
     });
 
-      startRenderLoop({
-        scene: sceneRef.current,
-        camera: cameraRef.current,
-        renderer: rendererRef.current,
-        controlsRef,
-        animateIdRef,
-        abortControllerRef,
-        needsRenderRef,
-      });
+      startRenderLoop(sceneRef.current, cameraRef.current, rendererRef.current);
 
       if (ifcLoaderRef.current) {
         await buildIdCaches({

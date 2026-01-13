@@ -15,7 +15,7 @@
 
 ## 行为是否变化
 - 逻辑保持一致：反序列化、材质设置、交互初始化、索引缓存和高亮触发流程不变。
-- 变化仅在调用方式：util 调用改为 hook 返回函数。
+- 变化仅在调用方式：util 调用改为 hook 返回函数，渲染循环调用由外部依赖切换为简化签名。
 
 ## 相关文件
 - `src/components/model/ModelViewer/hooks/useWorkerModel.ts`

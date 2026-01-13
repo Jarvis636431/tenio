@@ -15,7 +15,7 @@
 
 ## 行为是否变化
 - 逻辑保持一致：解析、材质处理、交互初始化、缓存构建、高亮触发流程未改变。
-- 变化仅在调用方式：util 调用改为 hook 返回函数。
+- 变化仅在调用方式：util 调用改为 hook 返回函数，`startRenderLoop` 的依赖也收敛为简化调用签名。
 
 ## 相关文件
 - `src/components/model/ModelViewer/hooks/useMainThreadLoader.ts`
