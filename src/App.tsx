@@ -101,7 +101,7 @@ function AppRoutes() {
 
         {/* 工匠管理 */}
         <Route path="craftsman" element={<CraftsmanManagement />} />
-
+        
         {/* 资金物料 */}
         <Route path="funding" element={<FundingMaterials />} />
 

@@ -233,11 +233,7 @@ export function AppSidebar() {
                       className="flex items-center space-x-3 cursor-pointer transition-opacity hover:opacity-80"
                       onClick={handleLogoClick}
                     >
-                      <img
-                        src="/lovable-uploads/Frame 2147224672.svg"
-                        alt="天友"
-                        className="h-8 w-8"
-                      />
+                      <img src="/logo.svg" alt="天友" className="h-8 w-8" />
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="right">
@@ -249,11 +245,7 @@ export function AppSidebar() {
                   className="flex items-center space-x-3 cursor-pointer transition-opacity hover:opacity-80"
                   onClick={handleLogoClick}
                 >
-                  <img
-                    src="/lovable-uploads/Frame 2147224672.svg"
-                    alt="天友"
-                    className="h-8 w-8"
-                  />
+                  <img src="/logo.svg" alt="天友" className="h-8 w-8" />
                   <h1 className="text-lg font-semibold text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
                     A.PM 智慧建管
                   </h1>
