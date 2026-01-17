@@ -24,8 +24,16 @@ import { KnowledgeQA } from "./components/quality/KnowledgeQA";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+type AuthState = ReturnType<typeof useAuth>;
+
+function ProtectedRoute({
+  children,
+  auth,
+}: {
+  children: React.ReactNode;
+  auth: AuthState;
+}) {
+  const { user, isLoading } = auth;
 
   if (isLoading) {
     return (
@@ -40,8 +48,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function AppRoutes() {
-  const { user, isLoading } = useAuth();
+function AppRoutes({ auth }: { auth: AuthState }) {
+  const { user, isLoading } = auth;
 
   if (isLoading) {
     return (
@@ -58,7 +66,7 @@ function AppRoutes() {
       <Route
         path="/"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute auth={auth}>
             <Layout>
               <Index />
             </Layout>
@@ -68,7 +76,7 @@ function AppRoutes() {
       <Route
         path="/project-management"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute auth={auth}>
             <Layout>
               <ProjectManagement />
             </Layout>
@@ -78,7 +86,7 @@ function AppRoutes() {
       <Route
         path="/project/:id"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute auth={auth}>
             <Layout>
               <ProjectLayout />
             </Layout>
@@ -115,16 +123,20 @@ function AppRoutes() {
   );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const auth = useAuth();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppRoutes auth={auth} />
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

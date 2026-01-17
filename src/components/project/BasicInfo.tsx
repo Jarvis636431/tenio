@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,6 +31,17 @@ const basicInfoSchema = z.object({
 
 type BasicInfoFormData = z.infer<typeof basicInfoSchema>;
 
+const defaultProjectData: BasicInfoFormData = {
+  city: "北京市",
+  buildingType: "住宅",
+  structureType: "框架结构",
+  bidAmount: 0,
+  controlPrice: 0,
+  buildingHeight: 0,
+  buildingFloors: 1,
+  buildingArea: 0,
+};
+
 export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) {
   const { currentProject, updateProject } = useProject();
   const [isEditMode, setIsEditMode] = useState(false);
@@ -41,16 +52,7 @@ export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) 
 
   const form = useForm<BasicInfoFormData>({
     resolver: zodResolver(basicInfoSchema),
-    defaultValues: {
-      city: "北京市",
-      buildingType: "住宅",
-      structureType: "框架结构",
-      bidAmount: 0,
-      controlPrice: 0,
-      buildingHeight: 0,
-      buildingFloors: 1,
-      buildingArea: 0,
-    },
+    defaultValues: defaultProjectData,
   });
 
   // 检测表单变化
@@ -60,18 +62,8 @@ export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) 
 
   useEffect(() => {
     // 由于 Project 上暂未定义这些字段，这里提供默认值
-    const projectData = {
-      city: "北京市",
-      buildingType: "住宅",
-      structureType: "框架结构",
-      bidAmount: 0,
-      controlPrice: 0,
-      buildingHeight: 0,
-      buildingFloors: 1,
-      buildingArea: 0,
-    };
-    form.reset(projectData);
-    setEditedItem(projectData);
+    form.reset(defaultProjectData);
+    setEditedItem(defaultProjectData);
   }, [form]);
 
   const handleEdit = () => {
@@ -80,18 +72,8 @@ export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) 
 
   const handleCancel = () => {
     setIsEditMode(false);
-    const projectData = {
-      city: "北京市",
-      buildingType: "住宅",
-      structureType: "框架结构",
-      bidAmount: 0,
-      controlPrice: 0,
-      buildingHeight: 0,
-      buildingFloors: 1,
-      buildingArea: 0,
-    };
-    form.reset(projectData);
-    setEditedItem(projectData);
+    form.reset(defaultProjectData);
+    setEditedItem(defaultProjectData);
   };
 
   const onSubmit = async (data: BasicInfoFormData) => {
@@ -119,14 +101,6 @@ export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) 
     toast.success("正在重新生成施工工序...");
     // TODO: 在此触发真实的重新生成逻辑
     console.info('Regenerate construction procedures requested');
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   // 渲染操作按钮
