@@ -1,16 +1,34 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import ReactECharts from "echarts-for-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
-import { getCrewData, getBudgetData, CrewData, BudgetData } from "@/services/project-service";
+import {
+  getCrewData,
+  getBudgetData,
+  CrewData,
+  BudgetData,
+} from "@/services/project-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 
-interface FundingMaterialsProps {}
-
-export function FundingMaterials({}: FundingMaterialsProps) {
+export function FundingMaterials() {
   const { currentProject } = useProject();
   const { token } = useAuth();
 
@@ -38,72 +56,62 @@ export function FundingMaterials({}: FundingMaterialsProps) {
     refetchOnWindowFocus: false,
   });
 
-  const buildOption = useMemo(() => {
-    const formatter =
-      (unit?: string) =>
-      (value: number) =>
-        unit ? `${value}${unit}` : value;
+  const transformData = (data: CrewData[] | BudgetData[]) => {
+    if (!data || data.length === 0) return [];
+    
+    // Assuming all series share the same date categories
+    const categories = data[0].date ?? [];
+    
+    return categories.map((date, index) => {
+      const point: Record<string, string | number> = { date };
+      data.forEach(series => {
+        point[series.name] = series.data?.[index] ?? 0;
+      });
+      return point;
+    });
+  };
 
-    return (data: CrewData[] | BudgetData[], unit?: string) => {
-      if (!data || data.length === 0) {
-        return null;
-      }
-      const categories = data[0].date ?? [];
-      const series = data.map((item) => ({
-        name: item.name,
-        type: "line" as const,
-        smooth: true,
-        showSymbol: false,
-        data: item.data ?? [],
-        emphasis: { focus: "series" as const },
-      }));
+  const crewChartData = useMemo(() => transformData(crewQuery.data ?? []), [crewQuery.data]);
+  const budgetChartData = useMemo(() => transformData(budgetQuery.data ?? []), [budgetQuery.data]);
+  
+  const colors = ["#2563eb", "#16a34a", "#db2777", "#ea580c", "#8b5cf6", "#0891b2"];
 
-      return {
-        tooltip: {
-          trigger: "axis",
-        },
-        legend: {
-          data: data.map((item) => item.name),
-        },
-        grid: {
-          left: 40,
-          right: 30,
-          bottom: 40,
-          top: 40,
-        },
-        xAxis: {
-          type: "category",
-          boundaryGap: false,
-          data: categories,
-          axisLabel: {
-            formatter: (value: number | string) => `${value}`,
-          },
-        },
-        yAxis: {
-          type: "value",
-          axisLabel: {
-            formatter: formatter(unit),
-          },
-          splitLine: {
-            lineStyle: {
-              type: "dashed",
-            },
-          },
-        },
-        series,
-      };
-    };
-  }, []);
+  const renderChart = (data: Record<string, string | number>[], seriesNames: string[], unit: string) => {
+    if (!data || data.length === 0) return null;
 
-  const crewOption = useMemo(
-    () => buildOption(crewQuery.data ?? [], "人"),
-    [buildOption, crewQuery.data]
-  );
-
-  const budgetOption = useMemo(
-    () => buildOption(budgetQuery.data ?? [], "万元"),
-    [buildOption, budgetQuery.data]
-  );
+    return (
+      <ResponsiveContainer width="100%" height={320}>
+        <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis 
+            dataKey="date" 
+            tick={{ fontSize: 12 }} 
+            tickLine={false} 
+            axisLine={false}
+          />
+          <YAxis 
+            tick={{ fontSize: 12 }} 
+            tickLine={false} 
+            axisLine={false}
+            tickFormatter={(value) => unit ? `${value}${unit}` : value}
+          />
+          <Tooltip />
+          <Legend />
+          {seriesNames.map((name, index) => (
+            <Line
+              key={name}
+              type="monotone"
+              dataKey={name}
+              stroke={colors[index % colors.length]}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 6 }}
+            />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  };
 
   if (!currentProject) {
     return (
@@ -128,8 +136,12 @@ export function FundingMaterials({}: FundingMaterialsProps) {
               <AlertCircle className="mr-2 h-4 w-4" />
               无法获取人员数据
             </div>
-          ) : crewOption ? (
-            <ReactECharts option={crewOption} style={{ height: 320 }} />
+          ) : crewChartData.length > 0 ? (
+            renderChart(
+              crewChartData,
+              (crewQuery.data ?? []).map((d) => d.name),
+              "人",
+            )
           ) : (
             <div className="flex h-[320px] items-center justify-center text-muted-foreground">
               暂无人员数据
@@ -151,8 +163,12 @@ export function FundingMaterials({}: FundingMaterialsProps) {
               <AlertCircle className="mr-2 h-4 w-4" />
               无法获取成本数据
             </div>
-          ) : budgetOption ? (
-            <ReactECharts option={budgetOption} style={{ height: 320 }} />
+          ) : budgetChartData.length > 0 ? (
+            renderChart(
+              budgetChartData,
+              (budgetQuery.data ?? []).map((d) => d.name),
+              "万元",
+            )
           ) : (
             <div className="flex h-[320px] items-center justify-center text-muted-foreground">
               暂无成本数据
