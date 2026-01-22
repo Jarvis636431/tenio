@@ -13,6 +13,7 @@ const Index = lazy(() => import("./pages/Index"));
 const ProjectManagement = lazy(() => import("./pages/ProjectManagement"));
 const Login = lazy(() => import("./pages/Login"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const CreateProject = lazy(() => import("./pages/CreateProject"));
 
 // Lazy loaded project components
 const ProjectHomepage = lazy(() =>
@@ -121,6 +122,16 @@ function AppRoutes({ auth }: { auth: AuthState }) {
             <ProtectedRoute auth={auth}>
               <Layout>
                 <ProjectManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/create-project"
+          element={
+            <ProtectedRoute auth={auth}>
+              <Layout>
+                <CreateProject />
               </Layout>
             </ProtectedRoute>
           }

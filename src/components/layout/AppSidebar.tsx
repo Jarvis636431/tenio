@@ -43,7 +43,6 @@ import { Separator } from "@/components/ui/separator";
 import { ProjectSelector } from "@/components/project/ProjectSelector";
 import { useProject } from "@/hooks/useProject";
 import { useNavigate } from "react-router-dom";
-import { NewProjectDialog } from "@/components/project/NewProjectDialog";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -152,7 +151,6 @@ export function AppSidebar() {
   const { currentProject } = useProject();
   const navigate = useNavigate();
   const location = useLocation();
-  const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([
     "plan",
     "monitoring",
@@ -167,7 +165,7 @@ export function AppSidebar() {
   const { logout, user } = useAuth();
 
   const handleNewProject = () => {
-    setNewProjectDialogOpen(true);
+    navigate("/create-project");
   };
 
   const handleLogout = () => {
@@ -572,10 +570,6 @@ export function AppSidebar() {
           </SidebarFooter>
         </SidebarContent>
       </Sidebar>
-      <NewProjectDialog
-        open={newProjectDialogOpen}
-        onOpenChange={setNewProjectDialogOpen}
-      />
 
       {/* Portal-rendered hover menu */}
       {hoveredItem &&
