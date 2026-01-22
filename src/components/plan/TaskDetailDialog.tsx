@@ -1,11 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Loader2, ShieldAlert, CheckCircle, Clock, AlertCircle } from "lucide-react";
-import { getProcessInfo, OrderInfoData, ProcessInfoData } from "@/services/project-service";
+import {
+  Eye,
+  Loader2,
+  ShieldAlert,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
+import {
+  getProcessInfo,
+  OrderInfoData,
+  ProcessInfoData,
+} from "@/services/project-service";
 import { useAuth } from "@/hooks/useAuth";
 import { ModelViewer } from "@/components/model/ModelViewer";
+import type { PlanTask } from "@/types/domain/plan";
 
 // 验收数据接口
 interface AcceptanceData {
@@ -33,7 +50,7 @@ interface AcceptanceData {
 interface TaskDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  task: any; // TaskItem type
+  task: PlanTask | null;
   projectId?: string | null;
   workProcessName?: string;
 }
@@ -50,7 +67,9 @@ export function TaskDetailDialog({
   const [orderInfo, setOrderInfo] = useState<OrderInfoData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [acceptanceData, setAcceptanceData] = useState<AcceptanceData | null>(null);
+  const [acceptanceData, setAcceptanceData] = useState<AcceptanceData | null>(
+    null,
+  );
   const [acceptanceLoading, setAcceptanceLoading] = useState(false);
   const { token } = useAuth();
 
@@ -106,35 +125,35 @@ export function TaskDetailDialog({
   const loadAcceptanceData = async (processNumber: string) => {
     try {
       setAcceptanceLoading(true);
-      const response = await fetch('/Database/验收数据.csv');
+      const response = await fetch("/Database/验收数据.csv");
       if (!response.ok) {
-        throw new Error('无法加载验收数据');
+        throw new Error("无法加载验收数据");
       }
-      
+
       const csvText = await response.text();
-      const lines = csvText.trim().split('\n');
+      const lines = csvText.trim().split("\n");
       if (lines.length <= 1) return null;
-      
-      const headers = lines[0].split(',');
-      
+
+      const headers = lines[0].split(",");
+
       // 查找匹配的工序
       for (let i = 1; i < lines.length; i++) {
-        const row = lines[i].split(',');
-        const data: any = {};
-        
+        const row = lines[i].split(",");
+        const data: Record<string, string> = {};
+
         headers.forEach((header, index) => {
-          data[header] = row[index] || '';
+          data[header] = row[index] || "";
         });
-        
+
         // 通过工序序号匹配
-        if (data['工序序号'] === processNumber) {
-          return data as AcceptanceData;
+        if (data["工序序号"] === processNumber) {
+          return data as unknown as AcceptanceData;
         }
       }
-      
+
       return null;
     } catch (error) {
-      console.error('加载验收数据失败:', error);
+      console.error("加载验收数据失败:", error);
       return null;
     } finally {
       setAcceptanceLoading(false);
@@ -145,7 +164,7 @@ export function TaskDetailDialog({
   useEffect(() => {
     if (task && task.id) {
       // 假设task.id就是工序序号，或者从task中提取序号
-      const processNumber = task.id?.toString() || '1';
+      const processNumber = task.id?.toString() || "1";
       loadAcceptanceData(processNumber).then(setAcceptanceData);
     }
   }, [task]);
@@ -153,11 +172,11 @@ export function TaskDetailDialog({
   // 获取步骤状态图标
   const getStepStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'in_progress':
+      case "in_progress":
         return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'pending':
+      case "pending":
         return <AlertCircle className="h-4 w-4 text-gray-400" />;
       default:
         return <AlertCircle className="h-4 w-4 text-gray-400" />;
@@ -167,14 +186,14 @@ export function TaskDetailDialog({
   // 获取步骤状态样式
   const getStepStatusStyle = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-500 border-green-500';
-      case 'in_progress':
-        return 'bg-blue-500 border-blue-500';
-      case 'pending':
-        return 'bg-white border-gray-300';
+      case "completed":
+        return "bg-green-500 border-green-500";
+      case "in_progress":
+        return "bg-blue-500 border-blue-500";
+      case "pending":
+        return "bg-white border-gray-300";
       default:
-        return 'bg-white border-gray-300';
+        return "bg-white border-gray-300";
     }
   };
 
@@ -199,12 +218,18 @@ export function TaskDetailDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <span>{task.task ?? workProcessName ?? "未知工序"}</span>
-            {task.specialty && <Badge variant="outline">{task.specialty}</Badge>}
+            {task.specialty && (
+              <Badge variant="outline">{task.specialty}</Badge>
+            )}
             {task.jobType && <Badge variant="secondary">{task.jobType}</Badge>}
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-[calc(90vh-120px)] flex flex-col">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full h-[calc(90vh-120px)] flex flex-col"
+        >
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="3d">三维模型</TabsTrigger>
             <TabsTrigger value="drawings">图纸</TabsTrigger>
@@ -242,7 +267,11 @@ export function TaskDetailDialog({
                     onClick={() => setSelectedImage(src)}
                   >
                     <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border">
-                      <img src={src} alt={`图纸 ${index + 1}`} className="h-full w-full object-cover" />
+                      <img
+                        src={src}
+                        alt={`图纸 ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all rounded-lg flex items-center justify-center">
                       <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -277,7 +306,11 @@ export function TaskDetailDialog({
                     onClick={() => setSelectedImage(src)}
                   >
                     <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border">
-                      <img src={src} alt={`节点大样图 ${index + 1}`} className="h-full w-full object-cover" />
+                      <img
+                        src={src}
+                        alt={`节点大样图 ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all rounded-lg flex items-center justify-center">
                       <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -350,11 +383,25 @@ export function TaskDetailDialog({
                 {/* 验收状态 */}
                 <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                   <span className="text-sm font-medium">验收状态:</span>
-                  <Badge variant={acceptanceData.验收状态 === 'completed' ? 'default' : acceptanceData.验收状态 === 'in_progress' ? 'secondary' : 'outline'}>
-                    {acceptanceData.验收状态 === 'completed' ? '已完成' : acceptanceData.验收状态 === 'in_progress' ? '进行中' : '待验收'}
+                  <Badge
+                    variant={
+                      acceptanceData.验收状态 === "completed"
+                        ? "default"
+                        : acceptanceData.验收状态 === "in_progress"
+                          ? "secondary"
+                          : "outline"
+                    }
+                  >
+                    {acceptanceData.验收状态 === "completed"
+                      ? "已完成"
+                      : acceptanceData.验收状态 === "in_progress"
+                        ? "进行中"
+                        : "待验收"}
                   </Badge>
                   {acceptanceData.验收备注 && (
-                    <span className="text-sm text-gray-600">- {acceptanceData.验收备注}</span>
+                    <span className="text-sm text-gray-600">
+                      - {acceptanceData.验收备注}
+                    </span>
                   )}
                 </div>
 
@@ -362,19 +409,28 @@ export function TaskDetailDialog({
                 <div className="relative">
                   {/* 连接线 */}
                   <div className="absolute top-8 left-8 right-8 h-0.5 bg-gray-300" />
-                  
+
                   <div className="grid grid-cols-4 gap-4 relative">
                     {/* 动态生成步骤 */}
                     {[1, 2, 3, 4].map((stepNum) => {
-                      const stepText = acceptanceData[`步骤${stepNum}` as keyof AcceptanceData] as string;
-                      const stepStatus = acceptanceData[`步骤${stepNum}状态` as keyof AcceptanceData] as string;
-                      
+                      const stepText = acceptanceData[
+                        `步骤${stepNum}` as keyof AcceptanceData
+                      ] as string;
+                      const stepStatus = acceptanceData[
+                        `步骤${stepNum}状态` as keyof AcceptanceData
+                      ] as string;
+
                       return (
-                        <div key={stepNum} className="flex flex-col items-center">
-                          <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center mb-4 relative z-10 ${getStepStatusStyle(stepStatus)}`}>
-                            {stepStatus === 'completed' ? (
+                        <div
+                          key={stepNum}
+                          className="flex flex-col items-center"
+                        >
+                          <div
+                            className={`w-16 h-16 rounded-full border-4 flex items-center justify-center mb-4 relative z-10 ${getStepStatusStyle(stepStatus)}`}
+                          >
+                            {stepStatus === "completed" ? (
                               <CheckCircle className="h-6 w-6 text-white" />
-                            ) : stepStatus === 'in_progress' ? (
+                            ) : stepStatus === "in_progress" ? (
                               <Clock className="h-6 w-6 text-white" />
                             ) : (
                               <div className="w-2 h-2 bg-gray-400 rounded-full" />
@@ -396,10 +452,17 @@ export function TaskDetailDialog({
                     {/* 拍摄位置要求 */}
                     <div className="grid grid-cols-3 gap-4">
                       {[1, 2, 3].map((reqNum) => {
-                        const requirement = acceptanceData[`拍摄要求${reqNum}` as keyof AcceptanceData] as string;
+                        const requirement = acceptanceData[
+                          `拍摄要求${reqNum}` as keyof AcceptanceData
+                        ] as string;
                         return (
-                          <div key={reqNum} className="bg-blue-500 text-white px-4 py-3 rounded-lg flex items-center justify-center min-h-[60px]">
-                            <p className="text-center font-medium text-sm">{requirement}</p>
+                          <div
+                            key={reqNum}
+                            className="bg-blue-500 text-white px-4 py-3 rounded-lg flex items-center justify-center min-h-[60px]"
+                          >
+                            <p className="text-center font-medium text-sm">
+                              {requirement}
+                            </p>
                           </div>
                         );
                       })}
@@ -408,12 +471,19 @@ export function TaskDetailDialog({
                     {/* 现场照片 */}
                     <div className="grid grid-cols-3 gap-4">
                       {[1, 2, 3].map((photoNum) => {
-                        const photoPath = acceptanceData[`现场照片${photoNum}` as keyof AcceptanceData] as string;
+                        const photoPath = acceptanceData[
+                          `现场照片${photoNum}` as keyof AcceptanceData
+                        ] as string;
                         return (
-                          <div key={photoNum} className="bg-gray-200 rounded-lg overflow-hidden h-48 flex items-center justify-center">
-                            {photoPath && photoPath !== '/images/acceptance/placeholder.jpg' ? (
-                              <img 
-                                src={photoPath} 
+                          <div
+                            key={photoNum}
+                            className="bg-gray-200 rounded-lg overflow-hidden h-48 flex items-center justify-center"
+                          >
+                            {photoPath &&
+                            photoPath !==
+                              "/images/acceptance/placeholder.jpg" ? (
+                              <img
+                                src={photoPath}
                                 alt={`现场照片 ${photoNum}`}
                                 className="w-full h-full object-cover cursor-pointer"
                                 onClick={() => setSelectedImage(photoPath)}
@@ -434,12 +504,16 @@ export function TaskDetailDialog({
                   {/* 右侧 1 列 - 人像 */}
                   <div className="col-span-1">
                     <div className="bg-gray-200 rounded-lg flex items-center justify-center h-full">
-                      {acceptanceData.人像照片 && acceptanceData.人像照片 !== '/images/acceptance/placeholder.jpg' ? (
-                        <img 
-                          src={acceptanceData.人像照片} 
+                      {acceptanceData.人像照片 &&
+                      acceptanceData.人像照片 !==
+                        "/images/acceptance/placeholder.jpg" ? (
+                        <img
+                          src={acceptanceData.人像照片}
                           alt="验收人员"
                           className="w-full h-full object-cover rounded-lg cursor-pointer"
-                          onClick={() => setSelectedImage(acceptanceData.人像照片)}
+                          onClick={() =>
+                            setSelectedImage(acceptanceData.人像照片)
+                          }
                         />
                       ) : (
                         <div className="text-center text-gray-500">
@@ -466,13 +540,20 @@ export function TaskDetailDialog({
 
         {/* 图片查看大图弹窗 */}
         {selectedImage && (
-          <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+          <Dialog
+            open={!!selectedImage}
+            onOpenChange={() => setSelectedImage(null)}
+          >
             <DialogContent className="max-w-4xl">
               <DialogHeader>
                 <DialogTitle>节点大样图</DialogTitle>
               </DialogHeader>
               <div className="bg-black/5 rounded-lg overflow-hidden">
-                <img src={selectedImage} alt="节点大样图" className="w-full h-full object-contain" />
+                <img
+                  src={selectedImage}
+                  alt="节点大样图"
+                  className="w-full h-full object-contain"
+                />
               </div>
             </DialogContent>
           </Dialog>

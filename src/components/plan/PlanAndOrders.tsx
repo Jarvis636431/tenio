@@ -198,7 +198,7 @@ export function PlanAndOrders() {
   );
 
   // 详情对话框处理
-  const handleDetailClick = (item: TaskItem) => {
+  const handleDetailClick = (item: PlanTask) => {
     setSelectedItem(item);
     setIsEditMode(false); // 确保从详情入口进入时是只读状态
     setEditedItem(null);
@@ -206,7 +206,7 @@ export function PlanAndOrders() {
   };
 
   // 更多详情对话框处理
-  const handleMoreClick = (item: TaskItem) => {
+  const handleMoreClick = (item: PlanTask) => {
     setSelectedTaskForDetail(item);
     setIsTaskDetailDialogOpen(true);
   };
@@ -218,7 +218,7 @@ export function PlanAndOrders() {
     setEditedItem(null);
   };
 
-  const handleEditClick = (item: TaskItem) => {
+  const handleEditClick = (item: PlanTask) => {
     setSelectedItem(item);
     setEditedItem({ ...item });
     setIsEditMode(true);
@@ -318,14 +318,11 @@ export function PlanAndOrders() {
   // 甘特图数据转换 - 使用过滤后的数据
   const ganttData = useMemo(() => {
     return filteredData.map((item) => ({
-      id: item.id,
-      task: item.task,
+      ...item,
       startDate: item.startTime,
       endDate: item.endTime,
-      duration: item.duration,
       worker: item.jobType,
       count: item.workerCount,
-      floor: item.floor,
     }));
   }, [filteredData]);
 
@@ -460,7 +457,7 @@ export function PlanAndOrders() {
           console.log("新增任务:", task);
           setIsNewTaskDialogOpen(false);
         }}
-        existingTasks={allData as any}
+        existingTasks={allData}
         projectId={currentProject?.id ?? ""}
       />
 

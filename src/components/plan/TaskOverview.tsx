@@ -1,39 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { ProjectScheduleItem } from "@/hooks/useProjectSchedule";
-
-// 扩展计划项类型以适配页面内使用的附加字段
-type TaskItem = ProjectScheduleItem & {
-  specialty?: string;
-  component?: string;
-  totalCost?: number;
-  constructionSituation?: string;
-  prerequisiteProcess?: string;
-  quantity?: number;
-  quantityUnit?: string;
-  overtime?: string;
-  duration?: string;
-  actualWorkDays?: number;
-  constructionMethod?: string;
-  directDependency?: string;
-  remarks?: string;
-  selectedConstructionMethod?: string;
-  materialCost?: number;
-  laborCost?: number;
-  floor?: number;
-};
+import type { PlanTask } from "@/types/domain/plan";
 
 interface TaskOverviewProps {
-  paginatedData: TaskItem[];
+  paginatedData: PlanTask[];
   currentPage: number;
   itemsPerPage: number;
   filteredDataLength: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  onEditClick: (item: TaskItem) => void;
-  onDetailClick: (item: TaskItem) => void;
-  onMoreClick: (item: TaskItem) => void;
+  onEditClick: (item: PlanTask) => void;
+  onDetailClick: (item: PlanTask) => void;
+  onMoreClick: (item: PlanTask) => void;
 }
 
 export function TaskOverview({
