@@ -211,27 +211,6 @@ const generateHeaders = (
   });
 };
 
-const getWorkerColor = (worker: string): string => {
-  const colors: {
-    [key: string]: string;
-  } = {
-    钢筋工: "hsl(210, 70%, 65%)", // lighter blue
-    混凝土工: "hsl(25, 75%, 70%)", // lighter orange
-    木工: "hsl(40, 80%, 70%)", // lighter yellow
-    测量员: "hsl(255, 60%, 65%)", // lighter purple
-    土方工: "hsl(25, 75%, 70%)", // lighter orange
-    砌筑工: "hsl(165, 60%, 60%)", // lighter green
-    抹灰工: "hsl(255, 60%, 65%)", // lighter purple
-    防水工: "hsl(210, 70%, 65%)", // lighter blue
-    水电工: "hsl(165, 60%, 60%)", // lighter green
-    油漆工: "hsl(40, 80%, 70%)", // lighter yellow
-    油工: "hsl(40, 80%, 70%)", // lighter yellow
-    瓦工: "hsl(355, 70%, 70%)", // lighter red
-    不限: "#9ca3af",
-  };
-  return colors[worker] || "#9ca3af";
-};
-
 const getWorkerBadgeClass = (worker: string): string => {
   const badgeClasses: {
     [key: string]: string;
@@ -403,7 +382,7 @@ export function GanttChart({
           startOffset,
           spanUnits,
           barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
-          color: getWorkerColor(item.worker),
+          color: "hsl(210, 70%, 65%)", // 统一为蓝色
         };
       },
     );

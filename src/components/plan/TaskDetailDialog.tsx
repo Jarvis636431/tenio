@@ -15,7 +15,9 @@ import {
   Clock,
   AlertCircle,
 } from "lucide-react";
-import { getProcessInfo } from "@/services/project-service";
+import {
+  getProcessInfo,
+} from "@/services/project-service";
 import type { OrderInfoData, ProcessInfoData } from "@/types/domain/project";
 import { useAuth } from "@/hooks/useAuth";
 import { ModelViewer } from "@/components/model/ModelViewer";
