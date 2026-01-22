@@ -85,8 +85,13 @@ const projectMenuItems = [
       },
       {
         id: "gantt",
-        label: "施工工序甘特图",
+        label: "施工甘特图",
         icon: BarChart3,
+      },
+      {
+        id: "network",
+        label: "施工网络图",
+        icon: Activity,
       },
     ],
   },
@@ -178,7 +183,7 @@ export function AppSidebar() {
     setExpandedItems((prev) =>
       prev.includes(itemId)
         ? prev.filter((id) => id !== itemId)
-        : [...prev, itemId]
+        : [...prev, itemId],
     );
   };
 
@@ -190,7 +195,7 @@ export function AppSidebar() {
 
   const handleMouseEnter = (
     itemId: string,
-    event: React.MouseEvent<HTMLElement> | HoverEventLike
+    event: React.MouseEvent<HTMLElement> | HoverEventLike,
   ) => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
@@ -624,7 +629,7 @@ export function AppSidebar() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </TooltipProvider>
   );
