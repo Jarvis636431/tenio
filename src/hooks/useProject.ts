@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
  */
 export function useProject() {
   const { id } = useParams();
+  const location = useLocation();
   const { token, user } = useAuth();
   
   const {
@@ -58,6 +59,12 @@ export function useProject() {
       }
     }
   }, [id, projects, currentProject, setCurrentProject]);
+
+  useEffect(() => {
+    if (location.pathname === "/create-project" && currentProject) {
+      setCurrentProject(null);
+    }
+  }, [location.pathname, currentProject, setCurrentProject]);
 
   // 包装 refreshProjects 以自动传入 token 和 userId
   const wrappedRefreshProjects = async () => {
