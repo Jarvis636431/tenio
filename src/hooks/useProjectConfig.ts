@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
-import { getProjectConfig, ProjectConfigResponse } from "@/services/project-service";
+import { getProjectConfig } from "@/services/project-service";
+import type { ProjectConfigResponse } from "@/types/domain/project";
 
 export function useProjectConfig() {
   const { currentProject } = useProject();

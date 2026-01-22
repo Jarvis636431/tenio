@@ -22,9 +22,8 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   getCrewData,
   getBudgetData,
-  CrewData,
-  BudgetData,
 } from "@/services/project-service";
+import type { CrewData, BudgetData } from "@/types/domain/project";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 
