@@ -2,34 +2,11 @@ import { useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
-import { getProjectDetail, getProcessGuidMapping, ScheduleRow } from "@/services/project-service";
+import { getProjectDetail, getProcessGuidMapping } from "@/services/project-service";
+import type { ScheduleRow } from "@/types/domain/project";
+import type { PlanTask } from "@/types/domain/plan";
 
-export interface ProjectScheduleItem {
-  id: number;
-  task: string;
-  workerCount: number;
-  jobType: string;
-  totalCost: number;
-  startTime: string;
-  endTime: string;
-  constructionSituation: string;
-  prerequisiteProcess: string;
-  quantity: number;
-  quantityUnit: string;
-  overtime: string;
-  duration: string;
-  actualWorkDays: number;
-  constructionMethod: string;
-  directDependency: string;
-  remarks: string;
-  selectedConstructionMethod: string;
-  materialCost: number;
-  laborCost: number;
-  floor: number;
-  extra: ScheduleRow;
-}
-
-const mapScheduleRow = (row: ScheduleRow, index: number): ProjectScheduleItem => ({
+const mapScheduleRow = (row: ScheduleRow, index: number): PlanTask => ({
   id: index + 1,
   task: String(row["施工工序"] ?? row["任务"] ?? `任务${index + 1}`),
   workerCount: Number(row["施工人数"] ?? 0),
@@ -52,6 +29,11 @@ const mapScheduleRow = (row: ScheduleRow, index: number): ProjectScheduleItem =>
   laborCost: Number(row["劳动力成本"] ?? 0),
   floor: Number(row["层数"] ?? 0),
   extra: row,
+  // 兼容性字段
+  worker: String(row["工种"] ?? ""),
+  count: Number(row["施工人数"] ?? 0),
+  startDate: String(row["开始时间"] ?? ""),
+  endDate: String(row["结束时间"] ?? ""),
 });
 
 export function useProjectSchedule() {

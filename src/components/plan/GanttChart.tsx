@@ -5,28 +5,16 @@ import { MoreHorizontal } from "lucide-react";
 import { NewTaskDialog } from "./NewTaskDialog";
 import { TaskDetailDialog } from "./TaskDetailDialog";
 import { useProject } from "@/hooks/useProject";
-import type { ShutdownEventConfig } from "@/services/project-service";
-
-interface ScheduleItem {
-  id: number;
-  task: string;
-  startDate: string;
-  endDate: string;
-  duration: string;
-  worker: string;
-  count: number;
-  floor?: number;
-}
+import type { ShutdownEventConfig } from "@/types/domain/project";
+import type { PlanTask, TimelineScale } from "@/types/domain/plan";
 
 interface GanttChartProps {
-  data: ScheduleItem[];
-  onTaskDetail?: (task: ScheduleItem) => void;
-  onAddTask?: (task: Partial<ScheduleItem>) => void;
+  data: PlanTask[];
+  onTaskDetail?: (task: PlanTask) => void;
+  onAddTask?: (task: Partial<PlanTask>) => void;
   scale?: TimelineScale;
   shutdownEvents?: ShutdownEventConfig[];
 }
-
-export type TimelineScale = "day" | "hour" | "week" | "month";
 
 const BASELINE_DATE = new Date(2025, 0, 1); // 2025-10-01
 const MS_IN_HOUR = 1000 * 60 * 60;
@@ -95,7 +83,7 @@ const getWeekStart = (date: Date) => {
 const calculateTotalUnits = (
   startAnchor: Date,
   maxTime: number,
-  scale: TimelineScale
+  scale: TimelineScale,
 ) => {
   if (scale === "month") {
     const endDate = alignDateToScaleStart(new Date(maxTime), "month");
@@ -112,7 +100,11 @@ const calculateTotalUnits = (
   return Math.max(1, Math.ceil(diff / step) + 1);
 };
 
-const calculateStartOffset = (start: Date, startAnchor: Date, scale: TimelineScale) => {
+const calculateStartOffset = (
+  start: Date,
+  startAnchor: Date,
+  scale: TimelineScale,
+) => {
   if (scale === "month") {
     const alignedStart = alignDateToScaleStart(start, "month");
     return Math.max(0, monthDiff(startAnchor, alignedStart));
@@ -140,7 +132,7 @@ const calculateSpanUnits = (start: Date, end: Date, scale: TimelineScale) => {
     const units = Math.ceil(diff / MS_IN_WEEK) + 1;
     return Math.max(1, units);
   }
-  
+
   if (scale === "day") {
     const units = Math.ceil(diff / MS_IN_DAY) + 1;
     return Math.max(1, units);
@@ -158,7 +150,7 @@ interface TimelineHeader {
   isWeekend?: boolean;
 }
 
-type TimelineRow = ScheduleItem & {
+type TimelineRow = PlanTask & {
   startOffset: number;
   spanUnits: number;
   barLabel: string;
@@ -177,7 +169,7 @@ interface NewTaskFormData {
 const generateHeaders = (
   startAnchor: Date,
   totalUnits: number,
-  scale: TimelineScale
+  scale: TimelineScale,
 ): TimelineHeader[] => {
   return Array.from({ length: totalUnits }, (_, index) => {
     const current = addUnits(startAnchor, index, scale);
@@ -312,7 +304,7 @@ const parseDate = (dateStr: string): Date => {
 
   // 解析相对格式 "第X天 08:00" 或 "第X天08:00"
   const relativeMatch = trimmed.match(
-    /第\s*(\d+)\s*天\s*([0-9]{1,2})(?::([0-9]{2}))?/
+    /第\s*(\d+)\s*天\s*([0-9]{1,2})(?::([0-9]{2}))?/,
   );
   if (relativeMatch) {
     const day = parseInt(relativeMatch[1], 10);
@@ -367,7 +359,7 @@ export function GanttChart({
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
   const [selectedTaskForDetail, setSelectedTaskForDetail] =
-    useState<ScheduleItem | null>(null);
+    useState<PlanTask | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const { currentProject } = useProject();
@@ -402,7 +394,7 @@ export function GanttChart({
         const startOffset = calculateStartOffset(
           start,
           startAnchor,
-          timelineScale
+          timelineScale,
         );
         const spanUnits = calculateSpanUnits(start, end, timelineScale);
 
@@ -413,7 +405,7 @@ export function GanttChart({
           barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
           color: getWorkerColor(item.worker),
         };
-      }
+      },
     );
 
     return {
@@ -426,7 +418,8 @@ export function GanttChart({
 
   // 计算停工期遮罩段，仅用于内容区渲染
   const shutdownSegments = useMemo(() => {
-    if (!shutdownEvents || shutdownEvents.length === 0) return [] as { left: number; width: number; key: string }[];
+    if (!shutdownEvents || shutdownEvents.length === 0)
+      return [] as { left: number; width: number; key: string }[];
 
     const base = getBaselineDate();
 
@@ -445,7 +438,11 @@ export function GanttChart({
         endDate.setDate(base.getDate() + (eDay - 1));
         endDate.setHours(eHour, 0, 0, 0);
 
-        const startOffsetUnits = calculateStartOffset(startDate, startAnchor, timelineScale);
+        const startOffsetUnits = calculateStartOffset(
+          startDate,
+          startAnchor,
+          timelineScale,
+        );
         const spanUnits = calculateSpanUnits(startDate, endDate, timelineScale);
 
         if (startOffsetUnits >= totalUnits || spanUnits <= 0) {
@@ -507,7 +504,7 @@ export function GanttChart({
 
   const handleAddTask = (taskData: NewTaskFormData) => {
     if (onAddTask) {
-      const newTask: Partial<ScheduleItem> = {
+      const newTask: Partial<PlanTask> = {
         task: taskData.task,
         startDate: taskData.startTime,
         endDate: taskData.endTime,
@@ -520,7 +517,7 @@ export function GanttChart({
     }
   };
 
-  const handleMoreClick = (task: ScheduleItem) => {
+  const handleMoreClick = (task: PlanTask) => {
     setSelectedTaskForDetail(task);
     setIsTaskDetailDialogOpen(true);
   };
@@ -555,7 +552,7 @@ export function GanttChart({
                           clearTimeout(hoverTimeoutRef.current);
                         hoverTimeoutRef.current = setTimeout(
                           () => setShowDetailButton(item.id),
-                          150
+                          150,
                         );
                       }}
                       onMouseLeave={() => {
@@ -583,7 +580,7 @@ export function GanttChart({
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Badge
                             className={`text-xs ${getWorkerBadgeClass(
-                              item.worker
+                              item.worker || "",
                             )}`}
                           >
                             {item.worker}

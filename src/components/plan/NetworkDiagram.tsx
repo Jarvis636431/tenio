@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function NetworkDiagram() {
   return (
-    <div className="h-full w-full p-4">
+    <div className="h-full w-full">
       <Card className="h-full">
         <CardContent className="h-full flex items-center justify-center">
           <div className="text-center text-muted-foreground">

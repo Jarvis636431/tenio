@@ -1,9 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { useProject } from "@/hooks/useProject";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
-import type { ProjectScheduleItem } from "@/hooks/useProjectSchedule";
 import { useProjectConfig } from "@/hooks/useProjectConfig";
-import { GanttChart, type TimelineScale } from "@/components/plan/GanttChart";
+import { GanttChart } from "@/components/plan/GanttChart";
 import { NewTaskDialog } from "@/components/plan/NewTaskDialog";
 import { TaskDetailDialog } from "@/components/plan/TaskDetailDialog";
 import { TaskFilters } from "@/components/plan/TaskFilters";
@@ -11,27 +10,7 @@ import { TaskActions } from "@/components/plan/TaskActions";
 import { TaskOverview } from "@/components/plan/TaskOverview";
 import { TaskDetailSheet } from "@/components/plan/TaskDetailSheet";
 import { useLocation, useParams } from "react-router-dom";
-
-// 扩展计划项类型以适配页面内使用的附加字段
-type TaskItem = ProjectScheduleItem & {
-  specialty?: string;
-  component?: string;
-  totalCost?: number;
-  constructionSituation?: string;
-  prerequisiteProcess?: string;
-  quantity?: number;
-  quantityUnit?: string;
-  overtime?: string;
-  duration?: string;
-  actualWorkDays?: number;
-  constructionMethod?: string;
-  directDependency?: string;
-  remarks?: string;
-  selectedConstructionMethod?: string;
-  materialCost?: number;
-  laborCost?: number;
-  floor?: number;
-};
+import type { PlanTask, TimelineScale } from "@/types/domain/plan";
 
 const TIMELINE_SCALE_LABELS: Record<TimelineScale, string> = {
   day: "天",
@@ -88,14 +67,14 @@ export function PlanAndOrders() {
   const [floorFilter, setFloorFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  const [selectedItem, setSelectedItem] = useState<TaskItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<PlanTask | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editedItem, setEditedItem] = useState<TaskItem | null>(null);
+  const [editedItem, setEditedItem] = useState<PlanTask | null>(null);
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
   const [selectedTaskForDetail, setSelectedTaskForDetail] =
-    useState<TaskItem | null>(null);
+    useState<PlanTask | null>(null);
   const [timelineScale, setTimelineScale] = useState<TimelineScale>("day");
 
   const { scheduleItems, isLoading, error, refetch } = useProjectSchedule();
