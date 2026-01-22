@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { User, Phone, Users, Briefcase, DollarSign, Calendar, CheckCircle2, XCircle, Clock } from "lucide-react";
-import type { Team } from "@/types/craftsman";
+import type { Team } from "@/types/domain/craftsman";
 
 interface TeamDetailDialogProps {
   open: boolean;

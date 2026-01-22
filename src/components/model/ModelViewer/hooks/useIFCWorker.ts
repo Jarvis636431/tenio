@@ -11,7 +11,7 @@ import type {
   ProgressCallback,
   SuccessCallback,
   ErrorCallback,
-} from '../types/worker.types';
+} from "@/types/domain/worker";
 
 // ============================================================================
 // Hook 选项

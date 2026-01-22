@@ -5,7 +5,7 @@
 
 import { IFCLoader } from 'web-ifc-three/IFCLoader';
 import * as THREE from 'three';
-import type { WorkerMessage, WorkerResponse, SerializedModel, SerializedMesh } from '../types/worker.types';
+import type { WorkerMessage, WorkerResponse, SerializedModel, SerializedMesh } from "@/types/domain/worker";
 
 // ============================================================================
 // Worker 状态

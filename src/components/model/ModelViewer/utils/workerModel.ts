@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { IFCLoader } from 'web-ifc-three/IFCLoader';
-import type { SerializedModel, LoadingState } from '@/types/worker.types';
+import type { SerializedModel, LoadingState } from '@/types/domain/worker';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Dispatch, SetStateAction } from 'react';
 import type { buildIdCaches } from './ifcCaches';

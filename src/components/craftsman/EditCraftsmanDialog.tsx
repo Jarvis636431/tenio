@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Craftsman } from "@/types/craftsman";
+import { Craftsman } from "@/types/domain/craftsman";
 
 interface EditCraftsmanDialogProps {
   open: boolean;

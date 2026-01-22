@@ -9,7 +9,13 @@ import { EditCraftsmanDialog } from "@/components/craftsman/EditCraftsmanDialog"
 import { ImportCraftsmanDialog } from "@/components/craftsman/ImportCraftsmanDialog";
 import { TeamDetailDialog } from "@/components/craftsman/TeamDetailDialog";
 import { useToast } from "@/hooks/use-toast";
-import type { Craftsman, Team } from "@/types/craftsman";
+import {
+  Craftsman,
+  ImportError,
+  ImportResult,
+  Team,
+  EntryExitRecord
+} from "@/types/domain/craftsman";
 
 interface CraftsmanManagementProps {
   onActionsChange?: (actions: React.ReactNode) => void;

@@ -9,7 +9,11 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Craftsman, ImportResult } from "@/types/craftsman";
+import {
+  ImportError,
+  ImportResult,
+  Craftsman
+} from "@/types/domain/craftsman";
 
 interface ImportCraftsmanDialogProps {
   open: boolean;
