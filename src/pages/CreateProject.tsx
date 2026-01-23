@@ -12,6 +12,17 @@ import {
 } from "@/services/project-service";
 import { useAuth } from "@/hooks/useAuth";
 import { MapContainer } from "@/components/map/MapContainer";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+  ReferenceArea,
+} from "recharts";
 
 export default function CreateProject() {
   const [projectDoc, setProjectDoc] = useState<File | null>(null);
@@ -19,12 +30,13 @@ export default function CreateProject() {
   const [projectName, setProjectName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [currentStep, setCurrentStep] = useState<
-    "upload" | "confirm" | "generating"
+    "upload" | "confirm" | "plan-selection" | "generating"
   >("upload");
   const [siteAddress, setSiteAddress] = useState("");
   const [siteCoordinates, setSiteCoordinates] = useState<
     [number, number] | null
   >(null);
+  const [selectedPlan, setSelectedPlan] = useState<number>(1);
 
   // 项目基础信息状态
   const [projectInfo, setProjectInfo] = useState({
@@ -129,6 +141,10 @@ export default function CreateProject() {
     setCurrentStep("confirm");
   };
 
+  const handleNextToPlan = () => {
+    setCurrentStep("plan-selection");
+  };
+
   const handleGenerateProcess = async () => {
     setCurrentStep("generating");
     setIsCreating(true);
@@ -206,8 +222,57 @@ export default function CreateProject() {
   };
 
   const handleBack = () => {
-    setCurrentStep("upload");
+    if (currentStep === "plan-selection") {
+      setCurrentStep("confirm");
+    } else if (currentStep === "confirm") {
+      setCurrentStep("upload");
+    }
   };
+
+  // 模拟工期-成本数据
+  const planChartData = [
+    { month: 10, cost: 9500 },
+    { month: 12, cost: 8800 },
+    { month: 14, cost: 8400 },
+    { month: 16, cost: 8200 },
+    { month: 18, cost: 8100 }, // 最优成本点
+    { month: 20, cost: 8150 },
+    { month: 22, cost: 8300 },
+    { month: 24, cost: 8600 },
+    { month: 26, cost: 9000 },
+  ];
+
+  const planOptions = [
+    {
+      id: 1,
+      title: "施工方案1",
+      endDate: "2027年3月16日",
+      cost: "8450万元",
+      tag: "推荐",
+      tagColor: "bg-yellow-400",
+      costTag: "低",
+      durationTag: "早",
+    },
+    {
+      id: 2,
+      title: "施工方案2",
+      endDate: "2027年3月29日",
+      cost: "8327万元",
+      costTag: "低",
+    },
+    {
+      id: 3,
+      title: "施工方案3",
+      endDate: "2027年4月16日",
+      cost: "8747万元",
+    },
+    {
+      id: 4,
+      title: "施工方案4",
+      endDate: "2027年5月24日",
+      cost: "9447万元",
+    },
+  ];
 
   // 渲染上传卡片辅助函数
   const renderUploadCard = (
@@ -324,7 +389,9 @@ export default function CreateProject() {
         <h1 className="text-xl font-semibold text-gray-900">新建项目</h1>
       </div>
 
-      <div className="flex-1 overflow-auto p-12">
+      <div
+        className={`flex-1 overflow-auto ${currentStep === "plan-selection" ? "p-4" : "p-12"}`}
+      >
         {currentStep === "upload" ? (
           <div className="max-w-[1000px] mx-auto min-h-full flex flex-col justify-center">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 items-center">
@@ -397,7 +464,9 @@ export default function CreateProject() {
             </div>
           </div>
         ) : (
-          <div className="max-w-[800px] mx-auto min-h-full flex flex-col justify-center">
+          <div
+            className={`mx-auto h-full flex flex-col justify-center ${currentStep === "plan-selection" ? "max-w-full" : "max-w-[800px]"}`}
+          >
             {currentStep === "confirm" && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1000px] mx-auto py-2">
                 {/* 顶部标题与地图横幅 */}
@@ -610,9 +679,162 @@ export default function CreateProject() {
                     返回上一步
                   </Button>
                   <Button
-                    onClick={handleGenerateProcess}
+                    onClick={handleNextToPlan}
                     disabled={isCreating}
                     className="w-56 h-10 text-sm font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
+                  >
+                    开始分析
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === "plan-selection" && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 w-full h-full flex flex-col">
+                <div className="bg-gray-50/50 rounded-xl p-6 flex-1 min-h-[360px] relative">
+                  <div className="absolute top-4 left-6 text-sm text-gray-400">
+                    成本
+                  </div>
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
+                    <div className="text-xl font-medium text-gray-800">
+                      18个月
+                    </div>
+                    <div className="text-sm text-gray-400">工期上限</div>
+                  </div>
+                  <div className="absolute bottom-2 right-6 text-sm text-gray-400">
+                    工期时间
+                  </div>
+
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={planChartData}
+                      margin={{ top: 40, right: 30, left: 20, bottom: 20 }}
+                    >
+                      <CartesianGrid
+                        vertical={true}
+                        horizontal={false}
+                        strokeDasharray="3 3"
+                        stroke="#eee"
+                      />
+                      <XAxis
+                        dataKey="month"
+                        type="number"
+                        domain={["dataMin", "dataMax"]}
+                        hide
+                      />
+                      <YAxis hide domain={["dataMin - 500", "dataMax + 500"]} />
+                      <Tooltip
+                        contentStyle={{
+                          borderRadius: "8px",
+                          border: "none",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        }}
+                        formatter={(value: number) => [`${value}万元`, "成本"]}
+                        labelFormatter={(label) => `${label}个月`}
+                      />
+                      {/* 模拟选中区域 */}
+                      <ReferenceArea
+                        x1={16}
+                        x2={20}
+                        strokeOpacity={0}
+                        fill="#fee2e2"
+                        fillOpacity={0.5}
+                      />
+                      <ReferenceLine
+                        x={18}
+                        stroke="#ef4444"
+                        strokeDasharray="3 3"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="cost"
+                        stroke="#93c5fd"
+                        strokeWidth={4}
+                        dot={{
+                          r: 4,
+                          fill: "white",
+                          stroke: "#93c5fd",
+                          strokeWidth: 2,
+                        }}
+                        activeDot={{
+                          r: 6,
+                          fill: "#3b82f6",
+                          stroke: "white",
+                          strokeWidth: 2,
+                        }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="grid grid-cols-4 gap-4 h-[200px]">
+                  {planOptions.map((plan) => (
+                    <div
+                      key={plan.id}
+                      onClick={() => setSelectedPlan(plan.id)}
+                      className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 h-full flex flex-col justify-between shadow-sm ${
+                        selectedPlan === plan.id
+                          ? "border-yellow-400 bg-yellow-50/30"
+                          : "border-transparent bg-gray-50 hover:bg-gray-100"
+                      }`}
+                    >
+                      {plan.tag && (
+                        <div
+                          className={`absolute top-0 right-0 ${plan.tagColor} text-white text-sm px-3 py-1 rounded-bl-lg rounded-tr-md shadow-sm`}
+                        >
+                          {plan.tag}
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <h3 className="font-bold text-xl text-gray-900">
+                          {plan.title}
+                        </h3>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between text-base">
+                          <span className="text-gray-700 font-medium">
+                            {plan.endDate}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            预期结束日期
+                          </span>
+                          {plan.durationTag && (
+                            <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded font-medium">
+                              {plan.durationTag}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-base">
+                          <span className="text-gray-900 font-bold text-xl">
+                            {plan.cost}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            预期建设成本
+                          </span>
+                          {plan.costTag && (
+                            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded font-medium">
+                              {plan.costTag}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-center gap-6 pt-2 pb-2 shrink-0">
+                  <Button
+                    variant="ghost"
+                    onClick={handleBack}
+                    className="w-32 h-12 text-base font-medium text-[#1975D2] hover:text-[#1564b3] hover:bg-blue-50 bg-gray-50 rounded-lg"
+                  >
+                    返回上一步
+                  </Button>
+                  <Button
+                    onClick={handleGenerateProcess}
+                    className="w-56 h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
                   >
                     开始分析
                   </Button>
