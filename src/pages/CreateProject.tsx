@@ -1,8 +1,18 @@
 import { useState } from "react";
-import { Upload, FileText, Cloud, Check } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  Cloud,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Play,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/hooks/useProject";
@@ -37,6 +47,8 @@ export default function CreateProject() {
     [number, number] | null
   >(null);
   const [selectedPlan, setSelectedPlan] = useState<number>(1);
+  const [activeChartTab, setActiveChartTab] = useState("resource");
+  const [expandedProcess, setExpandedProcess] = useState<string | null>("P01");
 
   // 项目基础信息状态
   const [projectInfo, setProjectInfo] = useState({
@@ -147,6 +159,9 @@ export default function CreateProject() {
 
   const handleGenerateProcess = async () => {
     setCurrentStep("generating");
+  };
+
+  const handleCreateProject = async () => {
     setIsCreating(true);
 
     toast({
@@ -187,7 +202,7 @@ export default function CreateProject() {
       }
 
       // 模拟解析过程
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const newProject = {
         id: newProjectId,
@@ -215,7 +230,6 @@ export default function CreateProject() {
             : "项目创建过程中出现错误，请重试",
         variant: "destructive",
       });
-      setCurrentStep("confirm");
     } finally {
       setIsCreating(false);
     }
@@ -240,6 +254,44 @@ export default function CreateProject() {
     { month: 22, cost: 8300 },
     { month: 24, cost: 8600 },
     { month: 26, cost: 9000 },
+  ];
+
+  // 模拟详情页图表数据
+  const detailChartData = Array.from({ length: 12 }, (_, i) => ({
+    month: `2026-${i + 1}`,
+    value: Math.floor(Math.random() * 50) + 20 + i * 5,
+    fund: Math.floor(Math.random() * 1000) + 500 + i * 100,
+    progress: Math.min(100, (i + 1) * 8),
+  }));
+
+  const processList = [
+    {
+      id: "P01",
+      title: "主体结构标准层施工",
+      details: [
+        "测量放线：弹出柱、墙的位置线和水平控制线，轴线偏差需在±3mm内",
+        "墙柱钢筋绑扎：连接纵向主筋，绑扎箍筋，安装保护层垫块。",
+        "模板安装：搭建支架，安装墙板、梁板底模。检查模板平整度、支撑稳定性。",
+      ],
+    },
+    {
+      id: "P02",
+      title: "二次结构砌筑",
+      details: [
+        "植筋：钻孔、清孔、注胶、植入钢筋。",
+        "构造柱施工：绑扎钢筋，支模，浇筑混凝土。",
+      ],
+    },
+    {
+      id: "P03",
+      title: "外墙爬架提升",
+      details: ["附墙支座安装。", "架体提升。", "安全检查。"],
+    },
+    {
+      id: "P04",
+      title: "机电管线预埋",
+      details: ["定位划线。", "管路敷设。", "管路固定。"],
+    },
   ];
 
   const planOptions = [
@@ -390,7 +442,7 @@ export default function CreateProject() {
       </div>
 
       <div
-        className={`flex-1 overflow-auto ${currentStep === "plan-selection" ? "p-4" : "p-12"}`}
+        className={`flex-1 overflow-auto ${currentStep === "plan-selection" || currentStep === "generating" ? "p-4" : "p-12"}`}
       >
         {currentStep === "upload" ? (
           <div className="max-w-[1000px] mx-auto min-h-full flex flex-col justify-center">
@@ -465,7 +517,7 @@ export default function CreateProject() {
           </div>
         ) : (
           <div
-            className={`mx-auto h-full flex flex-col justify-center ${currentStep === "plan-selection" ? "max-w-full" : "max-w-[800px]"}`}
+            className={`mx-auto h-full flex flex-col ${currentStep === "generating" ? "justify-start" : "justify-center"} ${currentStep === "plan-selection" || currentStep === "generating" ? "w-full max-w-full" : "max-w-[800px]"}`}
           >
             {currentStep === "confirm" && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1000px] mx-auto py-2">
@@ -843,65 +895,241 @@ export default function CreateProject() {
             )}
 
             {currentStep === "generating" && (
-              <div className="flex flex-col items-center justify-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
-                <div className="relative">
-                  <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center">
-                    <Cloud className="h-12 w-12 text-[#1975D2] animate-pulse" />
+              <div className="w-full h-full flex flex-col space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-6 bg-[#1975D2] rounded-full"></div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {projectInfo.name || "住宅楼-04栋"}
+                  </h2>
+                </div>
+
+                <div className="flex-1 grid grid-cols-12 gap-6 min-h-0">
+                  {/* 左侧区域：3D模型 + 图表 */}
+                  <div className="col-span-8 flex flex-col gap-6 min-h-0">
+                    {/* 3D 模型区域 */}
+                    <div className="bg-gray-50 rounded-xl relative overflow-hidden flex-1 min-h-[300px] flex items-center justify-center border border-gray-100 shadow-sm group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-white/50 z-0"></div>
+
+                      {/* 模拟3D建筑模型 */}
+                      <div className="relative z-10 w-full h-full flex items-center justify-center p-8">
+                        <div className="relative w-full h-full max-w-lg max-h-80">
+                          {/* 简单的 CSS 3D 效果模拟 */}
+                          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-64 h-32 bg-gray-200 transform skew-x-12 rounded-lg shadow-xl border border-gray-300"></div>
+                          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-48 h-64 bg-white border border-gray-200 shadow-2xl flex flex-col items-center justify-end p-4 gap-2 transform -translate-x-4">
+                            <div className="w-full h-8 bg-blue-100 rounded"></div>
+                            <div className="w-full h-8 bg-blue-100 rounded"></div>
+                            <div className="w-full h-8 bg-blue-100 rounded"></div>
+                            <div className="w-full h-8 bg-blue-100 rounded"></div>
+                          </div>
+                          <div className="absolute bottom-14 left-1/4 w-24 h-32 bg-gray-100 border border-gray-200 shadow-lg"></div>
+                          <div className="absolute bottom-12 right-1/4 w-32 h-24 bg-gray-100 border border-gray-200 shadow-lg"></div>
+
+                          {/* AI 助手按钮 */}
+                          <div className="absolute bottom-4 right-4 z-20">
+                            <div className="w-16 h-16 bg-[#1975D2] rounded-full flex items-center justify-center shadow-lg shadow-blue-200 cursor-pointer hover:scale-105 transition-transform">
+                              <span className="text-white font-medium text-xs">
+                                AI助手
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 底部图表区域 */}
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-[320px] flex flex-col">
+                      <Tabs
+                        value={activeChartTab}
+                        onValueChange={setActiveChartTab}
+                        className="w-full h-full flex flex-col"
+                      >
+                        <TabsList className="bg-transparent justify-start p-0 h-auto border-b w-full rounded-none">
+                          <TabsTrigger
+                            value="resource"
+                            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1975D2] data-[state=active]:text-[#1975D2] rounded-none px-4 py-2"
+                          >
+                            资源曲线
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="fund"
+                            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1975D2] data-[state=active]:text-[#1975D2] rounded-none px-4 py-2"
+                          >
+                            资金曲线
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="progress"
+                            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1975D2] data-[state=active]:text-[#1975D2] rounded-none px-4 py-2"
+                          >
+                            进度曲线
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <div className="flex-1 min-h-0 pt-4 relative">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart
+                              data={detailChartData}
+                              margin={{
+                                top: 10,
+                                right: 10,
+                                left: 0,
+                                bottom: 20,
+                              }}
+                            >
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                vertical={false}
+                                stroke="#f0f0f0"
+                              />
+                              <XAxis dataKey="month" hide />
+                              <YAxis hide />
+                              <Tooltip
+                                contentStyle={{
+                                  borderRadius: "8px",
+                                  border: "none",
+                                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                }}
+                              />
+                              <Line
+                                type="monotone"
+                                dataKey={
+                                  activeChartTab === "resource"
+                                    ? "value"
+                                    : activeChartTab === "fund"
+                                      ? "fund"
+                                      : "progress"
+                                }
+                                stroke="#93c5fd"
+                                strokeWidth={3}
+                                dot={false}
+                                activeDot={{
+                                  r: 6,
+                                  fill: "#3b82f6",
+                                  stroke: "white",
+                                  strokeWidth: 2,
+                                }}
+                                fill="url(#colorGradient)"
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+
+                          {/* 时间轴覆盖层 */}
+                          <div className="absolute bottom-0 left-0 right-0 h-12 flex items-center px-4 border-t border-gray-100 bg-white/50 backdrop-blur-sm">
+                            <div className="w-full h-1.5 bg-gray-100 rounded-full relative">
+                              <div className="absolute left-0 top-0 bottom-0 w-[30%] bg-blue-200 rounded-full"></div>
+                              <div className="absolute left-[30%] top-1/2 -translate-y-1/2 w-4 h-4 bg-[#1975D2] border-2 border-white rounded-full shadow-sm z-10"></div>
+
+                              {/* 关键节点标记 */}
+                              <div
+                                className="absolute left-[40%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-red-500 rounded-full"
+                                title="春节节假日"
+                              ></div>
+                              <div
+                                className="absolute left-[70%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-yellow-500 rounded-full"
+                                title="秋收罢工"
+                              ></div>
+                            </div>
+
+                            <div className="absolute -bottom-6 left-4 text-xs text-gray-500">
+                              2026年
+                              <br />
+                              1月24日
+                            </div>
+                            <div className="absolute -bottom-6 right-4 text-xs text-gray-500 text-right">
+                              2026年
+                              <br />
+                              8月24日
+                            </div>
+
+                            {/* 事件标签 */}
+                            <div className="absolute -bottom-10 left-[40%] -translate-x-1/2 bg-[#D32F2F] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center">
+                              <span className="font-bold">春节节假日</span>
+                              <span className="text-[8px] opacity-80">
+                                请提前做好准备
+                              </span>
+                            </div>
+                            <div className="absolute -bottom-10 left-[70%] -translate-x-1/2 bg-[#FBC02D] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center">
+                              <span className="font-bold">秋收罢工</span>
+                              <span className="text-[8px] opacity-80 text-black">
+                                请提前做好准备
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </Tabs>
+                    </div>
                   </div>
-                  <div className="absolute -top-1 -right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center animate-bounce">
-                    <Check className="h-4 w-4 text-white" />
+
+                  {/* 右侧工序列表 */}
+                  <div className="col-span-4 bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col h-full">
+                    <div className="flex items-center gap-2 mb-4 pl-2 border-l-4 border-[#1975D2]">
+                      <h3 className="font-bold text-gray-900">当日工序</h3>
+                    </div>
+
+                    <ScrollArea className="flex-1 pr-4">
+                      <div className="space-y-3">
+                        {processList.map((process) => (
+                          <div
+                            key={process.id}
+                            className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md"
+                          >
+                            <div
+                              className="flex items-center justify-between p-4 cursor-pointer bg-gray-50/50"
+                              onClick={() =>
+                                setExpandedProcess(
+                                  expandedProcess === process.id
+                                    ? null
+                                    : process.id,
+                                )
+                              }
+                            >
+                              <span className="font-medium text-gray-800">
+                                {process.id} {process.title}
+                              </span>
+                              {expandedProcess === process.id ? (
+                                <ChevronUp className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 text-gray-500" />
+                              )}
+                            </div>
+
+                            {expandedProcess === process.id && (
+                              <div className="p-4 pt-0 bg-gray-50/30">
+                                <div className="space-y-4 relative pl-4 mt-3">
+                                  {/* 左侧连接线 */}
+                                  <div className="absolute left-0 top-2 bottom-2 w-px bg-gray-200"></div>
+
+                                  {process.details.map((detail, index) => (
+                                    <div key={index} className="relative">
+                                      <div className="absolute -left-[21px] top-2 w-2.5 h-2.5 bg-gray-300 rounded-full border-2 border-white"></div>
+                                      <p className="text-sm text-gray-600 leading-relaxed">
+                                        {detail}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
                   </div>
                 </div>
 
-                <div className="space-y-3 text-center max-w-md">
-                  <h3 className="text-2xl font-semibold text-gray-900">
-                    正在生成施工工序
-                  </h3>
-                  <p className="text-gray-500">
-                    系统正在深度分析CAD图纸与设计说明，智能生成施工计划...
-                  </p>
-                </div>
-
-                <div className="w-full max-w-md bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                      <Check className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        文件上传与解析
-                      </p>
-                      <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
-                        <div className="bg-green-500 h-full rounded-full w-full"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 animate-pulse">
-                      <div className="w-2.5 h-2.5 bg-[#1975D2] rounded-full"></div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        构建施工工序图谱
-                      </p>
-                      <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
-                        <div className="bg-[#1975D2] h-full rounded-full w-2/3 animate-[loading_2s_ease-in-out_infinite]"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 opacity-50">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                      <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        生成甘特图与资源计划
-                      </p>
-                      <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2"></div>
-                    </div>
-                  </div>
+                <div className="flex justify-between items-center pt-2 pb-2 shrink-0">
+                  <Button
+                    variant="ghost"
+                    onClick={handleBack}
+                    className="w-32 h-12 text-base font-medium text-[#1975D2] hover:text-[#1564b3] hover:bg-blue-50 bg-gray-50 rounded-lg"
+                  >
+                    返回上一步
+                  </Button>
+                  <Button
+                    onClick={handleCreateProject}
+                    className="w-56 h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
+                  >
+                    查看详情
+                  </Button>
                 </div>
               </div>
             )}
