@@ -1,12 +1,5 @@
 import { useState } from "react";
 import { Upload, FileText, Cloud, Check } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +11,6 @@ import {
   uploadProjectDocs,
 } from "@/services/project-service";
 import { useAuth } from "@/hooks/useAuth";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { MapContainer } from "@/components/map/MapContainer";
 
 export default function CreateProject() {
@@ -37,12 +29,17 @@ export default function CreateProject() {
   // 项目基础信息状态
   const [projectInfo, setProjectInfo] = useState({
     name: "",
-    location: "河北省石家庄市",
-    floors: "小高层住宅 11 层",
+    location: "天津市",
+    floors: "地下1层，地上5层",
     heightDiff: "0.6 米",
-    structure: "剪力墙",
-    structureSystem: "剪力墙结构体系",
+    structure: "框架结构",
+    structureSystem: "框架结构体系",
     safetyLevel: "二级",
+    area: "9820m²",
+    buildingCount: "1",
+    startDate: "2026年3月1日",
+    durationLimit: "18个月",
+    remarks: "",
   });
 
   const { toast } = useToast();
@@ -400,199 +397,292 @@ export default function CreateProject() {
             </div>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto mt-8">
-            <Card>
-              <CardContent className="p-8">
-                {currentStep === "confirm" && (
-                  <div className="space-y-8">
-                    <div className="p-4 bg-blue-50 mb-6">
-                      <div className="flex items-start space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-                        </div>
-                        <div className="text-sm text-blue-800">
-                          <p className="font-medium mb-1">
-                            系统已解析项目基础信息
-                          </p>
-                          <p>
-                            请确认以上信息无误后，点击"生成工序"开始创建施工工序计划。
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+          <div className="max-w-[800px] mx-auto min-h-full flex flex-col justify-center">
+            {currentStep === "confirm" && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1000px] mx-auto py-2">
+                {/* 顶部标题与地图横幅 */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-6 bg-[#1975D2] rounded-full"></div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {projectInfo.name || "住宅楼-04栋"}
+                    </h2>
+                  </div>
 
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label htmlFor="project-name-edit">项目名称</Label>
-                          <Input
-                            id="project-name-edit"
-                            value={projectInfo.name}
-                            onChange={(e) =>
-                              setProjectInfo((prev) => ({
-                                ...prev,
-                                name: e.target.value,
-                              }))
-                            }
-                            className="bg-white h-10"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="project-location">建设地点</Label>
-                          <Input
-                            id="project-location"
-                            value={projectInfo.location}
-                            onChange={(e) =>
-                              setProjectInfo((prev) => ({
-                                ...prev,
-                                location: e.target.value,
-                              }))
-                            }
-                            className="bg-white h-10"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="project-floors">层数</Label>
-                          <Input
-                            id="project-floors"
-                            value={projectInfo.floors}
-                            onChange={(e) =>
-                              setProjectInfo((prev) => ({
-                                ...prev,
-                                floors: e.target.value,
-                              }))
-                            }
-                            className="bg-white h-10"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="project-height-diff">
-                            室内外高差
-                          </Label>
-                          <Input
-                            id="project-height-diff"
-                            value={projectInfo.heightDiff}
-                            onChange={(e) =>
-                              setProjectInfo((prev) => ({
-                                ...prev,
-                                heightDiff: e.target.value,
-                              }))
-                            }
-                            className="bg-white h-10"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="project-structure">结构形式</Label>
-                          <Input
-                            id="project-structure"
-                            value={projectInfo.structure}
-                            onChange={(e) =>
-                              setProjectInfo((prev) => ({
-                                ...prev,
-                                structure: e.target.value,
-                              }))
-                            }
-                            className="bg-white h-10"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="project-structure-system">
-                            结构体系
-                          </Label>
-                          <Input
-                            id="project-structure-system"
-                            value={projectInfo.structureSystem}
-                            onChange={(e) =>
-                              setProjectInfo((prev) => ({
-                                ...prev,
-                                structureSystem: e.target.value,
-                              }))
-                            }
-                            className="bg-white h-10"
-                          />
-                        </div>
-                        <div className="space-y-2 col-span-2">
-                          <Label htmlFor="project-safety-level">
-                            建筑结构安全等级
-                          </Label>
-                          <Input
-                            id="project-safety-level"
-                            value={projectInfo.safetyLevel}
-                            onChange={(e) =>
-                              setProjectInfo((prev) => ({
-                                ...prev,
-                                safetyLevel: e.target.value,
-                              }))
-                            }
-                            className="bg-white h-10"
-                          />
-                        </div>
-                      </div>
-                    </div>
+                  <div className="h-[120px] w-full rounded-xl overflow-hidden shadow-sm border border-gray-100 relative">
+                    <MapContainer
+                      className="w-full h-full pointer-events-none opacity-90"
+                      selectedPosition={siteCoordinates}
+                      onSelect={() => {}}
+                    />
+                    {/* 遮罩层，增加视觉质感 */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent pointer-events-none"></div>
+                  </div>
+                </div>
 
-                    <div className="flex justify-end gap-3 pt-4">
-                      <Button
-                        variant="outline"
-                        onClick={handleBack}
-                        className="h-10 px-6"
-                      >
-                        上一步
-                      </Button>
-                      <Button
-                        onClick={handleGenerateProcess}
-                        disabled={isCreating}
-                        className="h-10 px-6"
-                      >
-                        生成工序
-                      </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                  {/* 左侧详细信息表单 */}
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-[80px_1fr] items-center gap-3">
+                      <Label className="text-gray-600 font-medium text-sm text-right">
+                        建筑面积
+                      </Label>
+                      <Input
+                        value={projectInfo.area}
+                        onChange={(e) =>
+                          setProjectInfo((p) => ({
+                            ...p,
+                            area: e.target.value,
+                          }))
+                        }
+                        className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+                      />
+                    </div>
+                    <div className="grid grid-cols-[80px_1fr] items-center gap-3">
+                      <Label className="text-gray-600 font-medium text-sm text-right">
+                        建筑层数
+                      </Label>
+                      <Input
+                        value={projectInfo.floors}
+                        onChange={(e) =>
+                          setProjectInfo((p) => ({
+                            ...p,
+                            floors: e.target.value,
+                          }))
+                        }
+                        className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+                      />
+                    </div>
+                    <div className="grid grid-cols-[80px_1fr] items-center gap-3">
+                      <Label className="text-gray-600 font-medium text-sm text-right">
+                        楼栋数
+                      </Label>
+                      <Input
+                        value={projectInfo.buildingCount}
+                        onChange={(e) =>
+                          setProjectInfo((p) => ({
+                            ...p,
+                            buildingCount: e.target.value,
+                          }))
+                        }
+                        className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+                      />
+                    </div>
+                    <div className="grid grid-cols-[80px_1fr] items-center gap-3">
+                      <Label className="text-gray-600 font-medium text-sm text-right">
+                        结构类型
+                      </Label>
+                      <Input
+                        value={projectInfo.structure}
+                        onChange={(e) =>
+                          setProjectInfo((p) => ({
+                            ...p,
+                            structure: e.target.value,
+                          }))
+                        }
+                        className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+                      />
+                    </div>
+                    <div className="grid grid-cols-[80px_1fr] items-center gap-3">
+                      <Label className="text-gray-600 font-medium text-sm text-right">
+                        地区
+                      </Label>
+                      <Input
+                        value={projectInfo.location}
+                        onChange={(e) =>
+                          setProjectInfo((p) => ({
+                            ...p,
+                            location: e.target.value,
+                          }))
+                        }
+                        className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+                      />
+                    </div>
+                    <div className="grid grid-cols-[80px_1fr] items-center gap-3">
+                      <Label className="text-gray-600 font-medium text-sm text-right">
+                        抗震等级
+                      </Label>
+                      <Input
+                        value={projectInfo.safetyLevel}
+                        onChange={(e) =>
+                          setProjectInfo((p) => ({
+                            ...p,
+                            safetyLevel: e.target.value,
+                          }))
+                        }
+                        className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+                      />
                     </div>
                   </div>
-                )}
 
-                {currentStep === "generating" && (
-                  <div className="space-y-8 py-8">
-                    <div className="flex flex-col items-center justify-center space-y-6 text-center">
-                      <div className="relative">
-                        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center animate-pulse">
-                          <Cloud className="h-10 w-10 text-blue-600" />
+                  {/* 右侧分析与补充信息 */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-gray-900 font-medium text-sm">
+                        周边场地分析
+                      </Label>
+                      <div className="bg-gray-50/80 p-4 rounded-lg space-y-2">
+                        <div className="flex items-center gap-2 text-gray-800 font-medium text-sm">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="lucide lucide-person-standing"
+                          >
+                            <circle cx="12" cy="5" r="1" />
+                            <path d="m9 20 3-6 3 6" />
+                            <path d="m6 8 6 2 6-2" />
+                            <path d="M12 10v4" />
+                          </svg>
+                          <span>养老院</span>
                         </div>
-                        <div className="absolute top-0 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-white animate-bounce"></div>
-                      </div>
-
-                      <div className="space-y-2 max-w-md">
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          正在生成施工工序
-                        </h3>
-                        <p className="text-gray-500">
-                          系统正在分析上传文件并生成施工计划，这可能需要几分钟时间，请稍候...
+                        <p className="text-gray-600 text-xs leading-relaxed">
+                          注意
+                          <span className="text-red-500 mx-1">夜间施工</span>,
+                          注意<span className="text-red-500 mx-1">噪声</span>,
+                          注意<span className="text-red-500 mx-1">扬尘</span>
                         </p>
                       </div>
+                    </div>
 
-                      <div className="w-full max-w-md space-y-4 text-left bg-gray-50 p-6 rounded-lg border border-gray-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <p className="text-sm font-medium text-gray-700">
-                            正在上传项目文件...
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                          <p className="text-sm font-medium text-gray-700">
-                            正在解析CAD图纸结构...
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                          <p className="text-sm text-gray-500">
-                            等待生成施工工序...
-                          </p>
-                        </div>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-[100px_1fr] items-center gap-3">
+                        <Label className="text-gray-600 font-medium text-sm text-right">
+                          计划开工时间
+                        </Label>
+                        <Input
+                          value={projectInfo.startDate}
+                          onChange={(e) =>
+                            setProjectInfo((p) => ({
+                              ...p,
+                              startDate: e.target.value,
+                            }))
+                          }
+                          className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+                        />
+                      </div>
+                      <div className="grid grid-cols-[100px_1fr] items-center gap-3">
+                        <Label className="text-gray-600 font-medium text-sm text-right">
+                          工期上限
+                        </Label>
+                        <Input
+                          value={projectInfo.durationLimit}
+                          onChange={(e) =>
+                            setProjectInfo((p) => ({
+                              ...p,
+                              durationLimit: e.target.value,
+                            }))
+                          }
+                          className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+                        />
+                      </div>
+                      <div className="grid grid-cols-[100px_1fr] items-center gap-3">
+                        <Label className="text-gray-600 font-medium text-sm text-right">
+                          其他补充
+                        </Label>
+                        <Input
+                          value={projectInfo.remarks}
+                          onChange={(e) =>
+                            setProjectInfo((p) => ({
+                              ...p,
+                              remarks: e.target.value,
+                            }))
+                          }
+                          className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+                        />
                       </div>
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+
+                <div className="flex justify-center gap-6 pt-6">
+                  <Button
+                    variant="ghost"
+                    onClick={handleBack}
+                    className="w-32 h-10 text-sm font-medium text-[#1975D2] hover:text-[#1564b3] hover:bg-blue-50 bg-gray-50 rounded-lg"
+                  >
+                    返回上一步
+                  </Button>
+                  <Button
+                    onClick={handleGenerateProcess}
+                    disabled={isCreating}
+                    className="w-56 h-10 text-sm font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
+                  >
+                    开始分析
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === "generating" && (
+              <div className="flex flex-col items-center justify-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
+                <div className="relative">
+                  <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center">
+                    <Cloud className="h-12 w-12 text-[#1975D2] animate-pulse" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center animate-bounce">
+                    <Check className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-center max-w-md">
+                  <h3 className="text-2xl font-semibold text-gray-900">
+                    正在生成施工工序
+                  </h3>
+                  <p className="text-gray-500">
+                    系统正在深度分析CAD图纸与设计说明，智能生成施工计划...
+                  </p>
+                </div>
+
+                <div className="w-full max-w-md bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                      <Check className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        文件上传与解析
+                      </p>
+                      <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div className="bg-green-500 h-full rounded-full w-full"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 animate-pulse">
+                      <div className="w-2.5 h-2.5 bg-[#1975D2] rounded-full"></div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        构建施工工序图谱
+                      </p>
+                      <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div className="bg-[#1975D2] h-full rounded-full w-2/3 animate-[loading_2s_ease-in-out_infinite]"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 opacity-50">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                      <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        生成甘特图与资源计划
+                      </p>
+                      <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
