@@ -1109,17 +1109,17 @@ export default function CreateProject() {
 
                     <div className="pt-4 mt-auto space-y-3">
                       <Button
-                        onClick={handleCreateProject}
-                        className="w-full h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
-                      >
-                        查看详情
-                      </Button>
-                      <Button
                         variant="ghost"
                         onClick={handleBack}
                         className="w-full h-12 text-base font-medium text-[#1975D2] hover:text-[#1564b3] hover:bg-blue-50 bg-gray-50 rounded-lg"
                       >
                         返回上一步
+                      </Button>
+                      <Button
+                        onClick={handleCreateProject}
+                        className="w-full h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
+                      >
+                        查看详情
                       </Button>
                     </div>
                   </div>
