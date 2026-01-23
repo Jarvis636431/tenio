@@ -261,7 +261,6 @@ export default function CreateProject() {
     month: `2026-${i + 1}`,
     value: Math.floor(Math.random() * 50) + 20 + i * 5,
     fund: Math.floor(Math.random() * 1000) + 500 + i * 100,
-    progress: Math.min(100, (i + 1) * 8),
   }));
 
   const processList = [
@@ -956,64 +955,58 @@ export default function CreateProject() {
                           >
                             资金曲线
                           </TabsTrigger>
-                          <TabsTrigger
-                            value="progress"
-                            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1975D2] data-[state=active]:text-[#1975D2] rounded-none px-4 py-2"
-                          >
-                            进度曲线
-                          </TabsTrigger>
                         </TabsList>
 
-                        <div className="flex-1 min-h-0 pt-4 relative">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart
-                              data={detailChartData}
-                              margin={{
-                                top: 10,
-                                right: 10,
-                                left: 0,
-                                bottom: 20,
-                              }}
-                            >
-                              <CartesianGrid
-                                strokeDasharray="3 3"
-                                vertical={false}
-                                stroke="#f0f0f0"
-                              />
-                              <XAxis dataKey="month" hide />
-                              <YAxis hide />
-                              <Tooltip
-                                contentStyle={{
-                                  borderRadius: "8px",
-                                  border: "none",
-                                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        <div className="flex-1 flex flex-col min-h-0 pt-4 relative">
+                          <div className="flex-1 min-h-0 pb-12">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart
+                                data={detailChartData}
+                                margin={{
+                                  top: 10,
+                                  right: 10,
+                                  left: 0,
+                                  bottom: 20,
                                 }}
-                              />
-                              <Line
-                                type="monotone"
-                                dataKey={
-                                  activeChartTab === "resource"
-                                    ? "value"
-                                    : activeChartTab === "fund"
-                                      ? "fund"
-                                      : "progress"
-                                }
-                                stroke="#93c5fd"
-                                strokeWidth={3}
-                                dot={false}
-                                activeDot={{
-                                  r: 6,
-                                  fill: "#3b82f6",
-                                  stroke: "white",
-                                  strokeWidth: 2,
-                                }}
-                                fill="url(#colorGradient)"
-                              />
-                            </LineChart>
-                          </ResponsiveContainer>
+                              >
+                                <CartesianGrid
+                                  strokeDasharray="3 3"
+                                  vertical={false}
+                                  stroke="#f0f0f0"
+                                />
+                                <XAxis dataKey="month" hide />
+                                <YAxis hide />
+                                <Tooltip
+                                  contentStyle={{
+                                    borderRadius: "8px",
+                                    border: "none",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                  }}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey={
+                                    activeChartTab === "resource"
+                                      ? "value"
+                                      : "fund"
+                                  }
+                                  stroke="#93c5fd"
+                                  strokeWidth={3}
+                                  dot={false}
+                                  activeDot={{
+                                    r: 6,
+                                    fill: "#3b82f6",
+                                    stroke: "white",
+                                    strokeWidth: 2,
+                                  }}
+                                  fill="url(#colorGradient)"
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
 
                           {/* 时间轴覆盖层 */}
-                          <div className="absolute bottom-0 left-0 right-0 h-12 flex items-center px-4 border-t border-gray-100 bg-white/50 backdrop-blur-sm">
+                          <div className="absolute bottom-0 left-0 right-0 h-16 flex items-end pb-2 px-4 border-t border-gray-100 bg-white/50 backdrop-blur-sm">
                             <div className="w-full h-1.5 bg-gray-100 rounded-full relative">
                               <div className="absolute left-0 top-0 bottom-0 w-[30%] bg-blue-200 rounded-full"></div>
                               <div className="absolute left-[30%] top-1/2 -translate-y-1/2 w-4 h-4 bg-[#1975D2] border-2 border-white rounded-full shadow-sm z-10"></div>
@@ -1113,23 +1106,23 @@ export default function CreateProject() {
                         ))}
                       </div>
                     </ScrollArea>
-                  </div>
-                </div>
 
-                <div className="flex justify-between items-center pt-2 pb-2 shrink-0">
-                  <Button
-                    variant="ghost"
-                    onClick={handleBack}
-                    className="w-32 h-12 text-base font-medium text-[#1975D2] hover:text-[#1564b3] hover:bg-blue-50 bg-gray-50 rounded-lg"
-                  >
-                    返回上一步
-                  </Button>
-                  <Button
-                    onClick={handleCreateProject}
-                    className="w-56 h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
-                  >
-                    查看详情
-                  </Button>
+                    <div className="pt-4 mt-auto space-y-3">
+                      <Button
+                        onClick={handleCreateProject}
+                        className="w-full h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
+                      >
+                        查看详情
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={handleBack}
+                        className="w-full h-12 text-base font-medium text-[#1975D2] hover:text-[#1564b3] hover:bg-blue-50 bg-gray-50 rounded-lg"
+                      >
+                        返回上一步
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
