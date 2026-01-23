@@ -130,9 +130,7 @@ function AppRoutes({ auth }: { auth: AuthState }) {
           path="/create-project"
           element={
             <ProtectedRoute auth={auth}>
-              <Layout>
-                <CreateProject />
-              </Layout>
+               <CreateProject />
             </ProtectedRoute>
           }
         />
