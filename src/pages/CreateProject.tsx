@@ -904,9 +904,9 @@ export default function CreateProject() {
 
                 <div className="flex-1 grid grid-cols-12 gap-6 min-h-0">
                   {/* 左侧区域：3D模型 + 图表 */}
-                  <div className="col-span-8 flex flex-col gap-6 min-h-0">
-                    {/* 3D 模型区域 */}
-                    <div className="bg-gray-50 rounded-xl relative overflow-hidden flex-1 min-h-[300px] flex items-center justify-center border border-gray-100 shadow-sm group">
+                  <div className="col-span-8 flex flex-col gap-4 min-h-0 h-full">
+                    {/* 3D 模型区域 - 固定高度 */}
+                    <div className="bg-gray-50 rounded-xl relative overflow-hidden h-[300px] shrink-0 flex items-center justify-center border border-gray-100 shadow-sm group">
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-white/50 z-0"></div>
 
                       {/* 模拟3D建筑模型 */}
@@ -936,7 +936,7 @@ export default function CreateProject() {
                     </div>
 
                     {/* 底部图表区域 */}
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-[320px] flex flex-col">
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-[220px] flex flex-col">
                       <Tabs
                         value={activeChartTab}
                         onValueChange={setActiveChartTab}
@@ -958,7 +958,7 @@ export default function CreateProject() {
                         </TabsList>
 
                         <div className="flex-1 flex flex-col min-h-0 pt-4 relative">
-                          <div className="flex-1 min-h-0 pb-12">
+                          <div className="flex-1 min-h-0">
                             <ResponsiveContainer width="100%" height="100%">
                               <LineChart
                                 data={detailChartData}
@@ -1004,51 +1004,51 @@ export default function CreateProject() {
                               </LineChart>
                             </ResponsiveContainer>
                           </div>
-
-                          {/* 时间轴覆盖层 */}
-                          <div className="absolute bottom-0 left-0 right-0 h-16 flex items-end pb-2 px-4 border-t border-gray-100 bg-white/50 backdrop-blur-sm">
-                            <div className="w-full h-1.5 bg-gray-100 rounded-full relative">
-                              <div className="absolute left-0 top-0 bottom-0 w-[30%] bg-blue-200 rounded-full"></div>
-                              <div className="absolute left-[30%] top-1/2 -translate-y-1/2 w-4 h-4 bg-[#1975D2] border-2 border-white rounded-full shadow-sm z-10"></div>
-
-                              {/* 关键节点标记 */}
-                              <div
-                                className="absolute left-[40%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-red-500 rounded-full"
-                                title="春节节假日"
-                              ></div>
-                              <div
-                                className="absolute left-[70%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-yellow-500 rounded-full"
-                                title="秋收罢工"
-                              ></div>
-                            </div>
-
-                            <div className="absolute -bottom-6 left-4 text-xs text-gray-500">
-                              2026年
-                              <br />
-                              1月24日
-                            </div>
-                            <div className="absolute -bottom-6 right-4 text-xs text-gray-500 text-right">
-                              2026年
-                              <br />
-                              8月24日
-                            </div>
-
-                            {/* 事件标签 */}
-                            <div className="absolute -bottom-10 left-[40%] -translate-x-1/2 bg-[#D32F2F] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center">
-                              <span className="font-bold">春节节假日</span>
-                              <span className="text-[8px] opacity-80">
-                                请提前做好准备
-                              </span>
-                            </div>
-                            <div className="absolute -bottom-10 left-[70%] -translate-x-1/2 bg-[#FBC02D] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center">
-                              <span className="font-bold">秋收罢工</span>
-                              <span className="text-[8px] opacity-80 text-black">
-                                请提前做好准备
-                              </span>
-                            </div>
-                          </div>
                         </div>
                       </Tabs>
+                    </div>
+
+                    {/* 时间轴区域 - 独立区域 */}
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-[100px] flex flex-col justify-center relative">
+                      <div className="w-full h-1.5 bg-gray-100 rounded-full relative">
+                        <div className="absolute left-0 top-0 bottom-0 w-[30%] bg-blue-200 rounded-full"></div>
+                        <div className="absolute left-[30%] top-1/2 -translate-y-1/2 w-4 h-4 bg-[#1975D2] border-2 border-white rounded-full shadow-sm z-10"></div>
+
+                        {/* 关键节点标记 */}
+                        <div
+                          className="absolute left-[40%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-red-500 rounded-full"
+                          title="春节节假日"
+                        ></div>
+                        <div
+                          className="absolute left-[70%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-yellow-500 rounded-full"
+                          title="秋收罢工"
+                        ></div>
+                      </div>
+
+                      <div className="absolute top-12 left-4 text-xs text-gray-500">
+                        2026年
+                        <br />
+                        1月24日
+                      </div>
+                      <div className="absolute top-12 right-4 text-xs text-gray-500 text-right">
+                        2026年
+                        <br />
+                        8月24日
+                      </div>
+
+                      {/* 事件标签 */}
+                      <div className="absolute top-8 left-[40%] -translate-x-1/2 bg-[#D32F2F] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center z-20">
+                        <span className="font-bold">春节节假日</span>
+                        <span className="text-[8px] opacity-80">
+                          请提前做好准备
+                        </span>
+                      </div>
+                      <div className="absolute top-8 left-[70%] -translate-x-1/2 bg-[#FBC02D] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center z-20">
+                        <span className="font-bold">秋收罢工</span>
+                        <span className="text-[8px] opacity-80 text-black">
+                          请提前做好准备
+                        </span>
+                      </div>
                     </div>
                   </div>
 
