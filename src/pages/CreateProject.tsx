@@ -390,7 +390,7 @@ export default function CreateProject() {
             </div>
 
             {/* 底部按钮 */}
-            <div className="mt-auto pt-6 flex justify-center">
+            <div className="mt-8 flex justify-center">
               <Button
                 className="w-full max-w-md h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200"
                 onClick={handleNextStep}
