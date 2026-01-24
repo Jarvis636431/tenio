@@ -1,13 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MapContainer } from "@/components/map/MapContainer";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { CreateProjectContextType } from "./types";
 
 export function UploadStep() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [province, setProvince] = useState("北京市");
+  const [city, setCity] = useState("北京市");
   const {
     cadFile,
     setCadFile,
@@ -21,6 +31,16 @@ export function UploadStep() {
     setProjectInfo,
     projectName,
   } = useOutletContext<CreateProjectContextType>();
+
+  const citiesByProvince: Record<string, string[]> = {
+    北京市: ["北京市"],
+    天津市: ["天津市"],
+    上海市: ["上海市"],
+    重庆市: ["重庆市"],
+    广东省: ["广州市", "深圳市", "佛山市", "东莞市"],
+    浙江省: ["杭州市", "宁波市", "温州市", "绍兴市"],
+  };
+  const cityOptions = citiesByProvince[province] ?? [];
 
   const handleNext = () => {
     const locationLabel = siteAddress.trim()
@@ -164,7 +184,7 @@ export function UploadStep() {
                   className="lucide lucide-x"
                 >
                   <path d="M18 6 6 18" />
-                  <path d="m6 6 18 12" />
+                  <path d="M6 6 18 18" />
                 </svg>
               </Button>
             </div>
@@ -182,12 +202,9 @@ export function UploadStep() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-center p-8 overflow-hidden">
-      <div className="w-full max-w-[1600px] flex flex-col justify-center h-full">
-        <div className="mb-6 w-full max-w-[800px] mx-auto shrink-0">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            项目名称
-          </label>
+    <div className="w-full h-full flex flex-col items-center px-8 py-6 overflow-hidden">
+      <div className="w-full max-w-[1100px] flex flex-col h-full">
+        <div className="w-full mb-6">
           <Input
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
@@ -196,31 +213,64 @@ export function UploadStep() {
           />
         </div>
 
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 items-center min-h-0">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_640px] gap-6 min-h-0 items-stretch">
           {/* 左侧上传区 */}
-          <div className="flex flex-col gap-4 justify-center w-full max-w-lg mx-auto h-[500px]">
-            {renderUploadCard(
-              "点击上传CAD图纸/BIM模型",
-              "支持 .dwg/ .rvt/ .ifc 格式",
-              cadFile,
-              setCadFile,
-              [".dwg", ".rvt", ".ifc", ".dxf"],
-              "cad",
-            )}
-            {renderUploadCard(
-              "点击上传设计说明",
-              "支持 .doc/ .txt 格式",
-              projectDoc,
-              setProjectDoc,
-              [".doc", ".docx", ".txt", ".pdf"],
-              "doc",
-            )}
+          <div className="flex flex-col gap-4 h-full">
+            <div className="grid grid-rows-2 gap-4 flex-1 min-h-0">
+              {renderUploadCard(
+                "点击上传CAD图纸/BIM模型",
+                "支持 .dwg/ .rvt/ .ifc 格式",
+                cadFile,
+                setCadFile,
+                [".dwg", ".rvt", ".ifc", ".dxf"],
+                "cad",
+              )}
+              {renderUploadCard(
+                "点击上传设计说明",
+                "支持 .doc/ .txt 格式",
+                projectDoc,
+                setProjectDoc,
+                [".doc", ".docx", ".txt", ".pdf"],
+                "doc",
+              )}
+            </div>
           </div>
 
           {/* 右侧地图区 */}
-          <div className="flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-[500px] w-full max-w-lg mx-auto relative">
-            <div className="absolute top-4 left-4 right-4 z-10">
-              <div className="relative bg-white/90 backdrop-blur rounded-lg shadow-sm border border-gray-200">
+          <div className="flex flex-col gap-3 h-full lg:w-[640px]">
+            <div className="flex items-center gap-2">
+              <Select
+                value={province}
+                onValueChange={(value) => {
+                  setProvince(value);
+                  const nextCity = citiesByProvince[value]?.[0] ?? "";
+                  setCity(nextCity);
+                }}
+              >
+                <SelectTrigger className="h-10 w-32 text-sm">
+                  <SelectValue placeholder="选择省份" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.keys(citiesByProvince).map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={city} onValueChange={setCity}>
+                <SelectTrigger className="h-10 w-32 text-sm">
+                  <SelectValue placeholder="选择城市" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cityOptions.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="relative flex-1 bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -245,18 +295,20 @@ export function UploadStep() {
                 />
               </div>
             </div>
-            <div className="flex-1 w-full h-full bg-gray-50">
-              <MapContainer
-                className="w-full h-full"
-                selectedPosition={siteCoordinates}
-                onSelect={setSiteCoordinates}
-              />
+            <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="w-full h-full bg-gray-50">
+                <MapContainer
+                  className="w-full h-full"
+                  selectedPosition={siteCoordinates}
+                  onSelect={setSiteCoordinates}
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* 底部按钮 */}
-        <div className="mt-auto shrink-0 flex justify-center pb-4">
+        <div className="mt-6 shrink-0 flex justify-center pb-2">
           <Button
             className="w-full max-w-md h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200"
             onClick={handleNext}
