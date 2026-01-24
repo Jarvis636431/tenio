@@ -10,6 +10,7 @@ import {
   ReferenceLine,
   ReferenceArea,
 } from "recharts";
+import { useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { CreateProjectContextType } from "./types";
 import { planChartData, planOptions } from "./mockData";
@@ -19,6 +20,15 @@ export function SelectionStep() {
   const { selectedPlan, setSelectedPlan } =
     useOutletContext<CreateProjectContextType>();
 
+  const defaultPlanId =
+    planOptions.find((plan) => plan.tag === "推荐")?.id ?? planOptions[0]?.id;
+
+  useEffect(() => {
+    if (!selectedPlan && defaultPlanId) {
+      setSelectedPlan(defaultPlanId);
+    }
+  }, [selectedPlan, defaultPlanId, setSelectedPlan]);
+
   const onBack = () => {
     navigate("/create-project/confirm");
   };
@@ -27,8 +37,8 @@ export function SelectionStep() {
     navigate("/create-project/preview");
   };
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 w-full h-full flex flex-col">
-      <div className="bg-gray-50/50 rounded-xl p-6 flex-1 min-h-[360px] relative">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 w-full h-full flex flex-col p-6">
+      <div className="bg-gray-50/50 rounded-xl p-6 flex-1 min-h-[340px] relative">
         <div className="absolute top-4 left-6 text-sm text-gray-400">成本</div>
         <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
           <div className="text-xl font-medium text-gray-800">18个月</div>
@@ -96,7 +106,7 @@ export function SelectionStep() {
         </ResponsiveContainer>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 h-[200px]">
+      <div className="grid grid-cols-4 gap-4 h-[160px]">
         {planOptions.map((plan) => (
           <div
             key={plan.id}
@@ -115,32 +125,36 @@ export function SelectionStep() {
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-4">
               <h3 className="font-bold text-xl text-gray-900">{plan.title}</h3>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-base">
-                <span className="text-gray-700 font-medium">
+            <div className="space-y-2">
+              <div className="grid grid-cols-[1fr_auto] items-center text-base">
+                <span className="text-gray-900 font-semibold text-lg">
                   {plan.endDate}
                 </span>
-                <span className="text-xs text-gray-400">预期结束日期</span>
-                {plan.durationTag && (
-                  <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded font-medium">
-                    {plan.durationTag}
-                  </span>
-                )}
+                <div className="flex items-center justify-end gap-2 text-right">
+                  <span className="text-xs text-gray-400">预期结束日期</span>
+                  {plan.durationTag && (
+                    <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded font-medium">
+                      {plan.durationTag}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center justify-between text-base">
-                <span className="text-gray-900 font-bold text-xl">
+              <div className="grid grid-cols-[1fr_auto] items-center text-base">
+                <span className="text-gray-900 font-semibold text-lg">
                   {plan.cost}
                 </span>
-                <span className="text-xs text-gray-400">预期建设成本</span>
-                {plan.costTag && (
-                  <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded font-medium">
-                    {plan.costTag}
-                  </span>
-                )}
+                <div className="flex items-center justify-end gap-2 text-right">
+                  <span className="text-xs text-gray-400">预期建设成本</span>
+                  {plan.costTag && (
+                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded font-medium">
+                      {plan.costTag}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
