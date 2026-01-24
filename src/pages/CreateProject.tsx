@@ -173,8 +173,6 @@ export default function CreateProject() {
   );
 
   const currentPath = location.pathname.split("/").pop();
-  const isFullWidth = currentPath === "selection" || currentPath === "preview";
-  const isFlexStart = currentPath === "preview";
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-white">
@@ -206,14 +204,8 @@ export default function CreateProject() {
         <h1 className="text-xl font-semibold text-gray-900">新建项目</h1>
       </div>
 
-      <div className={`flex-1 overflow-auto ${isFullWidth ? "p-4" : "p-12"}`}>
-        <div
-          className={`mx-auto h-full flex flex-col ${
-            isFlexStart ? "justify-start" : "justify-center"
-          } ${isFullWidth ? "w-full max-w-full" : "max-w-[800px]"}`}
-        >
-          <Outlet context={contextValue} />
-        </div>
+      <div className="flex-1 overflow-hidden p-0">
+        <Outlet context={contextValue} />
       </div>
     </div>
   );
