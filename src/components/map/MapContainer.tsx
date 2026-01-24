@@ -15,6 +15,15 @@ type MapInstance = {
 type MarkerInstance = {
   setPosition: (position: [number, number]) => void;
 };
+type GeocoderInstance = {
+  getLocation: (
+    address: string,
+    callback: (
+      status: string,
+      result: { geocodes?: { location: { lng: number; lat: number } }[] },
+    ) => void,
+  ) => void;
+};
 type AMapNamespace = {
   Map: new (
     container: HTMLDivElement,
@@ -23,6 +32,7 @@ type AMapNamespace = {
   Scale: new () => unknown;
   ToolBar: new () => unknown;
   Marker: new (options: { position: [number, number] }) => MarkerInstance;
+  Geocoder: new (options?: { city?: string }) => GeocoderInstance;
 };
 
 interface MapContainerProps {
@@ -31,6 +41,9 @@ interface MapContainerProps {
   zoom?: number;
   selectedPosition?: [number, number] | null;
   onSelect?: (position: [number, number]) => void;
+  searchQuery?: string;
+  searchCity?: string;
+  searchToken?: number;
 }
 
 export function MapContainer({
@@ -39,11 +52,15 @@ export function MapContainer({
   zoom = 11,
   selectedPosition = null,
   onSelect,
+  searchQuery,
+  searchCity,
+  searchToken,
 }: MapContainerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
   const amapRef = useRef<AMapNamespace | null>(null);
   const markerRef = useRef<MarkerInstance | null>(null);
+  const geocoderRef = useRef<GeocoderInstance | null>(null);
 
   useEffect(() => {
     let map: MapInstance | null = null;
@@ -58,7 +75,7 @@ export function MapContainer({
     AMapLoader.load({
       key: import.meta.env.VITE_AMAP_KEY, // 申请好的 Web 端开发者 Key
       version: "2.0", // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
-      plugins: ["AMap.Scale", "AMap.ToolBar"], // 需要使用的插件列表
+      plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.Geocoder"], // 需要使用的插件列表
     })
       .then((AMap) => {
         if (!mapRef.current) return;
@@ -126,6 +143,25 @@ export function MapContainer({
     }
     mapInstance.setCenter(selectedPosition);
   }, [mapInstance, selectedPosition]);
+
+  useEffect(() => {
+    if (!mapInstance || !searchToken) return;
+    const AMap = amapRef.current;
+    if (!AMap || !searchQuery?.trim()) return;
+    if (!geocoderRef.current) {
+      geocoderRef.current = new AMap.Geocoder({ city: searchCity });
+    }
+    const resolvedQuery = searchCity
+      ? `${searchCity}${searchQuery}`
+      : searchQuery;
+    geocoderRef.current.getLocation(resolvedQuery, (status, result) => {
+      if (status === "complete" && result.geocodes?.length) {
+        const location = result.geocodes[0].location;
+        const position: [number, number] = [location.lng, location.lat];
+        onSelect?.(position);
+      }
+    });
+  }, [mapInstance, searchToken, searchQuery, searchCity, onSelect]);
 
   return <div ref={mapRef} className={className} />;
 }

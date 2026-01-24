@@ -9,15 +9,19 @@ import {
 } from "@/components/ui/select";
 import { MapContainer } from "@/components/map/MapContainer";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import AMapLoader from "@amap/amap-jsapi-loader";
+import { useEffect, useMemo, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { CreateProjectContextType } from "./types";
 
 export function UploadStep() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [province, setProvince] = useState("北京市");
-  const [city, setCity] = useState("北京市");
+  const [province, setProvince] = useState("");
+  const [city, setCity] = useState("");
+  const [provinces, setProvinces] = useState<string[]>([]);
+  const [citiesByProvince, setCitiesByProvince] = useState<Record<string, string[]>>({});
+  const [searchToken, setSearchToken] = useState(0);
   const {
     cadFile,
     setCadFile,
@@ -32,15 +36,92 @@ export function UploadStep() {
     projectName,
   } = useOutletContext<CreateProjectContextType>();
 
-  const citiesByProvince: Record<string, string[]> = {
-    北京市: ["北京市"],
-    天津市: ["天津市"],
-    上海市: ["上海市"],
-    重庆市: ["重庆市"],
-    广东省: ["广州市", "深圳市", "佛山市", "东莞市"],
-    浙江省: ["杭州市", "宁波市", "温州市", "绍兴市"],
-  };
-  const cityOptions = citiesByProvince[province] ?? [];
+  const cityOptions = useMemo(() => citiesByProvince[province] ?? [], [citiesByProvince, province]);
+
+  useEffect(() => {
+    let active = true;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any)._AMapSecurityConfig = {
+      securityJsCode: import.meta.env.VITE_AMAP_SECURITY_CODE,
+    };
+
+    AMapLoader.load({
+      key: import.meta.env.VITE_AMAP_KEY,
+      version: "2.0",
+      plugins: ["AMap.DistrictSearch"],
+    })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then((AMap: any) => {
+        if (!active) return;
+        const districtSearch = new AMap.DistrictSearch({
+          level: "country",
+          subdistrict: 1,
+          extensions: "base",
+        });
+
+        districtSearch.search("中国", (status: string, result: any) => {
+          if (!active || status !== "complete") return;
+          const list = result?.districtList?.[0]?.districtList ?? [];
+          const provinceNames = list
+            .filter((item: any) => item?.name && item?.adcode)
+            .sort((a: any, b: any) => Number(a.adcode) - Number(b.adcode))
+            .map((item: any) => item.name);
+          setProvinces(provinceNames);
+          if (!province && provinceNames.length > 0) {
+            setProvince(provinceNames[0]);
+          }
+        });
+      })
+      .catch((error) => {
+        console.error("高德行政区数据加载失败:", error);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [province]);
+
+  useEffect(() => {
+    if (!province) return;
+    let active = true;
+
+    AMapLoader.load({
+      key: import.meta.env.VITE_AMAP_KEY,
+      version: "2.0",
+      plugins: ["AMap.DistrictSearch"],
+    })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then((AMap: any) => {
+        if (!active) return;
+        const districtSearch = new AMap.DistrictSearch({
+          level: "province",
+          subdistrict: 1,
+          extensions: "base",
+        });
+        districtSearch.search(province, (status: string, result: any) => {
+          if (!active || status !== "complete") return;
+          const list = result?.districtList?.[0]?.districtList ?? [];
+          const cityNames = list
+            .filter((item: any) => item?.name && item?.adcode)
+            .sort((a: any, b: any) => Number(a.adcode) - Number(b.adcode))
+            .map((item: any) => item.name);
+          setCitiesByProvince((prev) => ({
+            ...prev,
+            [province]: cityNames,
+          }));
+          if (cityNames.length > 0 && !cityNames.includes(city)) {
+            setCity(cityNames[0]);
+          }
+        });
+      })
+      .catch((error) => {
+        console.error("高德城市数据加载失败:", error);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [province, city]);
 
   const handleNext = () => {
     const locationLabel = siteAddress.trim()
@@ -239,24 +320,22 @@ export function UploadStep() {
           {/* 右侧地图区 */}
           <div className="flex flex-col gap-3 h-full lg:w-[640px]">
             <div className="flex items-center gap-2">
-              <Select
-                value={province}
-                onValueChange={(value) => {
-                  setProvince(value);
-                  const nextCity = citiesByProvince[value]?.[0] ?? "";
-                  setCity(nextCity);
-                }}
-              >
-                <SelectTrigger className="h-10 w-32 text-sm">
-                  <SelectValue placeholder="选择省份" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(citiesByProvince).map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <Select
+                  value={province}
+                  onValueChange={(value) => {
+                    setProvince(value);
+                  }}
+                >
+                  <SelectTrigger className="h-10 w-32 text-sm">
+                    <SelectValue placeholder="选择省份" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {provinces.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
               </Select>
               <Select value={city} onValueChange={setCity}>
                 <SelectTrigger className="h-10 w-32 text-sm">
@@ -292,6 +371,12 @@ export function UploadStep() {
                   placeholder="搜索地点"
                   value={siteAddress}
                   onChange={(e) => setSiteAddress(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      setSearchToken((prev) => prev + 1);
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -301,6 +386,9 @@ export function UploadStep() {
                   className="w-full h-full"
                   selectedPosition={siteCoordinates}
                   onSelect={setSiteCoordinates}
+                  searchQuery={siteAddress}
+                  searchCity={city}
+                  searchToken={searchToken}
                 />
               </div>
             </div>
