@@ -64,7 +64,7 @@ export function EditCraftsmanDialog({ open, onOpenChange, craftsman, onSave }: E
     }
   };
 
-  const updateField = (field: keyof Craftsman, value: any) => {
+  const updateField = (field: keyof Craftsman, value: Craftsman[keyof Craftsman]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

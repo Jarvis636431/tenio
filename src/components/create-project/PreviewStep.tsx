@@ -11,42 +11,28 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useOutletContext, useNavigate } from "react-router-dom";
+import type { CreateProjectContextType } from "./types";
+import { detailChartData, processList } from "./mockData";
 
-interface Process {
-  id: string;
-  title: string;
-  details: string[];
-}
+export function PreviewStep() {
+  const navigate = useNavigate();
+  const {
+    projectName,
+    activeChartTab,
+    setActiveChartTab,
+    expandedProcess,
+    setExpandedProcess,
+    handleCreateProject,
+  } = useOutletContext<CreateProjectContextType>();
 
-interface DetailChartData {
-  month: string;
-  value: number;
-  fund: number;
-}
+  const onBack = () => {
+    navigate("/create-project/selection");
+  };
 
-interface GeneratingStepProps {
-  projectName: string;
-  activeChartTab: string;
-  setActiveChartTab: (tab: string) => void;
-  detailChartData: DetailChartData[];
-  processList: Process[];
-  expandedProcess: string | null;
-  setExpandedProcess: (id: string | null) => void;
-  onBack: () => void;
-  onNext: () => void;
-}
-
-export function PreviewStep({
-  projectName,
-  activeChartTab,
-  setActiveChartTab,
-  detailChartData,
-  processList,
-  expandedProcess,
-  setExpandedProcess,
-  onBack,
-  onNext,
-}: GeneratingStepProps) {
+  const onNext = () => {
+    handleCreateProject();
+  };
   return (
     <div className="w-full h-full flex flex-col space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="flex items-center gap-2">
@@ -267,7 +253,7 @@ export function PreviewStep({
               onClick={onNext}
               className="w-full h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
             >
-              查看详情
+              创建项目
             </Button>
           </div>
         </div>

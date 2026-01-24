@@ -95,7 +95,7 @@ const mockTeams: Team[] = [
     updatedAt: "2024-07-20T16:30:00Z",
   },
 ];
-export function CraftsmanManagement({}: CraftsmanManagementProps) {
+export function CraftsmanManagement(_props: CraftsmanManagementProps) {
   const {
     toast
   } = useToast();

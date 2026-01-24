@@ -58,6 +58,11 @@ const KnowledgeQA = lazy(() =>
   })),
 );
 
+import { UploadStep } from "@/components/create-project/UploadStep";
+import { ConfirmStep } from "@/components/create-project/ConfirmStep";
+import { SelectionStep } from "@/components/create-project/SelectionStep";
+import { PreviewStep } from "@/components/create-project/PreviewStep";
+
 const queryClient = new QueryClient();
 
 type AuthState = ReturnType<typeof useAuth>;
@@ -133,7 +138,13 @@ function AppRoutes({ auth }: { auth: AuthState }) {
                <CreateProject />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="upload" replace />} />
+          <Route path="upload" element={<UploadStep />} />
+          <Route path="confirm" element={<ConfirmStep />} />
+          <Route path="selection" element={<SelectionStep />} />
+          <Route path="preview" element={<PreviewStep />} />
+        </Route>
         <Route
           path="/project/:id"
           element={

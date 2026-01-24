@@ -10,40 +10,22 @@ import {
   ReferenceLine,
   ReferenceArea,
 } from "recharts";
+import { useOutletContext, useNavigate } from "react-router-dom";
+import type { CreateProjectContextType } from "./types";
+import { planChartData, planOptions } from "./mockData";
 
-interface PlanOption {
-  id: number;
-  title: string;
-  endDate: string;
-  cost: string;
-  tag?: string;
-  tagColor?: string;
-  costTag?: string;
-  durationTag?: string;
-}
+export function SelectionStep() {
+  const navigate = useNavigate();
+  const { selectedPlan, setSelectedPlan } =
+    useOutletContext<CreateProjectContextType>();
 
-interface PlanChartData {
-  month: number;
-  cost: number;
-}
+  const onBack = () => {
+    navigate("/create-project/confirm");
+  };
 
-interface PlanSelectionStepProps {
-  planChartData: PlanChartData[];
-  planOptions: PlanOption[];
-  selectedPlan: number;
-  setSelectedPlan: (id: number) => void;
-  onBack: () => void;
-  onNext: () => void;
-}
-
-export function SelectionStep({
-  planChartData,
-  planOptions,
-  selectedPlan,
-  setSelectedPlan,
-  onBack,
-  onNext,
-}: PlanSelectionStepProps) {
+  const onNext = () => {
+    navigate("/create-project/preview");
+  };
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 w-full h-full flex flex-col">
       <div className="bg-gray-50/50 rounded-xl p-6 flex-1 min-h-[360px] relative">

@@ -2,39 +2,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapContainer } from "@/components/map/MapContainer";
+import { useOutletContext, useNavigate } from "react-router-dom";
+import type { CreateProjectContextType } from "./types";
 
-interface ProjectInfo {
-  name: string;
-  location: string;
-  floors: string;
-  heightDiff: string;
-  structure: string;
-  structureSystem: string;
-  safetyLevel: string;
-  area: string;
-  buildingCount: string;
-  startDate: string;
-  durationLimit: string;
-  remarks: string;
-}
+export function ConfirmStep() {
+  const navigate = useNavigate();
+  const {
+    projectInfo,
+    setProjectInfo,
+    siteCoordinates,
+    isCreating,
+  } = useOutletContext<CreateProjectContextType>();
 
-interface ConfirmStepProps {
-  projectInfo: ProjectInfo;
-  setProjectInfo: React.Dispatch<React.SetStateAction<ProjectInfo>>;
-  siteCoordinates: [number, number] | null;
-  onBack: () => void;
-  onNext: () => void;
-  isCreating: boolean;
-}
+  const onBack = () => {
+    navigate("/create-project/upload");
+  };
 
-export function ConfirmStep({
-  projectInfo,
-  setProjectInfo,
-  siteCoordinates,
-  onBack,
-  onNext,
-  isCreating,
-}: ConfirmStepProps) {
+  const onNext = () => {
+    navigate("/create-project/selection");
+  };
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1000px] mx-auto py-2">
       {/* 顶部标题与地图横幅 */}

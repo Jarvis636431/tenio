@@ -169,7 +169,7 @@ function serializeMesh(mesh: THREE.Mesh): SerializedMesh | null {
   const matrix = mesh.matrix.toArray();
 
   // 提取 expressID（如果存在）
-  const expressID = (mesh as any).expressID;
+  const expressID = (mesh as THREE.Mesh & { expressID?: number }).expressID;
 
   return {
     geometry: {

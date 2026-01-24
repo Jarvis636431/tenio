@@ -2,31 +2,62 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapContainer } from "@/components/map/MapContainer";
 import { useToast } from "@/hooks/use-toast";
+import { useOutletContext, useNavigate } from "react-router-dom";
+import type { CreateProjectContextType } from "./types";
 
-interface UploadStepProps {
-  cadFile: File | null;
-  setCadFile: (file: File | null) => void;
-  projectDoc: File | null;
-  setProjectDoc: (file: File | null) => void;
-  siteAddress: string;
-  setSiteAddress: (address: string) => void;
-  siteCoordinates: [number, number] | null;
-  setSiteCoordinates: (coords: [number, number] | null) => void;
-  onNext: () => void;
-}
-
-export function UploadStep({
-  cadFile,
-  setCadFile,
-  projectDoc,
-  setProjectDoc,
-  siteAddress,
-  setSiteAddress,
-  siteCoordinates,
-  setSiteCoordinates,
-  onNext,
-}: UploadStepProps) {
+export function UploadStep() {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const {
+    cadFile,
+    setCadFile,
+    projectDoc,
+    setProjectDoc,
+    siteAddress,
+    setSiteAddress,
+    siteCoordinates,
+    setSiteCoordinates,
+    setProjectName,
+    setProjectInfo,
+    projectName,
+  } = useOutletContext<CreateProjectContextType>();
+
+  const handleNext = () => {
+    const locationLabel = siteAddress.trim()
+      ? siteAddress.trim()
+      : siteCoordinates
+        ? `${siteCoordinates[0].toFixed(6)}, ${siteCoordinates[1].toFixed(6)}`
+        : "";
+
+    // 自动生成项目名称（如果未填写）
+    if (!projectName.trim()) {
+      let autoName = "";
+      if (cadFile) {
+        autoName = cadFile.name.substring(0, cadFile.name.lastIndexOf("."));
+      } else if (projectDoc) {
+        autoName = projectDoc.name.substring(
+          0,
+          projectDoc.name.lastIndexOf("."),
+        );
+      } else {
+        autoName = `新项目 ${new Date().toLocaleDateString()}`;
+      }
+      setProjectName(autoName);
+      setProjectInfo((prev) => ({
+        ...prev,
+        name: autoName,
+        location: locationLabel || prev.location,
+      }));
+    } else {
+      setProjectInfo((prev) => ({
+        ...prev,
+        name: projectName.trim(),
+        location: locationLabel || prev.location,
+      }));
+    }
+
+    navigate("/create-project/confirm");
+  };
 
   const handleFileUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -215,7 +246,7 @@ export function UploadStep({
       <div className="mt-8 flex justify-center">
         <Button
           className="w-full max-w-md h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200"
-          onClick={onNext}
+          onClick={handleNext}
         >
           信息提取
         </Button>

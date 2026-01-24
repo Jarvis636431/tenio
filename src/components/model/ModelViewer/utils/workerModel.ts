@@ -22,7 +22,7 @@ interface DeserializeParams {
 export function deserializeModel({ serialized }: DeserializeParams): SelectableModel {
   console.log('[ModelViewer] 开始反序列化模型');
 
-  const group = new THREE.Group() as any;
+  const group = new THREE.Group() as SelectableModel;
   group.modelID = serialized.modelID;
 
   serialized.meshes.forEach((meshData, index) => {
