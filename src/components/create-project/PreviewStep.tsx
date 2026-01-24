@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import type { CreateProjectContextType } from "./types";
@@ -18,6 +19,8 @@ import { detailChartData, processList } from "./mockData";
 
 export function PreviewStep() {
   const navigate = useNavigate();
+  const timelineRef = useRef<HTMLDivElement | null>(null);
+  const [indicatorPercent, setIndicatorPercent] = useState(30);
   const {
     projectName,
     activeChartTab,
@@ -34,6 +37,34 @@ export function PreviewStep() {
   const onNext = () => {
     handleCreateProject();
   };
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!timelineRef.current) return;
+      const { left, width } = timelineRef.current.getBoundingClientRect();
+      const x = event.clientX - left;
+      const percent = Math.min(100, Math.max(0, (x / width) * 100));
+      setIndicatorPercent(percent);
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    const handleMouseDown = () => {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    const slider = timelineRef.current;
+    if (!slider) return;
+    slider.addEventListener("mousedown", handleMouseDown);
+    return () => {
+      slider.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
   return (
     <div className="w-full h-full flex flex-col space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 p-6">
       <div className="flex items-center gap-2">
@@ -58,7 +89,7 @@ export function PreviewStep() {
           </div>
 
           {/* 底部图表区域 */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-[220px] flex flex-col">
+          <div className="bg-white rounded-xl p-4 h-[220px] flex flex-col">
             <Tabs
               value={activeChartTab}
               onValueChange={setActiveChartTab}
@@ -129,43 +160,53 @@ export function PreviewStep() {
           </div>
 
           {/* 时间轴区域 - 独立区域 */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-[100px] flex flex-col justify-center relative">
-            <div className="w-full h-1.5 bg-gray-100 rounded-full relative">
-              <div className="absolute left-0 top-0 bottom-0 w-[30%] bg-blue-200 rounded-full"></div>
-              <div className="absolute left-[30%] top-1/2 -translate-y-1/2 w-4 h-4 bg-[#1975D2] border-2 border-white rounded-full shadow-sm z-10"></div>
+          <div className="bg-white rounded-xl p-2 h-[110px] flex flex-col justify-center relative">
+            <div ref={timelineRef} className="w-full select-none">
+              <div className="relative pb-6">
+                <div className="w-full h-1.5 bg-gray-100 rounded-full relative">
+                  <div
+                    className="absolute left-0 top-0 bottom-0 bg-blue-200 rounded-full"
+                    style={{ width: `${indicatorPercent}%` }}
+                  ></div>
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#1975D2] border-2 border-white rounded-full shadow-sm z-10 cursor-ew-resize"
+                    style={{ left: `${indicatorPercent}%`, transform: "translate(-50%, -50%)" }}
+                  ></div>
 
-              {/* 关键节点标记 */}
-              <div
-                className="absolute left-[40%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-red-500 rounded-full"
-                title="春节节假日"
-              ></div>
-              <div
-                className="absolute left-[70%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-yellow-500 rounded-full"
-                title="秋收罢工"
-              ></div>
-            </div>
+                  {/* 关键节点标记 */}
+                  <div
+                    className="absolute left-[40%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-red-500 rounded-full group"
+                    title="春节节假日"
+                  >
+                    <div className="absolute top-[-36px] left-1/2 -translate-x-1/2 bg-[#D32F2F] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                      <span className="font-bold">春节节假日</span>
+                      <span className="text-[8px] opacity-80">请提前做好准备</span>
+                    </div>
+                  </div>
+                  <div
+                    className="absolute left-[70%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-yellow-500 rounded-full group"
+                    title="秋收罢工"
+                  >
+                    <div className="absolute top-[-36px] left-1/2 -translate-x-1/2 bg-[#FBC02D] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                      <span className="font-bold">秋收罢工</span>
+                      <span className="text-[8px] opacity-80 text-black">
+                        请提前做好准备
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-            <div className="absolute top-12 left-4 text-xs text-gray-500">
-              2026年
-              <br />
-              1月24日
-            </div>
-            <div className="absolute top-12 right-4 text-xs text-gray-500 text-right">
-              2026年
-              <br />
-              8月24日
-            </div>
-
-            {/* 事件标签 */}
-            <div className="absolute top-8 left-[40%] -translate-x-1/2 bg-[#D32F2F] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center z-20">
-              <span className="font-bold">春节节假日</span>
-              <span className="text-[8px] opacity-80">请提前做好准备</span>
-            </div>
-            <div className="absolute top-8 left-[70%] -translate-x-1/2 bg-[#FBC02D] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center z-20">
-              <span className="font-bold">秋收罢工</span>
-              <span className="text-[8px] opacity-80 text-black">
-                请提前做好准备
-              </span>
+                <div className="absolute top-5 left-0 text-xs text-gray-500">
+                  2026年
+                  <br />
+                  1月24日
+                </div>
+                <div className="absolute top-5 right-0 text-xs text-gray-500 text-right">
+                  2026年
+                  <br />
+                  8月24日
+                </div>
+              </div>
             </div>
           </div>
         </div>
