@@ -22,7 +22,7 @@ export function ConfirmStep() {
     navigate("/create-project/selection");
   };
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1000px] mx-auto py-2">
+    <div className="min-h-full flex flex-col justify-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[640px] mx-auto py-2">
       {/* 顶部标题与地图横幅 */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
@@ -43,9 +43,9 @@ export function ConfirmStep() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
         {/* 左侧详细信息表单 */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="grid grid-cols-[80px_1fr] items-center gap-3">
             <Label className="text-gray-600 font-medium text-sm text-right">
               建筑面积
@@ -139,12 +139,12 @@ export function ConfirmStep() {
         </div>
 
         {/* 右侧分析与补充信息 */}
-        <div className="space-y-4">
-          <div className="space-y-2">
+        <div className="grid grid-rows-6 gap-4">
+          <div className="row-span-3 space-y-2">
             <Label className="text-gray-900 font-medium text-sm">
               周边场地分析
             </Label>
-            <div className="bg-gray-50/80 p-4 rounded-lg space-y-2">
+            <div className="bg-gray-50/80 p-4 rounded-lg space-y-2 h-full">
               <div className="flex items-center gap-2 text-gray-800 font-medium text-sm">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -174,52 +174,50 @@ export function ConfirmStep() {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="grid grid-cols-[100px_1fr] items-center gap-3">
-              <Label className="text-gray-600 font-medium text-sm text-right">
-                计划开工时间
-              </Label>
-              <Input
-                value={projectInfo.startDate}
-                onChange={(e) =>
-                  setProjectInfo((p) => ({
-                    ...p,
-                    startDate: e.target.value,
-                  }))
-                }
-                className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
-              />
-            </div>
-            <div className="grid grid-cols-[100px_1fr] items-center gap-3">
-              <Label className="text-gray-600 font-medium text-sm text-right">
-                工期上限
-              </Label>
-              <Input
-                value={projectInfo.durationLimit}
-                onChange={(e) =>
-                  setProjectInfo((p) => ({
-                    ...p,
-                    durationLimit: e.target.value,
-                  }))
-                }
-                className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
-              />
-            </div>
-            <div className="grid grid-cols-[100px_1fr] items-center gap-3">
-              <Label className="text-gray-600 font-medium text-sm text-right">
-                其他补充
-              </Label>
-              <Input
-                value={projectInfo.remarks}
-                onChange={(e) =>
-                  setProjectInfo((p) => ({
-                    ...p,
-                    remarks: e.target.value,
-                  }))
-                }
-                className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
-              />
-            </div>
+          <div className="grid grid-cols-[100px_1fr] items-center gap-3">
+            <Label className="text-gray-600 font-medium text-sm text-right">
+              计划开工时间
+            </Label>
+            <Input
+              value={projectInfo.startDate}
+              onChange={(e) =>
+                setProjectInfo((p) => ({
+                  ...p,
+                  startDate: e.target.value,
+                }))
+              }
+              className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+            />
+          </div>
+          <div className="grid grid-cols-[100px_1fr] items-center gap-3">
+            <Label className="text-gray-600 font-medium text-sm text-right">
+              工期上限
+            </Label>
+            <Input
+              value={projectInfo.durationLimit}
+              onChange={(e) =>
+                setProjectInfo((p) => ({
+                  ...p,
+                  durationLimit: e.target.value,
+                }))
+              }
+              className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+            />
+          </div>
+          <div className="grid grid-cols-[100px_1fr] items-center gap-3">
+            <Label className="text-gray-600 font-medium text-sm text-right">
+              其他补充
+            </Label>
+            <Input
+              value={projectInfo.remarks}
+              onChange={(e) =>
+                setProjectInfo((p) => ({
+                  ...p,
+                  remarks: e.target.value,
+                }))
+              }
+              className="bg-gray-100/80 border-0 h-9 focus-visible:ring-0 focus-visible:bg-gray-100 font-medium text-gray-900 rounded-md text-sm"
+            />
           </div>
         </div>
       </div>
