@@ -432,7 +432,7 @@ export function PlanAndOrders() {
             </div>
           )}
 
-          {tab === "network" && <NetworkDiagram />}
+          {tab === "network" && <NetworkDiagram tasks={ganttData} />}
         </div>
       </div>
 
