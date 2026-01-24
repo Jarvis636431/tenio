@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useOutletContext, useNavigate } from "react-router-dom";
+import { ModelViewer } from "@/components/model/ModelViewer";
 import type { CreateProjectContextType } from "./types";
 import { detailChartData, processList } from "./mockData";
 
@@ -34,7 +35,7 @@ export function PreviewStep() {
     handleCreateProject();
   };
   return (
-    <div className="w-full h-full flex flex-col space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+    <div className="w-full h-full flex flex-col space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 p-6">
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-6 bg-[#1975D2] rounded-full"></div>
         <h2 className="text-2xl font-bold text-gray-900">
@@ -46,31 +47,12 @@ export function PreviewStep() {
         {/* 左侧区域：3D模型 + 图表 */}
         <div className="col-span-8 flex flex-col gap-4 min-h-0 h-full">
           {/* 3D 模型区域 - 固定高度 */}
-          <div className="bg-gray-50 rounded-xl relative overflow-hidden h-[300px] shrink-0 flex items-center justify-center border border-gray-100 shadow-sm group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-white/50 z-0"></div>
-
-            {/* 模拟3D建筑模型 */}
-            <div className="relative z-10 w-full h-full flex items-center justify-center p-8">
-              <div className="relative w-full h-full max-w-lg max-h-80">
-                {/* 简单的 CSS 3D 效果模拟 */}
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-64 h-32 bg-gray-200 transform skew-x-12 rounded-lg shadow-xl border border-gray-300"></div>
-                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-48 h-64 bg-white border border-gray-200 shadow-2xl flex flex-col items-center justify-end p-4 gap-2 transform -translate-x-4">
-                  <div className="w-full h-8 bg-blue-100 rounded"></div>
-                  <div className="w-full h-8 bg-blue-100 rounded"></div>
-                  <div className="w-full h-8 bg-blue-100 rounded"></div>
-                  <div className="w-full h-8 bg-blue-100 rounded"></div>
-                </div>
-                <div className="absolute bottom-14 left-1/4 w-24 h-32 bg-gray-100 border border-gray-200 shadow-lg"></div>
-                <div className="absolute bottom-12 right-1/4 w-32 h-24 bg-gray-100 border border-gray-200 shadow-lg"></div>
-
-                {/* AI 助手按钮 */}
-                <div className="absolute bottom-4 right-4 z-20">
-                  <div className="w-16 h-16 bg-[#1975D2] rounded-full flex items-center justify-center shadow-lg shadow-blue-200 cursor-pointer hover:scale-105 transition-transform">
-                    <span className="text-white font-medium text-xs">
-                      AI助手
-                    </span>
-                  </div>
-                </div>
+          <div className="bg-gray-50 rounded-xl relative overflow-hidden h-[300px] shrink-0 border border-gray-100 shadow-sm">
+            <ModelViewer src="/models/0125.ifc" allowUpload={false} className="h-full" />
+            {/* AI 助手按钮 */}
+            <div className="absolute bottom-4 right-4 z-20">
+              <div className="w-16 h-16 bg-[#1975D2] rounded-full flex items-center justify-center shadow-lg shadow-blue-200 cursor-pointer hover:scale-105 transition-transform">
+                <span className="text-white font-medium text-xs">AI助手</span>
               </div>
             </div>
           </div>
@@ -189,72 +171,76 @@ export function PreviewStep() {
         </div>
 
         {/* 右侧工序列表 */}
-        <div className="col-span-4 bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col h-full">
-          <div className="flex items-center gap-2 mb-4 pl-2 border-l-4 border-[#1975D2]">
-            <h3 className="font-bold text-gray-900">当日工序</h3>
-          </div>
+        <div className="col-span-4 flex flex-col h-full gap-4 min-h-0">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col flex-1 min-h-0">
+            <div className="flex items-center gap-2 mb-4 pl-2 border-l-4 border-[#1975D2]">
+              <h3 className="font-bold text-gray-900">当日工序</h3>
+            </div>
 
-          <ScrollArea className="flex-1 pr-4">
-            <div className="space-y-3">
-              {processList.map((process) => (
-                <div
-                  key={process.id}
-                  className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md"
-                >
+            <ScrollArea className="flex-1 pr-4">
+              <div className="space-y-3">
+                {processList.map((process) => (
                   <div
-                    className="flex items-center justify-between p-4 cursor-pointer bg-gray-50/50"
-                    onClick={() =>
-                      setExpandedProcess(
-                        expandedProcess === process.id ? null : process.id,
-                      )
-                    }
+                    key={process.id}
+                    className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md"
                   >
-                    <span className="font-medium text-gray-800">
-                      {process.id} {process.title}
-                    </span>
-                    {expandedProcess === process.id ? (
-                      <ChevronUp className="h-4 w-4 text-gray-500" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-gray-500" />
+                    <div
+                      className="flex items-center justify-between p-4 cursor-pointer bg-gray-50/50"
+                      onClick={() =>
+                        setExpandedProcess(
+                          expandedProcess === process.id ? null : process.id,
+                        )
+                      }
+                    >
+                      <span className="font-medium text-gray-800">
+                        {process.id} {process.title}
+                      </span>
+                      {expandedProcess === process.id ? (
+                        <ChevronUp className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      )}
+                    </div>
+
+                    {expandedProcess === process.id && (
+                      <div className="p-4 pt-0 bg-gray-50/30">
+                        <div className="space-y-4 relative pl-4 mt-3">
+                          {/* 左侧连接线 */}
+                          <div className="absolute left-0 top-2 bottom-2 w-px bg-gray-200"></div>
+
+                          {process.details.map((detail, index) => (
+                            <div key={index} className="relative">
+                              <div className="absolute -left-[21px] top-2 w-2.5 h-2.5 bg-gray-300 rounded-full border-2 border-white"></div>
+                              <p className="text-sm text-gray-600 leading-relaxed">
+                                {detail}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
 
-                  {expandedProcess === process.id && (
-                    <div className="p-4 pt-0 bg-gray-50/30">
-                      <div className="space-y-4 relative pl-4 mt-3">
-                        {/* 左侧连接线 */}
-                        <div className="absolute left-0 top-2 bottom-2 w-px bg-gray-200"></div>
-
-                        {process.details.map((detail, index) => (
-                          <div key={index} className="relative">
-                            <div className="absolute -left-[21px] top-2 w-2.5 h-2.5 bg-gray-300 rounded-full border-2 border-white"></div>
-                            <p className="text-sm text-gray-600 leading-relaxed">
-                              {detail}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 shrink-0">
+            <div className="space-y-3">
+              <Button
+                variant="ghost"
+                onClick={onBack}
+                className="w-full h-12 text-base font-medium text-[#1975D2] hover:text-[#1564b3] hover:bg-blue-50 bg-gray-50 rounded-lg"
+              >
+                返回上一步
+              </Button>
+              <Button
+                onClick={onNext}
+                className="w-full h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
+              >
+                创建项目
+              </Button>
             </div>
-          </ScrollArea>
-
-          <div className="pt-4 mt-auto space-y-3">
-            <Button
-              variant="ghost"
-              onClick={onBack}
-              className="w-full h-12 text-base font-medium text-[#1975D2] hover:text-[#1564b3] hover:bg-blue-50 bg-gray-50 rounded-lg"
-            >
-              返回上一步
-            </Button>
-            <Button
-              onClick={onNext}
-              className="w-full h-12 text-base font-medium bg-[#1975D2] hover:bg-[#1564b3] shadow-lg shadow-blue-200 rounded-lg"
-            >
-              创建项目
-            </Button>
           </div>
         </div>
       </div>
