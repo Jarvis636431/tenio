@@ -173,6 +173,13 @@ export default function CreateProject() {
   );
 
   const currentPath = location.pathname.split("/").pop();
+  const stepMap: Record<string, number> = {
+    upload: 1,
+    confirm: 2,
+    selection: 3,
+    preview: 4,
+  };
+  const currentStep = stepMap[currentPath ?? "upload"] ?? 1;
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-white">
@@ -201,7 +208,24 @@ export default function CreateProject() {
           </svg>
           返回
         </Button>
-        <h1 className="text-xl font-semibold text-gray-900">新建项目</h1>
+        <div className="ml-auto flex items-center gap-3">
+          <div className="relative flex items-center gap-10">
+            <div className="absolute left-4 right-4 top-1/2 h-px -translate-y-1/2 bg-gray-200" />
+            {[1, 2, 3, 4].map((step) => (
+              <div key={step} className="relative z-10 flex flex-col items-center gap-1">
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold border transition-colors ${
+                    step <= currentStep
+                      ? "bg-[#1975D2] text-white border-[#1975D2]"
+                      : "bg-white text-gray-400 border-gray-200"
+                  }`}
+                >
+                  {step}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden p-0">
