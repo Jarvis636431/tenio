@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { ProjectRoutes } from "@/routes/ProjectRoutes";
 import { CreateProjectRoutes } from "@/routes/CreateProjectRoutes";
+import { APP_DEFAULT_TITLE } from "@/config";
 
 // Lazy loaded pages
 const Index = lazy(() => import("@/pages/Index"));
@@ -13,6 +14,10 @@ const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const CreateProject = lazy(() => import("@/pages/CreateProject"));
 
+const TITLE_RULES: Array<{ prefix: string; title: string }> = [
+  { prefix: "/login", title: "登录" },
+  { prefix: "/create-project", title: "创建" },
+];
 
 export function AppRoutes() {
   const auth = useAuth();
@@ -21,15 +26,10 @@ export function AppRoutes() {
 
   useEffect(() => {
     const { pathname } = location;
-    if (pathname === "/login") {
-      document.title = "登录";
-      return;
-    }
-    if (pathname.startsWith("/create-project")) {
-      document.title = "创建新项目";
-      return;
-    }
-    document.title = "A.PM 智能管理平台";
+    const matched = TITLE_RULES.find((rule) =>
+      pathname.startsWith(rule.prefix),
+    );
+    document.title = matched?.title ?? APP_DEFAULT_TITLE;
   }, [location]);
 
   if (isLoading) {

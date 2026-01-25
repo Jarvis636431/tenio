@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { SOCKET_URL } from "@/config";
 
 interface Message {
   id: string;
@@ -27,7 +28,7 @@ interface Message {
 
 type ConnectionStatus = "idle" | "connecting" | "open" | "closed" | "error";
 
-const AI_WS_URL = import.meta.env.VITE_SOCKET_URL ||"";
+const AI_WS_URL = SOCKET_URL;
 const DEBUG_TAG = "[ai-ws-debug]";
 const INITIAL_RECONNECT_DELAY = 1000;
 const MAX_RECONNECT_DELAY = 30000;

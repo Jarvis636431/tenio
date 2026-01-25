@@ -1,9 +1,10 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { IS_DEV } from "@/config";
 
 async function enableMocking() {
-  if (import.meta.env.MODE !== 'development') {
+  if (!IS_DEV) {
     return
   }
   

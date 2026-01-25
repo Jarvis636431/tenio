@@ -1,15 +1,14 @@
-const USER_SERVICE_BASE_URL =
-  import.meta.env.VITE_USER_SERVICE_URL?.replace(/\/$/, "") ||
-  "http://localhost:8001";
-
-const TOKEN_STORAGE_KEY = "auth_token";
-
 import type {
   LoginPayload,
   LoginResponse,
   UserProfile,
 } from "@/types/domain/user";
+import { API_BASE } from "@/config";
 import { requestJson } from "@/services/http";
+
+const USER_SERVICE_BASE_URL = API_BASE.userService;
+
+const TOKEN_STORAGE_KEY = "auth_token";
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   return requestJson<LoginResponse>(`${USER_SERVICE_BASE_URL}/login`, {

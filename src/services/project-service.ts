@@ -1,4 +1,5 @@
 import { requestJson, buildUrl } from "@/services/http";
+import { API_BASE } from "@/config";
 import type {
   PrecreateProjectPayload,
   PrecreateProjectResponse,
@@ -15,9 +16,7 @@ import type {
   UploadDocsPayload,
 } from "@/types/domain/project";
 
-const PROJECT_SERVICE_BASE_URL =
-  import.meta.env.VITE_PROJECT_SERVICE_URL?.replace(/\/$/, "") ||
-  "http://localhost:8002";
+const PROJECT_SERVICE_BASE_URL = API_BASE.projectService;
 
 // ----------- Types -----------
 // Types are now imported from @/types/domain/project
