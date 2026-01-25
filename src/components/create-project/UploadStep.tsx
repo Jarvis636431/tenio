@@ -7,12 +7,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapContainer } from "@/components/map/MapContainer";
+import { MapContainer, useDistricts } from "@/components/map";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { CreateProjectContextType } from "@/types/create-project";
-import { useDistricts } from "@/components/map/hooks/useDistricts";
 
 export function UploadStep() {
   const { toast } = useToast();

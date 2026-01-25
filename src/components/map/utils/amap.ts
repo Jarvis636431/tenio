@@ -1,17 +1,5 @@
 import AMapLoader from "@amap/amap-jsapi-loader";
-
-type AMapNamespace = {
-  DistrictSearch: new (options: {
-    level: string;
-    subdistrict: number;
-    extensions: string;
-  }) => {
-    search: (
-      keyword: string,
-      callback: (status: string, result: any) => void,
-    ) => void;
-  };
-};
+import type { AMapNamespace } from "@/types/map";
 
 export async function loadAMap(plugins: string[]) {
   (window as any)._AMapSecurityConfig = {

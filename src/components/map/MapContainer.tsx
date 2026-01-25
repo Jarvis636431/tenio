@@ -1,39 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { loadAMap } from "@/components/map/utils/amap";
-
-type LngLat = { getLng: () => number; getLat: () => number };
-type MapClickEvent = { lnglat: LngLat };
-type MapInstance = {
-  addControl: (control: unknown) => void;
-  on: (event: "click", handler: (event: MapClickEvent) => void) => void;
-  off: (event: "click", handler: (event: MapClickEvent) => void) => void;
-  add: (overlay: unknown) => void;
-  remove: (overlay: unknown) => void;
-  setCenter: (position: [number, number]) => void;
-  destroy: () => void;
-};
-type MarkerInstance = {
-  setPosition: (position: [number, number]) => void;
-};
-type GeocoderInstance = {
-  getLocation: (
-    address: string,
-    callback: (
-      status: string,
-      result: { geocodes?: { location: { lng: number; lat: number } }[] },
-    ) => void,
-  ) => void;
-};
-type AMapNamespace = {
-  Map: new (
-    container: HTMLDivElement,
-    options: { viewMode: string; zoom: number; center: [number, number] },
-  ) => MapInstance;
-  Scale: new () => unknown;
-  ToolBar: new () => unknown;
-  Marker: new (options: { position: [number, number] }) => MarkerInstance;
-  Geocoder: new (options?: { city?: string }) => GeocoderInstance;
-};
+import { loadAMap } from "@/components/map";
+import type {
+  AMapNamespace,
+  GeocoderInstance,
+  MapClickEvent,
+  MapInstance,
+  MarkerInstance,
+} from "@/types/map";
 
 interface MapContainerProps {
   className?: string;

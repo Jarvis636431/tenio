@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadAMap } from "@/components/map/utils/amap";
-
-type DistrictNode = {
-  name?: string;
-  adcode?: string | number;
-  districtList?: DistrictNode[];
-};
+import { loadAMap } from "@/components/map";
+import type { DistrictNode } from "@/types/map";
 
 export function useDistricts() {
   const [province, setProvince] = useState("");
