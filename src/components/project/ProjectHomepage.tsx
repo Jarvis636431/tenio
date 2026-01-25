@@ -405,7 +405,7 @@ export function ProjectHomepage({
 
             <div className="relative w-full h-[500px]">
               <ModelViewer
-                src="/models/0923.ifc"
+                src="/models/0125.ifc"
                 highlightGroups={[
                   {
                     ids: completedIds,
