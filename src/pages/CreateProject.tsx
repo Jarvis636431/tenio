@@ -1,46 +1,39 @@
-import { useState, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate, useLocation, Outlet, Navigate } from "react-router-dom";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useProject } from "@/hooks/useProject";
 import {
   precreateProject,
   uploadProjectDocs,
 } from "@/services/project-service";
 import { useAuth } from "@/hooks/useAuth";
-import type {
-  CreateProjectContextType,
-  ProjectInfo,
-} from "@/components/create-project/types";
+import type { CreateProjectContextType } from "@/components/create-project/types";
+import { useCreateProjectStore } from "@/stores/createProjectStore";
 
 export default function CreateProject() {
-  const [projectDoc, setProjectDoc] = useState<File | null>(null);
-  const [cadFile, setCadFile] = useState<File | null>(null);
-  const [projectName, setProjectName] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
-  const [siteAddress, setSiteAddress] = useState("");
-  const [siteCoordinates, setSiteCoordinates] = useState<
-    [number, number] | null
-  >(null);
-  const [selectedPlan, setSelectedPlan] = useState<number>(1);
-  const [activeChartTab, setActiveChartTab] = useState("resource");
-  const [expandedProcess, setExpandedProcess] = useState<string | null>("P01");
-
-  // 项目基础信息状态
-  const [projectInfo, setProjectInfo] = useState<ProjectInfo>({
-    name: "",
-    location: "天津市",
-    floors: "地下1层，地上5层",
-    heightDiff: "0.6 米",
-    structure: "框架结构",
-    structureSystem: "框架结构体系",
-    safetyLevel: "二级",
-    area: "9820m²",
-    buildingCount: "1",
-    startDate: "2026年3月1日",
-    durationLimit: "18个月",
-    remarks: "",
-  });
+  const {
+    projectDoc,
+    setProjectDoc,
+    cadFile,
+    setCadFile,
+    projectName,
+    setProjectName,
+    projectInfo,
+    setProjectInfo,
+    siteAddress,
+    setSiteAddress,
+    siteCoordinates,
+    setSiteCoordinates,
+    selectedPlan,
+    setSelectedPlan,
+    activeChartTab,
+    setActiveChartTab,
+    expandedProcess,
+    setExpandedProcess,
+    isCreating,
+    setIsCreating,
+  } = useCreateProjectStore();
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -132,6 +125,7 @@ export default function CreateProject() {
     refreshProjects,
     toast,
     navigate,
+    setIsCreating,
   ]);
 
   const contextValue: CreateProjectContextType = useMemo(

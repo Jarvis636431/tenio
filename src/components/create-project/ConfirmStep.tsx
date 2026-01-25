@@ -12,6 +12,7 @@ export function ConfirmStep() {
     setProjectInfo,
     siteCoordinates,
     isCreating,
+    projectName,
   } = useOutletContext<CreateProjectContextType>();
 
   const onBack = () => {
@@ -28,7 +29,7 @@ export function ConfirmStep() {
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-6 bg-[#1975D2] rounded-full"></div>
           <h2 className="text-2xl font-bold text-gray-900">
-            {projectInfo.name || "住宅楼-04栋"}
+            {projectInfo.name || projectName || "住宅楼-04栋"}
           </h2>
         </div>
 
