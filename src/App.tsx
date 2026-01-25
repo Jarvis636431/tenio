@@ -17,43 +17,43 @@ const CreateProject = lazy(() => import("./pages/CreateProject"));
 
 // Lazy loaded project components
 const ProjectHomepage = lazy(() =>
-  import("./components/project/ProjectHomepage").then((module) => ({
+  import("./pages/project/ProjectHomepage").then((module) => ({
     default: module.ProjectHomepage,
   })),
 );
-const BasicInfo = lazy(() => import("./components/project/BasicInfo"));
+const BasicInfo = lazy(() => import("./pages/project/BasicInfo"));
 const PlanAndOrders = lazy(() =>
-  import("./components/plan/PlanAndOrders").then((module) => ({
+  import("./pages/project/PlanAndOrders").then((module) => ({
     default: module.PlanAndOrders,
   })),
 );
 const RealTimeMonitoring = lazy(() =>
-  import("./components/monitoring/RealTimeMonitoring").then((module) => ({
+  import("./pages/project/RealTimeMonitoring").then((module) => ({
     default: module.RealTimeMonitoring,
   })),
 );
 const CraftsmanManagement = lazy(() =>
-  import("./components/craftsman/CraftsmanManagement").then((module) => ({
+  import("./pages/project/CraftsmanManagement").then((module) => ({
     default: module.CraftsmanManagement,
   })),
 );
 const FundingMaterials = lazy(() =>
-  import("./components/funding/FundingMaterials").then((module) => ({
+  import("./pages/project/FundingMaterials").then((module) => ({
     default: module.FundingMaterials,
   })),
 );
 const QualityInspection = lazy(() =>
-  import("./components/quality/QualityInspection").then((module) => ({
+  import("./pages/project/QualityInspection").then((module) => ({
     default: module.QualityInspection,
   })),
 );
 const DailyLog = lazy(() =>
-  import("./components/quality/DailyLog").then((module) => ({
+  import("./pages/project/DailyLog").then((module) => ({
     default: module.DailyLog,
   })),
 );
 const KnowledgeQA = lazy(() =>
-  import("./components/quality/KnowledgeQA").then((module) => ({
+  import("./pages/project/KnowledgeQA").then((module) => ({
     default: module.KnowledgeQA,
   })),
 );

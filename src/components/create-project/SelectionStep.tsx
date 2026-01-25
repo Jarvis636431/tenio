@@ -12,8 +12,8 @@ import {
 } from "recharts";
 import { useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
-import type { CreateProjectContextType } from "./types";
-import { planChartData, planOptions } from "./mockData";
+import type { CreateProjectContextType } from "@/types/create-project";
+import { planChartData, planOptions } from "@/mocks/data/create-project";
 
 export function SelectionStep() {
   const navigate = useNavigate();

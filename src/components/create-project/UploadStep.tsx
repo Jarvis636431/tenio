@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import AMapLoader from "@amap/amap-jsapi-loader";
 import { useEffect, useMemo, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
-import type { CreateProjectContextType } from "./types";
+import type { CreateProjectContextType } from "@/types/create-project";
 
 export function UploadStep() {
   const { toast } = useToast();

@@ -14,8 +14,8 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { ModelViewer } from "@/components/model/ModelViewer";
-import type { CreateProjectContextType } from "./types";
-import { detailChartData, processList } from "./mockData";
+import type { CreateProjectContextType } from "@/types/create-project";
+import { detailChartData, processList } from "@/mocks/data/create-project";
 
 export function PreviewStep() {
   const navigate = useNavigate();

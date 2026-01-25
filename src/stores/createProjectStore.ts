@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ProjectInfo } from "@/components/create-project/types";
+import type { ProjectInfo } from "@/types/create-project";
 
 const defaultProjectInfo: ProjectInfo = {
   name: "",

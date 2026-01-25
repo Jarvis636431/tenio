@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapContainer } from "@/components/map/MapContainer";
 import { useOutletContext, useNavigate } from "react-router-dom";
-import type { CreateProjectContextType } from "./types";
+import type { CreateProjectContextType } from "@/types/create-project";
 
 export function ConfirmStep() {
   const navigate = useNavigate();

@@ -8,7 +8,7 @@ import {
   uploadProjectDocs,
 } from "@/services/project-service";
 import { useAuth } from "@/hooks/useAuth";
-import type { CreateProjectContextType } from "@/components/create-project/types";
+import type { CreateProjectContextType } from "@/types/create-project";
 import { useCreateProjectStore } from "@/stores/createProjectStore";
 
 export default function CreateProject() {

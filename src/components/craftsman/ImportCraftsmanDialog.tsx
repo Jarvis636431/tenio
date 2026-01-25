@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { createImportCraftsmanMockData } from "@/mocks/data/craftsman";
 import {
   ImportError,
   ImportResult,
@@ -57,40 +58,7 @@ export function ImportCraftsmanDialog({ open, onOpenChange, onImport }: ImportCr
       // 模拟解析CSV/Excel文件
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const mockData: Craftsman[] = [
-        {
-          id: Date.now() + 1,
-          name: "新工匠1",
-          trade: "木工",
-          level: 2,
-          status: "active",
-          contractStatus: "已签署",
-          certificationStatus: "已认证",
-          gender: "男",
-          age: 30,
-          bio: "有5年工作经验",
-          phone: "138****0001",
-          entryCount: 0,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: Date.now() + 2,
-          name: "新工匠2",
-          trade: "电工",
-          level: 3,
-          status: "active",
-          contractStatus: "待签署",
-          certificationStatus: "待认证",
-          gender: "男",
-          age: 28,
-          bio: "电工专业技能证书",
-          phone: "138****0002",
-          entryCount: 0,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
+      const mockData = createImportCraftsmanMockData();
 
       setPreviewData(mockData);
       setProgress(100);
