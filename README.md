@@ -1,126 +1,51 @@
-# Welcome to your Lovable project
+# A.PM 智能管理平台
 
-## Project info
+面向智慧工地/项目管理的前端应用，包含项目管理、地图选址、BIM/IFC 模型浏览等模块。
 
-**URL**: https://lovable.dev/projects/511adf8f-2a00-4c58-83dd-148e41718d40
+## 技术栈
 
-## How can I edit this code?
+- Vite + React + TypeScript
+- Tailwind CSS + shadcn-ui (Radix UI)
+- React Router + React Query
+- three.js + web-ifc/web-ifc-three
+- 高德地图 AMap JS API
 
-There are several ways of editing your application.
+## 本地开发
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/511adf8f-2a00-4c58-83dd-148e41718d40) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/511adf8f-2a00-4c58-83dd-148e41718d40) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
-
-### 1) Create `.nvmrc`
-Use the current LTS (Vite 5 requires Node >= 18; I recommend 20):
 ```bash
-# at project root
-echo "20" > .nvmrc
-```
-Or pin an exact version:
-```bash
-echo "v20.11.1" > .nvmrc
+pnpm i
+pnpm dev
 ```
 
-### 2) Team usage
-- First time:
+## 环境变量
+
+在项目根目录配置 `.env`（或 `.env.local`）：
+
 ```bash
-<code_block_to_apply_changes_from>
-```
-- Each time you cd into the repo:
-```bash
-nvm use
+VITE_USER_SERVICE_URL=http://localhost:8001
+VITE_PROJECT_SERVICE_URL=http://localhost:8002
+VITE_AMAP_KEY=your_amap_key
+VITE_AMAP_SECURITY_CODE=your_amap_security_code
+VITE_SOCKET_URL=ws://localhost:8000
 ```
 
-### 3) Optional: auto-switch on cd
-Add to your shell profile (`~/.zshrc` or `~/.bashrc`):
-```bash
-autoload -U add-zsh-hook
-load-nvmrc() {
-  local node_version="$(nvm version)"
-  local nvmrc_path="$(nvm_find_nvmrc)"
-  if [ -n "$nvmrc_path" ]; then
-    local nvmrc_node_version=$(cat "$nvmrc_path")
-    if [ "$nvmrc_node_version" != "$node_version" ]; then
-      nvm install "$nvmrc_node_version"
-    fi
-  fi
-}
-add-zsh-hook chpwd load-nvmrc
-load-nvmrc
-```
+## 配置收口
 
-### 4) Optional: enforce in `package.json`
-Add an `engines` field (doesn’t force nvm, but warns):
-```json
-"engines": {
-  "node": ">=20 <21"
-}
-```
-And to make npm fail on mismatch, add `.npmrc`:
-```
-engine-strict=true
-```
+所有运行时配置统一在 `src/config/index.ts` 中管理，包含：
 
-- If you want me to pin to the exact Node version you prefer, tell me the version and I’ll update the snippets.
+- API Base（用户服务/项目服务）
+- AMap Key 与 Security Code
+- Socket 地址
+- 环境标志（是否开发环境）
+
+## 页面标题规则
+
+通过路由前缀统一设置标题：
+
+- `/login` → 登录
+- `/create-project` → 创建
+- 其他路由 → A.PM 智能管理平台
+
+## Mock
+
+开发环境会自动启用 MSW（`src/main.tsx`）。
