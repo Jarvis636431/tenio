@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import AMapLoader from "@amap/amap-jsapi-loader";
+import { loadAMap } from "@/components/map/utils/amap";
 
 type LngLat = { getLng: () => number; getLat: () => number };
 type MapClickEvent = { lnglat: LngLat };
@@ -65,18 +65,7 @@ export function MapContainer({
   useEffect(() => {
     let map: MapInstance | null = null;
     let clickHandler: ((event: MapClickEvent) => void) | null = null;
-    // 1. 配置安全密钥 (必须在 loader 加载前配置)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any)._AMapSecurityConfig = {
-      securityJsCode: import.meta.env.VITE_AMAP_SECURITY_CODE,
-    };
-
-    // 2. 加载地图 API
-    AMapLoader.load({
-      key: import.meta.env.VITE_AMAP_KEY, // 申请好的 Web 端开发者 Key
-      version: "2.0", // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
-      plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.Geocoder"], // 需要使用的插件列表
-    })
+    loadAMap(["AMap.Scale", "AMap.ToolBar", "AMap.Geocoder"])
       .then((AMap) => {
         if (!mapRef.current) return;
         amapRef.current = AMap as AMapNamespace;

@@ -9,18 +9,22 @@ import {
 } from "@/components/ui/select";
 import { MapContainer } from "@/components/map/MapContainer";
 import { useToast } from "@/hooks/use-toast";
-import AMapLoader from "@amap/amap-jsapi-loader";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { CreateProjectContextType } from "@/types/create-project";
+import { useDistricts } from "@/components/map/hooks/useDistricts";
 
 export function UploadStep() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [province, setProvince] = useState("");
-  const [city, setCity] = useState("");
-  const [provinces, setProvinces] = useState<string[]>([]);
-  const [citiesByProvince, setCitiesByProvince] = useState<Record<string, string[]>>({});
+  const {
+    province,
+    setProvince,
+    city,
+    setCity,
+    provinces,
+    cityOptions,
+  } = useDistricts();
   const [searchToken, setSearchToken] = useState(0);
   const {
     cadFile,
@@ -36,92 +40,6 @@ export function UploadStep() {
     projectName,
   } = useOutletContext<CreateProjectContextType>();
 
-  const cityOptions = useMemo(() => citiesByProvince[province] ?? [], [citiesByProvince, province]);
-
-  useEffect(() => {
-    let active = true;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any)._AMapSecurityConfig = {
-      securityJsCode: import.meta.env.VITE_AMAP_SECURITY_CODE,
-    };
-
-    AMapLoader.load({
-      key: import.meta.env.VITE_AMAP_KEY,
-      version: "2.0",
-      plugins: ["AMap.DistrictSearch"],
-    })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then((AMap: any) => {
-        if (!active) return;
-        const districtSearch = new AMap.DistrictSearch({
-          level: "country",
-          subdistrict: 1,
-          extensions: "base",
-        });
-
-        districtSearch.search("中国", (status: string, result: any) => {
-          if (!active || status !== "complete") return;
-          const list = result?.districtList?.[0]?.districtList ?? [];
-          const provinceNames = list
-            .filter((item: any) => item?.name && item?.adcode)
-            .sort((a: any, b: any) => Number(a.adcode) - Number(b.adcode))
-            .map((item: any) => item.name);
-          setProvinces(provinceNames);
-          if (!province && provinceNames.length > 0) {
-            setProvince(provinceNames[0]);
-          }
-        });
-      })
-      .catch((error) => {
-        console.error("高德行政区数据加载失败:", error);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [province]);
-
-  useEffect(() => {
-    if (!province) return;
-    let active = true;
-
-    AMapLoader.load({
-      key: import.meta.env.VITE_AMAP_KEY,
-      version: "2.0",
-      plugins: ["AMap.DistrictSearch"],
-    })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then((AMap: any) => {
-        if (!active) return;
-        const districtSearch = new AMap.DistrictSearch({
-          level: "province",
-          subdistrict: 1,
-          extensions: "base",
-        });
-        districtSearch.search(province, (status: string, result: any) => {
-          if (!active || status !== "complete") return;
-          const list = result?.districtList?.[0]?.districtList ?? [];
-          const cityNames = list
-            .filter((item: any) => item?.name && item?.adcode)
-            .sort((a: any, b: any) => Number(a.adcode) - Number(b.adcode))
-            .map((item: any) => item.name);
-          setCitiesByProvince((prev) => ({
-            ...prev,
-            [province]: cityNames,
-          }));
-          if (cityNames.length > 0 && !cityNames.includes(city)) {
-            setCity(cityNames[0]);
-          }
-        });
-      })
-      .catch((error) => {
-        console.error("高德城市数据加载失败:", error);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [province, city]);
 
   const handleNext = () => {
     const locationLabel = siteAddress.trim()
