@@ -1,5 +1,5 @@
-import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, Outlet } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { Navigate, Route, Routes, Outlet, useLocation } from "react-router-dom";
 import { AppLayout } from "@/components/layout/app/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
@@ -17,6 +17,20 @@ const CreateProject = lazy(() => import("@/pages/CreateProject"));
 export function AppRoutes() {
   const auth = useAuth();
   const { user, isLoading } = auth;
+  const location = useLocation();
+
+  useEffect(() => {
+    const { pathname } = location;
+    if (pathname === "/login") {
+      document.title = "登录";
+      return;
+    }
+    if (pathname.startsWith("/create-project")) {
+      document.title = "创建新项目";
+      return;
+    }
+    document.title = "A.PM 智能管理平台";
+  }, [location]);
 
   if (isLoading) {
     return (
