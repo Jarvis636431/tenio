@@ -1,4 +1,4 @@
-import { TOKEN_STORAGE_KEY } from "@/services/user-service";
+import { requestJson, buildUrl } from "@/services/http";
 import type {
   PrecreateProjectPayload,
   PrecreateProjectResponse,
@@ -19,47 +19,6 @@ const PROJECT_SERVICE_BASE_URL =
   import.meta.env.VITE_PROJECT_SERVICE_URL?.replace(/\/$/, "") ||
   "http://localhost:8002";
 
-function authHeaders(token?: string) {
-  const resolvedToken = token ?? localStorage.getItem(TOKEN_STORAGE_KEY);
-  return resolvedToken
-    ? {
-        Authorization: `Bearer ${resolvedToken}`,
-      }
-    : {};
-}
-
-async function parseResponse<T>(response: Response): Promise<T> {
-  if (response.ok) {
-    if (response.status === 204) {
-      return {} as T;
-    }
-    return response.json() as Promise<T>;
-  }
-
-  try {
-    const data = await response.json();
-    if (data?.message) {
-      throw new Error(data.message);
-    }
-    if (data?.error?.message) {
-      throw new Error(data.error.message);
-    }
-    if (data?.detail) {
-      throw new Error(
-        Array.isArray(data.detail)
-          ? data.detail
-              .map((item: { msg?: string }) => item?.msg)
-              .filter(Boolean)
-              .join("; ")
-          : data.detail,
-      );
-    }
-  } catch (parseError) {
-    throw new Error(`请求失败 (${response.status})`);
-  }
-  throw new Error(`请求失败 (${response.status})`);
-}
-
 // ----------- Types -----------
 // Types are now imported from @/types/domain/project
 
@@ -69,16 +28,16 @@ export async function precreateProject(
   payload: PrecreateProjectPayload,
   token?: string,
 ): Promise<PrecreateProjectResponse> {
-  const response = await fetch(`${PROJECT_SERVICE_BASE_URL}/precreate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(token),
+  return requestJson<PrecreateProjectResponse>(
+    `${PROJECT_SERVICE_BASE_URL}/precreate`,
+    {
+      token,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
-
-  return parseResponse<PrecreateProjectResponse>(response);
+  );
 }
 
 export async function uploadProjectDocs(
@@ -92,31 +51,23 @@ export async function uploadProjectDocs(
     formData.append("files", file);
   });
 
-  const response = await fetch(`${PROJECT_SERVICE_BASE_URL}/upload_docs`, {
-    method: "POST",
-    headers: {
-      ...authHeaders(token),
+  return requestJson<UploadDocsResponse>(
+    `${PROJECT_SERVICE_BASE_URL}/upload_docs`,
+    {
+      token,
+      body: formData,
     },
-    body: formData,
-  });
-
-  return parseResponse<UploadDocsResponse>(response);
+  );
 }
 
 export async function getProjectDetail(
   projectId: string,
   token?: string,
 ): Promise<ProjectDetailResponse> {
-  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/view`);
-  url.searchParams.set("project_id", projectId);
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      ...authHeaders(token),
-    },
+  const url = buildUrl(PROJECT_SERVICE_BASE_URL, "/view", {
+    project_id: projectId,
   });
-
-  return parseResponse<ProjectDetailResponse>(response);
+  return requestJson<ProjectDetailResponse>(url, { token });
 }
 
 export async function getProcessInfo(
@@ -124,39 +75,21 @@ export async function getProcessInfo(
   token?: string,
   options?: { workProcessName?: string },
 ): Promise<ProcessInfoResponse> {
-  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/process_info`);
-  if (projectId) {
-    url.searchParams.set("project_id", projectId);
-  }
-  if (options?.workProcessName) {
-    url.searchParams.set("work_process_name", options.workProcessName);
-  }
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      ...authHeaders(token),
-    },
+  const url = buildUrl(PROJECT_SERVICE_BASE_URL, "/process_info", {
+    project_id: projectId,
+    work_process_name: options?.workProcessName ?? "",
   });
-
-  return parseResponse<ProcessInfoResponse>(response);
+  return requestJson<ProcessInfoResponse>(url, { token });
 }
 
 export async function getProjectList(
   token?: string,
   userId?: string,
 ): Promise<ProjectListResponse> {
-  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/project_list`);
-  if (userId) {
-    url.searchParams.set("user_id", userId);
-  }
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      ...authHeaders(token),
-    },
+  const url = buildUrl(PROJECT_SERVICE_BASE_URL, "/project_list", {
+    user_id: userId ?? "",
   });
-
-  return parseResponse<ProjectListResponse>(response);
+  return requestJson<ProjectListResponse>(url, { token });
 }
 
 export async function addProcess(
@@ -187,77 +120,51 @@ export async function addProcess(
     formData.append("description", payload.description);
   }
 
-  const response = await fetch(`${PROJECT_SERVICE_BASE_URL}/add_process`, {
-    method: "POST",
-    headers: {
-      ...authHeaders(token),
+  return requestJson<AddProcessResponse>(
+    `${PROJECT_SERVICE_BASE_URL}/add_process`,
+    {
+      token,
+      body: formData,
     },
-    body: formData,
-  });
-
-  return parseResponse<AddProcessResponse>(response);
+  );
 }
 
 export async function getProjectConfig(
   projectId: string,
   token?: string,
 ): Promise<ProjectConfigResponse> {
-  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/project_config`);
-  url.searchParams.set("project_id", projectId);
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      ...authHeaders(token),
-    },
+  const url = buildUrl(PROJECT_SERVICE_BASE_URL, "/project_config", {
+    project_id: projectId,
   });
-
-  return parseResponse<ProjectConfigResponse>(response);
+  return requestJson<ProjectConfigResponse>(url, { token });
 }
 
 export async function getProcessGuidMapping(
   projectId: string,
   token?: string,
 ): Promise<ProcessGuidMappingResponse> {
-  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/process_guid_mapping`);
-  url.searchParams.set("project_id", projectId);
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      ...authHeaders(token),
-    },
+  const url = buildUrl(PROJECT_SERVICE_BASE_URL, "/process_guid_mapping", {
+    project_id: projectId,
   });
-
-  return parseResponse<ProcessGuidMappingResponse>(response);
+  return requestJson<ProcessGuidMappingResponse>(url, { token });
 }
 
 export async function getCrewData(
   projectId: string,
   token?: string,
 ): Promise<CrewData[]> {
-  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/crew`);
-  url.searchParams.set("project_id", projectId);
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      ...authHeaders(token),
-    },
+  const url = buildUrl(PROJECT_SERVICE_BASE_URL, "/crew", {
+    project_id: projectId,
   });
-
-  return parseResponse<CrewData[]>(response);
+  return requestJson<CrewData[]>(url, { token });
 }
 
 export async function getBudgetData(
   projectId: string,
   token?: string,
 ): Promise<BudgetData[]> {
-  const url = new URL(`${PROJECT_SERVICE_BASE_URL}/budget`);
-  url.searchParams.set("project_id", projectId);
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      ...authHeaders(token),
-    },
+  const url = buildUrl(PROJECT_SERVICE_BASE_URL, "/budget", {
+    project_id: projectId,
   });
-
-  return parseResponse<BudgetData[]>(response);
+  return requestJson<BudgetData[]>(url, { token });
 }
