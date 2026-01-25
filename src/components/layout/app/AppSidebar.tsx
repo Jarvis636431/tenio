@@ -12,6 +12,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   DollarSign,
   ClipboardList,
   Package,
@@ -40,7 +42,6 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ProjectSelector } from "@/components/project/ProjectSelector";
 import { useProject } from "@/hooks/useProject";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
@@ -50,10 +51,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import userAvatar from "@/assets/user-avatar.png";
+import { cn } from "@/lib/utils";
 const mainMenuItems = [
   {
     title: "主页",
@@ -148,7 +151,7 @@ const projectMenuItems = [
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const { currentProject } = useProject();
+  const { currentProject, projects, setCurrentProject } = useProject();
   const navigate = useNavigate();
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([
@@ -156,6 +159,7 @@ export function AppSidebar() {
     "monitoring",
     "toolbox",
   ]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{
     top: number;
@@ -166,6 +170,14 @@ export function AppSidebar() {
 
   const handleNewProject = () => {
     navigate("/create-project");
+  };
+
+  const handleProjectSelect = (projectId: string) => {
+    const project = projects.find((p) => p.id === projectId);
+    if (project) {
+      setCurrentProject(project);
+      navigate(`/project/${projectId}`);
+    }
   };
 
   const handleLogout = () => {
@@ -224,6 +236,21 @@ export function AppSidebar() {
 
   return (
     <TooltipProvider delayDuration={300}>
+      {isCollapsed && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed z-50 h-8 w-8 rounded-md bg-white border border-gray-200 shadow-sm hover:bg-gray-50"
+          style={{
+            left: "4.5rem",
+            top: "1.5rem",
+            transform: "translate(-50%, 0)",
+          }}
+          onClick={toggleSidebar}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
       <Sidebar className="border-r border-gray-200" collapsible="icon">
         <SidebarContent className="flex flex-col h-full">
           {/* 顶部公司Logo和名称 */}
@@ -330,7 +357,56 @@ export function AppSidebar() {
               <SidebarGroup className="py-0 my-0">
                 <SidebarGroupContent>
                   <div className="bg-transparent">
-                    <ProjectSelector isCollapsed={isCollapsed} />
+                    <div className="flex items-center w-full">
+                      <DropdownMenu
+                        open={dropdownOpen}
+                        onOpenChange={setDropdownOpen}
+                      >
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full h-9 p-2 font-normal bg-white border border-gray-200 flex items-center gap-2 rounded-md hover:bg-gray-50 hover:text-foreground active:bg-gray-100 transition-colors"
+                          >
+                            <span className="truncate text-left flex-1">
+                              {currentProject?.name || "选择项目"}
+                            </span>
+                            {dropdownOpen ? (
+                              <ChevronUp className="h-4 w-4 opacity-60 flex-shrink-0 ml-auto" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 opacity-60 flex-shrink-0 ml-auto" />
+                            )}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] px-[4px] bg-card">
+                          {projects.map((project) => (
+                            <DropdownMenuItem
+                              key={project.id}
+                              onClick={() => handleProjectSelect(project.id)}
+                              className={cn(
+                                "cursor-pointer",
+                                project.id === currentProject?.id &&
+                                  "bg-accent",
+                              )}
+                            >
+                              {project.name}
+                              {project.id === currentProject?.id && (
+                                <span className="ml-auto text-xs">✓</span>
+                              )}
+                            </DropdownMenuItem>
+                          ))}
+                          {projects.length === 0 && (
+                            <DropdownMenuItem disabled>暂无项目</DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={handleNewProject}
+                            className="cursor-pointer"
+                          >
+                            新建项目
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </SidebarGroupContent>
               </SidebarGroup>

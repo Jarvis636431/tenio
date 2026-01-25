@@ -1,13 +1,18 @@
 import { ReactNode } from "react";
 
-interface PageHeaderProps {
+interface ProjectHeaderProps {
   title?: string;
   actions?: ReactNode;
   className?: string;
   titleExtra?: ReactNode;
 }
 
-export function PageHeader({ title, actions, className = "", titleExtra }: PageHeaderProps) {
+export function ProjectHeader({
+  title,
+  actions,
+  className = "",
+  titleExtra,
+}: ProjectHeaderProps) {
   return (
     <div className={`flex items-center justify-between mb-2 ${className}`}>
       <div className="flex items-center">

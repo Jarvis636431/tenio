@@ -1,7 +1,7 @@
 import { Outlet, useParams } from 'react-router-dom';
 import { useProject } from '@/hooks/useProject';
 import { useProjectSchedule } from '@/hooks/useProjectSchedule';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { ProjectHeader } from '@/components/layout/project/ProjectHeader';
 import type { ProjectInfoRow } from '@/types/domain/project';
 import { useMemo } from 'react';
 
@@ -38,7 +38,7 @@ export function ProjectLayout() {
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
       <div className="px-6 pt-6">
-        <PageHeader 
+        <ProjectHeader 
           title={currentProject?.name || "项目详情"}
           titleExtra={totalDurationLabel ? `总工期：${totalDurationLabel}` : undefined}
         />

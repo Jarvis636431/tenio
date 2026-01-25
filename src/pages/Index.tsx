@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/hooks/useProject";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { ProjectHeader } from "@/components/layout/project/ProjectHeader";
 import { useState } from "react";
 
 const Index = () => {
@@ -35,7 +35,7 @@ const Index = () => {
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
       <div className="px-6 pt-6">
-        <PageHeader />
+        <ProjectHeader />
       </div>
 
       {/* 主内容区域 - 直接显示，无白色卡片包装 */}

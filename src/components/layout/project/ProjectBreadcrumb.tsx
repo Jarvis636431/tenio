@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 
-export function PageBreadcrumb() {
+export function ProjectBreadcrumb() {
   const location = useLocation();
   const { id } = useParams();
   const { currentProject } = useProject();

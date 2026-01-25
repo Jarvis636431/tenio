@@ -3,8 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Layout } from "./components/layout/Layout";
-import { ProjectLayout } from "./components/layout/ProjectLayout";
+import { AppLayout } from "./components/layout/app/AppLayout";
+import { ProjectLayout } from "./components/layout/project/ProjectLayout";
 import { useAuth } from "./hooks/useAuth";
 import { lazy, Suspense } from "react";
 
@@ -115,9 +115,9 @@ function AppRoutes({ auth }: { auth: AuthState }) {
           path="/"
           element={
             <ProtectedRoute auth={auth}>
-              <Layout>
+              <AppLayout>
                 <Index />
-              </Layout>
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -125,9 +125,9 @@ function AppRoutes({ auth }: { auth: AuthState }) {
           path="/project-management"
           element={
             <ProtectedRoute auth={auth}>
-              <Layout>
+              <AppLayout>
                 <ProjectManagement />
-              </Layout>
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -149,9 +149,9 @@ function AppRoutes({ auth }: { auth: AuthState }) {
           path="/project/:id"
           element={
             <ProtectedRoute auth={auth}>
-              <Layout>
+              <AppLayout>
                 <ProjectLayout />
-              </Layout>
+              </AppLayout>
             </ProtectedRoute>
           }
         >
