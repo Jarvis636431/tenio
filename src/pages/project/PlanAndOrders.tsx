@@ -2,20 +2,14 @@ import { useState, useMemo, useEffect } from "react";
 import { useProject } from "@/hooks/useProject";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import { useProjectConfig } from "@/hooks/useProjectConfig";
-import { GanttChart } from "@/components/plan/GanttChart";
-import { NewTaskDialog } from "@/components/plan/NewTaskDialog";
-import { TaskDetailDialog } from "@/components/plan/TaskDetailDialog";
-import { TaskFilters } from "@/components/plan/TaskFilters";
-import { TaskActions } from "@/components/plan/TaskActions";
-import { TaskOverview } from "@/components/plan/TaskOverview";
-import { TaskDetailSheet } from "@/components/plan/TaskDetailSheet";
+import { PlanToolbar } from "@/pages/project/plan/components/PlanToolbar";
+import { PlanContent } from "@/pages/project/plan/components/PlanContent";
+import { PlanDialogs } from "@/pages/project/plan/components/PlanDialogs";
 import { useParams } from "react-router-dom";
 import type { PlanTask, TimelineScale } from "@/types/domain/plan";
 import { usePlanFilters } from "@/pages/project/plan/hooks/usePlanFilters";
 import { usePlanPagination } from "@/pages/project/plan/hooks/usePlanPagination";
 import { usePlanExport } from "@/pages/project/plan/hooks/usePlanExport";
-
-import { NetworkDiagram } from "@/components/plan/NetworkDiagram";
 
 export function PlanAndOrders() {
   const { currentProject } = useProject();
@@ -106,6 +100,16 @@ export function PlanAndOrders() {
     setEditedItem(null);
   };
 
+  const handleGanttTaskDetail = (taskId: number) => {
+    const taskItem = allData.find((item) => item.id === taskId);
+    if (taskItem) {
+      setSelectedItem(taskItem);
+      setIsEditMode(false);
+      setEditedItem(null);
+      setIsDetailDialogOpen(true);
+    }
+  };
+
   // 甘特图数据转换 - 使用过滤后的数据
   const ganttData = useMemo(() => {
     return filteredData.map((item) => ({
@@ -157,77 +161,45 @@ export function PlanAndOrders() {
 
   return (
     <div className="h-full flex flex-col space-y-6">
-      {/* 操作栏 */}
-      <div className="flex items-center justify-between">
-        <TaskFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          jobFilter={jobFilter}
-          onJobFilterChange={setJobFilter}
-          floorFilter={floorFilter}
-          onFloorFilterChange={setFloorFilter}
-          jobTypes={jobTypes}
-          floorTypes={floorTypes}
-        />
-        <TaskActions
-          activeView={tab || "overview"}
-          timelineScale={timelineScale}
-          onTimelineScaleChange={setTimelineScale}
-          filteredDataLength={filteredData.length}
-          ganttDataLength={ganttData.length}
-          onExportCSV={handleExportCSV}
-          onNewTask={() => currentProject?.id && setIsNewTaskDialogOpen(true)}
-          currentProjectId={currentProject?.id}
-        />
-      </div>
+      <PlanToolbar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        jobFilter={jobFilter}
+        onJobFilterChange={setJobFilter}
+        floorFilter={floorFilter}
+        onFloorFilterChange={setFloorFilter}
+        jobTypes={jobTypes}
+        floorTypes={floorTypes}
+        activeView={tab || "overview"}
+        timelineScale={timelineScale}
+        onTimelineScaleChange={setTimelineScale}
+        filteredDataLength={filteredData.length}
+        ganttDataLength={ganttData.length}
+        onExportCSV={handleExportCSV}
+        onNewTask={() => currentProject?.id && setIsNewTaskDialogOpen(true)}
+        currentProjectId={currentProject?.id}
+      />
 
-      <div className="h-full flex flex-col">
-        {/* 可滚动的内容区域 - 自适应高度 */}
-        <div className="flex-1 overflow-hidden">
-          {(tab === "overview" || !tab) && (
-            <TaskOverview
-              paginatedData={paginatedData}
-              currentPage={currentPage}
-              itemsPerPage={itemsPerPage}
-              filteredDataLength={filteredData.length}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              onEditClick={handleEditClick}
-              onDetailClick={handleDetailClick}
-              onMoreClick={handleMoreClick}
-            />
-          )}
+      <PlanContent
+        tab={tab}
+        paginatedData={paginatedData}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        filteredDataLength={filteredData.length}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        onEditClick={handleEditClick}
+        onDetailClick={handleDetailClick}
+        onMoreClick={handleMoreClick}
+        ganttData={ganttData}
+        timelineScale={timelineScale}
+        shutdownEvents={config?.shutdown_events ?? []}
+        onGanttTaskDetail={handleGanttTaskDetail}
+      />
 
-          {tab === "gantt" && (
-            <div className="h-[calc(100vh-200px)]">
-              <GanttChart
-                data={ganttData}
-                scale={timelineScale}
-                shutdownEvents={config?.shutdown_events ?? []}
-                onTaskDetail={(task) => {
-                  // 将甘特图的任务数据转换为表格数据格式
-                  const taskItem = allData.find((item) => item.id === task.id);
-                  if (taskItem) {
-                    setSelectedItem(taskItem);
-                    setIsEditMode(false); // 确保从甘特图进入时是只读状态
-                    setEditedItem(null);
-                    setIsDetailDialogOpen(true);
-                  }
-                }}
-              />
-            </div>
-          )}
-
-          {tab === "network" && (
-            <NetworkDiagram tasks={ganttData} onNodeClick={handleMoreClick} />
-          )}
-        </div>
-      </div>
-
-      {/* 详情抽屉 */}
-      <TaskDetailSheet
-        open={isDetailDialogOpen}
-        onOpenChange={setIsDetailDialogOpen}
+      <PlanDialogs
+        isDetailDialogOpen={isDetailDialogOpen}
+        setIsDetailDialogOpen={setIsDetailDialogOpen}
         selectedItem={selectedItem}
         isEditMode={isEditMode}
         editedItem={editedItem}
@@ -235,27 +207,17 @@ export function PlanAndOrders() {
         onSaveEdit={handleSaveEdit}
         onCancelEdit={handleCancelEdit}
         onEditedItemChange={setEditedItem}
-      />
-
-      {/* 新增任务对话框 */}
-      <NewTaskDialog
-        open={isNewTaskDialogOpen}
-        onOpenChange={setIsNewTaskDialogOpen}
-        onAdd={(task) => {
+        isNewTaskDialogOpen={isNewTaskDialogOpen}
+        setIsNewTaskDialogOpen={setIsNewTaskDialogOpen}
+        existingTasks={allData}
+        projectId={currentProject?.id ?? ""}
+        onTaskAdded={(task) => {
           console.log("新增任务:", task);
           setIsNewTaskDialogOpen(false);
         }}
-        existingTasks={allData}
-        projectId={currentProject?.id ?? ""}
-      />
-
-      {/* 任务详情对话框 */}
-      <TaskDetailDialog
-        open={isTaskDetailDialogOpen}
-        onOpenChange={setIsTaskDetailDialogOpen}
-        task={selectedTaskForDetail}
-        projectId={currentProject?.id}
-        workProcessName={selectedTaskForDetail?.task}
+        isTaskDetailDialogOpen={isTaskDetailDialogOpen}
+        setIsTaskDetailDialogOpen={setIsTaskDetailDialogOpen}
+        selectedTaskForDetail={selectedTaskForDetail}
       />
     </div>
   );
