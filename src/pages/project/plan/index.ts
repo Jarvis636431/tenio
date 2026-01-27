@@ -5,3 +5,4 @@ export { usePlanFilters } from "./hooks/usePlanFilters";
 export { usePlanPagination } from "./hooks/usePlanPagination";
 export { usePlanExport } from "./hooks/usePlanExport";
 export { usePlanDialogs } from "./hooks/usePlanDialogs";
+export { PlanPage } from "./PlanPage";

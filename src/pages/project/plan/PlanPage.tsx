@@ -14,7 +14,7 @@ import {
 import { useParams } from "react-router-dom";
 import type { TimelineScale } from "@/types/domain/plan";
 
-export function PlanAndOrders() {
+export function PlanPage() {
   const { currentProject } = useProject();
   const { tab } = useParams();
 

@@ -7,9 +7,9 @@ const ProjectHomepage = lazy(() =>
   })),
 );
 const BasicInfo = lazy(() => import("@/pages/project/BasicInfo"));
-const PlanAndOrders = lazy(() =>
-  import("@/pages/project/PlanAndOrders").then((module) => ({
-    default: module.PlanAndOrders,
+const PlanPage = lazy(() =>
+  import("@/pages/project/plan/PlanPage").then((module) => ({
+    default: module.PlanPage,
   })),
 );
 const RealTimeMonitoring = lazy(() =>
@@ -49,7 +49,7 @@ export function ProjectRoutes() {
       <Route index element={<ProjectHomepage />} />
       <Route path="basic-info" element={<BasicInfo />} />
       <Route path="plan" element={<Navigate to="overview" replace />} />
-      <Route path="plan/:tab" element={<PlanAndOrders />} />
+      <Route path="plan/:tab" element={<PlanPage />} />
       <Route path="monitoring" element={<Navigate to="labor" replace />} />
       <Route path="monitoring/:tab" element={<RealTimeMonitoring />} />
       <Route path="craftsman" element={<CraftsmanManagement />} />
