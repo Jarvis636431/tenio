@@ -2,28 +2,22 @@ import { useState, useMemo, useEffect } from "react";
 import { useProject } from "@/hooks/useProject";
 import { useProjectSchedule } from "@/hooks/useProjectSchedule";
 import { useProjectConfig } from "@/hooks/useProjectConfig";
-import { PlanToolbar } from "@/pages/project/plan/components/PlanToolbar";
-import { PlanContent } from "@/pages/project/plan/components/PlanContent";
-import { PlanDialogs } from "@/pages/project/plan/components/PlanDialogs";
+import {
+  PlanToolbar,
+  PlanContent,
+  PlanDialogs,
+  usePlanFilters,
+  usePlanPagination,
+  usePlanExport,
+  usePlanDialogs,
+} from "@/pages/project/plan";
 import { useParams } from "react-router-dom";
-import type { PlanTask, TimelineScale } from "@/types/domain/plan";
-import { usePlanFilters } from "@/pages/project/plan/hooks/usePlanFilters";
-import { usePlanPagination } from "@/pages/project/plan/hooks/usePlanPagination";
-import { usePlanExport } from "@/pages/project/plan/hooks/usePlanExport";
+import type { TimelineScale } from "@/types/domain/plan";
 
 export function PlanAndOrders() {
   const { currentProject } = useProject();
   const { tab } = useParams();
 
-  // State declarations
-  const [selectedItem, setSelectedItem] = useState<PlanTask | null>(null);
-  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editedItem, setEditedItem] = useState<PlanTask | null>(null);
-  const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
-  const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
-  const [selectedTaskForDetail, setSelectedTaskForDetail] =
-    useState<PlanTask | null>(null);
   const [timelineScale, setTimelineScale] = useState<TimelineScale>("day");
 
   const { scheduleItems, isLoading, error, refetch } = useProjectSchedule();
@@ -52,63 +46,25 @@ export function PlanAndOrders() {
 
   const { handleExportCSV } = usePlanExport(filteredData);
 
-  // 详情对话框处理
-  const handleDetailClick = (item: PlanTask) => {
-    setSelectedItem(item);
-    setIsEditMode(false); // 确保从详情入口进入时是只读状态
-    setEditedItem(null);
-    setIsDetailDialogOpen(true);
-  };
-
-  // 更多详情对话框处理
-  const handleMoreClick = (item: PlanTask) => {
-    setSelectedTaskForDetail(item);
-    setIsTaskDetailDialogOpen(true);
-  };
-
-  const handleCloseDetail = () => {
-    setIsDetailDialogOpen(false);
-    setSelectedItem(null);
-    setIsEditMode(false);
-    setEditedItem(null);
-  };
-
-  const handleEditClick = (item: PlanTask) => {
-    setSelectedItem(item);
-    setEditedItem({ ...item });
-    setIsEditMode(true);
-    // 如果详情页已经打开，不需要重新打开
-    if (!isDetailDialogOpen) {
-      setIsDetailDialogOpen(true);
-    }
-  };
-
-  const handleSaveEdit = () => {
-    if (editedItem) {
-      // 这里可以添加保存逻辑，比如更新数据
-      console.log("保存编辑:", editedItem);
-      // 更新原始数据
-      setSelectedItem(editedItem);
-      // 退出编辑模式
-      setIsEditMode(false);
-      setEditedItem(null);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditMode(false);
-    setEditedItem(null);
-  };
-
-  const handleGanttTaskDetail = (taskId: number) => {
-    const taskItem = allData.find((item) => item.id === taskId);
-    if (taskItem) {
-      setSelectedItem(taskItem);
-      setIsEditMode(false);
-      setEditedItem(null);
-      setIsDetailDialogOpen(true);
-    }
-  };
+  const {
+    isDetailDialogOpen,
+    setIsDetailDialogOpen,
+    selectedItem,
+    isEditMode,
+    editedItem,
+    isNewTaskDialogOpen,
+    setIsNewTaskDialogOpen,
+    isTaskDetailDialogOpen,
+    setIsTaskDetailDialogOpen,
+    selectedTaskForDetail,
+    setEditedItem,
+    handleDetailClick,
+    handleMoreClick,
+    handleEditClick,
+    handleSaveEdit,
+    handleCancelEdit,
+    handleGanttTaskDetail,
+  } = usePlanDialogs();
 
   // 甘特图数据转换 - 使用过滤后的数据
   const ganttData = useMemo(() => {
@@ -194,7 +150,9 @@ export function PlanAndOrders() {
         ganttData={ganttData}
         timelineScale={timelineScale}
         shutdownEvents={config?.shutdown_events ?? []}
-        onGanttTaskDetail={handleGanttTaskDetail}
+        onGanttTaskDetail={(taskId) =>
+          handleGanttTaskDetail(allData.find((item) => item.id === taskId))
+        }
       />
 
       <PlanDialogs
