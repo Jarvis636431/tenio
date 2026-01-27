@@ -1,6 +1,6 @@
-import { GanttChart } from "@/components/plan/GanttChart";
-import { TaskOverview } from "@/components/plan/TaskOverview";
-import { NetworkDiagram } from "@/components/plan/NetworkDiagram";
+import { GanttChart } from "@/components/plan/gantt/GanttChart";
+import { TaskOverview } from "@/components/plan/overview/TaskOverview";
+import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import type { PlanTask, TimelineScale } from "@/types/domain/plan";
 
 interface PlanContentProps {

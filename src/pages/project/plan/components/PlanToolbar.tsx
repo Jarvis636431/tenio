@@ -1,5 +1,5 @@
-import { TaskFilters } from "@/components/plan/TaskFilters";
-import { TaskActions } from "@/components/plan/TaskActions";
+import { TaskFilters } from "@/components/plan/filters/TaskFilters";
+import { TaskActions } from "@/components/plan/filters/TaskActions";
 import type { TimelineScale } from "@/types/domain/plan";
 
 interface PlanToolbarProps {

@@ -1,7 +1,7 @@
 import { Plus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { TimelineScale } from "@/components/plan/GanttChart";
+import type { TimelineScale } from "@/components/plan/gantt/GanttChart";
 
 interface TaskActionsProps {
   activeView: string;

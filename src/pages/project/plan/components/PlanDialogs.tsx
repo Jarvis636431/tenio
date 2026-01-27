@@ -1,6 +1,6 @@
-import { NewTaskDialog } from "@/components/plan/NewTaskDialog";
-import { TaskDetailDialog } from "@/components/plan/TaskDetailDialog";
-import { TaskDetailSheet } from "@/components/plan/TaskDetailSheet";
+import { NewTaskDialog } from "@/components/plan/dialogs/NewTaskDialog";
+import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
+import { TaskDetailSheet } from "@/components/plan/dialogs/TaskDetailSheet";
 import type { PlanTask } from "@/types/domain/plan";
 
 interface PlanDialogsProps {
