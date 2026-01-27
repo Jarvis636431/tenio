@@ -3,6 +3,7 @@ import type { PlanTask } from "@/types/domain/plan";
 
 interface NetworkDiagramProps {
   tasks: PlanTask[];
+  onNodeClick?: (task: PlanTask) => void;
 }
 
 type Node = {
@@ -11,6 +12,7 @@ type Node = {
   start: string;
   end: string;
   level: number;
+  task: PlanTask;
 };
 
 type Edge = {
@@ -25,7 +27,7 @@ function parseDependencyIds(value: string): number[] {
     .filter((id) => Number.isFinite(id));
 }
 
-export function NetworkDiagram({ tasks }: NetworkDiagramProps) {
+export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
   const { nodes, edges, width, height } = useMemo(() => {
     if (tasks.length === 0) {
       return { nodes: [] as Node[], edges: [] as Edge[], width: 0, height: 0 };
@@ -83,6 +85,7 @@ export function NetworkDiagram({ tasks }: NetworkDiagramProps) {
       start: task.startTime,
       end: task.endTime,
       level: levelMap.get(task.id) ?? 0,
+      task,
     }));
 
     const levelGroups = new Map<number, Node[]>();
@@ -161,7 +164,11 @@ export function NetworkDiagram({ tasks }: NetworkDiagramProps) {
           })}
 
           {nodes.map((node) => (
-            <g key={node.id}>
+            <g
+              key={node.id}
+              onClick={() => onNodeClick?.(node.task)}
+              className={onNodeClick ? "cursor-pointer" : undefined}
+            >
               <rect
                 x={node.x}
                 y={node.y}

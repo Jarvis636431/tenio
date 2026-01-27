@@ -432,7 +432,9 @@ export function PlanAndOrders() {
             </div>
           )}
 
-          {tab === "network" && <NetworkDiagram tasks={ganttData} />}
+          {tab === "network" && (
+            <NetworkDiagram tasks={ganttData} onNodeClick={handleMoreClick} />
+          )}
         </div>
       </div>
 
