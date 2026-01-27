@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, Outlet, useLocation } from "react-router-dom";
 import { AppLayout } from "@/components/layout/app/AppLayout";
+import { ProjectLayout } from "@/components/layout/project/ProjectLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { ProjectRoutes } from "@/routes/ProjectRoutes";
@@ -86,7 +87,7 @@ export function AppRoutes() {
           element={
             <ProtectedRoute auth={auth}>
               <AppLayout>
-                <Outlet />
+                <ProjectLayout />
               </AppLayout>
             </ProtectedRoute>
           }
