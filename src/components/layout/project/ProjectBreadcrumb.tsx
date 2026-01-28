@@ -9,28 +9,12 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
+import { PROJECT_BREADCRUMB_NAME_MAP } from "@/constants/project-breadcrumb";
 
 export function ProjectBreadcrumb() {
   const location = useLocation();
   const { id } = useParams();
   const { currentProject } = useProject();
-  // 路径片段到名称的映射
-  const segmentNameMap: { [key: string]: string } = {
-    // 一级导航
-    plan: "施工总览",
-    monitoring: "实时监测",
-    craftsman: "工匠管理",
-    funding: "资金物料",
-
-    // 二级导航 (Tabs)
-    overview: "任务总览",
-    gantt: "施工工序甘特图",
-    procurement: "采购进度",
-    labor: "施工人数",
-    cost: "人工成本",
-    materials: "物料供应",
-  };
-
   // 根据当前路径生成面包屑
   const getBreadcrumbItems = () => {
     const items = [];
@@ -63,19 +47,19 @@ export function ProjectBreadcrumb() {
       const viewSegment = segments[2];
       const tabSegment = segments[3];
 
-      if (viewSegment && segmentNameMap[viewSegment]) {
+      if (viewSegment && PROJECT_BREADCRUMB_NAME_MAP[viewSegment]) {
         // 添加一级导航面包屑
         const isLast = !tabSegment;
         items.push({
-          label: segmentNameMap[viewSegment],
+          label: PROJECT_BREADCRUMB_NAME_MAP[viewSegment],
           href: !isLast ? `/project/${id}/${viewSegment}` : undefined,
           isCurrent: isLast,
         });
 
         // 如果有二级导航，添加二级导航面包屑
-        if (tabSegment && segmentNameMap[tabSegment]) {
+        if (tabSegment && PROJECT_BREADCRUMB_NAME_MAP[tabSegment]) {
           items.push({
-            label: segmentNameMap[tabSegment],
+            label: PROJECT_BREADCRUMB_NAME_MAP[tabSegment],
             href: undefined, // 最后一级通常不可点击或就是当前页
             isCurrent: true,
           });

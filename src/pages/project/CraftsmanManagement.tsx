@@ -8,89 +8,14 @@ import { Search, Upload, User } from "lucide-react";
 import { EditCraftsmanDialog } from "@/components/craftsman/EditCraftsmanDialog";
 import { ImportCraftsmanDialog } from "@/components/craftsman/ImportCraftsmanDialog";
 import { TeamDetailDialog } from "@/components/craftsman/TeamDetailDialog";
-import {
-  Craftsman,
-  Team,
-} from "@/types/domain/craftsman";
+import { Craftsman, Team } from "@/types/domain/craftsman";
+import { mockTeams } from "@/mocks/data/craftsman";
 
 interface CraftsmanManagementProps {
   onActionsChange?: (actions: React.ReactNode) => void;
 }
 
-// 班组 Mock 数据
-const mockTeams: Team[] = [
-  {
-    id: 1,
-    name: "木工一班",
-    leader: "张师傅",
-    leaderPhone: "138****1234",
-    trade: "木工",
-    memberCount: 8,
-    status: 'active',
-    contractStatus: "已签署",
-    certificationStatus: "已认证",
-    entryCount: 23,
-    createdAt: "2024-01-15T08:00:00Z",
-    updatedAt: "2024-07-20T16:30:00Z",
-    remarks: "技术骨干班组，工作认真负责"
-  },
-  {
-    id: 2,
-    name: "电工专业班",
-    leader: "李师傅",
-    leaderPhone: "139****5678",
-    trade: "电工",
-    memberCount: 6,
-    status: 'active',
-    contractStatus: "已签署",
-    certificationStatus: "已认证",
-    entryCount: 31,
-    createdAt: "2024-01-10T08:00:00Z",
-    updatedAt: "2024-07-20T16:30:00Z",
-  },
-  {
-    id: 3,
-    name: "钢筋工二班",
-    leader: "王师傅",
-    leaderPhone: "137****9012",
-    trade: "钢筋工",
-    memberCount: 10,
-    status: 'active',
-    contractStatus: "已签署",
-    certificationStatus: "待认证",
-    entryCount: 18,
-    createdAt: "2024-02-01T08:00:00Z",
-    updatedAt: "2024-07-20T16:30:00Z",
-  },
-  {
-    id: 4,
-    name: "混凝土专业组",
-    leader: "刘师傅",
-    leaderPhone: "136****3456",
-    trade: "混凝土工",
-    memberCount: 12,
-    status: 'inactive',
-    contractStatus: "已签署",
-    certificationStatus: "已认证",
-    entryCount: 15,
-    createdAt: "2024-01-20T08:00:00Z",
-    updatedAt: "2024-07-20T16:30:00Z",
-  },
-  {
-    id: 5,
-    name: "木工二班",
-    leader: "赵师傅",
-    leaderPhone: "135****7890",
-    trade: "木工",
-    memberCount: 5,
-    status: 'active',
-    contractStatus: "待签署",
-    certificationStatus: "已认证",
-    entryCount: 8,
-    createdAt: "2024-03-01T08:00:00Z",
-    updatedAt: "2024-07-20T16:30:00Z",
-  },
-];
+// 班组 Mock 数据已移至 mocks
 export function CraftsmanManagement(_props: CraftsmanManagementProps) {
   const [teams, setTeams] = useState<Team[]>(mockTeams);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);

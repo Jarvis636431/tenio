@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { User, Phone, Users, Briefcase, DollarSign, Calendar, CheckCircle2, XCircle, Clock } from "lucide-react";
 import type { Team } from "@/types/domain/craftsman";
+import { mockTeamTasks } from "@/mocks/data/craftsman";
 
 interface TeamDetailDialogProps {
   open: boolean;
@@ -20,44 +21,7 @@ export function TeamDetailDialog({ open, onOpenChange, team }: TeamDetailDialogP
   const totalAmount = team.memberCount * 15000;
   const progress = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0;
 
-  // Mock 工序数据
-  const mockTasks = [
-    {
-      id: 1,
-      name: "基础开挖",
-      amount: 25000,
-      isCompleted: true,
-      isSettled: true,
-    },
-    {
-      id: 2,
-      name: "钢筋绑扎",
-      amount: 35000,
-      isCompleted: true,
-      isSettled: true,
-    },
-    {
-      id: 3,
-      name: "模板安装",
-      amount: 28000,
-      isCompleted: true,
-      isSettled: false,
-    },
-    {
-      id: 4,
-      name: "混凝土浇筑",
-      amount: 42000,
-      isCompleted: false,
-      isSettled: false,
-    },
-    {
-      id: 5,
-      name: "模板拆除",
-      amount: 18000,
-      isCompleted: false,
-      isSettled: false,
-    },
-  ];
+  const mockTasks = mockTeamTasks;
 
   const getTradeColor = (trade: string) => {
     switch (trade) {
