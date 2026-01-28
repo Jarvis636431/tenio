@@ -28,17 +28,17 @@ const FundingMaterials = lazy(() =>
   })),
 );
 const QualityInspection = lazy(() =>
-  import("@/pages/project/QualityInspection").then((module) => ({
+  import("@/pages/project/toolbox/QualityInspection").then((module) => ({
     default: module.QualityInspection,
   })),
 );
 const DailyLog = lazy(() =>
-  import("@/pages/project/DailyLog").then((module) => ({
+  import("@/pages/project/toolbox/DailyLog").then((module) => ({
     default: module.DailyLog,
   })),
 );
 const KnowledgeQA = lazy(() =>
-  import("@/pages/project/KnowledgeQA").then((module) => ({
+  import("@/pages/project/toolbox/KnowledgeQA").then((module) => ({
     default: module.KnowledgeQA,
   })),
 );
