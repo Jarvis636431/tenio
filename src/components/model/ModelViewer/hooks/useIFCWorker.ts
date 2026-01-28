@@ -7,7 +7,6 @@ import { useRef, useCallback, useEffect, useState } from 'react';
 import type {
   WorkerMessage,
   WorkerResponse,
-  SerializedModel,
   ProgressCallback,
   SuccessCallback,
   ErrorCallback,

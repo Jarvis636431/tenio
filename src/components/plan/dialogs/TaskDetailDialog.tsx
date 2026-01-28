@@ -13,12 +13,11 @@ import {
   ShieldAlert,
   CheckCircle,
   Clock,
-  AlertCircle,
 } from "lucide-react";
 import {
   getProcessInfo,
 } from "@/services/project-service";
-import type { OrderInfoData, ProcessInfoData } from "@/types/domain/project";
+import type { OrderInfoData } from "@/types/domain/project";
 import { useAuth } from "@/hooks/useAuth";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import type { PlanTask } from "@/types/domain/plan";
@@ -167,20 +166,6 @@ export function TaskDetailDialog({
       loadAcceptanceData(processNumber).then(setAcceptanceData);
     }
   }, [task]);
-
-  // 获取步骤状态图标
-  const getStepStatusIcon = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "in_progress":
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      case "pending":
-        return <AlertCircle className="h-4 w-4 text-gray-400" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-400" />;
-    }
-  };
 
   // 获取步骤状态样式
   const getStepStatusStyle = (status: string) => {

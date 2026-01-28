@@ -433,7 +433,7 @@ export function AIAssistant() {
     }
   };
 
-  const handleApproveChange = (messageId: string, payload: unknown) => {
+  const handleApproveChange = (messageId: string) => {
     if (!projectId || !token) {
       setMessages((prev) =>
         prev.map((msg) =>
@@ -610,9 +610,7 @@ export function AIAssistant() {
                         <div className="mt-3 flex items-center gap-2">
                           <Button
                             size="sm"
-                            onClick={() =>
-                              handleApproveChange(message.id, message.approvalPayload)
-                            }
+                            onClick={() => handleApproveChange(message.id)}
                           >
                             <Check className="w-4 h-4 mr-1" />
                             确认修改

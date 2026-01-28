@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import * as THREE from 'three';
 import { IFCLoader } from 'web-ifc-three/IFCLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useIFCWorker } from './hooks/useIFCWorker';
-import type { SerializedModel, LoadingState } from '@/types/worker.types';
+import type { LoadingState } from "@/types/domain/worker";
 import { buildIdCaches } from './utils/ifcCaches';
 import { setupCameraAndControls } from './utils/cameraControls';
 import { useRenderLoop } from './hooks/useRenderLoop';
@@ -34,7 +34,6 @@ export function ModelViewer({
   className,
   highlightIds = [],
   highlightColor = "#ff9800",
-  baseColor = "#808080",
   highlightGroups,
 }: ModelViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -130,10 +129,7 @@ export function ModelViewer({
     globalIdMapModelIdRef,
     productIdsRef,
     productIndexReadyRef,
-    needsRenderRef,
     controlsRef,
-    animateIdRef,
-    abortControllerRef,
     expressIdIndexMapRef,
   });
 
@@ -150,12 +146,10 @@ export function ModelViewer({
     globalIdMapRef,
     globalIdMapModelIdRef,
     productIndexReadyRef,
-    needsRenderRef,
     controlsRef,
     sceneRef,
     cameraRef,
     rendererRef,
-    animateIdRef,
     expressIdIndexMapRef,
   });
 

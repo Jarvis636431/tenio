@@ -13,8 +13,6 @@ type BuildIdCaches = typeof buildIdCaches;
 
 type SelectableModel = THREE.Object3D & { modelID: number };
 
-type AnyMesh = THREE.Mesh & { renderOrder: number };
-
 interface DeserializeParams {
   serialized: SerializedModel;
 }
@@ -99,10 +97,7 @@ interface WorkerModelParams {
   globalIdMapModelIdRef: Ref<number | null>;
   productIdsRef: Ref<number[] | null>;
   productIndexReadyRef: Ref<boolean>;
-  needsRenderRef: Ref<boolean>;
   controlsRef: Ref<OrbitControls | null>;
-  animateIdRef: Ref<number | null>;
-  abortControllerRef: Ref<AbortController | null>;
   expressIdIndexMapRef: Ref<Map<number, { [materialID: number]: number[] }> | null>;
 }
 
@@ -122,10 +117,7 @@ export function createWorkerModel({
   globalIdMapModelIdRef,
   productIdsRef,
   productIndexReadyRef,
-  needsRenderRef,
   controlsRef,
-  animateIdRef,
-  abortControllerRef,
   expressIdIndexMapRef,
 }: WorkerModelParams) {
   const handleWorkerSuccess = async (modelData: SerializedModel) => {

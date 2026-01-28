@@ -8,13 +8,9 @@ import { Search, Upload, User } from "lucide-react";
 import { EditCraftsmanDialog } from "@/components/craftsman/EditCraftsmanDialog";
 import { ImportCraftsmanDialog } from "@/components/craftsman/ImportCraftsmanDialog";
 import { TeamDetailDialog } from "@/components/craftsman/TeamDetailDialog";
-import { useToast } from "@/hooks/use-toast";
 import {
   Craftsman,
-  ImportError,
-  ImportResult,
   Team,
-  EntryExitRecord
 } from "@/types/domain/craftsman";
 
 interface CraftsmanManagementProps {
@@ -96,9 +92,6 @@ const mockTeams: Team[] = [
   },
 ];
 export function CraftsmanManagement(_props: CraftsmanManagementProps) {
-  const {
-    toast
-  } = useToast();
   const [teams, setTeams] = useState<Team[]>(mockTeams);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);

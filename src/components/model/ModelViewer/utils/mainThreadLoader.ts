@@ -11,8 +11,7 @@ type LoadModelInMainThread = (
   data: ArrayBuffer,
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
-  renderer: THREE.WebGLRenderer,
-  container: HTMLDivElement
+  renderer: THREE.WebGLRenderer
 ) => Promise<void>;
 
 interface MainThreadLoaderParams {
@@ -44,12 +43,10 @@ interface MainThreadLoaderParams {
   globalIdMapRef: Ref<Map<string, number> | null>;
   globalIdMapModelIdRef: Ref<number | null>;
   productIndexReadyRef: Ref<boolean>;
-  needsRenderRef: Ref<boolean>;
   controlsRef: Ref<OrbitControls | null>;
   sceneRef: Ref<THREE.Scene | null>;
   cameraRef: Ref<THREE.PerspectiveCamera | null>;
   rendererRef: Ref<THREE.WebGLRenderer | null>;
-  animateIdRef: Ref<number | null>;
   expressIdIndexMapRef: Ref<Map<number, { [materialID: number]: number[] }> | null>;
 }
 
@@ -66,20 +63,17 @@ export function createMainThreadLoader({
   globalIdMapRef,
   globalIdMapModelIdRef,
   productIndexReadyRef,
-  needsRenderRef,
   controlsRef,
   sceneRef,
   cameraRef,
   rendererRef,
-  animateIdRef,
   expressIdIndexMapRef,
 }: MainThreadLoaderParams) {
   const loadModelInMainThread: LoadModelInMainThread = async (
     data,
     scene,
     camera,
-    renderer,
-    container
+    renderer
   ) => {
     if (!ifcLoaderRef.current) {
       throw new Error('IFC Loader 未初始化');

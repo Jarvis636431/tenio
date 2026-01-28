@@ -9,8 +9,7 @@ type LoadModelInMainThread = (
   data: ArrayBuffer,
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
-  renderer: THREE.WebGLRenderer,
-  container: HTMLDivElement
+  renderer: THREE.WebGLRenderer
 ) => Promise<void>;
 
 interface LoadingState {
@@ -158,7 +157,7 @@ export function useInitViewer({
         console.log('[ModelViewer] Worker 解析请求已发送');
       } else {
         console.warn('[ModelViewer] Worker 不可用，使用主线程解析');
-        await loadModelInMainThread(data, scene, camera, renderer, container);
+        await loadModelInMainThread(data, scene, camera, renderer);
       }
 
       isInitializedRef.current = true;

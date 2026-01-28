@@ -13,7 +13,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
@@ -86,7 +86,6 @@ interface DataEntryFormProps {
   }) => void;
   title: string;
   unit: string;
-  description: string;
   showCategorySelector?: boolean;
   category?: string;
   subType?: string;
@@ -98,7 +97,6 @@ export function DataEntryForm({
   onSubmit, 
   title, 
   unit, 
-  description,
   showCategorySelector = false,
   category: initialCategory,
   subType: initialSubType

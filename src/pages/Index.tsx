@@ -1,7 +1,5 @@
 import {
   Card,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -9,16 +7,12 @@ import { Button } from "@/components/ui/button";
 import {
   Plus,
   Building2,
-  Activity,
   FileText,
-  BarChart3,
-  Users,
   Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/hooks/useProject";
 import { ProjectHeader } from "@/components/layout/project/ProjectHeader";
-import { useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();

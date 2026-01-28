@@ -45,7 +45,6 @@ const defaultProjectData: BasicInfoFormData = {
 export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) {
   const { currentProject, updateProject } = useProject();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editedItem, setEditedItem] = useState<BasicInfoFormData | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<BasicInfoFormData | null>(null);
   // Tabs 移除，无需 sticky
@@ -63,7 +62,6 @@ export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) 
   useEffect(() => {
     // 由于 Project 上暂未定义这些字段，这里提供默认值
     form.reset(defaultProjectData);
-    setEditedItem(defaultProjectData);
   }, [form]);
 
   const handleEdit = () => {
@@ -73,7 +71,6 @@ export default function BasicInfo({ actions, onActionsChange }: BasicInfoProps) 
   const handleCancel = () => {
     setIsEditMode(false);
     form.reset(defaultProjectData);
-    setEditedItem(defaultProjectData);
   };
 
   const onSubmit = async (data: BasicInfoFormData) => {

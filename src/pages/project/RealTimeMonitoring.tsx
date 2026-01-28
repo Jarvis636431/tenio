@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Users, DollarSign, Plus, Calendar, Table as TableIcon, BarChart3, Eye, EyeOff } from "lucide-react";
+import { Plus, Calendar, Table as TableIcon, BarChart3 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -117,7 +117,6 @@ const loadRealData = async () => {
 };
 
 export function RealTimeMonitoring() {
-  const location = useLocation();
   const { tab } = useParams();
   
   // 从路径参数获取数据类型
@@ -135,10 +134,10 @@ export function RealTimeMonitoring() {
   const [jobTypeData, setJobTypeData] = useState<JobTypeData[]>([]);
   const itemsPerPage = 20;
 
-  const { addDataEntry, getDataEntries } = useDataEntry();
+  const { addDataEntry } = useDataEntry();
 
   // 使用 React Query 加载数据
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ["real-time-monitoring-data"],
     queryFn: loadRealData,
     staleTime: 5 * 60 * 1000, // 5分钟缓存
@@ -155,7 +154,6 @@ export function RealTimeMonitoring() {
   // 监听路径变化，更新数据类型 (不再需要，因为 dataType 现在是直接从 render 中计算的)
   // useEffect(() => {
   //   setDataType(getDataTypeFromPath());
-  // }, [location.pathname]);
 
   const handleDataEntrySubmit = (entryData: any) => {
     if (!currentEntryContext) return;
@@ -281,21 +279,6 @@ export function RealTimeMonitoring() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  // 计算统计信息
-  const stats = {
-    totalActual: displayData.reduce((sum, item) => sum + item.value, 0),
-    totalPlan: displayData.reduce((sum, item) => sum + item.plan, 0),
-    averageActual: Math.round(displayData.reduce((sum, item) => sum + item.value, 0) / displayData.length),
-    averagePlan: Math.round(displayData.reduce((sum, item) => sum + item.plan, 0) / displayData.length),
-  };
-
-  const formatValue = (value: number) => {
-    if (dataType === 'cost') {
-      return `¥${value.toLocaleString()}`;
-    }
-    return value.toString();
-  };
 
   const getVarianceColor = (actual: number, plan: number, originalValue?: number) => {
     // 使用原始实际值来判断是否超计划
@@ -484,7 +467,7 @@ export function RealTimeMonitoring() {
   };
 
   // 通用自定义 Tooltip：当选择"全部工种"时展示工种细分（只显示非 0 项）
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload[0]) return null;
     const point = payload[0].payload; // { day, date, actual, plan } 或 { date, value, plan }
     const unit = dataType === 'labor' ? '人' : '元';
@@ -758,7 +741,7 @@ export function RealTimeMonitoring() {
                             {day.dateStr}
                           </div>
                           <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {breakdown.map((row, idx) => {
+                            {breakdown.map((row) => {
                               const isOverPlan = row.actualValue > row.planValue;
                               return (
                                 <div key={`${day.dateStr}-${row.jobType}`} className="border-b border-gray-100 last:border-b-0 pb-2 last:pb-0">
@@ -901,7 +884,6 @@ export function RealTimeMonitoring() {
           onSubmit={handleDataEntrySubmit}
           title={currentEntryContext?.title}
           unit={currentEntryContext?.unit}
-          description={currentEntryContext?.description}
           category={currentEntryContext?.category}
         />
       )}

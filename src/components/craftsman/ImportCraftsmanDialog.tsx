@@ -7,14 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle } from "lucide-react";
+import { Download, FileSpreadsheet, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createImportCraftsmanMockData } from "@/mocks/data/craftsman";
-import {
-  ImportError,
-  ImportResult,
-  Craftsman
-} from "@/types/domain/craftsman";
+import { ImportResult, Craftsman } from "@/types/domain/craftsman";
 
 interface ImportCraftsmanDialogProps {
   open: boolean;
@@ -25,7 +21,6 @@ interface ImportCraftsmanDialogProps {
 export function ImportCraftsmanDialog({ open, onOpenChange, onImport }: ImportCraftsmanDialogProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<Craftsman[]>([]);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -34,12 +29,11 @@ export function ImportCraftsmanDialog({ open, onOpenChange, onImport }: ImportCr
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
-      processFile(selectedFile);
+      processFile();
     }
   };
 
-  const processFile = async (file: File) => {
+  const processFile = async () => {
     setIsProcessing(true);
     setProgress(0);
 
@@ -118,7 +112,6 @@ export function ImportCraftsmanDialog({ open, onOpenChange, onImport }: ImportCr
   };
 
   const reset = () => {
-    setFile(null);
     setPreviewData([]);
     setImportResult(null);
     setProgress(0);
