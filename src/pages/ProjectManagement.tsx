@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { ProjectHeader } from "@/components/layout/project/ProjectHeader";
 import { useProject } from "@/hooks/useProject";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -30,12 +29,8 @@ export default function ProjectManagement() {
   
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
-      <div className="px-6 pt-6">
-        <ProjectHeader title="项目管理" />
-      </div>
-
       {/* 主内容区域 - 直接显示，无白色卡片包装 */}
-      <div className="flex-1 overflow-hidden px-6 pb-6">
+      <div className="flex-1 overflow-hidden px-6 pt-6 pb-6">
         <div className="h-full overflow-auto space-y-4">
         {isLoading ? (
           Array.from({ length: 3 }).map((_, index) => (

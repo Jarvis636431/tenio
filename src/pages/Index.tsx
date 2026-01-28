@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/hooks/useProject";
-import { ProjectHeader } from "@/components/layout/project/ProjectHeader";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -28,12 +27,8 @@ const Index = () => {
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
-      <div className="px-6 pt-6">
-        <ProjectHeader />
-      </div>
-
       {/* 主内容区域 - 直接显示，无白色卡片包装 */}
-      <div className="flex-1 overflow-hidden px-6 pb-6">
+      <div className="flex-1 overflow-hidden px-6 pt-6 pb-6">
         <div className="h-full overflow-auto space-y-4">
           {/* Hero Section with Brand Gradient */}
           <div className="relative p-8 rounded-xl bg-gradient-to-br from-primary/10 via-primary-glow/5 to-transparent overflow-hidden">
