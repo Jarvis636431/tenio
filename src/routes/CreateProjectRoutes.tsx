@@ -1,8 +1,8 @@
 import { Navigate, Route } from "react-router-dom";
-import { UploadStep } from "@/components/create-project/UploadStep";
-import { ConfirmStep } from "@/components/create-project/ConfirmStep";
-import { SelectionStep } from "@/components/create-project/SelectionStep";
-import { PreviewStep } from "@/components/create-project/PreviewStep";
+import { UploadStep } from "@/pages/create/steps/UploadStep";
+import { ConfirmStep } from "@/pages/create/steps/ConfirmStep";
+import { SelectionStep } from "@/pages/create/steps/SelectionStep";
+import { PreviewStep } from "@/pages/create/steps/PreviewStep";
 
 export function CreateProjectRoutes() {
   return (

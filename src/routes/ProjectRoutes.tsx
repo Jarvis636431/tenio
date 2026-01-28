@@ -1,9 +1,9 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
 
-const ProjectHomepage = lazy(() =>
-  import("@/pages/project/ProjectHomepage").then((module) => ({
-    default: module.ProjectHomepage,
+const ProjectHomePage = lazy(() =>
+  import("@/pages/project/ProjectHomePage").then((module) => ({
+    default: module.ProjectHomePage,
   })),
 );
 const BasicInfo = lazy(() => import("@/pages/project/BasicInfo"));
@@ -46,7 +46,7 @@ const KnowledgeQA = lazy(() =>
 export function ProjectRoutes() {
   return (
     <>
-      <Route index element={<ProjectHomepage />} />
+      <Route index element={<ProjectHomePage />} />
       <Route path="basic-info" element={<BasicInfo />} />
       <Route path="plan" element={<Navigate to="overview" replace />} />
       <Route path="plan/:tab" element={<PlanPage />} />

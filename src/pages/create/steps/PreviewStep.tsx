@@ -31,7 +31,7 @@ export function PreviewStep() {
   } = useOutletContext<CreateProjectContextType>();
 
   const onBack = () => {
-    navigate("/create-project/selection");
+    navigate("/create/selection");
   };
 
   const onNext = () => {

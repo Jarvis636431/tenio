@@ -9,14 +9,14 @@ import { Slider } from "@/components/ui/slider";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface ProjectHomepageProps {
+interface ProjectHomePageProps {
   projectId?: string;
   projectName?: string;
 }
 
-export function ProjectHomepage({
+export function ProjectHomePage({
   projectId: propsProjectId,
-}: ProjectHomepageProps = {}) {
+}: ProjectHomePageProps = {}) {
   const { id: paramProjectId } = useParams();
   // 优先使用路由参数，其次使用props
   const projectId = paramProjectId || propsProjectId || '';

@@ -16,11 +16,11 @@ export function ConfirmStep() {
   } = useOutletContext<CreateProjectContextType>();
 
   const onBack = () => {
-    navigate("/create-project/upload");
+    navigate("/create/upload");
   };
 
   const onNext = () => {
-    navigate("/create-project/selection");
+    navigate("/create/selection");
   };
   return (
     <div className="min-h-full flex flex-col justify-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[640px] mx-auto py-2">

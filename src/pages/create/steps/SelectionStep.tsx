@@ -30,11 +30,11 @@ export function SelectionStep() {
   }, [selectedPlan, defaultPlanId, setSelectedPlan]);
 
   const onBack = () => {
-    navigate("/create-project/confirm");
+    navigate("/create/confirm");
   };
 
   const onNext = () => {
-    navigate("/create-project/preview");
+    navigate("/create/preview");
   };
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 w-full h-full flex flex-col p-6">

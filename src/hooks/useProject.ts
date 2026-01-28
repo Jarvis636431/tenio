@@ -61,7 +61,7 @@ export function useProject() {
   }, [id, projects, currentProject, setCurrentProject]);
 
   useEffect(() => {
-    if (location.pathname === "/create-project" && currentProject) {
+    if (location.pathname === "/create" && currentProject) {
       setCurrentProject(null);
     }
   }, [location.pathname, currentProject, setCurrentProject]);

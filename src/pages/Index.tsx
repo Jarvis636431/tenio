@@ -18,7 +18,7 @@ const Index = () => {
   const { projects } = useProject();
 
   const handleNewProject = () => {
-    navigate("/create-project");
+    navigate("/create");
   };
 
   const handleSelectProject = (projectId: string) => {

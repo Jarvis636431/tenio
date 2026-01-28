@@ -13,11 +13,11 @@ const Index = lazy(() => import("@/pages/Index"));
 const ProjectManagement = lazy(() => import("@/pages/ProjectManagement"));
 const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const CreateProject = lazy(() => import("@/pages/CreateProject"));
+const CreateProject = lazy(() => import("@/pages/create/CreatePage"));
 
 const TITLE_RULES: Array<{ prefix: string; title: string }> = [
   { prefix: "/login", title: "登录" },
-  { prefix: "/create-project", title: "创建" },
+  { prefix: "/create", title: "创建" },
 ];
 
 export function AppRoutes() {
@@ -73,7 +73,7 @@ export function AppRoutes() {
           }
         />
         <Route
-          path="/create-project"
+          path="/create"
           element={
             <ProtectedRoute auth={auth}>
               <CreateProject />

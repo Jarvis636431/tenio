@@ -169,7 +169,7 @@ export function AppSidebar() {
   const { logout, user } = useAuth();
 
   const handleNewProject = () => {
-    navigate("/create-project");
+    navigate("/create");
   };
 
   const handleProjectSelect = (projectId: string) => {

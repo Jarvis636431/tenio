@@ -74,7 +74,7 @@ export function UploadStep() {
       }));
     }
 
-    navigate("/create-project/confirm");
+    navigate("/create/confirm");
   };
 
   const handleFileUpload = (
