@@ -82,7 +82,7 @@ export function ModelViewer({
   const parseModelWithWorker = (arrayBuffer: ArrayBuffer, onProgress?: (progress: number, message: string) => void) =>
     new Promise<SerializedModel>((resolve, reject) => {
       const worker = new Worker(
-        new URL("../../../workers/ifc.worker.ts", import.meta.url),
+        new URL("../../workers/ifc.worker.ts", import.meta.url),
         { type: "module" }
       );
       const timeoutId = window.setTimeout(() => {
