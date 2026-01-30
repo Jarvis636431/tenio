@@ -1,9 +1,9 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
 
-const ProjectHomePage = lazy(() =>
-  import("@/pages/project/ProjectHomePage").then((module) => ({
-    default: module.ProjectHomePage,
+const Overview = lazy(() =>
+  import("@/pages/project/Overview").then((module) => ({
+    default: module.Overview,
   })),
 );
 const BasicInfo = lazy(() => import("@/pages/project/BasicInfo"));
@@ -12,19 +12,19 @@ const PlanPage = lazy(() =>
     default: module.PlanPage,
   })),
 );
-const RealTimeMonitoring = lazy(() =>
-  import("@/pages/project/RealTimeMonitoring").then((module) => ({
-    default: module.RealTimeMonitoring,
+const Monitoring = lazy(() =>
+  import("@/pages/project/Monitoring").then((module) => ({
+    default: module.Monitoring,
   })),
 );
-const CraftsmanManagement = lazy(() =>
-  import("@/pages/project/CraftsmanManagement").then((module) => ({
-    default: module.CraftsmanManagement,
+const Craftsmen = lazy(() =>
+  import("@/pages/project/Craftsmen").then((module) => ({
+    default: module.Craftsmen,
   })),
 );
-const FundingMaterials = lazy(() =>
-  import("@/pages/project/FundingMaterials").then((module) => ({
-    default: module.FundingMaterials,
+const Resources = lazy(() =>
+  import("@/pages/project/Resources").then((module) => ({
+    default: module.Resources,
   })),
 );
 const QualityInspection = lazy(() =>
@@ -46,14 +46,14 @@ const KnowledgeQA = lazy(() =>
 export function ProjectRoutes() {
   return (
     <>
-      <Route index element={<ProjectHomePage />} />
+      <Route index element={<Overview />} />
       <Route path="basic-info" element={<BasicInfo />} />
       <Route path="plan" element={<Navigate to="overview" replace />} />
       <Route path="plan/:tab" element={<PlanPage />} />
       <Route path="monitoring" element={<Navigate to="labor" replace />} />
-      <Route path="monitoring/:tab" element={<RealTimeMonitoring />} />
-      <Route path="craftsman" element={<CraftsmanManagement />} />
-      <Route path="funding" element={<FundingMaterials />} />
+      <Route path="monitoring/:tab" element={<Monitoring />} />
+      <Route path="craftsman" element={<Craftsmen />} />
+      <Route path="funding" element={<Resources />} />
       <Route path="toolbox/quality" element={<QualityInspection />} />
       <Route path="toolbox/daily-log" element={<DailyLog />} />
       <Route path="toolbox/qa" element={<KnowledgeQA />} />

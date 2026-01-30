@@ -11,12 +11,12 @@ import { TeamDetailDialog } from "@/components/craftsman/TeamDetailDialog";
 import { Craftsman, Team } from "@/types/domain/craftsman";
 import { mockTeams } from "@/mocks/data/craftsman";
 
-interface CraftsmanManagementProps {
+interface CraftsmenProps {
   onActionsChange?: (actions: React.ReactNode) => void;
 }
 
 // 班组 Mock 数据已移至 mocks
-export function CraftsmanManagement(_props: CraftsmanManagementProps) {
+export function Craftsmen(_props: CraftsmenProps) {
   const [teams, setTeams] = useState<Team[]>(mockTeams);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);

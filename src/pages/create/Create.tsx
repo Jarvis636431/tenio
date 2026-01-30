@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { CreateProjectContextType } from "@/types/create-project";
 import { useCreateProjectStore } from "@/stores/createProjectStore";
 
-export default function CreatePage() {
+export default function Create() {
   const {
     projectDoc,
     setProjectDoc,

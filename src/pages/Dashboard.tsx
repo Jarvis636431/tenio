@@ -13,7 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/hooks/useProject";
 
-const Index = () => {
+const Dashboard = () => {
   const navigate = useNavigate();
   const { projects } = useProject();
 
@@ -148,4 +148,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Dashboard;

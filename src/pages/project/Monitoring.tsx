@@ -103,7 +103,7 @@ const loadRealData = async () => {
   return { totalData, jobTypeData };
 };
 
-export function RealTimeMonitoring() {
+export function Monitoring() {
   const { tab } = useParams();
   
   // 从路径参数获取数据类型

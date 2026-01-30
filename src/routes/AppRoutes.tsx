@@ -9,11 +9,11 @@ import { CreateProjectRoutes } from "@/routes/CreateProjectRoutes";
 import { APP_DEFAULT_TITLE } from "@/config";
 
 // Lazy loaded pages
-const Index = lazy(() => import("@/pages/Index"));
-const ProjectManagement = lazy(() => import("@/pages/ProjectManagement"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const ProjectList = lazy(() => import("@/pages/ProjectList"));
 const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const CreateProject = lazy(() => import("@/pages/create/CreatePage"));
+const CreateProject = lazy(() => import("@/pages/create/Create"));
 
 const TITLE_RULES: Array<{ prefix: string; title: string }> = [
   { prefix: "/login", title: "登录" },
@@ -56,9 +56,9 @@ export function AppRoutes() {
           path="/"
           element={
             <ProtectedRoute auth={auth}>
-              <AppLayout>
-                <Index />
-              </AppLayout>
+                <AppLayout>
+                  <Dashboard />
+                </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -66,9 +66,9 @@ export function AppRoutes() {
           path="/project-management"
           element={
             <ProtectedRoute auth={auth}>
-              <AppLayout>
-                <ProjectManagement />
-              </AppLayout>
+                <AppLayout>
+                  <ProjectList />
+                </AppLayout>
             </ProtectedRoute>
           }
         />

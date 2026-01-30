@@ -27,7 +27,7 @@ import type { CrewData, BudgetData } from "@/types/domain/project";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 
-export function FundingMaterials() {
+export function Resources() {
   const { currentProject } = useProject();
   const { token } = useAuth();
 

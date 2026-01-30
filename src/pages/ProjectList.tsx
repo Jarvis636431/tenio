@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useProject } from "@/hooks/useProject";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function ProjectManagement() {
+export default function ProjectList() {
   const navigate = useNavigate();
   const { projects, isLoading } = useProject();
   
