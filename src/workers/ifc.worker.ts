@@ -4,6 +4,7 @@
  */
 
 import { IFCLoader } from 'web-ifc-three/IFCLoader';
+import { IFCPRODUCT } from 'web-ifc';
 import * as THREE from 'three';
 import type { WorkerMessage, WorkerResponse, SerializedModel, SerializedMesh } from "@/types/domain/worker";
 
@@ -74,9 +75,13 @@ async function handleParse(arrayBuffer: ArrayBuffer, wasmPath: string) {
     // 报告进度：解析完成
     sendProgress(70, '正在处理模型数据...');
 
+    // 构建 GlobalId 映射
+    const globalIdEntries = await buildGlobalIdEntries(model.modelID);
+
     // 序列化模型数据
     console.log('[IFC Worker] 开始序列化模型');
     const serialized = serializeModel(model);
+    serialized.globalIdEntries = globalIdEntries;
 
     if (!isProcessing) {
       console.log('[IFC Worker] 解析已取消（序列化后）');
@@ -93,6 +98,33 @@ async function handleParse(arrayBuffer: ArrayBuffer, wasmPath: string) {
   } finally {
     isProcessing = false;
   }
+}
+
+async function buildGlobalIdEntries(modelID: number): Promise<Array<[string, number]>> {
+  if (!ifcLoader) return [];
+  const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(
+    modelID,
+    IFCPRODUCT,
+    true
+  );
+  const allProductIds: number[] = Array.isArray(rawIds)
+    ? (rawIds as number[])
+    : Array.from(rawIds as Iterable<number>);
+
+  const entries: Array<[string, number]> = [];
+  for (const expressID of allProductIds) {
+    const props: { GlobalId?: { value?: string } } = await ifcLoader.ifcManager.getItemProperties(
+      modelID,
+      expressID,
+      false
+    );
+    const gid = props?.GlobalId?.value as string | undefined;
+    if (gid) {
+      entries.push([gid, expressID]);
+    }
+  }
+
+  return entries;
 }
 
 // ============================================================================

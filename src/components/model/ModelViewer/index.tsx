@@ -9,6 +9,8 @@ import { setupCameraAndControls } from "./utils/cameraControls";
 import { useRenderLoop } from "./hooks/useRenderLoop";
 import type { HighlightGroup } from "./hooks/useHighlight";
 import { useResize } from "./hooks/useResize";
+import type { SerializedModel } from "@/types/domain/worker";
+import { deserializeModel } from "./utils/workerModel";
 
 interface ModelViewerProps {
   className?: string;
@@ -33,6 +35,7 @@ export function ModelViewer({
 }: ModelViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInitializedRef = useRef(false);
+  const isInitializingRef = useRef(false);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -75,6 +78,53 @@ export function ModelViewer({
   });
 
   const { handleResize } = useResize({ containerRef, rendererRef, cameraRef });
+
+  const parseModelWithWorker = (arrayBuffer: ArrayBuffer, onProgress?: (progress: number, message: string) => void) =>
+    new Promise<SerializedModel>((resolve, reject) => {
+      const worker = new Worker(
+        new URL("../../../workers/ifc.worker.ts", import.meta.url),
+        { type: "module" }
+      );
+      const timeoutId = window.setTimeout(() => {
+        worker.terminate();
+        reject(new Error("解析超时"));
+      }, 120000);
+
+      worker.onmessage = (e) => {
+        const { type, data } = e.data as {
+          type: "progress" | "success" | "error";
+          data?: { progress?: number; message?: string; modelData?: SerializedModel; error?: string };
+        };
+
+        if (type === "progress") {
+          onProgress?.(data?.progress ?? 0, data?.message ?? "");
+        } else if (type === "success" && data?.modelData) {
+          clearTimeout(timeoutId);
+          worker.terminate();
+          resolve(data.modelData);
+        } else if (type === "error") {
+          clearTimeout(timeoutId);
+          worker.terminate();
+          reject(new Error(data?.error || "Worker 解析失败"));
+        }
+      };
+
+      worker.onerror = (error) => {
+        clearTimeout(timeoutId);
+        worker.terminate();
+        reject(new Error(error.message || "Worker 错误"));
+      };
+
+      worker.postMessage(
+        {
+          type: "parse",
+          data: {
+            arrayBuffer,
+            wasmPath: "/wasm/",
+          },
+        }
+      );
+    });
 
   const ensureHighlightMaterial = () => {
     const nextColor = new THREE.Color(highlightColor).getStyle();
@@ -251,6 +301,7 @@ export function ModelViewer({
     sceneRef.current = null;
     cameraRef.current = null;
     isInitializedRef.current = false;
+    isInitializingRef.current = false;
     modelsSignatureRef.current = null;
   };
 
@@ -266,15 +317,19 @@ export function ModelViewer({
       .map((item) => `${item.key}:${item.src}`)
       .join("|");
 
-    if (modelsSignatureRef.current === signature && isInitializedRef.current) {
+    if (
+      modelsSignatureRef.current === signature &&
+      (isInitializedRef.current || isInitializingRef.current)
+    ) {
       return;
     }
 
-    if (isInitializedRef.current) {
+    if (isInitializedRef.current || isInitializingRef.current) {
       cleanup();
     }
 
     const initViewer = async () => {
+      isInitializingRef.current = true;
       setLoadingState({
         isLoading: true,
         progress: 0,
@@ -340,6 +395,7 @@ export function ModelViewer({
 
         const buffers = await Promise.all(
           normalizedModels.map(async (item) => {
+            console.log("[ModelViewer] fetching model:", item.src);
             const response = await fetch(item.src, {
               signal: abortControllerRef.current?.signal,
             });
@@ -369,11 +425,35 @@ export function ModelViewer({
               message: `正在解析模型 ${index + 1}/${normalizedModels.length}...`,
             }));
 
-            const ifcLoader = new IFCLoader();
-            ifcLoader.ifcManager.setWasmPath("/wasm/");
-            const model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
-              modelID: number;
-            };
+            let model: THREE.Object3D & { modelID: number };
+            let idMap: Map<string, number>;
+            try {
+              const modelData = await parseModelWithWorker(
+                buffers[index],
+                (progress, message) => {
+                  setLoadingState((prev) => ({
+                    ...prev,
+                    progress: Math.min(95, prev.progress + Math.round(progress / normalizedModels.length)),
+                    message: message || prev.message,
+                  }));
+                }
+              );
+              model = deserializeModel({ serialized: modelData });
+              idMap = new Map(modelData.globalIdEntries ?? []);
+            } catch (error) {
+              console.warn("[ModelViewer] Worker 解析失败，降级到主线程解析:", error);
+              const ifcLoader = new IFCLoader();
+              ifcLoader.ifcManager.setWasmPath("/wasm/");
+              model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
+                modelID: number;
+              };
+              idMap = await buildGlobalIdMap(ifcLoader, model.modelID);
+              try {
+                ifcLoader.ifcManager?.dispose();
+              } catch (disposeError) {
+                console.warn("[ModelViewer] 卸载IFC实例时出错:", disposeError);
+              }
+            }
 
             if (abortControllerRef.current?.signal.aborted) return;
 
@@ -400,19 +480,12 @@ export function ModelViewer({
               }
             });
 
-            const idMap = await buildGlobalIdMap(ifcLoader, model.modelID);
             globalIdMapsRef.current.set(item.key, idMap);
             modelsRef.current.set(item.key, {
               model,
               meshes,
               originalMaterials,
             });
-
-            try {
-              ifcLoader.ifcManager?.dispose();
-            } catch (disposeError) {
-              console.warn("[ModelViewer] 卸载IFC实例时出错:", disposeError);
-            }
           }),
         );
 
@@ -432,6 +505,7 @@ export function ModelViewer({
 
         startRenderLoop(scene, camera, renderer);
         isInitializedRef.current = true;
+        isInitializingRef.current = false;
         modelsSignatureRef.current = signature;
 
         setLoadingState({
@@ -444,6 +518,7 @@ export function ModelViewer({
         applyMultiHighlight();
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
+          isInitializingRef.current = false;
           return;
         }
         console.error("[ModelViewer] 初始化失败:", err);
@@ -453,6 +528,7 @@ export function ModelViewer({
           message: "",
           error: err instanceof Error ? err.message : "初始化失败",
         });
+        isInitializingRef.current = false;
       }
     };
 

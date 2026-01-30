@@ -46,6 +46,7 @@ export interface WorkerResponse {
 export interface SerializedModel {
   modelID: number;
   meshes: SerializedMesh[];
+  globalIdEntries?: Array<[string, number]>;
   boundingBox: {
     min: [number, number, number];
     max: [number, number, number];
