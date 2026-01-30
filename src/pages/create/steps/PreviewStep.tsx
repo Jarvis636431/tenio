@@ -79,7 +79,15 @@ export function PreviewStep() {
         <div className="col-span-8 flex flex-col gap-4 min-h-0 h-full">
           {/* 3D 模型区域 - 固定高度 */}
           <div className="bg-gray-50 rounded-xl relative overflow-hidden h-[300px] shrink-0 border border-gray-100 shadow-sm">
-            <ModelViewer src="/models/0125.ifc" allowUpload={false} className="h-full" />
+            <ModelViewer
+              models={[
+                {
+                  key: "default",
+                  src: "/models/0125.ifc",
+                },
+              ]}
+              className="h-full"
+            />
             {/* AI 助手按钮 */}
             <div className="absolute bottom-4 right-4 z-20">
               <div className="w-16 h-16 bg-[#1975D2] rounded-full flex items-center justify-center shadow-lg shadow-blue-200 cursor-pointer hover:scale-105 transition-transform">

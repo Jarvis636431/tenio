@@ -225,8 +225,13 @@ export function TaskDetailDialog({
 
           <TabsContent value="3d" className="mt-4 flex-1">
             <ModelViewer
-              src="/models/0125.ifc"
-              highlightIds={highlightedComponentIds}
+              models={[
+                {
+                  key: "default",
+                  src: "/models/0125.ifc",
+                },
+              ]}
+              highlightGlobalIds={highlightedComponentIds.map((id) => String(id))}
               className="h-full"
             />
           </TabsContent>
