@@ -13,7 +13,7 @@ import { useResize } from "./hooks/useResize";
 interface ModelViewerProps {
   className?: string;
   highlightColor?: string;
-  highlightGroups?: HighlightGroup[];
+  highlightColorGroups?: HighlightGroup[];
   models: Array<{
     key: string;
     src: string;
@@ -26,7 +26,7 @@ interface ModelViewerProps {
 export function ModelViewer({
   className,
   highlightColor = "#ff9800",
-  highlightGroups,
+  highlightColorGroups,
   models,
   highlightGlobalIds = [],
   highlightTagIds = [],
@@ -100,7 +100,7 @@ export function ModelViewer({
   const applyMultiHighlight = () => {
     if (!isInitializedRef.current || !modelsRef.current.size) return;
 
-    const useGroups = Array.isArray(highlightGroups) && highlightGroups.length > 0;
+    const useGroups = Array.isArray(highlightColorGroups) && highlightColorGroups.length > 0;
     const highlightMaterial = ensureHighlightMaterial();
     const highlightGlobalSet = new Set(highlightGlobalIds);
     const highlightTagSet = new Set(highlightTagIds);
@@ -113,7 +113,7 @@ export function ModelViewer({
       const modelInput = normalizedModels.find((item) => item.key === modelKey);
 
       if (useGroups) {
-        highlightGroups?.forEach((group) => {
+        highlightColorGroups?.forEach((group) => {
           const idsToHighlight: number[] = [];
           for (const rawId of group.ids) {
             if (typeof rawId === "number") {
@@ -465,7 +465,7 @@ export function ModelViewer({
 
   useEffect(() => {
     applyMultiHighlight();
-  }, [highlightGlobalIds, highlightTagIds, highlightColor, highlightGroups, normalizedModels]);
+  }, [highlightGlobalIds, highlightTagIds, highlightColor, highlightColorGroups, normalizedModels]);
 
   return (
     <div className={cn("relative w-full h-full bg-gray-50", className)}>

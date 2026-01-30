@@ -411,7 +411,7 @@ export function ProjectHomePage({
                     src: "/models/0125.ifc",
                   },
                 ]}
-                highlightGroups={[
+                highlightColorGroups={[
                   {
                     ids: completedIds,
                     color: "#22c55e",
