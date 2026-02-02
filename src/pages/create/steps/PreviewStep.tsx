@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import type { CreateProjectContextType } from "@/types/create-project";
@@ -38,6 +38,17 @@ export function PreviewStep() {
   const onNext = () => {
     handleCreateProject();
   };
+
+  // 保持 models 引用稳定，避免父组件重渲染触发 ModelViewer 重新初始化
+  const models = useMemo(
+    () => [
+      {
+        key: "default",
+        src: "/models/0125.ifc",
+      },
+    ],
+    [],
+  );
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -82,12 +93,7 @@ export function PreviewStep() {
           {/* 3D 模型区域 - 固定高度 */}
           <div className="bg-gray-50 rounded-xl relative overflow-hidden h-[300px] shrink-0 border border-gray-100 shadow-sm">
             <ModelViewer
-              models={[
-                {
-                  key: "default",
-                  src: "/models/0125.ifc",
-                },
-              ]}
+              models={models}
               className="h-full"
             />
             {/* AI 助手按钮 */}
