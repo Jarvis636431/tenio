@@ -111,6 +111,7 @@ export function PreviewStep() {
               state={chatPanel}
               positionType="absolute"
               position={{ bottom: 0, right: 0 }}
+              height="300px"
             />
           </div>
 

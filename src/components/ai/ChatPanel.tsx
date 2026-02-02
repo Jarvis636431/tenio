@@ -10,12 +10,16 @@ interface ChatPanelProps {
   state: ChatPanelState;
   position?: Pick<CSSProperties, "top" | "right" | "bottom" | "left">;
   positionType?: "fixed" | "absolute";
+  height?: number | string;
+  width?: number | string;
 }
 
 export function ChatPanel({
   state,
   position,
   positionType = "fixed",
+  height,
+  width,
 }: ChatPanelProps) {
   const {
     isOpen,
@@ -32,13 +36,17 @@ export function ChatPanel({
   return (
     <div
       className={cn(
-        "w-96 h-[32rem] z-50 transition-all duration-300",
+        "z-50 transition-all duration-300",
         positionType === "fixed" ? "fixed" : "absolute",
         isOpen
           ? "scale-100 opacity-100 translate-y-0"
           : "scale-95 opacity-0 translate-y-4 pointer-events-none",
       )}
-      style={position ?? { bottom: 24, right: 24 }}
+      style={{
+        width: width ?? "24rem",
+        height: height ?? "32rem",
+        ...(position ?? { bottom: 24, right: 24 }),
+      }}
     >
       <Card className="h-full shadow-2xl border-2 flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
