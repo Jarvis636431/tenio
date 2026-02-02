@@ -17,11 +17,14 @@ import { ModelViewer } from "@/components/model/ModelViewer";
 import type { CreateProjectContextType } from "@/types/create-project";
 import { detailChartData, processList } from "@/mocks/data/create-project";
 import { ChatButton } from "@/components/ai/ChatButton";
+import { ChatPanel } from "@/components/ai/ChatPanel";
+import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
 
 export function PreviewStep() {
   const navigate = useNavigate();
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const [indicatorPercent, setIndicatorPercent] = useState(30);
+  const chatPanel = useChatPanel();
   const {
     projectName,
     activeChartTab,
@@ -91,15 +94,24 @@ export function PreviewStep() {
         {/* 左侧区域：3D模型 + 图表 */}
         <div className="col-span-8 flex flex-col gap-4 min-h-0 h-full">
           {/* 3D 模型区域 - 固定高度 */}
-          <div className="bg-gray-50 rounded-xl relative overflow-hidden h-[300px] shrink-0 border border-gray-100 shadow-sm">
-            <ModelViewer
-              models={models}
-              className="h-full"
-            />
-            {/* AI 助手按钮 */}
-            <div className="absolute bottom-4 right-4 z-20">
-              <ChatButton size="lg" />
+          <div className="relative h-[300px] shrink-0">
+            <div className="bg-gray-50 rounded-xl relative overflow-hidden h-full border border-gray-100 shadow-sm">
+              <ModelViewer
+                models={models}
+                className="h-full"
+              />
+              {/* AI 助手按钮 */}
+              {!chatPanel.isOpen && (
+                <div className="absolute bottom-4 right-4 z-20">
+                  <ChatButton size="lg" />
+                </div>
+              )}
             </div>
+            <ChatPanel
+              state={chatPanel}
+              positionType="absolute"
+              position={{ bottom: 0, right: 0 }}
+            />
           </div>
 
           {/* 底部图表区域 */}

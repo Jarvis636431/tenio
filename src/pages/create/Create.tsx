@@ -10,8 +10,6 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import type { CreateProjectContextType } from "@/types/create-project";
 import { useCreateProjectStore } from "@/stores/createProjectStore";
-import { ChatPanel } from "@/components/ai/ChatPanel";
-import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
 
 export default function Create() {
   const {
@@ -40,7 +38,6 @@ export default function Create() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const chatPanel = useChatPanel();
   const { setCurrentProject, addProject, refreshProjects } = useProject();
   const { user, token } = useAuth();
 
@@ -234,12 +231,6 @@ export default function Create() {
       <div className="flex-1 overflow-hidden p-0">
         <Outlet context={contextValue} />
       </div>
-      {currentStep === 4 && (
-        <ChatPanel
-          state={chatPanel}
-          position={{ top: 96, right: 24 }}
-        />
-      )}
     </div>
   );
 }
