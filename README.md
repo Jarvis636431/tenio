@@ -24,6 +24,7 @@ pnpm dev
 ```bash
 VITE_USER_SERVICE_URL=http://localhost:8001
 VITE_PROJECT_SERVICE_URL=http://localhost:8002
+VITE_SSE_URL=http://localhost:8002
 VITE_AMAP_KEY=your_amap_key
 VITE_AMAP_SECURITY_CODE=your_amap_security_code
 VITE_SOCKET_URL=ws://localhost:8000
