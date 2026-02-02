@@ -27,7 +27,6 @@ VITE_PROJECT_SERVICE_URL=http://localhost:8002
 VITE_SSE_URL=http://localhost:8002
 VITE_AMAP_KEY=your_amap_key
 VITE_AMAP_SECURITY_CODE=your_amap_security_code
-VITE_SOCKET_URL=ws://localhost:8000
 ```
 
 ## 配置收口
@@ -36,7 +35,6 @@ VITE_SOCKET_URL=ws://localhost:8000
 
 - API Base（用户服务/项目服务）
 - AMap Key 与 Security Code
-- Socket 地址
 - 环境标志（是否开发环境）
 
 ## 页面标题规则

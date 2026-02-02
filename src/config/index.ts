@@ -16,6 +16,4 @@ export const AMAP = {
   securityCode: env.VITE_AMAP_SECURITY_CODE ?? "",
 };
 
-export const SOCKET_URL = env.VITE_SOCKET_URL ?? "";
-
 export const SSE_BASE = trimTrailingSlash(env.VITE_SSE_URL) ?? API_BASE.projectService;
