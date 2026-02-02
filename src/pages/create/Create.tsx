@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
@@ -177,6 +177,12 @@ export default function Create() {
     preview: 4,
   };
   const currentStep = stepMap[currentPath ?? "upload"] ?? 1;
+
+  useEffect(() => {
+    return () => {
+      useCreateProjectStore.getState().reset();
+    };
+  }, []);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-white">
