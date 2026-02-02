@@ -16,6 +16,7 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import type { CreateProjectContextType } from "@/types/create-project";
 import { detailChartData, processList } from "@/mocks/data/create-project";
+import { openChatPanel } from "@/components/ai/hooks/useChatPanel";
 
 export function PreviewStep() {
   const navigate = useNavigate();
@@ -37,6 +38,11 @@ export function PreviewStep() {
   const onNext = () => {
     handleCreateProject();
   };
+
+  const onOpenChatPanel = () => {
+    openChatPanel();
+  };
+
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
       if (!timelineRef.current) return;
@@ -90,9 +96,13 @@ export function PreviewStep() {
             />
             {/* AI 助手按钮 */}
             <div className="absolute bottom-4 right-4 z-20">
-              <div className="w-16 h-16 bg-[#1975D2] rounded-full flex items-center justify-center shadow-lg shadow-blue-200 cursor-pointer hover:scale-105 transition-transform">
+                <button
+                  type="button"
+                  onClick={onOpenChatPanel}
+                  className="w-16 h-16 bg-[#1975D2] rounded-full flex items-center justify-center shadow-lg shadow-blue-200 cursor-pointer hover:scale-105 transition-transform"
+                >
                 <span className="text-white font-medium text-xs">AI助手</span>
-              </div>
+              </button>
             </div>
           </div>
 

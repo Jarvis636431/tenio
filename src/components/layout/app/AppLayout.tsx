@@ -1,12 +1,17 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app/AppSidebar";
-import { AIAssistant } from "@/components/ai/AIAssistant";
+import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChatPanel } from "@/components/ai/components/ChatPanel";
+import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
 import { ProjectBreadcrumb } from "@/components/layout/project/ProjectBreadcrumb";
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 function LayoutContent({ children }: LayoutProps) {
+  const chatPanel = useChatPanel();
+
   return (
     <div className="h-screen flex w-full bg-background overflow-hidden">
       <AppSidebar />
@@ -15,8 +20,17 @@ function LayoutContent({ children }: LayoutProps) {
         <ProjectBreadcrumb />
         {children}
       </main>
-      
-      <AIAssistant />
+
+      {!chatPanel.isOpen && (
+        <Button
+          onClick={chatPanel.open}
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-50"
+        >
+          <Sparkles className="w-8 h-8" />
+        </Button>
+      )}
+
+      <ChatPanel state={chatPanel} />
     </div>
   );
 }
