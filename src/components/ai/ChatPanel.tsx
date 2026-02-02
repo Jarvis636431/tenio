@@ -109,9 +109,6 @@ export function ChatPanel({
               <Send className="w-4 h-4" />
             </Button>
           </div>
-          <span className="text-[11px] text-muted-foreground">
-            当前实时通道未接入（WebSocket 已移除），正在切换为 SSE。
-          </span>
         </CardFooter>
       </Card>
     </div>

@@ -24,7 +24,7 @@ pnpm dev
 ```bash
 VITE_USER_SERVICE_URL=http://localhost:8001
 VITE_PROJECT_SERVICE_URL=http://localhost:8002
-VITE_SSE_URL=http://localhost:8002
+VITE_AI_SSE_URL=https://chat.zrzz.site/api/agent/chat/sse
 VITE_AMAP_KEY=your_amap_key
 VITE_AMAP_SECURITY_CODE=your_amap_security_code
 ```
@@ -35,6 +35,7 @@ VITE_AMAP_SECURITY_CODE=your_amap_security_code
 
 - API Base（用户服务/项目服务）
 - AMap Key 与 Security Code
+- AI SSE 地址
 - 环境标志（是否开发环境）
 
 ## 页面标题规则
