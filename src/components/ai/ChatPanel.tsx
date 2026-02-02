@@ -13,6 +13,7 @@ export function ChatPanel({ state }: ChatPanelProps) {
   const {
     isOpen,
     close,
+    panelPosition,
     messages,
     inputMessage,
     setInputMessage,
@@ -24,11 +25,15 @@ export function ChatPanel({ state }: ChatPanelProps) {
 
   return (
     <div
-      className={`fixed bottom-6 right-6 w-96 h-[32rem] z-50 transition-all duration-300 ${
+      className={`fixed w-96 h-[32rem] z-50 transition-all duration-300 ${
         isOpen
           ? "scale-100 opacity-100 translate-y-0"
           : "scale-95 opacity-0 translate-y-4 pointer-events-none"
       }`}
+      style={{
+        top: `${panelPosition.top}px`,
+        left: `${panelPosition.left}px`,
+      }}
     >
       <Card className="h-full shadow-2xl border-2 flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">

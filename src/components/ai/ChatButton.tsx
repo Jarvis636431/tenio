@@ -1,21 +1,42 @@
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { openChatPanel } from "@/components/ai/hooks/useChatPanel";
+import {
+  openChatPanel,
+  type ChatPanelPlacement,
+} from "@/components/ai/hooks/useChatPanel";
 
 interface ChatButtonProps {
   className?: string;
   size?: "md" | "lg";
+  placement?: ChatPanelPlacement;
+  offset?: number;
 }
 
 export function ChatButton({
   className,
   size = "md",
+  placement = "top-end",
+  offset = 12,
 }: ChatButtonProps) {
   return (
     <Button
       type="button"
-      onClick={openChatPanel}
+      onClick={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        openChatPanel({
+          anchorRect: {
+            top: rect.top,
+            left: rect.left,
+            right: rect.right,
+            bottom: rect.bottom,
+            width: rect.width,
+            height: rect.height,
+          },
+          placement,
+          offset,
+        });
+      }}
       className={cn(
         "rounded-full bg-[#1975D2] text-white shadow-lg shadow-blue-200 hover:bg-[#1564b3] hover:scale-105 transition-all",
         size === "lg" ? "w-16 h-16 text-xs" : "w-14 h-14 text-xs",

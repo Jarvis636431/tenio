@@ -7,10 +7,82 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-export const CHAT_PANEL_OPEN_EVENT = "chat-panel:open";
+export type ChatPanelPlacement =
+  | "top-start"
+  | "top-end"
+  | "bottom-start"
+  | "bottom-end";
 
-export function openChatPanel() {
-  window.dispatchEvent(new CustomEvent(CHAT_PANEL_OPEN_EVENT));
+export interface ChatAnchorRect {
+  top: number;
+  left: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+}
+
+export interface OpenChatPanelDetail {
+  anchorRect?: ChatAnchorRect;
+  placement?: ChatPanelPlacement;
+  offset?: number;
+}
+
+export const CHAT_PANEL_OPEN_EVENT = "chat-panel:open";
+const PANEL_WIDTH = 384;
+const PANEL_HEIGHT = 512;
+const VIEWPORT_PADDING = 12;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function computePanelPosition(
+  anchorRect: ChatAnchorRect,
+  placement: ChatPanelPlacement,
+  offset: number,
+) {
+  let top = 0;
+  let left = 0;
+
+  if (placement === "top-start") {
+    top = anchorRect.top - PANEL_HEIGHT - offset;
+    left = anchorRect.left;
+  } else if (placement === "top-end") {
+    top = anchorRect.top - PANEL_HEIGHT - offset;
+    left = anchorRect.right - PANEL_WIDTH;
+  } else if (placement === "bottom-start") {
+    top = anchorRect.bottom + offset;
+    left = anchorRect.left;
+  } else {
+    top = anchorRect.bottom + offset;
+    left = anchorRect.right - PANEL_WIDTH;
+  }
+
+  // 超出视口时做最小纠偏，保持面板尽量贴近锚点
+  if (top < VIEWPORT_PADDING) {
+    top = anchorRect.bottom + offset;
+  }
+  if (top + PANEL_HEIGHT > window.innerHeight - VIEWPORT_PADDING) {
+    top = anchorRect.top - PANEL_HEIGHT - offset;
+  }
+
+  top = clamp(
+    top,
+    VIEWPORT_PADDING,
+    window.innerHeight - PANEL_HEIGHT - VIEWPORT_PADDING,
+  );
+  left = clamp(
+    left,
+    VIEWPORT_PADDING,
+    window.innerWidth - PANEL_WIDTH - VIEWPORT_PADDING,
+  );
+
+  return { top, left };
+}
+
+export function openChatPanel(detail: OpenChatPanelDetail = {}) {
+  window.dispatchEvent(new CustomEvent<OpenChatPanelDetail>(CHAT_PANEL_OPEN_EVENT, { detail }));
 }
 
 function createMessageId() {
@@ -22,6 +94,10 @@ function createMessageId() {
 
 export function useChatPanel() {
   const [isOpen, setIsOpen] = useState(false);
+  const [panelPosition, setPanelPosition] = useState({ top: 24, left: 24 });
+  const anchorRectRef = useRef<ChatAnchorRect | null>(null);
+  const placementRef = useRef<ChatPanelPlacement>("top-end");
+  const offsetRef = useRef(12);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: createMessageId(),
@@ -41,7 +117,21 @@ export function useChatPanel() {
   }, [messages, isThinking]);
 
   useEffect(() => {
-    const handleOpen = () => {
+    const handleOpen = (event: Event) => {
+      const customEvent = event as CustomEvent<OpenChatPanelDetail>;
+      const detail = customEvent.detail;
+      if (detail?.anchorRect) {
+        anchorRectRef.current = detail.anchorRect;
+      }
+      placementRef.current = detail?.placement ?? "top-end";
+      offsetRef.current = detail?.offset ?? 12;
+
+      const anchor = anchorRectRef.current;
+      if (anchor) {
+        setPanelPosition(
+          computePanelPosition(anchor, placementRef.current, offsetRef.current),
+        );
+      }
       setIsOpen(true);
     };
     window.addEventListener(CHAT_PANEL_OPEN_EVENT, handleOpen);
@@ -49,6 +139,25 @@ export function useChatPanel() {
       window.removeEventListener(CHAT_PANEL_OPEN_EVENT, handleOpen);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updatePosition = () => {
+      const anchor = anchorRectRef.current;
+      if (!anchor) return;
+      setPanelPosition(
+        computePanelPosition(anchor, placementRef.current, offsetRef.current),
+      );
+    };
+
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [isOpen]);
 
   const handleSendMessage = () => {
     const trimmed = inputMessage.trim();
@@ -89,6 +198,7 @@ export function useChatPanel() {
   return {
     isOpen,
     close: () => setIsOpen(false),
+    panelPosition,
     messages,
     inputMessage,
     setInputMessage,
