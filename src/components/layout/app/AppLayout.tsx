@@ -1,8 +1,7 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app/AppSidebar";
-import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ChatPanel } from "@/components/ai/ChatPanel";
+import { ChatButton } from "@/components/ai/ChatButton";
 import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
 import { ProjectBreadcrumb } from "@/components/layout/project/ProjectBreadcrumb";
 interface LayoutProps {
@@ -22,12 +21,10 @@ function LayoutContent({ children }: LayoutProps) {
       </main>
 
       {!chatPanel.isOpen && (
-        <Button
-          onClick={chatPanel.open}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-50"
-        >
-          <Sparkles className="w-8 h-8" />
-        </Button>
+        <ChatButton
+          className="fixed bottom-6 right-6 z-50"
+          size="md"
+        />
       )}
 
       <ChatPanel state={chatPanel} />

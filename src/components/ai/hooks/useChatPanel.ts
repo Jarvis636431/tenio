@@ -7,10 +7,6 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-export interface UseChatPanelOptions {
-  listenOpenEvent?: boolean;
-}
-
 export const CHAT_PANEL_OPEN_EVENT = "chat-panel:open";
 
 export function openChatPanel() {
@@ -24,8 +20,7 @@ function createMessageId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-export function useChatPanel(options: UseChatPanelOptions = {}) {
-  const { listenOpenEvent = false } = options;
+export function useChatPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -46,14 +41,14 @@ export function useChatPanel(options: UseChatPanelOptions = {}) {
   }, [messages, isThinking]);
 
   useEffect(() => {
-    if (!listenOpenEvent) return;
-
-    const handleOpen = () => setIsOpen(true);
+    const handleOpen = () => {
+      setIsOpen(true);
+    };
     window.addEventListener(CHAT_PANEL_OPEN_EVENT, handleOpen);
     return () => {
       window.removeEventListener(CHAT_PANEL_OPEN_EVENT, handleOpen);
     };
-  }, [listenOpenEvent]);
+  }, []);
 
   const handleSendMessage = () => {
     const trimmed = inputMessage.trim();
@@ -93,7 +88,6 @@ export function useChatPanel(options: UseChatPanelOptions = {}) {
 
   return {
     isOpen,
-    open: () => setIsOpen(true),
     close: () => setIsOpen(false),
     messages,
     inputMessage,

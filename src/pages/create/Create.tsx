@@ -40,7 +40,7 @@ export default function Create() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const chatPanel = useChatPanel({ listenOpenEvent: true });
+  const chatPanel = useChatPanel();
   const { setCurrentProject, addProject, refreshProjects } = useProject();
   const { user, token } = useAuth();
 
