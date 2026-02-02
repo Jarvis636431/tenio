@@ -1,4 +1,5 @@
 import { Loader2, Send, Sparkles, X } from "lucide-react";
+import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,13 +8,13 @@ import type { ChatPanelState } from "@/components/ai/hooks/useChatPanel";
 
 interface ChatPanelProps {
   state: ChatPanelState;
+  position?: Pick<CSSProperties, "top" | "right" | "bottom" | "left">;
 }
 
-export function ChatPanel({ state }: ChatPanelProps) {
+export function ChatPanel({ state, position }: ChatPanelProps) {
   const {
     isOpen,
     close,
-    panelPosition,
     messages,
     inputMessage,
     setInputMessage,
@@ -30,10 +31,7 @@ export function ChatPanel({ state }: ChatPanelProps) {
           ? "scale-100 opacity-100 translate-y-0"
           : "scale-95 opacity-0 translate-y-4 pointer-events-none"
       }`}
-      style={{
-        top: `${panelPosition.top}px`,
-        left: `${panelPosition.left}px`,
-      }}
+      style={position ?? { bottom: 24, right: 24 }}
     >
       <Card className="h-full shadow-2xl border-2 flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">

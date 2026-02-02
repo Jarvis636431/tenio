@@ -27,7 +27,10 @@ function LayoutContent({ children }: LayoutProps) {
         />
       )}
 
-      <ChatPanel state={chatPanel} />
+      <ChatPanel
+        state={chatPanel}
+        position={{ bottom: 24, right: 24 }}
+      />
     </div>
   );
 }

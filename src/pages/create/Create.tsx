@@ -228,7 +228,12 @@ export default function Create() {
       <div className="flex-1 overflow-hidden p-0">
         <Outlet context={contextValue} />
       </div>
-      {currentStep === 4 && <ChatPanel state={chatPanel} />}
+      {currentStep === 4 && (
+        <ChatPanel
+          state={chatPanel}
+          position={{ top: 96, right: 24 }}
+        />
+      )}
     </div>
   );
 }
