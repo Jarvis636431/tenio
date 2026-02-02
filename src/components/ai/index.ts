@@ -1,3 +1,3 @@
 // AI components
-export { ChatPanel } from "./components/ChatPanel";
+export { ChatPanel } from "./ChatPanel";
 export { useChatPanel, openChatPanel } from "./hooks/useChatPanel";

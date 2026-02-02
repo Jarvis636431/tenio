@@ -10,7 +10,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import type { CreateProjectContextType } from "@/types/create-project";
 import { useCreateProjectStore } from "@/stores/createProjectStore";
-import { ChatPanel } from "@/components/ai/components/ChatPanel";
+import { ChatPanel } from "@/components/ai/ChatPanel";
 import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
 
 export default function Create() {

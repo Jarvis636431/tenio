@@ -2,7 +2,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app/AppSidebar";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ChatPanel } from "@/components/ai/components/ChatPanel";
+import { ChatPanel } from "@/components/ai/ChatPanel";
 import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
 import { ProjectBreadcrumb } from "@/components/layout/project/ProjectBreadcrumb";
 interface LayoutProps {
