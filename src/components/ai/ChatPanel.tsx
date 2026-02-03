@@ -107,6 +107,7 @@ export function ChatPanel({
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleInputEnter}
+              aria-label="输入调整指令"
               className="flex-1"
             />
             <Button

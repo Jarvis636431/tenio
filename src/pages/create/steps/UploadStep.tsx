@@ -192,6 +192,11 @@ export function UploadStep() {
             id={`upload-${iconType}`}
             accept={accept.join(",")}
             className="hidden"
+            aria-label={
+              iconType === "cad"
+                ? "上传CAD图纸或BIM模型文件"
+                : "上传设计说明文件"
+            }
             onChange={(e) => handleFileUpload(e, setFile)}
           />
         </div>
@@ -207,6 +212,7 @@ export function UploadStep() {
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
             placeholder="请输入项目名称"
+            aria-label="项目名称"
             className="h-12 text-lg"
           />
         </div>
@@ -286,6 +292,7 @@ export function UploadStep() {
                 <Input
                   className="border-0 bg-transparent h-10 pl-9 focus-visible:ring-0 text-sm"
                   placeholder="搜索地点"
+                  aria-label="搜索地点"
                   value={siteAddress}
                   onChange={(e) => setSiteAddress(e.target.value)}
                   onKeyDown={(e) => {
