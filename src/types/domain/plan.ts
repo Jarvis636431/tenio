@@ -3,7 +3,7 @@ import type { ScheduleRow } from './project';
 export type TimelineScale = "day" | "hour" | "week" | "month";
 
 export interface PlanTask {
-  id: number;
+  id: string;
   task: string;
   workerCount: number;
   jobType: string;
@@ -35,4 +35,5 @@ export interface PlanTask {
   // 扩展字段
   specialty?: string;
   component?: string;
+  criticalPath?: boolean;
 }

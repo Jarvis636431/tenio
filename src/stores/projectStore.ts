@@ -2,18 +2,21 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { getProjectList } from '@/services/project-service';
 import type { Project } from '@/types/domain/project';
+import type { CoreGraphResponse } from '@/types/domain/schedulepro';
 
 interface ProjectState {
   // State
   currentProject: Project | null;
   projects: Project[];
   isLoading: boolean;
+  coreGraphByProjectId: Record<string, CoreGraphResponse>;
   
   // Actions
   setCurrentProject: (project: Project | null) => void;
   setProjects: (projects: Project[]) => void;
   addProject: (project: Project) => void;
   updateProject: (project: Project) => void;
+  setCoreGraph: (projectId: string, data: CoreGraphResponse) => void;
   refreshProjects: (token: string) => Promise<void>;
   setLoading: (loading: boolean) => void;
   reset: () => void;
@@ -28,6 +31,7 @@ export const useProjectStore = create<ProjectState>()(
       currentProject: null,
       projects: [],
       isLoading: false,
+      coreGraphByProjectId: {},
 
       // Set current project and persist to localStorage
       setCurrentProject: (project: Project | null) => {
@@ -91,6 +95,15 @@ export const useProjectStore = create<ProjectState>()(
             currentProject: newCurrentProject
           };
         });
+      },
+
+      setCoreGraph: (projectId, data) => {
+        set((state) => ({
+          coreGraphByProjectId: {
+            ...state.coreGraphByProjectId,
+            [projectId]: data,
+          },
+        }));
       },
 
       // Refresh projects from server
@@ -164,6 +177,7 @@ export const useProjectStore = create<ProjectState>()(
           currentProject: null,
           projects: [],
           isLoading: false,
+          coreGraphByProjectId: {},
         });
         try {
           localStorage.removeItem(STORAGE_KEY);

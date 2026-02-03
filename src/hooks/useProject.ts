@@ -16,9 +16,11 @@ export function useProject() {
     currentProject,
     projects,
     isLoading,
+    coreGraphByProjectId,
     setCurrentProject,
     addProject,
     updateProject,
+    setCoreGraph,
     refreshProjects,
     setLoading,
   } = useProjectStore();
@@ -81,5 +83,7 @@ export function useProject() {
     updateProject,
     refreshProjects: wrappedRefreshProjects,
     isLoading,
+    coreGraphByProjectId,
+    setCoreGraph,
   };
 }

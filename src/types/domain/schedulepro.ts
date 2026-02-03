@@ -58,10 +58,65 @@ export interface SelectSolutionResponse {
   daily_schedule: Record<string, string[]>;
 }
 
+export interface CoreGraphWorkProcess {
+  id: string;
+  project_id: string;
+  code?: string;
+  name?: string;
+  is_dummy?: boolean;
+  quantity?: number;
+  unit?: string;
+  base_duration_days?: number;
+  duration_days?: number;
+  team_size?: number;
+  suggested_team_count?: number;
+  construction_coefficient?: number;
+  labor_cost?: number;
+  material_cost?: number;
+  device_rental_cost?: number;
+  building_number?: string | null;
+  outline_level?: number;
+  outline_path?: string;
+  outline_metadata?: Record<string, unknown>;
+  trade?: { id: number; name: string; code: string };
+  process_type?: { id: number; name: string; code: string };
+  selected_method?: { id: number; name: string; code: string };
+  selected_condition?: { id: number; name: string; code: string };
+  execution_state?: {
+    id: string;
+    work_process_id: string;
+    status: string;
+    planned_intervals?: Array<{
+      id: string;
+      execution_state_id: string;
+      start_datetime: string;
+      end_datetime: string;
+      interval_type?: string;
+      seq_no?: number;
+    }>;
+    planned_start_datetime?: string;
+    planned_end_datetime?: string;
+    actual_start_datetime?: string | null;
+    actual_end_datetime?: string | null;
+    progress_percent?: number;
+    critical_path?: boolean;
+  };
+}
+
+export interface CoreGraphDependency {
+  id: string;
+  project_id: string;
+  from_work_process_id: string;
+  to_work_process_id: string;
+  dependency_type?: string;
+  lag_days?: number;
+  is_deleted?: boolean;
+}
+
 export interface CoreGraphResponse {
   project_id: string;
-  work_processes: Array<Record<string, unknown>>;
-  dependencies: Array<Record<string, unknown>>;
+  work_processes: CoreGraphWorkProcess[];
+  dependencies: CoreGraphDependency[];
   team_assignments: Array<Record<string, unknown>>;
   resource_estimations: Array<Record<string, unknown>>;
   device_resources: Array<Record<string, unknown>>;

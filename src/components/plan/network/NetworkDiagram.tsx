@@ -7,7 +7,7 @@ interface NetworkDiagramProps {
 }
 
 type Node = {
-  id: number;
+  id: string;
   title: string;
   start: string;
   end: string;
@@ -16,15 +16,15 @@ type Node = {
 };
 
 type Edge = {
-  from: number;
-  to: number;
+  from: string;
+  to: string;
 };
 
-function parseDependencyIds(value: string): number[] {
+function parseDependencyIds(value: string): string[] {
   return value
     .split(/[,\s]+/)
-    .map((item) => Number(item.trim()))
-    .filter((id) => Number.isFinite(id));
+    .map((item) => item.trim())
+    .filter((id) => id.length > 0);
 }
 
 export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
@@ -33,12 +33,12 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
       return { nodes: [] as Node[], edges: [] as Edge[], width: 0, height: 0 };
     }
 
-    const taskMap = new Map<number, PlanTask>();
+    const taskMap = new Map<string, PlanTask>();
     tasks.forEach((task) => taskMap.set(task.id, task));
 
     const edges: Edge[] = [];
-    const inDegree = new Map<number, number>();
-    const levelMap = new Map<number, number>();
+    const inDegree = new Map<string, number>();
+    const levelMap = new Map<string, number>();
 
     tasks.forEach((task) => {
       inDegree.set(task.id, 0);
@@ -56,7 +56,7 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
       });
     });
 
-    const queue: number[] = [];
+    const queue: string[] = [];
     inDegree.forEach((deg, id) => {
       if (deg === 0) queue.push(id);
     });

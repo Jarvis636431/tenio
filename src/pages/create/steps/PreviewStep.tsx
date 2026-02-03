@@ -19,7 +19,9 @@ import { ChatButton } from "@/components/ai/ChatButton";
 import { ChatPanel } from "@/components/ai/ChatPanel";
 import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
 import { useAuth } from "@/hooks/useAuth";
-import { getProjectCostCurve } from "@/services/schedulepro-service";
+import { useToast } from "@/hooks/use-toast";
+import { useProject } from "@/hooks/useProject";
+import { getProjectCostCurve, getProjectCoreGraph } from "@/services/schedulepro-service";
 
 export function PreviewStep() {
   const navigate = useNavigate();
@@ -36,6 +38,8 @@ export function PreviewStep() {
   >([]);
   const chatPanel = useChatPanel();
   const { token } = useAuth();
+  const { toast } = useToast();
+  const { setCoreGraph } = useProject();
   const {
     projectName,
     activeChartTab,
@@ -125,6 +129,31 @@ export function PreviewStep() {
       isMounted = false;
     };
   }, [projectId, token]);
+
+  useEffect(() => {
+    if (!projectId || !token) {
+      return;
+    }
+
+    let isMounted = true;
+    getProjectCoreGraph(projectId, token)
+      .then((response) => {
+        if (!isMounted) return;
+        setCoreGraph(projectId, response);
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        toast({
+          title: "获取项目核心数据失败",
+          description: error instanceof Error ? error.message : "请稍后再试",
+          variant: "destructive",
+        });
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, token, setCoreGraph, toast]);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {

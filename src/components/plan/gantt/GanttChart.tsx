@@ -257,6 +257,12 @@ const parseDate = (dateStr: string): Date => {
 
   const trimmed = dateStr.trim();
 
+  // 解析 ISO / 标准日期
+  const isoDate = new Date(trimmed);
+  if (!Number.isNaN(isoDate.getTime())) {
+    return isoDate;
+  }
+
   // 解析 "2025/09/01" 或 "2025/09/01 08:00" 格式的日期
   if (trimmed.includes("/")) {
     const [datePart, timePart] = trimmed.split(/\s+/);
@@ -333,8 +339,8 @@ export function GanttChart({
   const taskListRef = useRef<HTMLDivElement>(null);
   const chartContentRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(false);
-  const [hoveredTaskId, setHoveredTaskId] = useState<number | null>(null);
-  const [showDetailButton, setShowDetailButton] = useState<number | null>(null);
+  const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
+  const [showDetailButton, setShowDetailButton] = useState<string | null>(null);
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
   const [selectedTaskForDetail, setSelectedTaskForDetail] =
@@ -349,17 +355,22 @@ export function GanttChart({
 
   const { timelineData, totalUnits, headers, startAnchor } = useMemo(() => {
     const baseline = getBaselineDate();
-    const parsedItems = data.map((item) => ({
-      item,
-      start: parseDate(item.startDate),
-      end: parseDate(item.endDate),
-    }));
+    const parsedItems = data.map((item) => {
+      const start = item.startDate ? parseDate(item.startDate) : null;
+      const end = item.endDate ? parseDate(item.endDate) : null;
+      return { item, start, end };
+    });
 
-    const timePoints = parsedItems.flatMap(({ start, end }) => [
-      start.getTime(),
-      end.getTime(),
-    ]);
-    timePoints.push(baseline.getTime());
+    const timePoints = parsedItems.flatMap(({ start, end }) => {
+      const points: number[] = [];
+      if (start) points.push(start.getTime());
+      if (end) points.push(end.getTime());
+      return points;
+    });
+
+    if (timePoints.length === 0) {
+      timePoints.push(baseline.getTime());
+    }
 
     const minTime = Math.min(...timePoints);
     const maxTime = Math.max(...timePoints);
@@ -370,19 +381,23 @@ export function GanttChart({
 
     const timelineData: TimelineRow[] = parsedItems.map(
       ({ item, start, end }) => {
+        const startDate = start ?? baseline;
+        const endDate = end ?? startDate;
         const startOffset = calculateStartOffset(
-          start,
+          startDate,
           startAnchor,
           timelineScale,
         );
-        const spanUnits = calculateSpanUnits(start, end, timelineScale);
+        const spanUnits = calculateSpanUnits(startDate, endDate, timelineScale);
 
         return {
           ...item,
           startOffset,
           spanUnits,
           barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
-          color: "hsl(210, 70%, 65%)", // 统一为蓝色
+          color: item.criticalPath
+            ? "hsl(210, 70%, 55%)"
+            : "hsl(210, 6%, 70%)",
         };
       },
     );

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCcw, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useProjectSchedule } from "@/hooks/useProjectSchedule";
+import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { Slider } from "@/components/ui/slider";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -20,222 +20,110 @@ export function Overview({
   const { id: paramProjectId } = useParams();
   // 优先使用路由参数，其次使用props
   const projectId = paramProjectId || propsProjectId || '';
-  const {
-    scheduleItems,
-    isLoading,
-    error,
-    processGuidMapping,
-    forceRefreshMapping,
-    isMappingFetching,
-  } = useProjectSchedule();
+  const { coreGraph, isLoading } = useProjectCoreGraph();
   const [currentDay, setCurrentDay] = useState(1);
   const [chartDataType, setChartDataType] = useState<'cost' | 'labor'>('cost');
 
+  const tasks = useMemo(() => {
+    if (!coreGraph?.work_processes?.length) return [];
+    return coreGraph.work_processes.map((wp) => {
+      const exec = wp.execution_state;
+      const start = exec?.planned_start_datetime ?? "";
+      const end = exec?.planned_end_datetime ?? "";
+      return {
+        id: wp.id,
+        name: wp.name || wp.code || "未命名工序",
+        start,
+        end,
+        durationDays: wp.duration_days ?? 0,
+        laborCost: wp.labor_cost ?? 0,
+        materialCost: wp.material_cost ?? 0,
+        deviceCost: wp.device_rental_cost ?? 0,
+        teamSize: wp.team_size ?? wp.suggested_team_count ?? 0,
+        status: exec?.status ?? "planned",
+      };
+    });
+  }, [coreGraph]);
+
   // 计算项目时间范围 - 处理相对时间
   const timeRange = useMemo(() => {
-    if (!scheduleItems.length) {
-      console.log('[ProjectHomepage] 没有工序数据');
-      return null;
-    }
-    
-    console.log('[ProjectHomepage] 工序数据:', scheduleItems.map(item => ({
-      task: item.task,
-      startTime: item.startTime,
-      endTime: item.endTime
-    })));
-    
-    // 解析相对时间（如"第1天"、"1"、"Day 1"等格式）
-    const parseRelativeTime = (timeStr: string): number | null => {
-      if (!timeStr || !timeStr.trim()) return null;
-      
-      // 尝试多种相对时间格式
-      const patterns = [
-        /第(\d+)天/,           // "第1天"
-        /Day\s*(\d+)/i,       // "Day 1" 或 "day 1"
-        /^\s*(\d+)\s*$/,      // 纯数字 "1"
-        /天数\s*(\d+)/,       // "天数1"
-      ];
-      
-      for (const pattern of patterns) {
-        const match = timeStr.match(pattern);
-        if (match) {
-          const day = parseInt(match[1], 10);
-          return isNaN(day) ? null : day;
-        }
-      }
-      
-      // 如果都不匹配，尝试直接解析数字
-      const num = parseInt(timeStr.trim(), 10);
-      return isNaN(num) ? null : num;
+    if (!tasks.length) return null;
+    const parseDate = (value: string) => {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
     };
-    
-    const startDays = scheduleItems
-      .map(item => parseRelativeTime(item.startTime))
-      .filter(day => day !== null) as number[];
-    
-    const endDays = scheduleItems
-      .map(item => parseRelativeTime(item.endTime))
-      .filter(day => day !== null) as number[];
-    
-    console.log('[ProjectHomepage] 解析的开始天数:', startDays);
-    console.log('[ProjectHomepage] 解析的结束天数:', endDays);
-    
-    if (!startDays.length || !endDays.length) {
-      console.log('[ProjectHomepage] 没有有效的相对时间数据，使用默认范围');
-      return { startDay: 1, endDay: 30, totalDays: 30 };
-    }
-    
-    const minDay = Math.min(...startDays);
-    const maxDay = Math.max(...endDays);
-    const totalDays = maxDay - minDay + 1;
-    
-    console.log('[ProjectHomepage] 项目天数范围:', { startDay: minDay, endDay: maxDay, totalDays });
-    
-    return { startDay: minDay, endDay: maxDay, totalDays };
-  }, [scheduleItems]);
+    const starts = tasks.map((t) => parseDate(t.start)).filter(Boolean) as Date[];
+    const ends = tasks.map((t) => parseDate(t.end)).filter(Boolean) as Date[];
+    if (!starts.length || !ends.length) return null;
+    const minStart = new Date(Math.min(...starts.map((d) => d.getTime())));
+    const maxEnd = new Date(Math.max(...ends.map((d) => d.getTime())));
+    const totalDays = Math.max(
+      1,
+      Math.ceil((maxEnd.getTime() - minStart.getTime()) / (1000 * 60 * 60 * 24)) + 1,
+    );
+    return { startDay: 1, endDay: totalDays, totalDays, baseDate: minStart };
+  }, [tasks]);
 
   const highlightInfo = useMemo(() => {
-    const all: Array<number | string> = [];
-    scheduleItems.forEach((i) => {
-      const raw = processGuidMapping?.[i.task] as unknown;
-      const arr = Array.isArray(raw) ? raw : [];
-      arr.forEach((id) => {
-        if (typeof id === "number" && Number.isFinite(id)) {
-          all.push(id);
-        } else if (typeof id === "string") {
-          const trimmed = id.trim();
-          if (!trimmed) return;
-          all.push(trimmed);
-        }
-      });
-    });
-
     return {
-      highlightCount: all.length,
-      highlightIds: all,
+      highlightCount: 0,
+      highlightIds: [] as Array<number | string>,
     };
-  }, [scheduleItems, processGuidMapping]);
-
-  const sanitizeIds = (
-    ids: Array<number | string> | undefined
-  ): Array<number | string> => {
-    const arr = Array.isArray(ids) ? ids : [];
-    const out: Array<number | string> = [];
-    arr.forEach((id) => {
-      if (typeof id === "number" && Number.isFinite(id)) {
-        out.push(id);
-      } else if (typeof id === "string") {
-        const t = id.trim();
-        if (!t) return;
-        if (/^\d+$/.test(t)) {
-          const n = parseInt(t, 10);
-          if (!Number.isNaN(n)) out.push(n);
-        } else {
-          out.push(t);
-        }
-      }
-    });
-    return out;
-  };
+  }, []);
 
   // 根据当前天数计算工序状态
   const taskStatusByTime = useMemo(() => {
     if (!timeRange) return { completed: [], inProgress: [], upcoming: [] };
-    
+
     const completed: string[] = [];
     const inProgress: string[] = [];
     const upcoming: string[] = [];
-    
-    // 解析相对时间的辅助函数
-    const parseRelativeTime = (timeStr: string): number | null => {
-      if (!timeStr || !timeStr.trim()) return null;
-      
-      const patterns = [
-        /第(\d+)天/,           // "第1天"
-        /Day\s*(\d+)/i,       // "Day 1" 或 "day 1"
-        /^\s*(\d+)\s*$/,      // 纯数字 "1"
-        /天数\s*(\d+)/,       // "天数1"
-      ];
-      
-      for (const pattern of patterns) {
-        const match = timeStr.match(pattern);
-        if (match) {
-          const day = parseInt(match[1], 10);
-          return isNaN(day) ? null : day;
-        }
-      }
-      
-      const num = parseInt(timeStr.trim(), 10);
-      return isNaN(num) ? null : num;
-    };
-    
-    scheduleItems.forEach((item, index) => {
-      const startDay = parseRelativeTime(item.startTime);
-      const endDay = parseRelativeTime(item.endTime);
-      
-      if (startDay === null || endDay === null) {
-        // 如果没有有效的相对时间数据，根据序号模拟状态
-        const totalTasks = scheduleItems.length;
-        const progressRatio = (currentDay - timeRange.startDay) / (timeRange.endDay - timeRange.startDay);
-        const currentTaskIndex = Math.floor(progressRatio * totalTasks);
-        
-        if (index < currentTaskIndex) {
-          completed.push(item.task);
-        } else if (index === currentTaskIndex) {
-          inProgress.push(item.task);
-        } else {
-          upcoming.push(item.task);
-        }
-        return;
-      }
-      
-      // 基于相对天数判断状态
+    const base = timeRange.baseDate;
+
+    tasks.forEach((item) => {
+      const start = new Date(item.start);
+      const end = new Date(item.end);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
+      const startDay =
+        Math.floor((start.getTime() - base.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const endDay =
+        Math.floor((end.getTime() - base.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
       if (currentDay < startDay) {
-        // 尚未开始
-        upcoming.push(item.task);
+        upcoming.push(item.name);
       } else if (currentDay > endDay) {
-        // 已完成
-        completed.push(item.task);
+        completed.push(item.name);
       } else {
-        // 进行中
-        inProgress.push(item.task);
+        inProgress.push(item.name);
       }
     });
-    
-    console.log('[ProjectHomepage] 工序状态 (第' + currentDay + '天):', { completed, inProgress, upcoming });
-    
+
     return { completed, inProgress, upcoming };
-  }, [scheduleItems, currentDay, timeRange]);
+  }, [tasks, currentDay, timeRange]);
 
   const completedIds = useMemo(() => {
-    return taskStatusByTime.completed
-      .flatMap((taskName) => sanitizeIds(processGuidMapping?.[taskName]));
-  }, [taskStatusByTime.completed, processGuidMapping]);
+    return [] as Array<number | string>;
+  }, []);
   
   const inProgressIds = useMemo(() => {
-    return taskStatusByTime.inProgress
-      .flatMap((taskName) => sanitizeIds(processGuidMapping?.[taskName]));
-  }, [taskStatusByTime.inProgress, processGuidMapping]);
+    return [] as Array<number | string>;
+  }, []);
 
   // 图表数据处理
   const chartData = useMemo(() => {
-    return scheduleItems.map((item, index) => {
-      // 生成模拟的费用和劳动力数据（实际项目中应该从真实数据源获取）
-      const baseCost = (item.workerCount || 1) * 500; // 基础费用
-      const variationFactor = 0.8 + Math.sin(index * 0.5) * 0.4; // 添加一些变化
-      const cost = Math.round(baseCost * variationFactor);
-      
-      const laborCount = item.workerCount || Math.floor(Math.random() * 10) + 1;
-      
+    return tasks.map((item, index) => {
+      const cost =
+        (item.laborCost ?? 0) + (item.materialCost ?? 0) + (item.deviceCost ?? 0);
+      const laborCount = item.teamSize || 0;
       return {
-        name: item.task.length > 15 ? item.task.substring(0, 15) + '...' : item.task,
-        fullName: item.task,
-        cost: cost,
+        name: item.name.length > 15 ? item.name.substring(0, 15) + "..." : item.name,
+        fullName: item.name,
+        cost,
         labor: laborCount,
-        index: index + 1
+        index: index + 1,
       };
     });
-  }, [scheduleItems]);
+  }, [tasks]);
 
   // 图表统计数据
   const chartStats = useMemo(() => {
@@ -287,46 +175,17 @@ export function Overview({
     }
   }, [timeRange]);
 
-  useEffect(() => {
-    const withIds = scheduleItems
-      .map((i) => ({
-        task: i.task,
-        ids: Array.isArray(processGuidMapping?.[i.task])
-          ? (processGuidMapping?.[i.task] as Array<number | string>)
-          : [],
-      }))
-      .filter(({ ids }) => {
-        const arr = Array.isArray(ids) ? ids : [];
-        return arr.some((id) => {
-          if (typeof id === "number") return Number.isFinite(id);
-          if (typeof id === "string") return id.trim().length > 0;
-          return false;
-        });
-      });
-    if (withIds.length > 0) {
-      console.log("[ProjectHomepage] 工序含有映射ID:", withIds);
-    }
-  }, [scheduleItems, processGuidMapping]);
-
   return (
     <div className="h-full flex flex-col space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-gray-600">项目ID: {projectId}</p>
           {isLoading && <p className="text-gray-500">数据加载中...</p>}
-          {error && (
-            <p className="text-destructive">加载失败：{error.message}</p>
-          )}
         </div>
         <div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => forceRefreshMapping()}
-            disabled={isMappingFetching}
-          >
+          <Button variant="outline" size="sm" disabled>
             <RefreshCcw />
-            强制刷新映射
+            核心数据已加载
           </Button>
         </div>
       </div>
@@ -344,25 +203,10 @@ export function Overview({
                     项目周期：第 {timeRange.startDay} 天 - 第 {timeRange.endDay} 天 (共 {timeRange.totalDays} 天)
                     <br />
                     当前进度：第 {currentDay} 天
-                    {scheduleItems.some(item => {
-                      const parseRelativeTime = (timeStr: string): number | null => {
-                        if (!timeStr || !timeStr.trim()) return null;
-                        const patterns = [/第(\d+)天/, /Day\s*(\d+)/i, /^\s*(\d+)\s*$/, /天数\s*(\d+)/];
-                        for (const pattern of patterns) {
-                          const match = timeStr.match(pattern);
-                          if (match) {
-                            const day = parseInt(match[1], 10);
-                            return isNaN(day) ? null : day;
-                          }
-                        }
-                        const num = parseInt(timeStr.trim(), 10);
-                        return isNaN(num) ? null : num;
-                      };
-                      return parseRelativeTime(item.startTime) === null || parseRelativeTime(item.endTime) === null;
-                    }) && (
+                    {tasks.some((item) => !item.start || !item.end) && (
                       <>
                         <br />
-                        <span className="text-amber-600">⚠️ 部分工序缺少时间数据，使用模拟进度</span>
+                        <span className="text-amber-600">⚠️ 部分工序缺少时间数据</span>
                       </>
                     )}
                   </>

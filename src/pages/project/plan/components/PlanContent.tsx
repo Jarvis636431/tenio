@@ -17,7 +17,7 @@ interface PlanContentProps {
   ganttData: PlanTask[];
   timelineScale: TimelineScale;
   shutdownEvents: string[];
-  onGanttTaskDetail: (taskId: number) => void;
+  onGanttTaskDetail: (taskId: string) => void;
 }
 
 export function PlanContent({

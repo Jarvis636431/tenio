@@ -57,8 +57,8 @@ export function NewTaskDialog({
     jobType: "",
     team: "",
     totalCost: "" as number | "",
-    prerequisiteTasks: [] as number[],
-    dependentTasks: [] as number[],
+    prerequisiteTasks: [] as string[],
+    dependentTasks: [] as string[],
     remarks: "",
     duration: "",
     constructionMethod: "",
@@ -280,7 +280,7 @@ export function NewTaskDialog({
     }
   };
 
-  const addPrerequisiteTask = (taskId: number) => {
+  const addPrerequisiteTask = (taskId: string) => {
     setFormData((prev) => ({
       ...prev,
       prerequisiteTasks: [...prev.prerequisiteTasks, taskId],
@@ -288,14 +288,14 @@ export function NewTaskDialog({
     setPrerequisiteSearch("");
   };
 
-  const removePrerequisiteTask = (taskId: number) => {
+  const removePrerequisiteTask = (taskId: string) => {
     setFormData((prev) => ({
       ...prev,
       prerequisiteTasks: prev.prerequisiteTasks.filter((id) => id !== taskId),
     }));
   };
 
-  const addDependentTask = (taskId: number) => {
+  const addDependentTask = (taskId: string) => {
     setFormData((prev) => ({
       ...prev,
       dependentTasks: [...prev.dependentTasks, taskId],
@@ -303,7 +303,7 @@ export function NewTaskDialog({
     setDependentSearch("");
   };
 
-  const removeDependentTask = (taskId: number) => {
+  const removeDependentTask = (taskId: string) => {
     setFormData((prev) => ({
       ...prev,
       dependentTasks: prev.dependentTasks.filter((id) => id !== taskId),
