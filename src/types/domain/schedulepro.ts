@@ -106,11 +106,15 @@ export interface CoreGraphWorkProcess {
 export interface CoreGraphDependency {
   id: string;
   project_id: string;
-  from_work_process_id: string;
-  to_work_process_id: string;
+  from_work_process_id?: string;
+  to_work_process_id?: string;
+  predecessor_id?: string;
+  successor_id?: string;
   dependency_type?: string;
   lag_days?: number;
   is_deleted?: boolean;
+  edge_type?: string;
+  description?: string | null;
 }
 
 export interface CoreGraphResponse {

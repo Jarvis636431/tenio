@@ -26,10 +26,12 @@ export function PlanPage() {
     if (!coreGraph?.work_processes?.length) return [];
     const depsByTarget = new Map<string, string[]>();
     coreGraph.dependencies?.forEach((dep) => {
-      if (!dep?.to_work_process_id || !dep?.from_work_process_id) return;
-      const list = depsByTarget.get(dep.to_work_process_id) ?? [];
-      list.push(dep.from_work_process_id);
-      depsByTarget.set(dep.to_work_process_id, list);
+      const toId = dep.to_work_process_id ?? dep.successor_id;
+      const fromId = dep.from_work_process_id ?? dep.predecessor_id;
+      if (!toId || !fromId) return;
+      const list = depsByTarget.get(toId) ?? [];
+      list.push(fromId);
+      depsByTarget.set(toId, list);
     });
 
     const resolvePlannedRange = (wp: typeof coreGraph.work_processes[number]) => {
