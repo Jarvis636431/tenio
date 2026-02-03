@@ -64,6 +64,9 @@ export interface CoreGraphWorkProcess {
   code?: string;
   name?: string;
   is_dummy?: boolean;
+  express_ids?: string[];
+  tag?: string[];
+  calc?: boolean;
   quantity?: number;
   unit?: string;
   base_duration_days?: number;

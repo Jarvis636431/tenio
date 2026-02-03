@@ -21,6 +21,7 @@ import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useProject } from "@/hooks/useProject";
+import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { getProjectCostCurve, getProjectCoreGraph } from "@/services/schedulepro-service";
 
 export function PreviewStep() {
@@ -40,6 +41,7 @@ export function PreviewStep() {
   const { token } = useAuth();
   const { toast } = useToast();
   const { setCoreGraph } = useProject();
+  const { getIdsByDate } = useProjectHighlight(projectId);
   const {
     projectName,
     activeChartTab,
@@ -237,6 +239,14 @@ export function PreviewStep() {
         holidayMarkers: markers,
       };
     }, [finishDate, indicatorPercent, solutionData, startDate]);
+
+  const highlightByDate = useMemo(() => {
+    if (!selectedDateKey) {
+      return { inProgressIds: [] as string[], completedIds: [] as string[] };
+    }
+    const date = toDate(selectedDateKey);
+    return getIdsByDate(date);
+  }, [getIdsByDate, selectedDateKey]);
   return (
     <div className="w-full h-full flex flex-col space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 p-6">
       <div className="flex items-center gap-2">
@@ -254,6 +264,20 @@ export function PreviewStep() {
             <div className="bg-gray-50 rounded-xl relative overflow-hidden h-full border border-gray-100 shadow-sm">
               <ModelViewer
                 models={models}
+                highlightColorGroups={[
+                  {
+                    ids: highlightByDate.completedIds,
+                    color: "#22c55e",
+                    opacity: 0.8,
+                    customID: "completed",
+                  },
+                  {
+                    ids: highlightByDate.inProgressIds,
+                    color: "#f59e0b",
+                    opacity: 0.9,
+                    customID: "inProgress",
+                  },
+                ]}
                 className="h-full"
               />
               {/* AI 助手按钮 */}

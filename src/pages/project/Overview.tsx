@@ -4,6 +4,7 @@ import { RefreshCcw, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
+import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { Slider } from "@/components/ui/slider";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -21,6 +22,8 @@ export function Overview({
   // 优先使用路由参数，其次使用props
   const projectId = paramProjectId || propsProjectId || '';
   const { coreGraph, isLoading } = useProjectCoreGraph();
+  const { tagMap, processHighlights, resolveExpressIds, allResolvedIds, getIdsByDate } =
+    useProjectHighlight(projectId);
   const [currentDay, setCurrentDay] = useState(1);
   const [chartDataType, setChartDataType] = useState<'cost' | 'labor'>('cost');
 
@@ -41,19 +44,17 @@ export function Overview({
         deviceCost: wp.device_rental_cost ?? 0,
         teamSize: wp.team_size ?? wp.suggested_team_count ?? 0,
         status: exec?.status ?? "planned",
+        expressIds: wp.express_ids ?? [],
+        tagIds: wp.tag ?? [],
       };
     });
   }, [coreGraph]);
 
   // 计算项目时间范围 - 处理相对时间
   const timeRange = useMemo(() => {
-    if (!tasks.length) return null;
-    const parseDate = (value: string) => {
-      const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? null : date;
-    };
-    const starts = tasks.map((t) => parseDate(t.start)).filter(Boolean) as Date[];
-    const ends = tasks.map((t) => parseDate(t.end)).filter(Boolean) as Date[];
+    if (!processHighlights.length) return null;
+    const starts = processHighlights.map((t) => t.start).filter(Boolean) as Date[];
+    const ends = processHighlights.map((t) => t.end).filter(Boolean) as Date[];
     if (!starts.length || !ends.length) return null;
     const minStart = new Date(Math.min(...starts.map((d) => d.getTime())));
     const maxEnd = new Date(Math.max(...ends.map((d) => d.getTime())));
@@ -62,36 +63,32 @@ export function Overview({
       Math.ceil((maxEnd.getTime() - minStart.getTime()) / (1000 * 60 * 60 * 24)) + 1,
     );
     return { startDay: 1, endDay: totalDays, totalDays, baseDate: minStart };
-  }, [tasks]);
+  }, [processHighlights]);
 
   const highlightInfo = useMemo(() => {
+    const ids = allResolvedIds;
     return {
-      highlightCount: 0,
-      highlightIds: [] as Array<number | string>,
+      highlightCount: ids.length,
+      highlightIds: ids,
     };
-  }, []);
+  }, [allResolvedIds]);
 
   // 根据当前天数计算工序状态
   const taskStatusByTime = useMemo(() => {
     if (!timeRange) return { completed: [], inProgress: [], upcoming: [] };
+    const base = timeRange.baseDate;
+    const currentDate = new Date(base);
+    currentDate.setDate(base.getDate() + currentDay - 1);
 
     const completed: string[] = [];
     const inProgress: string[] = [];
     const upcoming: string[] = [];
-    const base = timeRange.baseDate;
 
-    tasks.forEach((item) => {
-      const start = new Date(item.start);
-      const end = new Date(item.end);
-      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
-      const startDay =
-        Math.floor((start.getTime() - base.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      const endDay =
-        Math.floor((end.getTime() - base.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-      if (currentDay < startDay) {
+    processHighlights.forEach((item) => {
+      if (!item.start || !item.end) return;
+      if (currentDate < item.start) {
         upcoming.push(item.name);
-      } else if (currentDay > endDay) {
+      } else if (currentDate > item.end) {
         completed.push(item.name);
       } else {
         inProgress.push(item.name);
@@ -99,15 +96,23 @@ export function Overview({
     });
 
     return { completed, inProgress, upcoming };
-  }, [tasks, currentDay, timeRange]);
+  }, [processHighlights, currentDay, timeRange]);
 
   const completedIds = useMemo(() => {
-    return [] as Array<number | string>;
-  }, []);
+    if (!timeRange) return [] as string[];
+    const base = timeRange.baseDate;
+    const currentDate = new Date(base);
+    currentDate.setDate(base.getDate() + currentDay - 1);
+    return getIdsByDate(currentDate).completedIds;
+  }, [currentDay, getIdsByDate, timeRange]);
   
   const inProgressIds = useMemo(() => {
-    return [] as Array<number | string>;
-  }, []);
+    if (!timeRange) return [] as string[];
+    const base = timeRange.baseDate;
+    const currentDate = new Date(base);
+    currentDate.setDate(base.getDate() + currentDay - 1);
+    return getIdsByDate(currentDate).inProgressIds;
+  }, [currentDay, getIdsByDate, timeRange]);
 
   // 图表数据处理
   const chartData = useMemo(() => {
@@ -253,6 +258,7 @@ export function Overview({
                   {
                     key: "default",
                     src: "/models/0125.ifc",
+                    tagMap,
                   },
                 ]}
                 highlightColorGroups={[
