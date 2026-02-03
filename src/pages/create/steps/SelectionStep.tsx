@@ -22,7 +22,7 @@ export function SelectionStep() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { token } = useAuth();
-  const { selectedPlan, setSelectedPlan, projectId } =
+  const { selectedPlan, setSelectedPlan, projectId, setSolutionData } =
     useOutletContext<CreateProjectContextType>();
 
   const defaultPlanId =
@@ -58,11 +58,14 @@ export function SelectionStep() {
     }
 
     try {
-      await selectProjectSolution(
+      const response = await selectProjectSolution(
         projectId,
         { solution_id: 0 },
         token,
       );
+      const resolved =
+        (response as { data?: typeof response }).data ?? response;
+      setSolutionData(resolved);
       navigate("/create/preview");
     } catch (error) {
       toast({

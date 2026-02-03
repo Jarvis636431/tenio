@@ -15,16 +15,27 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import type { CreateProjectContextType } from "@/types/create-project";
-import { detailChartData, processList } from "@/mocks/data/create-project";
 import { ChatButton } from "@/components/ai/ChatButton";
 import { ChatPanel } from "@/components/ai/ChatPanel";
 import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
+import { useAuth } from "@/hooks/useAuth";
+import { getProjectCostCurve } from "@/services/schedulepro-service";
 
 export function PreviewStep() {
   const navigate = useNavigate();
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const [indicatorPercent, setIndicatorPercent] = useState(30);
+  const [costCurveData, setCostCurveData] = useState<
+    Array<{
+      dayIndex: number;
+      dateLabel: string;
+      totalCost: number;
+      laborCost: number;
+      rentalCost: number;
+    }>
+  >([]);
   const chatPanel = useChatPanel();
+  const { token } = useAuth();
   const {
     projectName,
     activeChartTab,
@@ -32,6 +43,8 @@ export function PreviewStep() {
     expandedProcess,
     setExpandedProcess,
     handleCreateProject,
+    solutionData,
+    projectId,
   } = useOutletContext<CreateProjectContextType>();
 
   const onBack = () => {
@@ -52,6 +65,65 @@ export function PreviewStep() {
     ],
     [],
   );
+
+  const toDate = (value: string) => new Date(`${value}T00:00:00`);
+  const formatDateKey = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+      date.getDate(),
+    ).padStart(2, "0")}`;
+  const formatDateLabel = (value: string) => {
+    if (!value) return "";
+    const date = toDate(value);
+    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+  };
+
+  useEffect(() => {
+    if (activeChartTab !== "fund") {
+      setActiveChartTab("fund");
+    }
+  }, [activeChartTab, setActiveChartTab]);
+
+  useEffect(() => {
+    if (!projectId || !token) {
+      setCostCurveData([]);
+      return;
+    }
+
+    let isMounted = true;
+    getProjectCostCurve(projectId, token)
+      .then((response) => {
+        if (!isMounted) return;
+        const baseDate = response.start_date;
+        const base = baseDate ? toDate(baseDate) : null;
+        const data =
+          response.points?.map((point) => {
+            const date = base ? new Date(base) : null;
+            if (date) {
+              date.setDate(date.getDate() + point.day_index);
+            }
+            const label = date
+              ? `${date.getMonth() + 1}/${date.getDate()}`
+              : `Day ${point.day_index}`;
+            return {
+              dayIndex: point.day_index,
+              dateLabel: label,
+              totalCost: point.total_cost,
+              laborCost: point.labor_cost,
+              rentalCost: point.rental_cost,
+            };
+          }) ?? [];
+        setCostCurveData(data);
+      })
+      .catch(() => {
+        if (isMounted) {
+          setCostCurveData([]);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, token]);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -81,6 +153,60 @@ export function PreviewStep() {
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, []);
+
+  const startDate = solutionData?.start_date ?? "";
+  const finishDate = solutionData?.finish_date ?? "";
+
+  const { selectedDateKey, selectedDateLabel, dailyTasks, holidayMarkers } =
+    useMemo(() => {
+      if (!startDate || !finishDate) {
+        return {
+          selectedDateKey: "",
+          selectedDateLabel: "",
+          dailyTasks: [] as string[],
+          holidayMarkers: [] as Array<{
+            name: string;
+            date: string;
+            percent: number;
+          }>,
+        };
+      }
+
+      const start = toDate(startDate);
+      const finish = toDate(finishDate);
+      const totalMs = Math.max(0, finish.getTime() - start.getTime());
+      const totalDays = Math.max(1, Math.round(totalMs / (1000 * 60 * 60 * 24)));
+      const dayIndex = Math.min(
+        totalDays,
+        Math.max(0, Math.round((indicatorPercent / 100) * totalDays)),
+      );
+      const selectedDate = new Date(start);
+      selectedDate.setDate(selectedDate.getDate() + dayIndex);
+      const dateKey = formatDateKey(selectedDate);
+
+      const tasks = solutionData?.daily_schedule?.[dateKey] ?? [];
+
+      const markers =
+        solutionData?.holidays?.map((holiday) => {
+          const holidayDate = toDate(holiday.date);
+          const diffMs = holidayDate.getTime() - start.getTime();
+          const diffDays = diffMs / (1000 * 60 * 60 * 24);
+          const percent =
+            totalDays > 0 ? Math.min(100, Math.max(0, (diffDays / totalDays) * 100)) : 0;
+          return {
+            name: holiday.name,
+            date: holiday.date,
+            percent,
+          };
+        }) ?? [];
+
+      return {
+        selectedDateKey: dateKey,
+        selectedDateLabel: formatDateLabel(dateKey),
+        dailyTasks: tasks,
+        holidayMarkers: markers,
+      };
+    }, [finishDate, indicatorPercent, solutionData, startDate]);
   return (
     <div className="w-full h-full flex flex-col space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 p-6">
       <div className="flex items-center gap-2">
@@ -117,18 +243,8 @@ export function PreviewStep() {
 
           {/* 底部图表区域 */}
           <div className="bg-white rounded-xl p-4 h-[220px] flex flex-col">
-            <Tabs
-              value={activeChartTab}
-              onValueChange={setActiveChartTab}
-              className="w-full h-full flex flex-col"
-            >
+            <Tabs value="fund" className="w-full h-full flex flex-col">
               <TabsList className="bg-transparent justify-start p-0 h-auto border-b w-full rounded-none">
-                <TabsTrigger
-                  value="resource"
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1975D2] data-[state=active]:text-[#1975D2] rounded-none px-4 py-2"
-                >
-                  资源曲线
-                </TabsTrigger>
                 <TabsTrigger
                   value="fund"
                   className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1975D2] data-[state=active]:text-[#1975D2] rounded-none px-4 py-2"
@@ -141,7 +257,7 @@ export function PreviewStep() {
                 <div className="flex-1 min-h-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
-                      data={detailChartData}
+                      data={costCurveData}
                       margin={{
                         top: 10,
                         right: 10,
@@ -154,7 +270,7 @@ export function PreviewStep() {
                         vertical={false}
                         stroke="#f0f0f0"
                       />
-                      <XAxis dataKey="month" hide />
+                      <XAxis dataKey="dateLabel" hide />
                       <YAxis hide />
                       <Tooltip
                         contentStyle={{
@@ -162,12 +278,15 @@ export function PreviewStep() {
                           border: "none",
                           boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                         }}
+                        formatter={(value: number) => [
+                          `¥${value.toLocaleString()}`,
+                          "费用",
+                        ]}
+                        labelFormatter={(label) => `${label}`}
                       />
                       <Line
                         type="monotone"
-                        dataKey={
-                          activeChartTab === "resource" ? "value" : "fund"
-                        }
+                        dataKey="totalCost"
                         stroke="#93c5fd"
                         strokeWidth={3}
                         dot={false}
@@ -201,37 +320,42 @@ export function PreviewStep() {
                   ></div>
 
                   {/* 关键节点标记 */}
-                  <div
-                    className="absolute left-[40%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-red-500 rounded-full group"
-                    title="春节节假日"
-                  >
-                    <div className="absolute top-[-36px] left-1/2 -translate-x-1/2 bg-[#D32F2F] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                      <span className="font-bold">春节节假日</span>
-                      <span className="text-[8px] opacity-80">请提前做好准备</span>
+                  {holidayMarkers.map((holiday) => (
+                    <div
+                      key={`${holiday.date}-${holiday.name}`}
+                      className="absolute top-1/2 -translate-y-1/2 w-10 h-1.5 bg-red-500 rounded-full group"
+                      style={{ left: `${holiday.percent}%`, transform: "translate(-50%, -50%)" }}
+                      title={holiday.name}
+                    >
+                      <div className="absolute top-[-36px] left-1/2 -translate-x-1/2 bg-[#D32F2F] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                        <span className="font-bold">{holiday.name}</span>
+                        <span className="text-[8px] opacity-80">{holiday.date}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div
-                    className="absolute left-[70%] top-1/2 -translate-y-1/2 w-12 h-1.5 bg-yellow-500 rounded-full group"
-                    title="秋收罢工"
-                  >
-                    <div className="absolute top-[-36px] left-1/2 -translate-x-1/2 bg-[#FBC02D] text-white text-[10px] px-2 py-1 rounded shadow-sm flex flex-col items-center z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                      <span className="font-bold">秋收罢工</span>
-                      <span className="text-[8px] opacity-80 text-black">
-                        请提前做好准备
-                      </span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
                 <div className="absolute top-5 left-0 text-xs text-gray-500">
-                  2026年
-                  <br />
-                  1月24日
+                  {startDate ? (
+                    <>
+                      {formatDateLabel(startDate).split("年")[0]}年
+                      <br />
+                      {formatDateLabel(startDate).split("年")[1]}
+                    </>
+                  ) : (
+                    <>--</>
+                  )}
                 </div>
                 <div className="absolute top-5 right-0 text-xs text-gray-500 text-right">
-                  2026年
-                  <br />
-                  8月24日
+                  {finishDate ? (
+                    <>
+                      {formatDateLabel(finishDate).split("年")[0]}年
+                      <br />
+                      {formatDateLabel(finishDate).split("年")[1]}
+                    </>
+                  ) : (
+                    <>--</>
+                  )}
                 </div>
               </div>
             </div>
@@ -243,47 +367,53 @@ export function PreviewStep() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col flex-1 min-h-0">
             <div className="flex items-center gap-2 mb-4 pl-2 border-l-4 border-[#1975D2]">
               <h3 className="font-bold text-gray-900">当日工序</h3>
+              {selectedDateLabel && (
+                <span className="text-xs text-gray-400">{selectedDateLabel}</span>
+              )}
             </div>
 
             <ScrollArea className="flex-1 pr-4">
               <div className="space-y-3">
-                {processList.map((process) => (
+                {dailyTasks.length === 0 && (
+                  <div className="text-sm text-gray-400 px-2 py-4">
+                    暂无当日工序
+                  </div>
+                )}
+                {dailyTasks.map((task, index) => (
                   <div
-                    key={process.id}
+                    key={`${selectedDateKey}-${index}`}
                     className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md"
                   >
                     <div
                       className="flex items-center justify-between p-4 cursor-pointer bg-gray-50/50"
                       onClick={() =>
                         setExpandedProcess(
-                          expandedProcess === process.id ? null : process.id,
+                          expandedProcess === String(index) ? null : String(index),
                         )
                       }
                     >
                       <span className="font-medium text-gray-800">
-                        {process.id} {process.title}
+                        工序 {index + 1}
                       </span>
-                      {expandedProcess === process.id ? (
+                      {expandedProcess === String(index) ? (
                         <ChevronUp className="h-4 w-4 text-gray-500" />
                       ) : (
                         <ChevronDown className="h-4 w-4 text-gray-500" />
                       )}
                     </div>
 
-                    {expandedProcess === process.id && (
+                    {expandedProcess === String(index) && (
                       <div className="p-4 pt-0 bg-gray-50/30">
                         <div className="space-y-4 relative pl-4 mt-3">
                           {/* 左侧连接线 */}
                           <div className="absolute left-0 top-2 bottom-2 w-px bg-gray-200"></div>
 
-                          {process.details.map((detail, index) => (
-                            <div key={index} className="relative">
-                              <div className="absolute -left-[21px] top-2 w-2.5 h-2.5 bg-gray-300 rounded-full border-2 border-white"></div>
-                              <p className="text-sm text-gray-600 leading-relaxed">
-                                {detail}
-                              </p>
-                            </div>
-                          ))}
+                          <div className="relative">
+                            <div className="absolute -left-[21px] top-2 w-2.5 h-2.5 bg-gray-300 rounded-full border-2 border-white"></div>
+                            <p className="text-sm text-gray-600 leading-relaxed">
+                              {task}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     )}

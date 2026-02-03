@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ProjectInfo } from "@/types/create-project";
+import type { SelectSolutionResponse } from "@/types/domain/schedulepro";
 
 const defaultProjectInfo: ProjectInfo = {
   name: "",
@@ -27,6 +28,7 @@ interface CreateProjectState {
   cadFile: File | null;
   projectName: string;
   projectId: string;
+  solutionData: SelectSolutionResponse | null;
   projectInfo: ProjectInfo;
   siteAddress: string;
   siteCoordinates: [number, number] | null;
@@ -39,6 +41,7 @@ interface CreateProjectState {
   setCadFile: (file: File | null) => void;
   setProjectName: (name: string) => void;
   setProjectId: (id: string) => void;
+  setSolutionData: (data: SelectSolutionResponse | null) => void;
   setProjectInfo: (info: ProjectInfo) => void;
   setSiteAddress: (address: string) => void;
   setSiteCoordinates: (coords: [number, number] | null) => void;
@@ -56,6 +59,7 @@ export const useCreateProjectStore = create<CreateProjectState>()(
       cadFile: null,
       projectName: "",
       projectId: "",
+      solutionData: null,
       projectInfo: defaultProjectInfo,
       siteAddress: "",
       siteCoordinates: null,
@@ -68,6 +72,7 @@ export const useCreateProjectStore = create<CreateProjectState>()(
       setCadFile: (file) => set({ cadFile: file }),
       setProjectName: (name) => set({ projectName: name }),
       setProjectId: (id) => set({ projectId: id }),
+      setSolutionData: (data) => set({ solutionData: data }),
       setProjectInfo: (info) => set({ projectInfo: info }),
       setSiteAddress: (address) => set({ siteAddress: address }),
       setSiteCoordinates: (coords) => set({ siteCoordinates: coords }),
@@ -81,6 +86,7 @@ export const useCreateProjectStore = create<CreateProjectState>()(
           cadFile: null,
           projectName: "",
           projectId: "",
+          solutionData: null,
           projectInfo: defaultProjectInfo,
           siteAddress: "",
           siteCoordinates: null,

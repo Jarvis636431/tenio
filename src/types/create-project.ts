@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction } from "react";
+import type { SelectSolutionResponse } from "@/types/domain/schedulepro";
 
 export interface ProjectInfo {
   name: string;
@@ -45,6 +46,10 @@ export interface CreateProjectContextType {
   // Project ID
   projectId: string;
   setProjectId: Dispatch<SetStateAction<string>>;
+
+  // Solution Data
+  solutionData: SelectSolutionResponse | null;
+  setSolutionData: Dispatch<SetStateAction<SelectSolutionResponse | null>>;
   
   // Global States
   isCreating: boolean;
