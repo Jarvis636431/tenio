@@ -22,10 +22,11 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
 export async function register(
   payload: LoginPayload & { role?: string },
 ): Promise<void> {
+  const randomEmail = `user_${Math.random().toString(36).slice(2, 10)}@example.com`;
   await registerUser({
     username: payload.username,
     password: payload.password,
-    email: "",
+    email: randomEmail,
   });
 }
 
