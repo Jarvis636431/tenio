@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 export function useProject() {
   const { id } = useParams();
   const location = useLocation();
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   
   const {
     currentProject,
@@ -28,14 +28,14 @@ export function useProject() {
     let active = true;
 
     const fetchProjects = async () => {
-      if (!token || !user?.id) {
+      if (!token) {
         useProjectStore.getState().reset();
         return;
       }
 
       setLoading(true);
       try {
-        await refreshProjects(token, user.id);
+        await refreshProjects(token);
       } finally {
         if (active) {
           setLoading(false);
@@ -48,7 +48,7 @@ export function useProject() {
     return () => {
       active = false;
     };
-  }, [token, user?.id, refreshProjects, setLoading]);
+  }, [token, refreshProjects, setLoading]);
 
   // 路由同步：当 URL 中的项目 ID 变化时，自动切换当前项目
   useEffect(() => {
@@ -68,8 +68,8 @@ export function useProject() {
 
   // 包装 refreshProjects 以自动传入 token 和 userId
   const wrappedRefreshProjects = async () => {
-    if (token && user?.id) {
-      await refreshProjects(token, user.id);
+    if (token) {
+      await refreshProjects(token);
     }
   };
 

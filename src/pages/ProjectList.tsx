@@ -12,10 +12,13 @@ export default function ProjectList() {
   
   const getStatusColor = (status: string) => {
     switch (status) {
+      case "active":
       case "已完成":
         return "bg-category-green-100 text-category-green-800 hover:bg-category-green-200";
+      case "in_progress":
       case "进行中":
         return "bg-category-blue-100 text-category-blue-800 hover:bg-category-blue-200";
+      case "planned":
       case "规划中":
         return "bg-category-yellow-100 text-category-yellow-800 hover:bg-category-yellow-200";
       default:

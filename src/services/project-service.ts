@@ -83,12 +83,11 @@ export async function getProcessInfo(
 
 export async function getProjectList(
   token?: string,
-  userId?: string,
 ): Promise<ProjectListResponse> {
-  const url = buildUrl(PROJECT_SERVICE_BASE_URL, "/project_list", {
-    user_id: userId ?? "",
-  });
-  return requestJson<ProjectListResponse>(url, { token });
+  return requestJson<ProjectListResponse>(
+    `${PROJECT_SERVICE_BASE_URL}/api/projects/`,
+    { token },
+  );
 }
 
 export async function addProcess(

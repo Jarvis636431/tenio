@@ -157,15 +157,14 @@ export type BudgetData = TimeSeriesData<number>;
 
 export interface ProjectListItem {
   project_id: string;
-  name: string;
+  project_name: string;
   description?: string;
   status: string;
   created_at: string;
+  updated_at?: string;
 }
 
-export interface ProjectListResponse {
-  result: ProjectListItem[];
-}
+export type ProjectListResponse = ProjectListItem[];
 
 export interface AddProcessPayload {
   project_id: string;

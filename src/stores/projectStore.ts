@@ -14,7 +14,7 @@ interface ProjectState {
   setProjects: (projects: Project[]) => void;
   addProject: (project: Project) => void;
   updateProject: (project: Project) => void;
-  refreshProjects: (token: string, userId: string) => Promise<void>;
+  refreshProjects: (token: string) => Promise<void>;
   setLoading: (loading: boolean) => void;
   reset: () => void;
 }
@@ -94,8 +94,8 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       // Refresh projects from server
-      refreshProjects: async (token: string, userId: string) => {
-        if (!token || !userId) {
+      refreshProjects: async (token: string) => {
+        if (!token) {
           set({ projects: [], currentProject: null });
           return;
         }
@@ -103,10 +103,10 @@ export const useProjectStore = create<ProjectState>()(
         set({ isLoading: true });
         
         try {
-          const response = await getProjectList(token, userId);
-          const projectList: Project[] = response.result.map(item => ({
+          const response = await getProjectList(token);
+          const projectList: Project[] = response.map(item => ({
             id: item.project_id,
-            name: item.name,
+            name: item.project_name,
             description: item.description,
             status: item.status,
             createdAt: item.created_at,
