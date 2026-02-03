@@ -42,7 +42,6 @@ export function PreviewStep() {
     setActiveChartTab,
     expandedProcess,
     setExpandedProcess,
-    handleCreateProject,
     solutionData,
     projectId,
   } = useOutletContext<CreateProjectContextType>();
@@ -52,7 +51,9 @@ export function PreviewStep() {
   };
 
   const onNext = () => {
-    handleCreateProject();
+    if (projectId) {
+      navigate(`/project/${projectId}`);
+    }
   };
 
   // 保持 models 引用稳定，避免父组件重渲染触发 ModelViewer 重新初始化
