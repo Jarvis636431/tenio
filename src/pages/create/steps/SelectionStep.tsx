@@ -79,13 +79,15 @@ export function SelectionStep() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 w-full h-full flex flex-col p-6">
       <div className="bg-gray-50/50 rounded-xl p-6 flex-1 min-h-[340px] relative">
-        <div className="absolute top-4 left-6 text-sm text-gray-400">成本</div>
+        <div className="absolute top-4 left-6 text-sm text-gray-400">
+          累计总成本（万元）
+        </div>
         <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
-          <div className="text-xl font-medium text-gray-800">18个月</div>
-          <div className="text-sm text-gray-400">工期上限</div>
+          <div className="text-xl font-medium text-gray-800">方案对比</div>
+          <div className="text-sm text-gray-400">总天数 vs 总成本</div>
         </div>
         <div className="absolute bottom-2 right-6 text-sm text-gray-400">
-          工期时间
+          累计总天数
         </div>
 
         <ResponsiveContainer width="100%" height="100%">
@@ -99,13 +101,8 @@ export function SelectionStep() {
               strokeDasharray="3 3"
               stroke="#eee"
             />
-            <XAxis
-              dataKey="month"
-              type="number"
-              domain={["dataMin", "dataMax"]}
-              hide
-            />
-            <YAxis hide domain={["dataMin - 500", "dataMax + 500"]} />
+            <XAxis dataKey="day" type="number" domain={["dataMin", "dataMax"]} hide />
+            <YAxis hide domain={[5100, "dataMax + 50"]} />
             <Tooltip
               contentStyle={{
                 borderRadius: "8px",
@@ -113,17 +110,17 @@ export function SelectionStep() {
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
               }}
               formatter={(value: number) => [`${value}万元`, "成本"]}
-              labelFormatter={(label) => `${label}个月`}
+              labelFormatter={(label) => `${label}天`}
             />
             {/* 模拟选中区域 */}
             <ReferenceArea
-              x1={16}
-              x2={20}
+              x1={260}
+              x2={300}
               strokeOpacity={0}
               fill="#fee2e2"
               fillOpacity={0.5}
             />
-            <ReferenceLine x={18} stroke="#ef4444" strokeDasharray="3 3" />
+            <ReferenceLine x={293} stroke="#ef4444" strokeDasharray="3 3" />
             <Line
               type="monotone"
               dataKey="cost"
@@ -146,12 +143,12 @@ export function SelectionStep() {
         </ResponsiveContainer>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 h-[160px]">
+      <div className="grid grid-cols-7 gap-3 h-[150px]">
         {planOptions.map((plan) => (
           <div
             key={plan.id}
             onClick={() => setSelectedPlan(plan.id)}
-            className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 h-full flex flex-col justify-between shadow-sm ${
+            className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 h-full flex flex-col justify-between shadow-sm ${
               selectedPlan === plan.id
                 ? "border-yellow-400 bg-yellow-50/30"
                 : "border-transparent bg-gray-50 hover:bg-gray-100"
@@ -165,35 +162,25 @@ export function SelectionStep() {
               </div>
             )}
 
-            <div className="space-y-4">
-              <h3 className="font-bold text-xl text-gray-900">{plan.title}</h3>
+            <div className="space-y-2">
+              <h3 className="font-bold text-base text-gray-900">{plan.title}</h3>
             </div>
 
-            <div className="space-y-2">
-              <div className="grid grid-cols-[1fr_auto] items-center text-base">
-                <span className="text-gray-900 font-semibold text-lg">
-                  {plan.endDate}
+            <div className="space-y-1">
+              <div className="grid grid-cols-[1fr_auto] items-center text-sm">
+                <span className="text-gray-900 font-semibold text-sm">
+                  {plan.totalDays} 天
                 </span>
                 <div className="flex items-center justify-end gap-2 text-right">
-                  <span className="text-xs text-gray-400">预期结束日期</span>
-                  {plan.durationTag && (
-                    <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded font-medium">
-                      {plan.durationTag}
-                    </span>
-                  )}
+                  <span className="text-[10px] text-gray-400">累计总天数</span>
                 </div>
               </div>
-              <div className="grid grid-cols-[1fr_auto] items-center text-base">
-                <span className="text-gray-900 font-semibold text-lg">
-                  {plan.cost}
+              <div className="grid grid-cols-[1fr_auto] items-center text-sm">
+                <span className="text-gray-900 font-semibold text-sm">
+                  {(plan.totalCost / 10000).toFixed(2)} 万元
                 </span>
                 <div className="flex items-center justify-end gap-2 text-right">
-                  <span className="text-xs text-gray-400">预期建设成本</span>
-                  {plan.costTag && (
-                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded font-medium">
-                      {plan.costTag}
-                    </span>
-                  )}
+                  <span className="text-[10px] text-gray-400">累计总成本</span>
                 </div>
               </div>
             </div>
