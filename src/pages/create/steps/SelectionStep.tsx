@@ -60,7 +60,7 @@ export function SelectionStep() {
     try {
       const response = await selectProjectSolution(
         projectId,
-        { solution_id: 0 },
+        { solution_id: selectedPlan || 0 },
         token,
       );
       const resolved =

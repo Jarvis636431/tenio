@@ -12,20 +12,20 @@ export const planOptions = [
   {
     id: 1,
     title: "施工方案1",
-    totalDays: 464,
-    totalCost: 52239140.0,
+    totalDays: 262,
+    totalCost: 52297733.33,
   },
   {
     id: 2,
     title: "施工方案2",
-    totalDays: 348,
-    totalCost: 51736840.0,
+    totalDays: 268,
+    totalCost: 51909926.67,
   },
   {
     id: 3,
     title: "施工方案3",
-    totalDays: 300,
-    totalCost: 51474200.0,
+    totalDays: 279,
+    totalCost: 51671120.0,
   },
   {
     id: 4,
@@ -38,20 +38,20 @@ export const planOptions = [
   {
     id: 5,
     title: "施工方案5",
-    totalDays: 262,
-    totalCost: 52297733.33,
+    totalDays: 300,
+    totalCost: 51474200.0,
   },
   {
     id: 6,
     title: "施工方案6",
-    totalDays: 268,
-    totalCost: 51909926.67,
+    totalDays: 348,
+    totalCost: 51736840.0,
   },
   {
     id: 7,
     title: "施工方案7",
-    totalDays: 279,
-    totalCost: 51671120.0,
+    totalDays: 464,
+    totalCost: 52239140.0,
   },
 ];
 
