@@ -42,7 +42,7 @@ interface CreateProjectState {
   setProjectName: (name: string) => void;
   setProjectId: (id: string) => void;
   setSolutionData: (data: SelectSolutionResponse | null) => void;
-  setProjectInfo: (info: ProjectInfo) => void;
+  setProjectInfo: (info: ProjectInfo | ((prev: ProjectInfo) => ProjectInfo)) => void;
   setSiteAddress: (address: string) => void;
   setSiteCoordinates: (coords: [number, number] | null) => void;
   setSelectedPlan: (plan: number) => void;
@@ -73,7 +73,10 @@ export const useCreateProjectStore = create<CreateProjectState>()(
       setProjectName: (name) => set({ projectName: name }),
       setProjectId: (id) => set({ projectId: id }),
       setSolutionData: (data) => set({ solutionData: data }),
-      setProjectInfo: (info) => set({ projectInfo: info }),
+      setProjectInfo: (info) =>
+        set((state) => ({
+          projectInfo: typeof info === "function" ? info(state.projectInfo) : info,
+        })),
       setSiteAddress: (address) => set({ siteAddress: address }),
       setSiteCoordinates: (coords) => set({ siteCoordinates: coords }),
       setSelectedPlan: (plan) => set({ selectedPlan: plan }),
