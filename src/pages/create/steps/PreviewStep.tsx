@@ -17,7 +17,7 @@ import { getProjectCoreGraph } from "@/services/schedulepro-service";
 export function PreviewStep() {
   const navigate = useNavigate();
   const timelineRef = useRef<HTMLDivElement | null>(null);
-  const [indicatorPercent, setIndicatorPercent] = useState(30);
+  const [indicatorPercent, setIndicatorPercent] = useState(0);
   const chatPanel = useChatPanel();
   const { token } = useAuth();
   const { toast } = useToast();
