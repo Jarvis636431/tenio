@@ -9,12 +9,15 @@ import {
 } from "@/components/ui/select";
 import { MapContainer, useDistricts } from "@/components/map";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { createJiuanProject } from "@/services/schedulepro-service";
 import { useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { CreateProjectContextType } from "@/types/create-project";
 
 export function UploadStep() {
   const { toast } = useToast();
+  const { token } = useAuth();
   const navigate = useNavigate();
   const {
     province,
@@ -35,12 +38,13 @@ export function UploadStep() {
     siteCoordinates,
     setSiteCoordinates,
     setProjectName,
+    setProjectId,
     setProjectInfo,
     projectName,
   } = useOutletContext<CreateProjectContextType>();
 
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const locationLabel = siteAddress.trim()
       ? siteAddress.trim()
       : siteCoordinates
@@ -48,7 +52,8 @@ export function UploadStep() {
         : "";
 
     // 自动生成项目名称（如果未填写）
-    if (!projectName.trim()) {
+    let finalProjectName = projectName.trim();
+    if (!finalProjectName) {
       let autoName = "";
       if (cadFile) {
         autoName = cadFile.name.substring(0, cadFile.name.lastIndexOf("."));
@@ -60,21 +65,40 @@ export function UploadStep() {
       } else {
         autoName = `新项目 ${new Date().toLocaleDateString()}`;
       }
-      setProjectName(autoName);
-      setProjectInfo((prev) => ({
-        ...prev,
-        name: autoName,
-        location: locationLabel || prev.location,
-      }));
-    } else {
-      setProjectInfo((prev) => ({
-        ...prev,
-        name: projectName.trim(),
-        location: locationLabel || prev.location,
-      }));
+      finalProjectName = autoName;
     }
 
-    navigate("/create/confirm");
+    setProjectName(finalProjectName);
+    setProjectInfo((prev) => ({
+      ...prev,
+      name: finalProjectName,
+      location: locationLabel || prev.location,
+    }));
+
+    if (!token) {
+      toast({
+        title: "未登录",
+        description: "请先登录后再创建项目。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await createJiuanProject(
+        { project_name: finalProjectName },
+        token,
+      );
+      setProjectId(response.project_id);
+      navigate("/create/confirm");
+    } catch (error) {
+      toast({
+        title: "创建项目失败",
+        description:
+          error instanceof Error ? error.message : "请稍后再试",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFileUpload = (

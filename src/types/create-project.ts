@@ -41,6 +41,10 @@ export interface CreateProjectContextType {
   setActiveChartTab: Dispatch<SetStateAction<string>>;
   expandedProcess: string | null;
   setExpandedProcess: Dispatch<SetStateAction<string | null>>;
+
+  // Project ID
+  projectId: string;
+  setProjectId: Dispatch<SetStateAction<string>>;
   
   // Global States
   isCreating: boolean;

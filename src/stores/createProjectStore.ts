@@ -26,6 +26,7 @@ interface CreateProjectState {
   projectDoc: File | null;
   cadFile: File | null;
   projectName: string;
+  projectId: string;
   projectInfo: ProjectInfo;
   siteAddress: string;
   siteCoordinates: [number, number] | null;
@@ -37,6 +38,7 @@ interface CreateProjectState {
   setProjectDoc: (file: File | null) => void;
   setCadFile: (file: File | null) => void;
   setProjectName: (name: string) => void;
+  setProjectId: (id: string) => void;
   setProjectInfo: (info: ProjectInfo) => void;
   setSiteAddress: (address: string) => void;
   setSiteCoordinates: (coords: [number, number] | null) => void;
@@ -53,6 +55,7 @@ export const useCreateProjectStore = create<CreateProjectState>()(
       projectDoc: null,
       cadFile: null,
       projectName: "",
+      projectId: "",
       projectInfo: defaultProjectInfo,
       siteAddress: "",
       siteCoordinates: null,
@@ -64,6 +67,7 @@ export const useCreateProjectStore = create<CreateProjectState>()(
       setProjectDoc: (file) => set({ projectDoc: file }),
       setCadFile: (file) => set({ cadFile: file }),
       setProjectName: (name) => set({ projectName: name }),
+      setProjectId: (id) => set({ projectId: id }),
       setProjectInfo: (info) => set({ projectInfo: info }),
       setSiteAddress: (address) => set({ siteAddress: address }),
       setSiteCoordinates: (coords) => set({ siteCoordinates: coords }),
@@ -76,6 +80,7 @@ export const useCreateProjectStore = create<CreateProjectState>()(
           projectDoc: null,
           cadFile: null,
           projectName: "",
+          projectId: "",
           projectInfo: defaultProjectInfo,
           siteAddress: "",
           siteCoordinates: null,
@@ -89,6 +94,7 @@ export const useCreateProjectStore = create<CreateProjectState>()(
       name: "create-project-store",
       partialize: (state) => ({
         projectName: state.projectName,
+        projectId: state.projectId,
         projectInfo: state.projectInfo,
         siteAddress: state.siteAddress,
         siteCoordinates: state.siteCoordinates,

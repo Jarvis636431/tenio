@@ -64,7 +64,7 @@ export const useAuthStore = create<AuthState>()(
       register: async (username: string, password: string) => {
         set({ isLoading: true });
         try {
-          await registerRequest({ username, password, role: 'user' });
+          await registerRequest({ username, password });
           // 注册成功后自动登录
           await get().login(username, password);
         } catch (error) {

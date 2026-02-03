@@ -22,8 +22,8 @@ pnpm dev
 在项目根目录配置 `.env`（或 `.env.local`）：
 
 ```bash
-VITE_USER_SERVICE_URL=http://localhost:8001
-VITE_PROJECT_SERVICE_URL=http://localhost:8002
+VITE_USER_SERVICE_URL=http://localhost:8000
+VITE_PROJECT_SERVICE_URL=http://localhost:8000
 VITE_AI_SSE_URL=https://chat.zrzz.site/api/agent/chat/sse
 VITE_POI_SERVICE_URL=https://chat.zrzz.site
 VITE_AMAP_KEY=your_amap_key

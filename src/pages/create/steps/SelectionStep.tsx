@@ -14,10 +14,15 @@ import { useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { CreateProjectContextType } from "@/types/create-project";
 import { planChartData, planOptions } from "@/mocks/data/create-project";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { selectProjectSolution } from "@/services/schedulepro-service";
 
 export function SelectionStep() {
   const navigate = useNavigate();
-  const { selectedPlan, setSelectedPlan } =
+  const { toast } = useToast();
+  const { token } = useAuth();
+  const { selectedPlan, setSelectedPlan, projectId } =
     useOutletContext<CreateProjectContextType>();
 
   const defaultPlanId =
@@ -33,8 +38,40 @@ export function SelectionStep() {
     navigate("/create/confirm");
   };
 
-  const onNext = () => {
-    navigate("/create/preview");
+  const onNext = async () => {
+    if (!projectId) {
+      toast({
+        title: "缺少项目ID",
+        description: "请先完成创建项目步骤。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!token) {
+      toast({
+        title: "未登录",
+        description: "请先登录后再选择方案。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await selectProjectSolution(
+        projectId,
+        { solution_id: 0 },
+        token,
+      );
+      navigate("/create/preview");
+    } catch (error) {
+      toast({
+        title: "方案选择失败",
+        description:
+          error instanceof Error ? error.message : "请稍后再试",
+        variant: "destructive",
+      });
+    }
   };
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 w-full h-full flex flex-col p-6">

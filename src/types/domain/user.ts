@@ -11,6 +11,6 @@ export interface LoginResponse {
 export interface UserProfile {
   user_id: string;
   username: string;
-  role: string;
+  role?: string;
   projects?: string[];
 }
