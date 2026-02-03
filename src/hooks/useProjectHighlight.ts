@@ -103,17 +103,54 @@ export function useProjectHighlight(projectId?: string) {
     );
   }, [processHighlights, resolveHighlightIds]);
 
+  if (processHighlights.length === 0 && coreGraph?.work_processes?.length) {
+    console.debug("[highlight] no processHighlights mapped", {
+      workProcessCount: coreGraph.work_processes.length,
+    });
+  }
+
+  if (processHighlights.length > 0) {
+    console.debug("[highlight] mapped highlights", {
+      count: processHighlights.length,
+      withExpress: processHighlights.filter((t) => t.expressIds.length > 0)
+        .length,
+      withTag: processHighlights.filter((t) => t.tagIds.length > 0).length,
+    });
+  }
+
   const getIdsByDate = useMemo(() => {
     return (date: Date) => {
+      if (processHighlights.length > 0) {
+        console.debug("[highlight] getIdsByDate", {
+          date: date.toISOString(),
+          sample: processHighlights[0]
+            ? {
+                id: processHighlights[0].id,
+                name: processHighlights[0].name,
+                start: processHighlights[0].start?.toISOString?.() ?? null,
+                end: processHighlights[0].end?.toISOString?.() ?? null,
+                expressIds: processHighlights[0].expressIds?.length ?? 0,
+                tagIds: processHighlights[0].tagIds?.length ?? 0,
+              }
+            : null,
+        });
+      }
+      const target = new Date(date);
+      target.setHours(12, 0, 0, 0);
       const completed: string[] = [];
       const inProgress: string[] = [];
       const upcoming: string[] = [];
 
       processHighlights.forEach((task) => {
         if (!task.start || !task.end) return;
-        if (date < task.start) {
+        const start = new Date(task.start);
+        const end = new Date(task.end);
+        start.setHours(12, 0, 0, 0);
+        end.setHours(12, 0, 0, 0);
+
+        if (target < start) {
           upcoming.push(...resolveHighlightIds(task.expressIds, task.tagIds));
-        } else if (date > task.end) {
+        } else if (target > end) {
           completed.push(...resolveHighlightIds(task.expressIds, task.tagIds));
         } else {
           inProgress.push(...resolveHighlightIds(task.expressIds, task.tagIds));
@@ -126,7 +163,7 @@ export function useProjectHighlight(projectId?: string) {
         upcomingIds: upcoming,
       };
     };
-  }, [processHighlights, resolveExpressIds]);
+  }, [processHighlights, resolveHighlightIds]);
 
   return {
     tagMap,

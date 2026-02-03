@@ -9,8 +9,6 @@ import { setupCameraAndControls } from "./utils/cameraControls";
 import { useRenderLoop } from "./hooks/useRenderLoop";
 import type { HighlightGroup } from "./hooks/useHighlight";
 import { useResize } from "./hooks/useResize";
-import type { SerializedModel } from "@/types/domain/worker";
-import { deserializeModel } from "./utils/workerModel";
 
 interface ModelViewerProps {
   className?: string;
@@ -43,6 +41,7 @@ export function ModelViewer({
   const animateIdRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const needsRenderRef = useRef(true);
+  const ifcLoaderRef = useRef<IFCLoader | null>(null);
   const modelsRef = useRef<
     Map<
       string,
@@ -60,6 +59,12 @@ export function ModelViewer({
   const highlightGroupMaterialsRef = useRef<
     Map<string, THREE.MeshStandardMaterial>
   >(new Map());
+  const highlightSubsetsRef = useRef<
+    Map<string, THREE.Mesh & { renderOrder: number }>
+  >(new Map());
+  const highlightSubsetRef = useRef<
+    (THREE.Mesh & { renderOrder: number }) | null
+  >(null);
 
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
@@ -87,53 +92,6 @@ export function ModelViewer({
   });
 
   const { handleResize } = useResize({ containerRef, rendererRef, cameraRef });
-
-  const parseModelWithWorker = (arrayBuffer: ArrayBuffer, onProgress?: (progress: number, message: string) => void) =>
-    new Promise<SerializedModel>((resolve, reject) => {
-      const worker = new Worker(
-        new URL("../../workers/ifc.worker.ts", import.meta.url),
-        { type: "module" }
-      );
-      const timeoutId = window.setTimeout(() => {
-        worker.terminate();
-        reject(new Error("解析超时"));
-      }, 120000);
-
-      worker.onmessage = (e) => {
-        const { type, data } = e.data as {
-          type: "progress" | "success" | "error";
-          data?: { progress?: number; message?: string; modelData?: SerializedModel; error?: string };
-        };
-
-        if (type === "progress") {
-          onProgress?.(data?.progress ?? 0, data?.message ?? "");
-        } else if (type === "success" && data?.modelData) {
-          clearTimeout(timeoutId);
-          worker.terminate();
-          resolve(data.modelData);
-        } else if (type === "error") {
-          clearTimeout(timeoutId);
-          worker.terminate();
-          reject(new Error(data?.error || "Worker 解析失败"));
-        }
-      };
-
-      worker.onerror = (error) => {
-        clearTimeout(timeoutId);
-        worker.terminate();
-        reject(new Error(error.message || "Worker 错误"));
-      };
-
-      worker.postMessage(
-        {
-          type: "parse",
-          data: {
-            arrayBuffer,
-            wasmPath: "/wasm/",
-          },
-        }
-      );
-    });
 
   const ensureHighlightMaterial = () => {
     const nextColor = new THREE.Color(highlightColor).getStyle();
@@ -170,8 +128,20 @@ export function ModelViewer({
 
       const expressToMaterial = new Map<number, THREE.Material>();
       const modelInput = normalizedModels.find((item) => item.key === modelKey);
+      console.debug("[ModelViewer] highlight pass", {
+        modelKey,
+        idMapSize: idMap.size,
+        hasTagMap: Boolean(modelInput?.tagMap),
+        tagMapKeys: modelInput?.tagMap ? Object.keys(modelInput.tagMap).length : 0,
+        useGroups,
+      });
 
-      if (useGroups) {
+      if (useGroups && ifcLoaderRef.current) {
+        highlightSubsetsRef.current.forEach((subset) => {
+          entry.model.remove(subset);
+        });
+        highlightSubsetsRef.current.clear();
+
         highlightColorGroups?.forEach((group) => {
           const idsToHighlight: number[] = [];
           for (const rawId of group.ids) {
@@ -201,6 +171,89 @@ export function ModelViewer({
           }
 
           if (!idsToHighlight.length) return;
+          console.debug("[ModelViewer] highlight group", {
+            group: group.customID,
+            rawCount: group.ids.length,
+            mappedCount: idsToHighlight.length,
+          });
+
+          let material = highlightGroupMaterialsRef.current.get(group.customID);
+          if (!material) {
+            material = new THREE.MeshStandardMaterial({
+              color: new THREE.Color(group.color),
+              transparent: true,
+              opacity: group.opacity ?? 0.8,
+              depthWrite: true,
+              depthTest: true,
+              metalness: 0,
+              roughness: 0.6,
+            });
+            highlightGroupMaterialsRef.current.set(group.customID, material);
+          } else {
+            material.color = new THREE.Color(group.color);
+            material.opacity = group.opacity ?? 0.8;
+          }
+
+          const subset = ifcLoaderRef.current?.ifcManager.createSubset({
+            modelID: entry.model.modelID,
+            ids: idsToHighlight,
+            material,
+            removePrevious: false,
+            customID: group.customID,
+          } as {
+            modelID: number;
+            ids: number[];
+            material: THREE.Material;
+            removePrevious: boolean;
+            customID: string;
+          });
+
+          if (subset) {
+            (subset as THREE.Mesh & { renderOrder: number }).renderOrder = 1;
+            entry.model.add(subset);
+            highlightSubsetsRef.current.set(
+              group.customID,
+              subset as THREE.Mesh & { renderOrder: number },
+            );
+          }
+        });
+        needsRenderRef.current = true;
+        return;
+      } else if (useGroups) {
+        highlightColorGroups?.forEach((group) => {
+          const idsToHighlight: number[] = [];
+          for (const rawId of group.ids) {
+            if (typeof rawId === "number") {
+              idsToHighlight.push(rawId);
+            } else if (typeof rawId === "string") {
+              const trimmed = rawId.trim();
+              if (!trimmed) continue;
+              if (/^\d+$/.test(trimmed)) {
+                const parsed = parseInt(trimmed, 10);
+                if (!Number.isNaN(parsed)) idsToHighlight.push(parsed);
+              } else {
+                const expressId = idMap.get(trimmed);
+                if (expressId !== undefined) {
+                  idsToHighlight.push(expressId);
+                } else if (modelInput?.tagMap?.[trimmed]) {
+                  const mapped = modelInput.tagMap[trimmed] ?? [];
+                  mapped.forEach((gid) => {
+                    const mappedExpress = idMap.get(gid);
+                    if (mappedExpress !== undefined) {
+                      idsToHighlight.push(mappedExpress);
+                    }
+                  });
+                }
+              }
+            }
+          }
+
+          if (!idsToHighlight.length) return;
+          console.debug("[ModelViewer] highlight group", {
+            group: group.customID,
+            rawCount: group.ids.length,
+            mappedCount: idsToHighlight.length,
+          });
 
           let material = highlightGroupMaterialsRef.current.get(group.customID);
           if (!material) {
@@ -224,6 +277,59 @@ export function ModelViewer({
           });
         });
       } else {
+        if (ifcLoaderRef.current) {
+          const idsToHighlight: number[] = [];
+          highlightGlobalSet.forEach((gid) => {
+            const expressId = idMap.get(gid);
+            if (expressId !== undefined) {
+              idsToHighlight.push(expressId);
+            }
+          });
+
+          if (modelInput?.tagMap && highlightTagSet.size > 0) {
+            highlightTagSet.forEach((tagId) => {
+              const tagIds = modelInput.tagMap?.[tagId] ?? [];
+              tagIds.forEach((gid) => {
+                const expressId = idMap.get(gid);
+                if (expressId !== undefined) {
+                  idsToHighlight.push(expressId);
+                }
+              });
+            });
+          }
+
+          if (highlightSubsetRef.current) {
+            entry.model.remove(highlightSubsetRef.current);
+            highlightSubsetRef.current = null;
+          }
+
+          if (idsToHighlight.length > 0) {
+            const subset = ifcLoaderRef.current.ifcManager.createSubset({
+              modelID: entry.model.modelID,
+              ids: idsToHighlight,
+              material: highlightMaterial,
+              removePrevious: true,
+              customID: "highlight",
+            } as {
+              modelID: number;
+              ids: number[];
+              material: THREE.Material;
+              removePrevious: boolean;
+              customID: string;
+            });
+            if (subset) {
+              (subset as THREE.Mesh & { renderOrder: number }).renderOrder = 1;
+              entry.model.add(subset);
+              highlightSubsetRef.current = subset as THREE.Mesh & {
+                renderOrder: number;
+              };
+            }
+          }
+
+          needsRenderRef.current = true;
+          return;
+        }
+
         highlightGlobalSet.forEach((gid) => {
           const expressId = idMap.get(gid);
           if (expressId !== undefined) {
@@ -244,14 +350,22 @@ export function ModelViewer({
         }
       }
 
+      let matchedMeshes = 0;
       entry.meshes.forEach((mesh) => {
         const expressID = (mesh as THREE.Mesh & { expressID?: number }).expressID;
         const originalMaterial = entry.originalMaterials.get(mesh.uuid);
         if (expressID !== undefined && expressToMaterial.has(expressID)) {
           mesh.material = expressToMaterial.get(expressID)!;
+          matchedMeshes += 1;
         } else if (originalMaterial) {
           mesh.material = originalMaterial;
         }
+      });
+      console.debug("[ModelViewer] highlight applied", {
+        modelKey,
+        meshes: entry.meshes.length,
+        matchedMeshes,
+        highlightedIds: expressToMaterial.size,
       });
     });
 
@@ -311,6 +425,8 @@ export function ModelViewer({
     }
     highlightGroupMaterialsRef.current.forEach((mat) => mat.dispose());
     highlightGroupMaterialsRef.current.clear();
+    highlightSubsetsRef.current.clear();
+    highlightSubsetRef.current = null;
     modelsRef.current.forEach((entry) => disposeModel(entry.model));
     modelsRef.current.clear();
     globalIdMapsRef.current.clear();
@@ -320,6 +436,14 @@ export function ModelViewer({
     isInitializedRef.current = false;
     isInitializingRef.current = false;
     modelsSignatureRef.current = null;
+    if (ifcLoaderRef.current?.ifcManager) {
+      try {
+        ifcLoaderRef.current.ifcManager.dispose();
+      } catch (error) {
+        console.warn("[ModelViewer] 卸载IFC实例时出错:", error);
+      }
+      ifcLoaderRef.current = null;
+    }
   };
 
   useEffect(() => {
@@ -440,33 +564,13 @@ export function ModelViewer({
 
             let model: THREE.Object3D & { modelID: number };
             let idMap: Map<string, number>;
-            try {
-              const modelData = await parseModelWithWorker(
-                buffers[index],
-                (progress, message) => {
-                  setLoadingState((prev) => ({
-                    ...prev,
-                    progress: Math.min(95, prev.progress + Math.round(progress / normalizedModels.length)),
-                    message: message || prev.message,
-                  }));
-                }
-              );
-              model = deserializeModel({ serialized: modelData });
-              idMap = new Map(modelData.globalIdEntries ?? []);
-            } catch (error) {
-              console.warn("[ModelViewer] Worker 解析失败，降级到主线程解析:", error);
-              const ifcLoader = new IFCLoader();
-              ifcLoader.ifcManager.setWasmPath("/wasm/");
-              model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
-                modelID: number;
-              };
-              idMap = await buildGlobalIdMap(ifcLoader, model.modelID);
-              try {
-                ifcLoader.ifcManager?.dispose();
-              } catch (disposeError) {
-                console.warn("[ModelViewer] 卸载IFC实例时出错:", disposeError);
-              }
-            }
+            const ifcLoader = new IFCLoader();
+            ifcLoader.ifcManager.setWasmPath("/wasm/");
+            ifcLoaderRef.current = ifcLoader;
+            model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
+              modelID: number;
+            };
+            idMap = await buildGlobalIdMap(ifcLoader, model.modelID);
 
             if (abortControllerRef.current?.signal.aborted) return;
 

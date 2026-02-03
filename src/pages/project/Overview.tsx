@@ -79,6 +79,7 @@ export function Overview({
     const base = timeRange.baseDate;
     const currentDate = new Date(base);
     currentDate.setDate(base.getDate() + currentDay - 1);
+    currentDate.setHours(12, 0, 0, 0);
 
     const completed: string[] = [];
     const inProgress: string[] = [];
@@ -86,9 +87,14 @@ export function Overview({
 
     processHighlights.forEach((item) => {
       if (!item.start || !item.end) return;
-      if (currentDate < item.start) {
+      const start = new Date(item.start);
+      const end = new Date(item.end);
+      start.setHours(12, 0, 0, 0);
+      end.setHours(12, 0, 0, 0);
+
+      if (currentDate < start) {
         upcoming.push(item.name);
-      } else if (currentDate > item.end) {
+      } else if (currentDate > end) {
         completed.push(item.name);
       } else {
         inProgress.push(item.name);
@@ -103,7 +109,13 @@ export function Overview({
     const base = timeRange.baseDate;
     const currentDate = new Date(base);
     currentDate.setDate(base.getDate() + currentDay - 1);
-    return getIdsByDate(currentDate).completedIds;
+    const result = getIdsByDate(currentDate);
+    console.debug("[overview] highlightByDate", {
+      day: currentDay,
+      completed: result.completedIds.length,
+      inProgress: result.inProgressIds.length,
+    });
+    return result.completedIds;
   }, [currentDay, getIdsByDate, timeRange]);
   
   const inProgressIds = useMemo(() => {
@@ -111,7 +123,8 @@ export function Overview({
     const base = timeRange.baseDate;
     const currentDate = new Date(base);
     currentDate.setDate(base.getDate() + currentDay - 1);
-    return getIdsByDate(currentDate).inProgressIds;
+    const result = getIdsByDate(currentDate);
+    return result.inProgressIds;
   }, [currentDay, getIdsByDate, timeRange]);
 
   // 图表数据处理

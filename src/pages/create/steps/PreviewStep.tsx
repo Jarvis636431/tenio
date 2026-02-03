@@ -177,7 +177,13 @@ export function PreviewStep() {
       return { inProgressIds: [] as string[], completedIds: [] as string[] };
     }
     const date = toDate(selectedDateKey);
-    return getIdsByDate(date);
+    const result = getIdsByDate(date);
+    console.debug("[preview] highlightByDate", {
+      date: selectedDateKey,
+      inProgress: result.inProgressIds.length,
+      completed: result.completedIds.length,
+    });
+    return result;
   }, [getIdsByDate, selectedDateKey]);
   return (
     <div className="w-full h-full flex flex-col space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 p-6">
