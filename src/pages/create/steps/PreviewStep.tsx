@@ -1,15 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
@@ -22,35 +12,24 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useProject } from "@/hooks/useProject";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
-import { getProjectCostCurve, getProjectCoreGraph } from "@/services/schedulepro-service";
+import { getProjectCoreGraph } from "@/services/schedulepro-service";
 
 export function PreviewStep() {
   const navigate = useNavigate();
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const [indicatorPercent, setIndicatorPercent] = useState(30);
-  const [costCurveData, setCostCurveData] = useState<
-    Array<{
-      dayIndex: number;
-      dateLabel: string;
-      totalCost: number;
-      laborCost: number;
-      rentalCost: number;
-    }>
-  >([]);
   const chatPanel = useChatPanel();
   const { token } = useAuth();
   const { toast } = useToast();
   const { setCoreGraph } = useProject();
-  const { getIdsByDate } = useProjectHighlight(projectId);
   const {
     projectName,
-    activeChartTab,
-    setActiveChartTab,
     expandedProcess,
     setExpandedProcess,
     solutionData,
     projectId,
   } = useOutletContext<CreateProjectContextType>();
+  const { getIdsByDate } = useProjectHighlight(projectId);
 
   const onBack = () => {
     navigate("/create/selection");
@@ -83,54 +62,6 @@ export function PreviewStep() {
     const date = toDate(value);
     return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
   };
-
-  useEffect(() => {
-    if (activeChartTab !== "fund") {
-      setActiveChartTab("fund");
-    }
-  }, [activeChartTab, setActiveChartTab]);
-
-  useEffect(() => {
-    if (!projectId || !token) {
-      setCostCurveData([]);
-      return;
-    }
-
-    let isMounted = true;
-    getProjectCostCurve(projectId, token)
-      .then((response) => {
-        if (!isMounted) return;
-        const baseDate = response.start_date;
-        const base = baseDate ? toDate(baseDate) : null;
-        const data =
-          response.points?.map((point) => {
-            const date = base ? new Date(base) : null;
-            if (date) {
-              date.setDate(date.getDate() + point.day_index);
-            }
-            const label = date
-              ? `${date.getMonth() + 1}/${date.getDate()}`
-              : `Day ${point.day_index}`;
-            return {
-              dayIndex: point.day_index,
-              dateLabel: label,
-              totalCost: point.total_cost,
-              laborCost: point.labor_cost,
-              rentalCost: point.rental_cost,
-            };
-          }) ?? [];
-        setCostCurveData(data);
-      })
-      .catch(() => {
-        if (isMounted) {
-          setCostCurveData([]);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [projectId, token]);
 
   useEffect(() => {
     if (!projectId || !token) {
@@ -293,70 +224,6 @@ export function PreviewStep() {
               position={{ bottom: 0, right: 0 }}
               height="300px"
             />
-          </div>
-
-          {/* 底部图表区域 */}
-          <div className="bg-white rounded-xl p-4 h-[220px] flex flex-col">
-            <Tabs value="fund" className="w-full h-full flex flex-col">
-              <TabsList className="bg-transparent justify-start p-0 h-auto border-b w-full rounded-none">
-                <TabsTrigger
-                  value="fund"
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1975D2] data-[state=active]:text-[#1975D2] rounded-none px-4 py-2"
-                >
-                  资金曲线
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="flex-1 flex flex-col min-h-0 pt-4 relative">
-                <div className="flex-1 min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={costCurveData}
-                      margin={{
-                        top: 10,
-                        right: 10,
-                        left: 0,
-                        bottom: 20,
-                      }}
-                    >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        vertical={false}
-                        stroke="#f0f0f0"
-                      />
-                      <XAxis dataKey="dateLabel" hide />
-                      <YAxis hide />
-                      <Tooltip
-                        contentStyle={{
-                          borderRadius: "8px",
-                          border: "none",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                        }}
-                        formatter={(value: number) => [
-                          `¥${value.toLocaleString()}`,
-                          "费用",
-                        ]}
-                        labelFormatter={(label) => `${label}`}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="totalCost"
-                        stroke="#93c5fd"
-                        strokeWidth={3}
-                        dot={false}
-                        activeDot={{
-                          r: 6,
-                          fill: "#3b82f6",
-                          stroke: "white",
-                          strokeWidth: 2,
-                        }}
-                        fill="url(#colorGradient)"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </Tabs>
           </div>
 
           {/* 时间轴区域 - 独立区域 */}
