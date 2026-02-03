@@ -29,7 +29,7 @@ export function PreviewStep() {
     solutionData,
     projectId,
   } = useOutletContext<CreateProjectContextType>();
-  const { getIdsByDate } = useProjectHighlight(projectId);
+  const { getIdsByDate, tagMap } = useProjectHighlight(projectId);
 
   const onBack = () => {
     navigate("/create/selection");
@@ -47,9 +47,10 @@ export function PreviewStep() {
       {
         key: "default",
         src: "/models/0125.ifc",
+        tagMap,
       },
     ],
-    [],
+    [tagMap],
   );
 
   const toDate = (value: string) => new Date(`${value}T00:00:00`);

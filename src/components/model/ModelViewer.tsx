@@ -69,6 +69,15 @@ export function ModelViewer({
   });
 
   const normalizedModels = useMemo(() => models, [models]);
+  const normalizedModelsRef = useRef(normalizedModels);
+  const modelsSignature = useMemo(
+    () => normalizedModels.map((item) => `${item.key}:${item.src}`).join("|"),
+    [normalizedModels],
+  );
+
+  useEffect(() => {
+    normalizedModelsRef.current = normalizedModels;
+  }, [normalizedModels]);
 
   const { startRenderLoop } = useRenderLoop({
     controlsRef,
@@ -178,6 +187,14 @@ export function ModelViewer({
                 const expressId = idMap.get(trimmed);
                 if (expressId !== undefined) {
                   idsToHighlight.push(expressId);
+                } else if (modelInput?.tagMap?.[trimmed]) {
+                  const mapped = modelInput.tagMap[trimmed] ?? [];
+                  mapped.forEach((gid) => {
+                    const mappedExpress = idMap.get(gid);
+                    if (mappedExpress !== undefined) {
+                      idsToHighlight.push(mappedExpress);
+                    }
+                  });
                 }
               }
             }
@@ -311,14 +328,10 @@ export function ModelViewer({
   }, [handleResize]);
 
   useEffect(() => {
-    if (!normalizedModels.length || !containerRef.current) return;
-
-    const signature = normalizedModels
-      .map((item) => `${item.key}:${item.src}`)
-      .join("|");
+    if (!normalizedModelsRef.current.length || !containerRef.current) return;
 
     if (
-      modelsSignatureRef.current === signature &&
+      modelsSignatureRef.current === modelsSignature &&
       (isInitializedRef.current || isInitializingRef.current)
     ) {
       return;
@@ -394,7 +407,7 @@ export function ModelViewer({
         }));
 
         const buffers = await Promise.all(
-          normalizedModels.map(async (item) => {
+          normalizedModelsRef.current.map(async (item) => {
             console.log("[ModelViewer] fetching model:", item.src);
             const response = await fetch(item.src, {
               signal: abortControllerRef.current?.signal,
@@ -418,7 +431,7 @@ export function ModelViewer({
         });
 
         await Promise.all(
-          normalizedModels.map(async (item, index) => {
+          normalizedModelsRef.current.map(async (item, index) => {
             setLoadingState((prev) => ({
               ...prev,
               progress: 20 + Math.round((index / normalizedModels.length) * 60),
@@ -506,7 +519,7 @@ export function ModelViewer({
         startRenderLoop(scene, camera, renderer);
         isInitializedRef.current = true;
         isInitializingRef.current = false;
-        modelsSignatureRef.current = signature;
+        modelsSignatureRef.current = modelsSignature;
 
         setLoadingState({
           isLoading: false,
@@ -537,7 +550,7 @@ export function ModelViewer({
     return () => {
       cleanup();
     };
-  }, [normalizedModels, startRenderLoop]);
+  }, [modelsSignature, startRenderLoop]);
 
   useEffect(() => {
     applyMultiHighlight();
