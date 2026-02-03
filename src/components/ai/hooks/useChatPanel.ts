@@ -151,12 +151,23 @@ export function useChatPanel() {
             : null;
         if (!obj) return null;
 
-        const knowledge = obj.knowledge_query as
-          | { messages?: Array<{ content?: string }> }
-          | undefined;
-        const messages = knowledge?.messages ?? [];
-        const last = messages[messages.length - 1];
-        if (last?.content) return last.content;
+        const extractFromRoute = (routeKey: string) => {
+          const routeObj = obj[routeKey] as
+            | { messages?: Array<{ content?: string; type?: string }> }
+            | undefined;
+          const messages = routeObj?.messages ?? [];
+          for (let i = messages.length - 1; i >= 0; i -= 1) {
+            const msg = messages[i];
+            if (msg?.type === "tool") continue;
+            if (msg?.content) return msg.content;
+          }
+          return null;
+        };
+
+        const routed =
+          extractFromRoute("knowledge_query") ??
+          extractFromRoute("project_info_query");
+        if (routed) return routed;
 
         return null;
       };
