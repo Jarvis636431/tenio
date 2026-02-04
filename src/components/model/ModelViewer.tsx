@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { IFCLoader } from "web-ifc-three/IFCLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { LoadingState } from "@/types/domain/worker";
-import { buildGlobalIdMap } from "./utils/ifcCaches";
+import { buildGlobalIdMap, buildTagMap } from "./utils/ifcCaches";
 import { setupCameraAndControls } from "./utils/cameraControls";
 import { useRenderLoop } from "./hooks/useRenderLoop";
 import type { HighlightGroup } from "./hooks/useHighlight";
@@ -52,6 +52,7 @@ export function ModelViewer({
       }
     >
   >(new Map());
+  const tagMapsRef = useRef<Map<string, Record<string, string[]>>>(new Map());
   const globalIdMapsRef = useRef<Map<string, Map<string, number>>>(new Map());
   const rootGroupRef = useRef<THREE.Group | null>(null);
   const modelsSignatureRef = useRef<string | null>(null);
@@ -74,6 +75,24 @@ export function ModelViewer({
   });
 
   const normalizedModels = useMemo(() => models, [models]);
+  const mergeTagMaps = (
+    base?: Record<string, string[]>,
+    override?: Record<string, string[]>,
+  ) => {
+    if (!base && !override) return undefined;
+    if (!base) return override;
+    if (!override) return base;
+    const merged: Record<string, string[]> = { ...base };
+    Object.entries(override).forEach(([key, values]) => {
+      const existing = merged[key] ?? [];
+      const next = new Set<string>(existing);
+      values.forEach((value) => {
+        if (value) next.add(value);
+      });
+      merged[key] = Array.from(next);
+    });
+    return merged;
+  };
   const normalizedModelsRef = useRef(normalizedModels);
   const modelsSignature = useMemo(
     () => normalizedModels.map((item) => `${item.key}:${item.src}`).join("|"),
@@ -128,11 +147,17 @@ export function ModelViewer({
 
       const expressToMaterial = new Map<number, THREE.Material>();
       const modelInput = normalizedModels.find((item) => item.key === modelKey);
+      const mergedTagMap = mergeTagMaps(
+        tagMapsRef.current.get(modelKey),
+        modelInput?.tagMap,
+      );
+      let tagHit = 0;
+      let tagMiss = 0;
       console.debug("[ModelViewer] highlight pass", {
         modelKey,
         idMapSize: idMap.size,
-        hasTagMap: Boolean(modelInput?.tagMap),
-        tagMapKeys: modelInput?.tagMap ? Object.keys(modelInput.tagMap).length : 0,
+        hasTagMap: Boolean(mergedTagMap),
+        tagMapKeys: mergedTagMap ? Object.keys(mergedTagMap).length : 0,
         useGroups,
       });
 
@@ -152,23 +177,31 @@ export function ModelViewer({
             } else if (typeof rawId === "string") {
               const trimmed = rawId.trim();
               if (!trimmed) continue;
-              if (/^\d+$/.test(trimmed)) {
-                const parsed = parseInt(trimmed, 10);
-                if (!Number.isNaN(parsed)) idsToHighlight.push(parsed);
+              if (mergedTagMap?.[trimmed]) {
+                const mapped = mergedTagMap[trimmed] ?? [];
+                mapped.forEach((gid) => {
+                  const mappedExpress = idMap.get(gid);
+                  if (mappedExpress !== undefined) {
+                    idsToHighlight.push(mappedExpress);
+                    mappedFromTagMap += 1;
+                  }
+                });
+                tagHit += 1;
               } else {
                 const expressId = idMap.get(trimmed);
                 if (expressId !== undefined) {
                   idsToHighlight.push(expressId);
                   mappedFromIdMap += 1;
-                } else if (modelInput?.tagMap?.[trimmed]) {
-                  const mapped = modelInput.tagMap[trimmed] ?? [];
-                  mapped.forEach((gid) => {
-                    const mappedExpress = idMap.get(gid);
-                    if (mappedExpress !== undefined) {
-                      idsToHighlight.push(mappedExpress);
-                      mappedFromTagMap += 1;
-                    }
-                  });
+                } else if (/^\d+$/.test(trimmed)) {
+                  const parsed = parseInt(trimmed, 10);
+                  if (!Number.isNaN(parsed)) {
+                    idsToHighlight.push(parsed);
+                    mappedFromIdMap += 1;
+                  } else {
+                    tagMiss += 1;
+                  }
+                } else {
+                  tagMiss += 1;
                 }
               }
             }
@@ -181,6 +214,8 @@ export function ModelViewer({
             mappedCount: idsToHighlight.length,
             mappedFromIdMap,
             mappedFromTagMap,
+            tagHit,
+            tagMiss,
           });
 
           let material = highlightGroupMaterialsRef.current.get(group.customID);
@@ -236,23 +271,31 @@ export function ModelViewer({
             } else if (typeof rawId === "string") {
               const trimmed = rawId.trim();
               if (!trimmed) continue;
-              if (/^\d+$/.test(trimmed)) {
-                const parsed = parseInt(trimmed, 10);
-                if (!Number.isNaN(parsed)) idsToHighlight.push(parsed);
+              if (mergedTagMap?.[trimmed]) {
+                const mapped = mergedTagMap[trimmed] ?? [];
+                mapped.forEach((gid) => {
+                  const mappedExpress = idMap.get(gid);
+                  if (mappedExpress !== undefined) {
+                    idsToHighlight.push(mappedExpress);
+                    mappedFromTagMap += 1;
+                  }
+                });
+                tagHit += 1;
               } else {
                 const expressId = idMap.get(trimmed);
                 if (expressId !== undefined) {
                   idsToHighlight.push(expressId);
                   mappedFromIdMap += 1;
-                } else if (modelInput?.tagMap?.[trimmed]) {
-                  const mapped = modelInput.tagMap[trimmed] ?? [];
-                  mapped.forEach((gid) => {
-                    const mappedExpress = idMap.get(gid);
-                    if (mappedExpress !== undefined) {
-                      idsToHighlight.push(mappedExpress);
-                      mappedFromTagMap += 1;
-                    }
-                  });
+                } else if (/^\d+$/.test(trimmed)) {
+                  const parsed = parseInt(trimmed, 10);
+                  if (!Number.isNaN(parsed)) {
+                    idsToHighlight.push(parsed);
+                    mappedFromIdMap += 1;
+                  } else {
+                    tagMiss += 1;
+                  }
+                } else {
+                  tagMiss += 1;
                 }
               }
             }
@@ -265,6 +308,8 @@ export function ModelViewer({
             mappedCount: idsToHighlight.length,
             mappedFromIdMap,
             mappedFromTagMap,
+            tagHit,
+            tagMiss,
           });
 
           let material = highlightGroupMaterialsRef.current.get(group.customID);
@@ -298,9 +343,9 @@ export function ModelViewer({
             }
           });
 
-          if (modelInput?.tagMap && highlightTagSet.size > 0) {
+          if (mergedTagMap && highlightTagSet.size > 0) {
             highlightTagSet.forEach((tagId) => {
-              const tagIds = modelInput.tagMap?.[tagId] ?? [];
+              const tagIds = mergedTagMap?.[tagId] ?? [];
               tagIds.forEach((gid) => {
                 const expressId = idMap.get(gid);
                 if (expressId !== undefined) {
@@ -349,9 +394,9 @@ export function ModelViewer({
           }
         });
 
-        if (modelInput?.tagMap && highlightTagSet.size > 0) {
+        if (mergedTagMap && highlightTagSet.size > 0) {
           highlightTagSet.forEach((tagId) => {
-            const tagIds = modelInput.tagMap?.[tagId] ?? [];
+            const tagIds = mergedTagMap?.[tagId] ?? [];
             tagIds.forEach((gid) => {
               const expressId = idMap.get(gid);
               if (expressId !== undefined) {
@@ -441,6 +486,7 @@ export function ModelViewer({
     highlightSubsetRef.current = null;
     modelsRef.current.forEach((entry) => disposeModel(entry.model));
     modelsRef.current.clear();
+    tagMapsRef.current.clear();
     globalIdMapsRef.current.clear();
     rootGroupRef.current = null;
     sceneRef.current = null;
@@ -583,6 +629,11 @@ export function ModelViewer({
               modelID: number;
             };
             idMap = await buildGlobalIdMap(ifcLoader, model.modelID);
+            const modelTagMap = await buildTagMap(ifcLoader, model.modelID);
+            console.debug("[ModelViewer] tag map built", {
+              modelKey: item.key,
+              tagKeys: Object.keys(modelTagMap).length,
+            });
 
             if (abortControllerRef.current?.signal.aborted) return;
 
@@ -610,6 +661,7 @@ export function ModelViewer({
             });
 
             globalIdMapsRef.current.set(item.key, idMap);
+            tagMapsRef.current.set(item.key, modelTagMap);
             modelsRef.current.set(item.key, {
               model,
               meshes,
