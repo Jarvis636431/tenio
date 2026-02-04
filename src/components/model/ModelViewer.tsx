@@ -144,6 +144,8 @@ export function ModelViewer({
 
         highlightColorGroups?.forEach((group) => {
           const idsToHighlight: number[] = [];
+          let mappedFromIdMap = 0;
+          let mappedFromTagMap = 0;
           for (const rawId of group.ids) {
             if (typeof rawId === "number") {
               idsToHighlight.push(rawId);
@@ -157,12 +159,14 @@ export function ModelViewer({
                 const expressId = idMap.get(trimmed);
                 if (expressId !== undefined) {
                   idsToHighlight.push(expressId);
+                  mappedFromIdMap += 1;
                 } else if (modelInput?.tagMap?.[trimmed]) {
                   const mapped = modelInput.tagMap[trimmed] ?? [];
                   mapped.forEach((gid) => {
                     const mappedExpress = idMap.get(gid);
                     if (mappedExpress !== undefined) {
                       idsToHighlight.push(mappedExpress);
+                      mappedFromTagMap += 1;
                     }
                   });
                 }
@@ -175,6 +179,8 @@ export function ModelViewer({
             group: group.customID,
             rawCount: group.ids.length,
             mappedCount: idsToHighlight.length,
+            mappedFromIdMap,
+            mappedFromTagMap,
           });
 
           let material = highlightGroupMaterialsRef.current.get(group.customID);
@@ -222,6 +228,8 @@ export function ModelViewer({
       } else if (useGroups) {
         highlightColorGroups?.forEach((group) => {
           const idsToHighlight: number[] = [];
+          let mappedFromIdMap = 0;
+          let mappedFromTagMap = 0;
           for (const rawId of group.ids) {
             if (typeof rawId === "number") {
               idsToHighlight.push(rawId);
@@ -235,12 +243,14 @@ export function ModelViewer({
                 const expressId = idMap.get(trimmed);
                 if (expressId !== undefined) {
                   idsToHighlight.push(expressId);
+                  mappedFromIdMap += 1;
                 } else if (modelInput?.tagMap?.[trimmed]) {
                   const mapped = modelInput.tagMap[trimmed] ?? [];
                   mapped.forEach((gid) => {
                     const mappedExpress = idMap.get(gid);
                     if (mappedExpress !== undefined) {
                       idsToHighlight.push(mappedExpress);
+                      mappedFromTagMap += 1;
                     }
                   });
                 }
@@ -253,6 +263,8 @@ export function ModelViewer({
             group: group.customID,
             rawCount: group.ids.length,
             mappedCount: idsToHighlight.length,
+            mappedFromIdMap,
+            mappedFromTagMap,
           });
 
           let material = highlightGroupMaterialsRef.current.get(group.customID);

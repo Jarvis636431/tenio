@@ -182,6 +182,7 @@ export function PreviewStep() {
       date: selectedDateKey,
       inProgress: result.inProgressIds.length,
       completed: result.completedIds.length,
+      debug: result.debug,
     });
     return result;
   }, [getIdsByDate, selectedDateKey]);

@@ -48,22 +48,7 @@ export function useProjectHighlight(projectId?: string) {
     }));
   }, [coreGraph]);
 
-  const tagMap = useMemo(() => {
-    const map: Record<string, string[]> = {};
-    processHighlights.forEach((task) => {
-      const tags = task.tagIds ?? [];
-      const ids = task.expressIds ?? [];
-      tags.forEach((tagId, index) => {
-        const expressId = ids[index];
-        if (!tagId || !expressId) return;
-        if (!map[tagId]) {
-          map[tagId] = [];
-        }
-        map[tagId].push(expressId);
-      });
-    });
-    return map;
-  }, [processHighlights]);
+  const tagMap = useMemo(() => ({} as Record<string, string[]>), []);
 
   const resolveExpressIds = useMemo(() => {
     return (expressIds: string[] = [], tagIds: string[] = []) => {
@@ -71,15 +56,9 @@ export function useProjectHighlight(projectId?: string) {
       expressIds.forEach((id) => {
         if (id) resolved.add(id);
       });
-      tagIds.forEach((tagId) => {
-        const mapped = tagMap[tagId] ?? [];
-        mapped.forEach((id) => {
-          if (id) resolved.add(id);
-        });
-      });
       return Array.from(resolved);
     };
-  }, [tagMap]);
+  }, []);
 
   const resolveHighlightIds = useMemo(() => {
     return (expressIds: string[] = [], tagIds: string[] = []) => {
@@ -89,14 +68,10 @@ export function useProjectHighlight(projectId?: string) {
       });
       tagIds.forEach((tagId) => {
         if (tagId) resolved.add(tagId);
-        const mapped = tagMap[tagId] ?? [];
-        mapped.forEach((id) => {
-          if (id) resolved.add(id);
-        });
       });
       return Array.from(resolved);
     };
-  }, [tagMap]);
+  }, []);
 
   const allResolvedIds = useMemo(() => {
     return processHighlights.flatMap((task) =>
@@ -117,6 +92,47 @@ export function useProjectHighlight(projectId?: string) {
         .length,
       withTag: processHighlights.filter((t) => t.tagIds.length > 0).length,
     });
+
+    const lengthMismatch = processHighlights.filter(
+      (t) =>
+        t.tagIds.length > 0 &&
+        t.expressIds.length > 0 &&
+        t.tagIds.length !== t.expressIds.length,
+    );
+    if (lengthMismatch.length > 0) {
+      console.debug("[highlight] tag/express length mismatch", {
+        count: lengthMismatch.length,
+        sample: lengthMismatch.slice(0, 5).map((t) => ({
+          id: t.id,
+          name: t.name,
+          tagCount: t.tagIds.length,
+          expressCount: t.expressIds.length,
+        })),
+      });
+    }
+
+    const tagOnly = processHighlights.filter(
+      (t) => t.tagIds.length > 0 && t.expressIds.length === 0,
+    );
+    const expressOnly = processHighlights.filter(
+      (t) => t.expressIds.length > 0 && t.tagIds.length === 0,
+    );
+    if (tagOnly.length || expressOnly.length) {
+      console.debug("[highlight] tag/express only tasks", {
+        tagOnly: tagOnly.length,
+        expressOnly: expressOnly.length,
+        tagOnlySample: tagOnly.slice(0, 3).map((t) => ({
+          id: t.id,
+          name: t.name,
+          tagCount: t.tagIds.length,
+        })),
+        expressOnlySample: expressOnly.slice(0, 3).map((t) => ({
+          id: t.id,
+          name: t.name,
+          expressCount: t.expressIds.length,
+        })),
+      });
+    }
   }
 
   const getIdsByDate = useMemo(() => {
@@ -141,6 +157,8 @@ export function useProjectHighlight(projectId?: string) {
       const completedSet = new Set<string>();
       const inProgressSet = new Set<string>();
       const upcomingSet = new Set<string>();
+      let withTags = 0;
+      let withExpress = 0;
 
       processHighlights.forEach((task) => {
         if (!task.start || !task.end) return;
@@ -149,7 +167,9 @@ export function useProjectHighlight(projectId?: string) {
         start.setHours(12, 0, 0, 0);
         end.setHours(12, 0, 0, 0);
 
-        const resolvedIds = resolveExpressIds(task.expressIds, task.tagIds);
+        const resolvedIds = resolveHighlightIds(task.expressIds, task.tagIds);
+        if (task.tagIds?.length) withTags += 1;
+        if (task.expressIds?.length) withExpress += 1;
         if (target < start) {
           resolvedIds.forEach((id) => upcomingSet.add(id));
         } else if (target > end) {
@@ -168,9 +188,16 @@ export function useProjectHighlight(projectId?: string) {
         completedIds: Array.from(completedSet),
         inProgressIds: Array.from(inProgressSet),
         upcomingIds: Array.from(upcomingSet),
+        debug: {
+          withTags,
+          withExpress,
+          completed: completedSet.size,
+          inProgress: inProgressSet.size,
+          upcoming: upcomingSet.size,
+        },
       };
     };
-  }, [processHighlights, resolveExpressIds]);
+  }, [processHighlights, resolveHighlightIds]);
 
   return {
     tagMap,

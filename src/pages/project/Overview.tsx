@@ -114,6 +114,7 @@ export function Overview({
       day: currentDay,
       completed: result.completedIds.length,
       inProgress: result.inProgressIds.length,
+      debug: result.debug,
     });
     return result.completedIds;
   }, [currentDay, getIdsByDate, timeRange]);
@@ -124,6 +125,11 @@ export function Overview({
     const currentDate = new Date(base);
     currentDate.setDate(base.getDate() + currentDay - 1);
     const result = getIdsByDate(currentDate);
+    console.debug("[overview] highlightByDate inProgress", {
+      day: currentDay,
+      inProgress: result.inProgressIds.length,
+      debug: result.debug,
+    });
     return result.inProgressIds;
   }, [currentDay, getIdsByDate, timeRange]);
 
