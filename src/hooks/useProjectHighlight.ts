@@ -42,6 +42,7 @@ export function useProjectHighlight(projectId?: string) {
       name: wp.name || wp.code || "未命名工序",
       expressIds: wp.express_ids ?? [],
       tagIds: wp.tag ?? [],
+      calc: wp.calc,
       start: resolvePlannedRange(wp).start,
       end: resolvePlannedRange(wp).end,
     }));
@@ -137,9 +138,9 @@ export function useProjectHighlight(projectId?: string) {
       }
       const target = new Date(date);
       target.setHours(12, 0, 0, 0);
-      const completed: string[] = [];
-      const inProgress: string[] = [];
-      const upcoming: string[] = [];
+      const completedSet = new Set<string>();
+      const inProgressSet = new Set<string>();
+      const upcomingSet = new Set<string>();
 
       processHighlights.forEach((task) => {
         if (!task.start || !task.end) return;
@@ -148,22 +149,28 @@ export function useProjectHighlight(projectId?: string) {
         start.setHours(12, 0, 0, 0);
         end.setHours(12, 0, 0, 0);
 
+        const resolvedIds = resolveExpressIds(task.expressIds, task.tagIds);
         if (target < start) {
-          upcoming.push(...resolveHighlightIds(task.expressIds, task.tagIds));
+          resolvedIds.forEach((id) => upcomingSet.add(id));
         } else if (target > end) {
-          completed.push(...resolveHighlightIds(task.expressIds, task.tagIds));
+          if (task.calc) {
+            resolvedIds.forEach((id) => completedSet.add(id));
+          } else {
+            // calc=false 不进入已完成，并从已完成里移除
+            resolvedIds.forEach((id) => completedSet.delete(id));
+          }
         } else {
-          inProgress.push(...resolveHighlightIds(task.expressIds, task.tagIds));
+          resolvedIds.forEach((id) => inProgressSet.add(id));
         }
       });
 
       return {
-        completedIds: completed,
-        inProgressIds: inProgress,
-        upcomingIds: upcoming,
+        completedIds: Array.from(completedSet),
+        inProgressIds: Array.from(inProgressSet),
+        upcomingIds: Array.from(upcomingSet),
       };
     };
-  }, [processHighlights, resolveHighlightIds]);
+  }, [processHighlights, resolveExpressIds]);
 
   return {
     tagMap,

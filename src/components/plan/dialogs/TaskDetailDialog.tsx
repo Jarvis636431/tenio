@@ -228,7 +228,7 @@ export function TaskDetailDialog({
               models={[
                 {
                   key: "default",
-                  src: "/models/0125.ifc",
+                  src: "/models/0202.ifc",
                 },
               ]}
               highlightGlobalIds={highlightedComponentIds.map((id) => String(id))}

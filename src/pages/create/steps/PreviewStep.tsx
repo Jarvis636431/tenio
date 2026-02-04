@@ -46,7 +46,7 @@ export function PreviewStep() {
     () => [
       {
         key: "default",
-        src: "/models/0125.ifc",
+        src: "/models/0202.ifc",
         tagMap,
       },
     ],
