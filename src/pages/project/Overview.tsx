@@ -280,17 +280,18 @@ export function Overview({
                     tagMap,
                   },
                 ]}
+                baseMaterialOverrides={{ transparent: true, opacity: 0 }}
                 highlightColorGroups={[
                   {
                     ids: completedIds,
                     color: "#22c55e",
-                    opacity: 0.8,
+                    opacity: 0.18,
                     customID: "completed",
                   },
                   {
                     ids: inProgressIds,
                     color: "#f59e0b",
-                    opacity: 0.9,
+                    opacity: 1,
                     customID: "inProgress",
                   },
                 ]}

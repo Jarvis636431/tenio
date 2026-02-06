@@ -228,17 +228,18 @@ export function PreviewStep() {
             <div className="bg-gray-50 rounded-xl relative overflow-hidden h-full border border-gray-100 shadow-sm">
               <ModelViewer
                 models={models}
+                baseMaterialOverrides={{ transparent: true, opacity: 0 }}
                 highlightColorGroups={[
                   {
                     ids: highlightByDate.completedIds,
                     color: "#22c55e",
-                    opacity: 0.8,
+                    opacity: 0.18,
                     customID: "completed",
                   },
                   {
                     ids: highlightByDate.inProgressIds,
                     color: "#f59e0b",
-                    opacity: 0.9,
+                    opacity: 1,
                     customID: "inProgress",
                   },
                 ]}

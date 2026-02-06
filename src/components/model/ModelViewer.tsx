@@ -10,10 +10,17 @@ import { useRenderLoop } from "./hooks/useRenderLoop";
 import type { HighlightGroup } from "./hooks/useHighlight";
 import { useResize } from "./hooks/useResize";
 
+type MaterialOverrides = Omit<THREE.MeshStandardMaterialParameters, "color"> & {
+  color?: string | number;
+};
+
 interface ModelViewerProps {
   className?: string;
   highlightColor?: string;
   highlightColorGroups?: HighlightGroup[];
+  baseMaterialOverrides?: MaterialOverrides;
+  highlightMaterial?: MaterialOverrides;
+  highlightGroupMaterial?: MaterialOverrides;
   models: Array<{
     key: string;
     src: string;
@@ -27,6 +34,9 @@ export function ModelViewer({
   className,
   highlightColor = "#ff9800",
   highlightColorGroups,
+  baseMaterialOverrides,
+  highlightMaterial,
+  highlightGroupMaterial,
   models,
   highlightGlobalIds = [],
   highlightTagIds = [],
@@ -112,22 +122,31 @@ export function ModelViewer({
 
   const { handleResize } = useResize({ containerRef, rendererRef, cameraRef });
 
+  const resolveColor = (value: string | number | undefined, fallback: string) => {
+    if (value === undefined || value === null) return new THREE.Color(fallback);
+    return new THREE.Color(value as string | number);
+  };
+
   const ensureHighlightMaterial = () => {
     const nextColor = new THREE.Color(highlightColor).getStyle();
     if (!highlightMaterialRef.current) {
       highlightMaterialRef.current = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(highlightColor),
-        transparent: true,
-        opacity: 0.8,
-        depthWrite: true,
-        depthTest: true,
-        metalness: 0,
-        roughness: 0.6,
+        color: resolveColor(highlightMaterial?.color, highlightColor),
+        transparent: highlightMaterial?.transparent ?? true,
+        opacity: highlightMaterial?.opacity ?? 0.8,
+        depthWrite: highlightMaterial?.depthWrite ?? true,
+        depthTest: highlightMaterial?.depthTest ?? true,
+        metalness: highlightMaterial?.metalness ?? 0,
+        roughness: highlightMaterial?.roughness ?? 0.6,
+        ...highlightMaterial,
       });
     } else if (
       highlightMaterialRef.current.color.getStyle() !== nextColor
     ) {
-      highlightMaterialRef.current.color = new THREE.Color(highlightColor);
+      highlightMaterialRef.current.color = resolveColor(
+        highlightMaterial?.color,
+        highlightColor,
+      );
     }
 
     return highlightMaterialRef.current;
@@ -221,18 +240,25 @@ export function ModelViewer({
           let material = highlightGroupMaterialsRef.current.get(group.customID);
           if (!material) {
             material = new THREE.MeshStandardMaterial({
-              color: new THREE.Color(group.color),
-              transparent: true,
-              opacity: group.opacity ?? 0.8,
-              depthWrite: true,
-              depthTest: true,
-              metalness: 0,
-              roughness: 0.6,
+              color: resolveColor(
+                highlightGroupMaterial?.color ?? group.color,
+                group.color,
+              ),
+              transparent: highlightGroupMaterial?.transparent ?? true,
+              opacity: highlightGroupMaterial?.opacity ?? group.opacity ?? 0.8,
+              depthWrite: highlightGroupMaterial?.depthWrite ?? true,
+              depthTest: highlightGroupMaterial?.depthTest ?? true,
+              metalness: highlightGroupMaterial?.metalness ?? 0,
+              roughness: highlightGroupMaterial?.roughness ?? 0.6,
+              ...highlightGroupMaterial,
             });
             highlightGroupMaterialsRef.current.set(group.customID, material);
           } else {
-            material.color = new THREE.Color(group.color);
-            material.opacity = group.opacity ?? 0.8;
+            material.color = resolveColor(
+              highlightGroupMaterial?.color ?? group.color,
+              group.color,
+            );
+            material.opacity = highlightGroupMaterial?.opacity ?? group.opacity ?? 0.8;
           }
 
           const subset = ifcLoaderRef.current?.ifcManager.createSubset({
@@ -315,18 +341,25 @@ export function ModelViewer({
           let material = highlightGroupMaterialsRef.current.get(group.customID);
           if (!material) {
             material = new THREE.MeshStandardMaterial({
-              color: new THREE.Color(group.color),
-              transparent: true,
-              opacity: group.opacity ?? 0.8,
-              depthWrite: true,
-              depthTest: true,
-              metalness: 0,
-              roughness: 0.6,
+              color: resolveColor(
+                highlightGroupMaterial?.color ?? group.color,
+                group.color,
+              ),
+              transparent: highlightGroupMaterial?.transparent ?? true,
+              opacity: highlightGroupMaterial?.opacity ?? group.opacity ?? 0.8,
+              depthWrite: highlightGroupMaterial?.depthWrite ?? true,
+              depthTest: highlightGroupMaterial?.depthTest ?? true,
+              metalness: highlightGroupMaterial?.metalness ?? 0,
+              roughness: highlightGroupMaterial?.roughness ?? 0.6,
+              ...highlightGroupMaterial,
             });
             highlightGroupMaterialsRef.current.set(group.customID, material);
           } else {
-            material.color = new THREE.Color(group.color);
-            material.opacity = group.opacity ?? 0.8;
+            material.color = resolveColor(
+              highlightGroupMaterial?.color ?? group.color,
+              group.color,
+            );
+            material.opacity = highlightGroupMaterial?.opacity ?? group.opacity ?? 0.8;
           }
 
           idsToHighlight.forEach((id) => {
@@ -604,12 +637,13 @@ export function ModelViewer({
         if (abortControllerRef.current?.signal.aborted) return;
 
         const baseMaterial = new THREE.MeshStandardMaterial({
-          color: 0x808080,
-          transparent: true,
-          opacity: 0.3,
-          depthWrite: false,
-          metalness: 0,
-          roughness: 1,
+          color: resolveColor(baseMaterialOverrides?.color, "#808080"),
+          transparent: baseMaterialOverrides?.transparent ?? true,
+          opacity: baseMaterialOverrides?.opacity ?? 0.3,
+          depthWrite: baseMaterialOverrides?.depthWrite ?? false,
+          metalness: baseMaterialOverrides?.metalness ?? 0,
+          roughness: baseMaterialOverrides?.roughness ?? 1,
+          ...baseMaterialOverrides,
         });
 
         await Promise.all(
@@ -620,15 +654,13 @@ export function ModelViewer({
               message: `正在解析模型 ${index + 1}/${normalizedModels.length}...`,
             }));
 
-            let model: THREE.Object3D & { modelID: number };
-            let idMap: Map<string, number>;
             const ifcLoader = new IFCLoader();
             ifcLoader.ifcManager.setWasmPath("/wasm/");
             ifcLoaderRef.current = ifcLoader;
-            model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
+            const model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
               modelID: number;
             };
-            idMap = await buildGlobalIdMap(ifcLoader, model.modelID);
+            const idMap = await buildGlobalIdMap(ifcLoader, model.modelID);
             const modelTagMap = await buildTagMap(ifcLoader, model.modelID);
             console.debug("[ModelViewer] tag map built", {
               modelKey: item.key,
