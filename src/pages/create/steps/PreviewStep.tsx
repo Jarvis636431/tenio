@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { ModelViewer } from "@/components/model/ModelViewer";
@@ -24,8 +23,6 @@ export function PreviewStep() {
   const { setCoreGraph } = useProject();
   const {
     projectName,
-    expandedProcess,
-    setExpandedProcess,
     solutionData,
     projectId,
   } = useOutletContext<CreateProjectContextType>();
@@ -121,13 +118,20 @@ export function PreviewStep() {
   const startDate = solutionData?.start_date ?? "";
   const finishDate = solutionData?.finish_date ?? "";
 
-  const { selectedDateKey, selectedDateLabel, dailyTasks, holidayMarkers } =
+  const {
+    selectedDateKey,
+    selectedDateLabel,
+    dailyTasks,
+    taskNameToGlobalId,
+    holidayMarkers,
+  } =
     useMemo(() => {
       if (!startDate || !finishDate) {
         return {
           selectedDateKey: "",
           selectedDateLabel: "",
           dailyTasks: [] as string[],
+          taskNameToGlobalId: new Map<string, number>(),
           holidayMarkers: [] as Array<{
             name: string;
             date: string;
@@ -150,6 +154,26 @@ export function PreviewStep() {
 
       const tasks = solutionData?.daily_schedule?.[dateKey] ?? [];
 
+      const taskNameToGlobalId = new Map<string, number>();
+      if (solutionData?.daily_schedule) {
+        const cursor = new Date(start);
+        const end = new Date(finish);
+        let nextId = 1;
+        while (cursor <= end) {
+          const key = formatDateKey(cursor);
+          const list = solutionData.daily_schedule[key] ?? [];
+          for (const taskName of list) {
+            const normalized = taskName.trim();
+            if (!normalized) continue;
+            if (!taskNameToGlobalId.has(normalized)) {
+              taskNameToGlobalId.set(normalized, nextId);
+              nextId += 1;
+            }
+          }
+          cursor.setDate(cursor.getDate() + 1);
+        }
+      }
+
       const markers =
         solutionData?.holidays?.map((holiday) => {
           const holidayDate = toDate(holiday.date);
@@ -168,6 +192,7 @@ export function PreviewStep() {
         selectedDateKey: dateKey,
         selectedDateLabel: formatDateLabel(dateKey),
         dailyTasks: tasks,
+        taskNameToGlobalId,
         holidayMarkers: markers,
       };
     }, [finishDate, indicatorPercent, solutionData, startDate]);
@@ -311,41 +336,20 @@ export function PreviewStep() {
                 {dailyTasks.map((task, index) => (
                   <div
                     key={`${selectedDateKey}-${index}`}
-                    className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md"
+                    className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm"
                   >
                     <div
-                      className="flex items-center justify-between p-4 cursor-pointer bg-gray-50/50"
-                      onClick={() =>
-                        setExpandedProcess(
-                          expandedProcess === String(index) ? null : String(index),
-                        )
-                      }
+                      className="flex items-start justify-between p-4 bg-gray-50/50"
                     >
-                      <span className="font-medium text-gray-800">
-                        工序 {index + 1}
-                      </span>
-                      {expandedProcess === String(index) ? (
-                        <ChevronUp className="h-4 w-4 text-gray-500" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-gray-500" />
-                      )}
-                    </div>
-
-                    {expandedProcess === String(index) && (
-                      <div className="p-4 pt-0 bg-gray-50/30">
-                        <div className="space-y-4 relative pl-4 mt-3">
-                          {/* 左侧连接线 */}
-                          <div className="absolute left-0 top-2 bottom-2 w-px bg-gray-200"></div>
-
-                          <div className="relative">
-                            <div className="absolute -left-[21px] top-2 w-2.5 h-2.5 bg-gray-300 rounded-full border-2 border-white"></div>
-                            <p className="text-sm text-gray-600 leading-relaxed">
-                              {task}
-                            </p>
-                          </div>
-                        </div>
+                      <div>
+                        <span className="font-medium text-gray-800">
+                          工序 {taskNameToGlobalId.get(task.trim()) ?? index + 1}
+                        </span>
+                        <p className="text-sm text-gray-600 leading-relaxed mt-2">
+                          {task}
+                        </p>
                       </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
