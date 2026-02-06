@@ -239,7 +239,7 @@ export function ModelViewer({
             modelID: entry.model.modelID,
             ids: idsToHighlight,
             material,
-            removePrevious: false,
+            removePrevious: true,
             customID: group.customID,
           } as {
             modelID: number;
