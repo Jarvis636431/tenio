@@ -139,3 +139,67 @@ export async function getCompressionStatus(
     { token },
   );
 }
+
+type CompressionPollOptions = {
+  intervalMs?: number;
+  timeoutMs?: number;
+  signal?: AbortSignal;
+  onUpdate?: (status: CompressionStatusResponse) => void;
+};
+
+function sleepWithAbort(delayMs: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new Error("Polling aborted"));
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      if (signal) {
+        signal.removeEventListener("abort", onAbort);
+      }
+      resolve();
+    }, delayMs);
+
+    const onAbort = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+      reject(new Error("Polling aborted"));
+    };
+
+    signal?.addEventListener("abort", onAbort);
+  });
+}
+
+export async function pollCompressionStatus(
+  projectId: string,
+  runId: string,
+  token?: string,
+  options: CompressionPollOptions = {},
+): Promise<CompressionStatusResponse> {
+  const {
+    intervalMs = 2000,
+    timeoutMs = 5 * 60 * 1000,
+    signal,
+    onUpdate,
+  } = options;
+  const startedAt = Date.now();
+
+  while (true) {
+    if (signal?.aborted) {
+      throw new Error("Polling aborted");
+    }
+
+    const status = await getCompressionStatus(projectId, runId, token);
+    onUpdate?.(status);
+
+    if (status.status === "completed" || status.status === "failed") {
+      return status;
+    }
+
+    if (timeoutMs > 0 && Date.now() - startedAt > timeoutMs) {
+      throw new Error("Polling timeout");
+    }
+
+    await sleepWithAbort(intervalMs, signal);
+  }
+}
