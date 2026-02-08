@@ -19,11 +19,7 @@ import {
 } from "@/components/ui/card";
 import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  getCrewData,
-} from "@/services/project-service";
-import { getProjectCostCurve } from "@/services/schedulepro-service";
-import type { CrewData } from "@/types/domain/project";
+import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 
@@ -31,13 +27,13 @@ export function Resources() {
   const { currentProject } = useProject();
   const { token } = useAuth();
 
-  const crewQuery = useQuery({
-    queryKey: ["funding-materials", "crew", currentProject?.id],
+  const headcountCurveQuery = useQuery({
+    queryKey: ["funding-materials", "headcount-curve", currentProject?.id],
     queryFn: async () => {
       if (!currentProject?.id) {
         throw new Error("缺少项目 ID");
       }
-      return getCrewData(currentProject.id, token || undefined);
+      return getProjectHeadcountCurve(currentProject.id, token || undefined);
     },
     enabled: Boolean(currentProject?.id && token),
     refetchOnWindowFocus: false,
@@ -55,22 +51,14 @@ export function Resources() {
     refetchOnWindowFocus: false,
   });
 
-  const transformData = (data: CrewData[]) => {
-    if (!data || data.length === 0) return [];
-    
-    // Assuming all series share the same date categories
-    const categories = data[0].date ?? [];
-    
-    return categories.map((date, index) => {
-      const point: Record<string, string | number> = { date };
-      data.forEach(series => {
-        point[series.name] = series.data?.[index] ?? 0;
-      });
-      return point;
-    });
-  };
-
-  const crewChartData = useMemo(() => transformData(crewQuery.data ?? []), [crewQuery.data]);
+  const headcountChartData = useMemo(() => {
+    const points = headcountCurveQuery.data?.points ?? [];
+    if (points.length === 0) return [];
+    return points.map((point) => ({
+      date: point.date,
+      劳动力人数: point.headcount,
+    }));
+  }, [headcountCurveQuery.data]);
   const costCurveChartData = useMemo(() => {
     const points = costCurveQuery.data?.points ?? [];
     if (points.length === 0) return [];
@@ -132,20 +120,20 @@ export function Resources() {
       <Card>
         <CardHeader>
           <CardTitle>人员投入趋势</CardTitle>
-          <CardDescription>展示不同工种的每日投入人数</CardDescription>
+          <CardDescription>展示每日劳动力总人数</CardDescription>
         </CardHeader>
         <CardContent>
-          {crewQuery.isLoading ? (
+          {headcountCurveQuery.isLoading ? (
             <Skeleton className="h-[320px] w-full" />
-          ) : crewQuery.isError ? (
+          ) : headcountCurveQuery.isError ? (
             <div className="flex h-[320px] items-center justify-center text-sm text-destructive">
               <AlertCircle className="mr-2 h-4 w-4" />
               无法获取人员数据
             </div>
-          ) : crewChartData.length > 0 ? (
+          ) : headcountChartData.length > 0 ? (
             renderChart(
-              crewChartData,
-              (crewQuery.data ?? []).map((d) => d.name),
+              headcountChartData,
+              ["劳动力人数"],
               "人",
             )
           ) : (

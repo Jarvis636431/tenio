@@ -150,6 +150,17 @@ export interface CostCurveResponse {
   generated_at: string;
 }
 
+export interface HeadcountCurvePoint {
+  date: string;
+  headcount: number;
+}
+
+export interface HeadcountCurveResponse {
+  project_id: string;
+  points: HeadcountCurvePoint[];
+  generated_at: string;
+}
+
 export interface TaskStatusResponse {
   task_id: string;
   algorithm_type: string;

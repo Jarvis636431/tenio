@@ -15,6 +15,7 @@ import type {
   CompressionStartPayload,
   CompressionStartResponse,
   CompressionStatusResponse,
+  HeadcountCurveResponse,
   TaskStatusResponse,
 } from "@/types/domain/schedulepro";
 
@@ -98,6 +99,16 @@ export async function getProjectCostCurve(
 ): Promise<CostCurveResponse> {
   return requestJson<CostCurveResponse>(
     `${BASE_URL}/api/projects/${projectId}/cost-curve`,
+    { token },
+  );
+}
+
+export async function getProjectHeadcountCurve(
+  projectId: string,
+  token?: string,
+): Promise<HeadcountCurveResponse> {
+  return requestJson<HeadcountCurveResponse>(
+    `${BASE_URL}/api/projects/${projectId}/headcount-curve`,
     { token },
   );
 }
