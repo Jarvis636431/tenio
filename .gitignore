@@ -43,3 +43,6 @@ public/models/
 *.gltf
 *.obj
 *.fbx
+
+# Local resources
+public/resources/
