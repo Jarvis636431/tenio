@@ -157,6 +157,28 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     if (!threadIdRef.current) {
       return;
     }
+    if (pollAbortRef.current) {
+      pollAbortRef.current.abort();
+    }
+    pollAbortRef.current = new AbortController();
+
+    const projectId =
+      options.projectId || routeProjectId || currentProject?.id || "";
+    if (projectId && token) {
+      pollTaskStatus(projectId, token, {
+        signal: pollAbortRef.current.signal,
+      })
+        .then((status) => {
+          if (status.status === "completed") {
+            return refreshCoreGraph(projectId);
+          }
+          return undefined;
+        })
+        .catch(() => {
+          // ignore polling errors
+        });
+    }
+
     await resumeAgent({
       message,
       approved,
@@ -197,27 +219,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       abortRef.current.abort();
     }
     abortRef.current = new AbortController();
-    if (pollAbortRef.current) {
-      pollAbortRef.current.abort();
-    }
-    pollAbortRef.current = new AbortController();
-
-    const projectId =
-      options.projectId || routeProjectId || currentProject?.id || "";
-    if (projectId && token) {
-      pollTaskStatus(projectId, token, {
-        signal: pollAbortRef.current.signal,
-      })
-        .then((status) => {
-          if (status.status === "completed") {
-            return refreshCoreGraph(projectId);
-          }
-          return undefined;
-        })
-        .catch(() => {
-          // ignore polling errors
-        });
-    }
 
     const aiMessageId = createMessageId();
     lastContentRef.current = "";
