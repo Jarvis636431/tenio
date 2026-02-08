@@ -18,3 +18,11 @@ export const AMAP = {
 };
 
 export const AI_SSE_URL = env.VITE_AI_SSE_URL ?? "";
+
+export const VOLC_SPEECH = {
+  apiUrl: "https://openspeech.bytedance.com/api/v3/auc/bigmodel/recognize/flash",
+  resourceId: "volc.bigasr.auc_turbo",
+  appId: env.VITE_VOLC_APP_ID ?? "",
+  accessToken: env.VITE_VOLC_ACCESS_TOKEN ?? "",
+  secretKey: env.VITE_VOLC_SECRET_KEY ?? "",
+};

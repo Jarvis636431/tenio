@@ -1,4 +1,4 @@
-import { Loader2, Send, Sparkles, X } from "lucide-react";
+import { Loader2, Mic, Send, Sparkles, Square, X } from "lucide-react";
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,11 @@ export function ChatPanel({
     inputMessage,
     setInputMessage,
     isThinking,
+    isRecording,
+    isRecognizing,
     handleSendMessage,
     handleInputEnter,
+    toggleRecording,
     scrollAreaRef,
   } = state;
 
@@ -111,6 +114,26 @@ export function ChatPanel({
               className="flex-1"
             />
             <Button
+              onClick={toggleRecording}
+              size="icon"
+              variant={isRecording ? "default" : "outline"}
+              disabled={isRecognizing && !isRecording}
+              aria-label={isRecording ? "结束录音" : "开始录音"}
+              className={cn(
+                "relative transition-all",
+                isRecording
+                  ? "bg-red-500 text-white hover:bg-red-500 ring-2 ring-red-400/60 animate-pulse"
+                  : "",
+              )}
+              style={isRecording ? { animationDuration: "1.6s" } : undefined}
+            >
+              {isRecording ? (
+                <Square className="w-4 h-4" />
+              ) : (
+                <Mic className="w-4 h-4" />
+              )}
+            </Button>
+            <Button
               onClick={handleSendMessage}
               size="icon"
               disabled={!inputMessage.trim()}
@@ -118,6 +141,12 @@ export function ChatPanel({
               <Send className="w-4 h-4" />
             </Button>
           </div>
+          {isRecognizing && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              正在识别语音，识别结果会填入输入框
+            </div>
+          )}
         </CardFooter>
       </Card>
     </div>
