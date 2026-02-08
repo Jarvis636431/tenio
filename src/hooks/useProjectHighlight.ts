@@ -170,15 +170,18 @@ export function useProjectHighlight(projectId?: string) {
         const resolvedIds = resolveHighlightIds(task.expressIds, task.tagIds);
         if (task.tagIds?.length) withTags += 1;
         if (task.expressIds?.length) withExpress += 1;
+        if (!task.calc) {
+          resolvedIds.forEach((id) => {
+            completedSet.delete(id);
+            inProgressSet.delete(id);
+            upcomingSet.delete(id);
+          });
+          return;
+        }
         if (target < start) {
           resolvedIds.forEach((id) => upcomingSet.add(id));
         } else if (target > end) {
-          if (task.calc) {
-            resolvedIds.forEach((id) => completedSet.add(id));
-          } else {
-            // calc=false 不进入已完成，并从已完成里移除
-            resolvedIds.forEach((id) => completedSet.delete(id));
-          }
+          resolvedIds.forEach((id) => completedSet.add(id));
         } else {
           resolvedIds.forEach((id) => inProgressSet.add(id));
         }
