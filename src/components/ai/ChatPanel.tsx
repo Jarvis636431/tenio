@@ -31,10 +31,137 @@ export function ChatPanel({
     isRecording,
     isRecognizing,
     handleSendMessage,
+    sendQuickMessage,
     handleInputEnter,
     toggleRecording,
     scrollAreaRef,
   } = state;
+
+  const renderInterruptMessage = (content: string) => {
+    const normalized = content.replace(/\\n/g, "\n").replace(/\/n/g, "\n");
+    const lines = normalized
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const header = lines[0] ?? "突发事件提示";
+    const detailLines = lines.slice(1);
+
+    const tasks: Array<{
+      name: string;
+      id?: string;
+      start?: string;
+      end?: string;
+    }> = [];
+
+    let currentTask: (typeof tasks)[number] | null = null;
+    for (const line of detailLines) {
+      if (line.startsWith("- ")) {
+        const raw = line.replace(/^-\\s*/, "");
+        const idMatch = raw.match(/\\(ID=([^\\)]+)\\)/);
+        currentTask = {
+          name: raw.replace(/\\s*\\(ID=.*\\)$/, "").trim(),
+          id: idMatch?.[1],
+        };
+        tasks.push(currentTask);
+        continue;
+      }
+      if (currentTask && line.startsWith("开始:")) {
+        currentTask.start = line.replace(/^开始:\\s*/, "").trim();
+        continue;
+      }
+      if (currentTask && line.startsWith("结束:")) {
+        currentTask.end = line.replace(/^结束:\\s*/, "").trim();
+        continue;
+      }
+    }
+
+    const renderLine = (line: string) => (
+      <div key={line} className="text-xs text-slate-700">
+        {line}
+      </div>
+    );
+
+    return (
+      <div className="space-y-3">
+        <div className="text-sm font-semibold text-amber-900">{header}</div>
+        <div className="space-y-1">
+          {detailLines
+            .filter(
+              (line) =>
+                !line.startsWith("- ") &&
+                !line.startsWith("开始:") &&
+                !line.startsWith("结束:") &&
+                !line.startsWith("建议方案：") &&
+                !line.startsWith("请确认是否执行此调整") &&
+                !line.startsWith("受影响的任务") &&
+                !line.startsWith("受影响任务"),
+            )
+            .map(renderLine)}
+        </div>
+        {tasks.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-slate-700">
+              受影响任务
+            </div>
+            {tasks.map((task) => (
+              <div
+                key={`${task.name}-${task.id ?? ""}`}
+                className="rounded-md border border-amber-200 bg-amber-50/70 px-2 py-2 text-xs text-slate-700"
+              >
+                <div className="font-medium text-slate-900">{task.name}</div>
+                {task.id && (
+                  <div className="text-[11px] text-slate-500">
+                    ID: {task.id}
+                  </div>
+                )}
+                {task.start && <div>开始: {task.start}</div>}
+                {task.end && <div>结束: {task.end}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="text-xs text-slate-700">
+          {detailLines.find((line) => line.startsWith("建议方案：")) ?? ""}
+        </div>
+        <div className="rounded-md bg-amber-100 px-2 py-2 text-xs font-medium text-amber-900">
+          {detailLines.find((line) => line.startsWith("请确认是否执行此调整？")) ??
+            "请确认是否执行此调整？"}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            className="h-8 rounded-md bg-amber-600 text-white hover:bg-amber-700"
+            onClick={() => sendQuickMessage("是")}
+            disabled={isThinking}
+          >
+            是
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 rounded-md border-amber-300 text-amber-700 hover:bg-amber-50"
+            onClick={() => sendQuickMessage("否")}
+            disabled={isThinking}
+          >
+            否
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMessageContent = (message: ChatPanelState["messages"][number]) => {
+    const content = message.content ?? "";
+    const isInterrupt =
+      message.sender === "ai" &&
+      (content.includes("突发事件分析完成") ||
+        content.includes("请确认是否执行此调整"));
+    if (isInterrupt) {
+      return renderInterruptMessage(content);
+    }
+    const normalized = content.replace(/\\n/g, "\n").replace(/\/n/g, "\n");
+    return <div>{normalized}</div>;
+  };
 
   return (
     <div
@@ -89,7 +216,7 @@ export function ChatPanel({
                       },
                     )}
                   >
-                    <div>{message.content}</div>
+                    {renderMessageContent(message)}
                   </div>
                 </div>
               ))}

@@ -492,6 +492,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     isRecording,
     isRecognizing,
     handleSendMessage,
+    sendQuickMessage: sendMessage,
     handleInputEnter,
     toggleRecording,
     scrollAreaRef,
