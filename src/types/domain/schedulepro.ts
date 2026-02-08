@@ -48,6 +48,7 @@ export interface HolidayInfo {
 
 export interface SelectSolutionResponse {
   project_id: string;
+  task_id: string;
   solution_id: number;
   total_duration_hours: number;
   start_date: string;
@@ -56,6 +57,7 @@ export interface SelectSolutionResponse {
   skipped_tasks: number;
   holidays: HolidayInfo[];
   daily_schedule: Record<string, string[]>;
+  cost_curve: CostCurvePoint[];
 }
 
 export interface CoreGraphWorkProcess {

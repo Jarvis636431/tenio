@@ -10,6 +10,7 @@ export const API_BASE = {
   userService: trimTrailingSlash(env.VITE_USER_SERVICE_URL) ?? "http://localhost:8001",
   projectService: trimTrailingSlash(env.VITE_PROJECT_SERVICE_URL) ?? "http://localhost:8002",
   poiService: trimTrailingSlash(env.VITE_POI_SERVICE_URL) ?? "https://chat.zrzz.site",
+  aiService: trimTrailingSlash(env.VITE_AI_SERVICE_URL) ?? "http://127.0.0.0:8123",
 };
 
 export const AMAP = {
@@ -17,7 +18,8 @@ export const AMAP = {
   securityCode: env.VITE_AMAP_SECURITY_CODE ?? "",
 };
 
-export const AI_SSE_URL = env.VITE_AI_SSE_URL ?? "";
+export const AI_SSE_URL =
+  env.VITE_AI_SSE_URL ?? `${API_BASE.aiService}/api/agent/chat/sse`;
 
 export const VOLC_SPEECH = {
   apiUrl: "https://openspeech.bytedance.com/api/v3/auc/bigmodel/recognize/flash",

@@ -17,6 +17,7 @@ import { planChartData, planOptions } from "@/mocks/data/create-project";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { selectProjectSolution } from "@/services/schedulepro-service";
+import { initAgent } from "@/services/ai-service";
 
 export function SelectionStep() {
   const navigate = useNavigate();
@@ -66,6 +67,12 @@ export function SelectionStep() {
       const resolved =
         (response as { data?: typeof response }).data ?? response;
       setSolutionData(resolved);
+      await initAgent({
+        project_id: projectId,
+        base_date: resolved.start_date,
+        solution_id: resolved.solution_id,
+        access_token: token,
+      });
       navigate("/create/preview");
     } catch (error) {
       toast({
