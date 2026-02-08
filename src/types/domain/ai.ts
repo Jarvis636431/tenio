@@ -10,3 +10,14 @@ export interface AgentInitResponse {
   message?: string;
   [key: string]: unknown;
 }
+
+export interface AgentResumePayload {
+  message: string;
+  thread_id: string;
+  approved: boolean;
+}
+
+export interface AgentResumeResponse {
+  message?: string;
+  [key: string]: unknown;
+}

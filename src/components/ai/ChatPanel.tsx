@@ -32,6 +32,7 @@ export function ChatPanel({
     isRecognizing,
     handleSendMessage,
     sendQuickMessage,
+    resumeInterrupt,
     handleInputEnter,
     toggleRecording,
     scrollAreaRef,
@@ -131,7 +132,7 @@ export function ChatPanel({
           <Button
             size="sm"
             className="h-8 rounded-md bg-amber-600 text-white hover:bg-amber-700"
-            onClick={() => sendQuickMessage("是")}
+            onClick={() => resumeInterrupt("是", true)}
             disabled={isThinking}
           >
             是
@@ -140,7 +141,7 @@ export function ChatPanel({
             size="sm"
             variant="outline"
             className="h-8 rounded-md border-amber-300 text-amber-700 hover:bg-amber-50"
-            onClick={() => sendQuickMessage("否")}
+            onClick={() => resumeInterrupt("否", false)}
             disabled={isThinking}
           >
             否

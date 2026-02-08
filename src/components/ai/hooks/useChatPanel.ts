@@ -7,6 +7,7 @@ import {
   getProjectCoreGraph,
   pollTaskStatus,
 } from "@/services/schedulepro-service";
+import { resumeAgent } from "@/services/ai-service";
 
 export interface ChatMessage {
   id: string;
@@ -152,6 +153,17 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     ]);
   };
 
+  const resumeInterrupt = async (message: string, approved: boolean) => {
+    if (!threadIdRef.current) {
+      return;
+    }
+    await resumeAgent({
+      message,
+      approved,
+      thread_id: threadIdRef.current,
+    });
+  };
+
   const refreshCoreGraph = async (projectId: string) => {
     if (!token) return;
     const response = await getProjectCoreGraph(projectId, token);
@@ -255,6 +267,10 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
             ? (payload as Record<string, unknown>)
             : null;
         if (!obj) return null;
+
+        if (obj.type === "interrupt" && typeof obj.message === "string") {
+          return obj.message;
+        }
 
         const extractInterrupt = () => {
           const interrupts = obj.__interrupt__;
@@ -493,6 +509,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     isRecognizing,
     handleSendMessage,
     sendQuickMessage: sendMessage,
+    resumeInterrupt,
     handleInputEnter,
     toggleRecording,
     scrollAreaRef,
