@@ -8,6 +8,7 @@ import {
   pollTaskStatus,
 } from "@/services/schedulepro-service";
 import { resumeAgent } from "@/services/ai-service";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface ChatMessage {
   id: string;
@@ -84,6 +85,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
   const { token } = useAuth();
   const { currentProject, setCoreGraph } = useProject();
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -199,6 +201,12 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     if (!token) return;
     const response = await getProjectCoreGraph(projectId, token);
     setCoreGraph(projectId, response);
+    queryClient.invalidateQueries({
+      queryKey: ["funding-materials", "cost-curve", projectId],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["funding-materials", "headcount-curve", projectId],
+    });
   };
 
   const sendMessage = async (messageText: string) => {
