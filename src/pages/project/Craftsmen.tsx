@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,9 @@ import { EditCraftsmanDialog } from "@/components/craftsman/EditCraftsmanDialog"
 import { ImportCraftsmanDialog } from "@/components/craftsman/ImportCraftsmanDialog";
 import { TeamDetailDialog } from "@/components/craftsman/TeamDetailDialog";
 import { Craftsman, Team } from "@/types/domain/craftsman";
-import { mockTeams } from "@/mocks/data/craftsman";
+import { getTeamAssignments } from "@/services/schedulepro-service";
+import { useAuth } from "@/hooks/useAuth";
+import { useParams } from "react-router-dom";
 
 interface CraftsmenProps {
   onActionsChange?: (actions: React.ReactNode) => void;
@@ -17,13 +19,77 @@ interface CraftsmenProps {
 
 // 班组 Mock 数据已移至 mocks
 export function Craftsmen(_props: CraftsmenProps) {
-  const [teams, setTeams] = useState<Team[]>(mockTeams);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeFilter, setTradeFilter] = useState("all");
+  const { token } = useAuth();
+  const { id: projectId } = useParams();
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!projectId || !token) return;
+    let isMounted = true;
+    setIsLoading(true);
+    setLoadError(null);
+
+    getTeamAssignments(projectId, token)
+      .then((response) => {
+        if (!isMounted) return;
+        const teamIndex = new Map<string, number>();
+        let nextId = 1;
+        const teamMap = new Map<string, Team>();
+
+        response.assignments.forEach((assignment) => {
+          const teamId = assignment.team_id;
+          let numericId = teamIndex.get(teamId);
+          if (!numericId) {
+            numericId = nextId;
+            nextId += 1;
+            teamIndex.set(teamId, numericId);
+          }
+
+          if (!teamMap.has(teamId)) {
+            teamMap.set(teamId, {
+              id: numericId,
+              name: assignment.team_name || "未命名班组",
+              leader: "—",
+              leaderPhone: "—",
+              trade: "未知",
+              memberCount: 0,
+              status: "active",
+              contractStatus: "未知",
+              certificationStatus: "未知",
+              entryCount: 0,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              remarks: `team_id:${teamId}`,
+            });
+          }
+
+          const team = teamMap.get(teamId)!;
+          team.memberCount += assignment.assigned_workers_count ?? 0;
+        });
+
+        setTeams(Array.from(teamMap.values()));
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setLoadError(error instanceof Error ? error.message : "加载失败");
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, token]);
   const filteredTeams = useMemo(() => {
     return teams.filter(team => {
       const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -192,11 +258,17 @@ export function Craftsmen(_props: CraftsmenProps) {
               </Card>;
           })}
           
-          {filteredTeams.length === 0 && <Card>
+          {filteredTeams.length === 0 && (
+            <Card>
               <CardContent className="p-8 text-center text-gray-500">
-                暂无班组数据
+                {isLoading
+                  ? "班组数据加载中..."
+                  : loadError
+                    ? `加载失败：${loadError}`
+                    : "暂无班组数据"}
               </CardContent>
-            </Card>}
+            </Card>
+          )}
         </div>
       </div>
 
