@@ -7,13 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import {
-  Eye,
-  Loader2,
-  ShieldAlert,
-  CheckCircle,
-  Clock,
-} from "lucide-react";
+import { Eye, Loader2, ShieldAlert } from "lucide-react";
 import {
   getProcessInfo,
 } from "@/services/project-service";
@@ -73,10 +67,6 @@ export function TaskDetailDialog({
   const [orderInfo, setOrderInfo] = useState<OrderInfoData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [acceptanceData, setAcceptanceData] = useState<AcceptanceData | null>(
-    null,
-  );
-  const [acceptanceLoading, setAcceptanceLoading] = useState(false);
   const [mediaRows, setMediaRows] = useState<ProcessMediaRow[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
   const { token } = useAuth();
@@ -208,68 +198,6 @@ export function TaskDetailDialog({
     const tagIds = match?.tag ?? [];
     return tagIds.map((id) => String(id));
   }, [coreGraph, task?.id, task?.task, workProcessName]);
-
-  // 加载验收数据
-  const loadAcceptanceData = async (processNumber: string) => {
-    try {
-      setAcceptanceLoading(true);
-      const response = await fetch("/Database/验收数据.csv");
-      if (!response.ok) {
-        throw new Error("无法加载验收数据");
-      }
-
-      const csvText = await response.text();
-      const lines = csvText.trim().split("\n");
-      if (lines.length <= 1) return null;
-
-      const headers = lines[0].split(",");
-
-      // 查找匹配的工序
-      for (let i = 1; i < lines.length; i++) {
-        const row = lines[i].split(",");
-        const data: Record<string, string> = {};
-
-        headers.forEach((header, index) => {
-          data[header] = row[index] || "";
-        });
-
-        // 通过工序序号匹配
-        if (data["工序序号"] === processNumber) {
-          return data as unknown as AcceptanceData;
-        }
-      }
-
-      return null;
-    } catch (error) {
-      console.error("加载验收数据失败:", error);
-      return null;
-    } finally {
-      setAcceptanceLoading(false);
-    }
-  };
-
-  // 当任务变化时加载验收数据
-  useEffect(() => {
-    if (task && task.id) {
-      // 假设task.id就是工序序号，或者从task中提取序号
-      const processNumber = task.id?.toString() || "1";
-      loadAcceptanceData(processNumber).then(setAcceptanceData);
-    }
-  }, [task]);
-
-  // 获取步骤状态样式
-  const getStepStatusStyle = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-500 border-green-500";
-      case "in_progress":
-        return "bg-blue-500 border-blue-500";
-      case "pending":
-        return "bg-white border-gray-300";
-      default:
-        return "bg-white border-gray-300";
-    }
-  };
 
   if (!task) {
     return (
@@ -443,168 +371,12 @@ export function TaskDetailDialog({
           </TabsContent>
 
           <TabsContent value="acceptance" className="mt-4 flex-1 overflow-auto">
-            {acceptanceLoading ? (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                加载验收数据中...
+            <div className="h-full flex items-center justify-center text-gray-500">
+              <div className="text-center">
+                <ShieldAlert className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <p className="text-lg font-medium mb-2">暂无验收数据</p>
               </div>
-            ) : acceptanceData ? (
-              <div className="space-y-6 pr-2">
-                {/* 验收状态 */}
-                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm font-medium">验收状态:</span>
-                  <Badge
-                    variant={
-                      acceptanceData.验收状态 === "completed"
-                        ? "default"
-                        : acceptanceData.验收状态 === "in_progress"
-                          ? "secondary"
-                          : "outline"
-                    }
-                  >
-                    {acceptanceData.验收状态 === "completed"
-                      ? "已完成"
-                      : acceptanceData.验收状态 === "in_progress"
-                        ? "进行中"
-                        : "待验收"}
-                  </Badge>
-                  {acceptanceData.验收备注 && (
-                    <span className="text-sm text-gray-600">
-                      - {acceptanceData.验收备注}
-                    </span>
-                  )}
-                </div>
-
-                {/* 流程步骤 */}
-                <div className="relative">
-                  {/* 连接线 */}
-                  <div className="absolute top-8 left-8 right-8 h-0.5 bg-gray-300" />
-
-                  <div className="grid grid-cols-4 gap-4 relative">
-                    {/* 动态生成步骤 */}
-                    {[1, 2, 3, 4].map((stepNum) => {
-                      const stepText = acceptanceData[
-                        `步骤${stepNum}` as keyof AcceptanceData
-                      ] as string;
-                      const stepStatus = acceptanceData[
-                        `步骤${stepNum}状态` as keyof AcceptanceData
-                      ] as string;
-
-                      return (
-                        <div
-                          key={stepNum}
-                          className="flex flex-col items-center"
-                        >
-                          <div
-                            className={`w-16 h-16 rounded-full border-4 flex items-center justify-center mb-4 relative z-10 ${getStepStatusStyle(stepStatus)}`}
-                          >
-                            {stepStatus === "completed" ? (
-                              <CheckCircle className="h-6 w-6 text-white" />
-                            ) : stepStatus === "in_progress" ? (
-                              <Clock className="h-6 w-6 text-white" />
-                            ) : (
-                              <div className="w-2 h-2 bg-gray-400 rounded-full" />
-                            )}
-                          </div>
-                          <div className="bg-gray-200 px-3 py-2 rounded text-center text-sm min-h-[30px] flex items-center">
-                            <span>{stepText}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 拍摄要求和现场照片区域 */}
-                <div className="grid grid-cols-4 gap-4">
-                  {/* 左侧 3 列 - 拍摄要求和现场照片 */}
-                  <div className="col-span-3 space-y-4">
-                    {/* 拍摄位置要求 */}
-                    <div className="grid grid-cols-3 gap-4">
-                      {[1, 2, 3].map((reqNum) => {
-                        const requirement = acceptanceData[
-                          `拍摄要求${reqNum}` as keyof AcceptanceData
-                        ] as string;
-                        return (
-                          <div
-                            key={reqNum}
-                            className="bg-blue-500 text-white px-4 py-3 rounded-lg flex items-center justify-center min-h-[60px]"
-                          >
-                            <p className="text-center font-medium text-sm">
-                              {requirement}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* 现场照片 */}
-                    <div className="grid grid-cols-3 gap-4">
-                      {[1, 2, 3].map((photoNum) => {
-                        const photoPath = acceptanceData[
-                          `现场照片${photoNum}` as keyof AcceptanceData
-                        ] as string;
-                        return (
-                          <div
-                            key={photoNum}
-                            className="bg-gray-200 rounded-lg overflow-hidden h-48 flex items-center justify-center"
-                          >
-                            {photoPath &&
-                            photoPath !==
-                              "/images/acceptance/placeholder.jpg" ? (
-                              <img
-                                src={photoPath}
-                                alt={`现场照片 ${photoNum}`}
-                                className="w-full h-full object-cover cursor-pointer"
-                                onClick={() => setSelectedImage(photoPath)}
-                              />
-                            ) : (
-                              <div className="text-center text-gray-500">
-                                <div className="text-2xl mb-2">📷</div>
-                                <p className="text-sm">现场照片 {photoNum}</p>
-                                <p className="text-xs">待上传</p>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 右侧 1 列 - 人像 */}
-                  <div className="col-span-1">
-                    <div className="bg-gray-200 rounded-lg flex items-center justify-center h-full">
-                      {acceptanceData.人像照片 &&
-                      acceptanceData.人像照片 !==
-                        "/images/acceptance/placeholder.jpg" ? (
-                        <img
-                          src={acceptanceData.人像照片}
-                          alt="验收人员"
-                          className="w-full h-full object-cover rounded-lg cursor-pointer"
-                          onClick={() =>
-                            setSelectedImage(acceptanceData.人像照片)
-                          }
-                        />
-                      ) : (
-                        <div className="text-center text-gray-500">
-                          <div className="text-4xl mb-2">👤</div>
-                          <p className="text-lg font-medium">人像</p>
-                          <p className="text-sm">待上传</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="h-full flex items-center justify-center text-gray-500">
-                <div className="text-center">
-                  <ShieldAlert className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-lg font-medium mb-2">暂无验收数据</p>
-                  <p className="text-sm">该工序的验收信息尚未配置</p>
-                </div>
-              </div>
-            )}
+            </div>
           </TabsContent>
         </Tabs>
 
