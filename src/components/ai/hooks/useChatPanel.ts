@@ -101,6 +101,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const pollAbortRef = useRef<AbortController | null>(null);
+  const pollDelayRef = useRef<number | null>(null);
   const threadIdRef = useRef<string | null>(null);
   const lastContentRef = useRef<string>("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -130,6 +131,9 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       if (pollAbortRef.current) {
         pollAbortRef.current.abort();
       }
+      if (pollDelayRef.current !== null) {
+        window.clearTimeout(pollDelayRef.current);
+      }
       if (mediaRecorderRef.current?.state === "recording") {
         mediaRecorderRef.current.stop();
       }
@@ -157,33 +161,38 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     if (!threadIdRef.current) {
       return;
     }
-    if (pollAbortRef.current) {
-      pollAbortRef.current.abort();
-    }
-    pollAbortRef.current = new AbortController();
-
-    const projectId =
-      options.projectId || routeProjectId || currentProject?.id || "";
-    if (projectId && token) {
-      pollTaskStatus(projectId, token, {
-        signal: pollAbortRef.current.signal,
-      })
-        .then((status) => {
-          if (status.status === "completed") {
-            return refreshCoreGraph(projectId);
-          }
-          return undefined;
-        })
-        .catch(() => {
-          // ignore polling errors
-        });
-    }
-
     await resumeAgent({
       message,
       approved,
       thread_id: threadIdRef.current,
     });
+
+    if (pollAbortRef.current) {
+      pollAbortRef.current.abort();
+    }
+    pollAbortRef.current = new AbortController();
+    if (pollDelayRef.current !== null) {
+      window.clearTimeout(pollDelayRef.current);
+    }
+
+    const projectId =
+      options.projectId || routeProjectId || currentProject?.id || "";
+    if (projectId && token) {
+      pollDelayRef.current = window.setTimeout(() => {
+        pollTaskStatus(projectId, token, {
+          signal: pollAbortRef.current?.signal,
+        })
+          .then((status) => {
+            if (status.status === "completed") {
+              return refreshCoreGraph(projectId);
+            }
+            return undefined;
+          })
+          .catch(() => {
+            // ignore polling errors
+          });
+      }, 3000);
+    }
   };
 
   const refreshCoreGraph = async (projectId: string) => {

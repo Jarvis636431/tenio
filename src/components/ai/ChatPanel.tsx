@@ -1,4 +1,5 @@
 import { Loader2, Mic, Send, Sparkles, Square, X } from "lucide-react";
+import { useState } from "react";
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,8 +38,11 @@ export function ChatPanel({
     toggleRecording,
     scrollAreaRef,
   } = state;
+  const [interruptDecisions, setInterruptDecisions] = useState<
+    Record<string, "yes" | "no">
+  >({});
 
-  const renderInterruptMessage = (content: string) => {
+  const renderInterruptMessage = (content: string, messageId: string) => {
     const normalized = content.replace(/\\n/g, "\n").replace(/\/n/g, "\n");
     const lines = normalized
       .split("\n")
@@ -132,19 +136,31 @@ export function ChatPanel({
           <Button
             size="sm"
             className="h-8 rounded-md bg-amber-600 text-white hover:bg-amber-700"
-            onClick={() => resumeInterrupt("是", true)}
-            disabled={isThinking}
+            onClick={() => {
+              setInterruptDecisions((prev) => ({
+                ...prev,
+                [messageId]: "yes",
+              }));
+              resumeInterrupt("是", true);
+            }}
+            disabled={isThinking || interruptDecisions[messageId] !== undefined}
           >
-            是
+            {interruptDecisions[messageId] === "yes" ? "已选：是" : "是"}
           </Button>
           <Button
             size="sm"
             variant="outline"
             className="h-8 rounded-md border-amber-300 text-amber-700 hover:bg-amber-50"
-            onClick={() => resumeInterrupt("否", false)}
-            disabled={isThinking}
+            onClick={() => {
+              setInterruptDecisions((prev) => ({
+                ...prev,
+                [messageId]: "no",
+              }));
+              resumeInterrupt("否", false);
+            }}
+            disabled={isThinking || interruptDecisions[messageId] !== undefined}
           >
-            否
+            {interruptDecisions[messageId] === "no" ? "已选：否" : "否"}
           </Button>
         </div>
       </div>
@@ -158,7 +174,7 @@ export function ChatPanel({
       (content.includes("突发事件分析完成") ||
         content.includes("请确认是否执行此调整"));
     if (isInterrupt) {
-      return renderInterruptMessage(content);
+      return renderInterruptMessage(content, message.id);
     }
     const normalized = content.replace(/\\n/g, "\n").replace(/\/n/g, "\n");
     return <div>{normalized}</div>;
