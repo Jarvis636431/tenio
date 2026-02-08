@@ -137,9 +137,34 @@ export interface CoreGraphResponse {
 
 export interface CostCurvePoint {
   day_index: number;
+  date?: string;
   labor_cost: number;
   rental_cost: number;
+  manage_cost?: number;
+  machine_cost?: number;
+  material_cost?: number;
   total_cost: number;
+  total_cost_with_material?: number;
+}
+
+export interface CostCurveSummary {
+  days_count?: number;
+  last_day?: number;
+  total_calendar_days?: number;
+  labor?: number;
+  rental?: number;
+  manage?: number;
+  machine?: number;
+  material?: number;
+  total?: number;
+  total_with_material?: number;
+  manage_start_date?: string;
+  manage_end_date?: string;
+  manage_days?: number;
+  machine_start_date?: string;
+  machine_end_date?: string;
+  machine_days?: number;
+  latest_end_date?: string;
 }
 
 export interface CostCurveResponse {
@@ -149,6 +174,7 @@ export interface CostCurveResponse {
   total_labor_cost: number;
   total_rental_cost: number;
   total_cost: number;
+  summary?: CostCurveSummary;
   generated_at: string;
 }
 
