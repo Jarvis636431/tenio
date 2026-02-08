@@ -19,6 +19,7 @@ import {
 } from "@/services/project-service";
 import type { OrderInfoData } from "@/types/domain/project";
 import { useAuth } from "@/hooks/useAuth";
+import { useProject } from "@/hooks/useProject";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import type { PlanTask } from "@/types/domain/plan";
 
@@ -45,6 +46,13 @@ interface AcceptanceData {
   验收备注: string;
 }
 
+interface ProcessMediaRow {
+  name: string;
+  structureImages: string[];
+  extraImages: string[];
+  video: string;
+}
+
 interface TaskDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -69,7 +77,11 @@ export function TaskDetailDialog({
     null,
   );
   const [acceptanceLoading, setAcceptanceLoading] = useState(false);
+  const [mediaRows, setMediaRows] = useState<ProcessMediaRow[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
   const { token } = useAuth();
+  const { coreGraphByProjectId } = useProject();
+  const coreGraph = projectId ? coreGraphByProjectId[projectId] : undefined;
 
   useEffect(() => {
     if (!open || !projectId || !workProcessName) {
@@ -99,25 +111,103 @@ export function TaskDetailDialog({
     };
   }, [open, projectId, workProcessName, token]);
 
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setMediaLoading(true);
+    fetch("/Database/图片 url.json")
+      .then((res) => {
+        if (!res.ok) throw new Error("无法加载图片库");
+        return res.json() as Promise<ProcessMediaRow[]>;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setMediaRows(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setMediaRows([]);
+      })
+      .finally(() => {
+        if (!cancelled) setMediaLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  const resolveResourceUrl = (path: string) => {
+    const trimmed = path.trim();
+    if (!trimmed) return "";
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      return trimmed;
+    }
+    if (trimmed.startsWith("/")) {
+      return trimmed;
+    }
+    return `/resources/${trimmed}`;
+  };
+
   const planeDrawings = useMemo(() => {
-    const raw = orderInfo?.["详细信息"];
-    if (!raw) return [];
-    return Array.isArray(raw) ? raw.filter(Boolean) : [raw];
-  }, [orderInfo]);
+    const taskName = task?.task ?? workProcessName ?? "";
+    const matched = mediaRows.find((row) => row.name === taskName);
+    const images = [
+      ...(matched?.structureImages ?? []),
+      ...(matched?.extraImages ?? []),
+    ];
+    return images
+      .filter(Boolean)
+      .map(resolveResourceUrl)
+      .filter(Boolean);
+  }, [mediaRows, task?.task, workProcessName]);
 
   const detailImages = useMemo(() => {
-    const raw = orderInfo?.["节点大样图"];
-    if (!raw) return [];
-    return Array.isArray(raw) ? raw.filter(Boolean) : [raw];
-  }, [orderInfo]);
+    const taskName = task?.task ?? workProcessName ?? "";
+    const matched = mediaRows.find((row) => row.name === taskName);
+    const images = [
+      ...(matched?.structureImages ?? []),
+      ...(matched?.extraImages ?? []),
+    ];
+    return images
+      .filter(Boolean)
+      .map(resolveResourceUrl)
+      .filter(Boolean);
+  }, [mediaRows, task?.task, workProcessName]);
 
-  const tutorialVideo = orderInfo?.["视频"] ?? "";
+  const tutorialVideo = useMemo(() => {
+    const taskName = task?.task ?? workProcessName ?? "";
+    const matched = mediaRows.find((row) => row.name === taskName);
+    return matched?.video ? resolveResourceUrl(matched.video) : "";
+  }, [mediaRows, task?.task, workProcessName]);
   const workDescription = orderInfo?.["工单内容"];
   const safetyNote = orderInfo?.["安全交底"];
   const technicalNote = orderInfo?.["技术验收标准"];
-  const highlightedComponentIds = orderInfo?.["构件"] || [];
+  const highlightedComponentIds = useMemo(() => {
+    if (!coreGraph?.work_processes?.length) return [] as string[];
+    const taskId = task?.id;
+    const taskName = task?.task ?? workProcessName ?? "";
+    const match =
+      coreGraph.work_processes.find((wp) => wp.id === taskId) ??
+      coreGraph.work_processes.find(
+        (wp) => (wp.name ?? wp.code ?? "") === taskName,
+      );
+    const expressIds = match?.express_ids ?? [];
+    return expressIds.map((id) => String(id));
+  }, [coreGraph, task?.id, task?.task, workProcessName]);
 
-  console.log("highlightedComponentIds:", highlightedComponentIds);
+  const highlightedTagIds = useMemo(() => {
+    if (!coreGraph?.work_processes?.length) return [] as string[];
+    const taskId = task?.id;
+    const taskName = task?.task ?? workProcessName ?? "";
+    const match =
+      coreGraph.work_processes.find((wp) => wp.id === taskId) ??
+      coreGraph.work_processes.find(
+        (wp) => (wp.name ?? wp.code ?? "") === taskName,
+      );
+    const tagIds = match?.tag ?? [];
+    return tagIds.map((id) => String(id));
+  }, [coreGraph, task?.id, task?.task, workProcessName]);
 
   // 加载验收数据
   const loadAcceptanceData = async (processNumber: string) => {
@@ -231,21 +321,17 @@ export function TaskDetailDialog({
                   src: "/models/0202.ifc",
                 },
               ]}
-              highlightGlobalIds={highlightedComponentIds.map((id) => String(id))}
+              highlightGlobalIds={highlightedComponentIds}
+              highlightTagIds={highlightedTagIds}
               className="h-full"
             />
           </TabsContent>
 
           <TabsContent value="drawings" className="mt-4 flex-1">
-            {isLoading ? (
+            {mediaLoading ? (
               <div className="h-full flex items-center justify-center text-muted-foreground">
                 <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                 加载图纸中...
-              </div>
-            ) : error ? (
-              <div className="h-full flex flex-col items-center justify-center text-destructive gap-2">
-                <ShieldAlert className="h-6 w-6" />
-                <p className="text-sm">获取图纸失败：{error.message}</p>
               </div>
             ) : planeDrawings.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-auto pr-2">
@@ -276,15 +362,10 @@ export function TaskDetailDialog({
           </TabsContent>
 
           <TabsContent value="details" className="mt-4 flex-1 overflow-auto">
-            {isLoading ? (
+            {mediaLoading ? (
               <div className="h-full flex items-center justify-center text-muted-foreground">
                 <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                 加载节点大样图中...
-              </div>
-            ) : error ? (
-              <div className="h-full flex flex-col items-center justify-center text-destructive gap-2">
-                <ShieldAlert className="h-6 w-6" />
-                <p className="text-sm">获取节点大样失败：{error.message}</p>
               </div>
             ) : detailImages.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pr-2">
