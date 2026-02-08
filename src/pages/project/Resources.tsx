@@ -21,9 +21,9 @@ import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
 import {
   getCrewData,
-  getBudgetData,
 } from "@/services/project-service";
-import type { CrewData, BudgetData } from "@/types/domain/project";
+import { getProjectCostCurve } from "@/services/schedulepro-service";
+import type { CrewData } from "@/types/domain/project";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 
@@ -43,19 +43,19 @@ export function Resources() {
     refetchOnWindowFocus: false,
   });
 
-  const budgetQuery = useQuery({
-    queryKey: ["funding-materials", "budget", currentProject?.id],
+  const costCurveQuery = useQuery({
+    queryKey: ["funding-materials", "cost-curve", currentProject?.id],
     queryFn: async () => {
       if (!currentProject?.id) {
         throw new Error("缺少项目 ID");
       }
-      return getBudgetData(currentProject.id, token || undefined);
+      return getProjectCostCurve(currentProject.id, token || undefined);
     },
     enabled: Boolean(currentProject?.id && token),
     refetchOnWindowFocus: false,
   });
 
-  const transformData = (data: CrewData[] | BudgetData[]) => {
+  const transformData = (data: CrewData[]) => {
     if (!data || data.length === 0) return [];
     
     // Assuming all series share the same date categories
@@ -71,7 +71,19 @@ export function Resources() {
   };
 
   const crewChartData = useMemo(() => transformData(crewQuery.data ?? []), [crewQuery.data]);
-  const budgetChartData = useMemo(() => transformData(budgetQuery.data ?? []), [budgetQuery.data]);
+  const costCurveChartData = useMemo(() => {
+    const points = costCurveQuery.data?.points ?? [];
+    if (points.length === 0) return [];
+    return points.map((point) => ({
+      date: point.date ?? `第${point.day_index}天`,
+      总成本: point.total_cost_with_material ?? point.total_cost,
+      人工成本: point.labor_cost ?? 0,
+      材料成本: point.material_cost ?? 0,
+      租赁成本: point.rental_cost ?? 0,
+      管理成本: point.manage_cost ?? 0,
+      机械成本: point.machine_cost ?? 0,
+    }));
+  }, [costCurveQuery.data]);
   
   const colors = ["#2563eb", "#16a34a", "#db2777", "#ea580c", "#8b5cf6", "#0891b2"];
 
@@ -155,17 +167,24 @@ export function Resources() {
           <CardDescription>监控人工成本、材料价格等关键指标</CardDescription>
         </CardHeader>
         <CardContent>
-          {budgetQuery.isLoading ? (
+          {costCurveQuery.isLoading ? (
             <Skeleton className="h-[320px] w-full" />
-          ) : budgetQuery.isError ? (
+          ) : costCurveQuery.isError ? (
             <div className="flex h-[320px] items-center justify-center text-sm text-destructive">
               <AlertCircle className="mr-2 h-4 w-4" />
               无法获取成本数据
             </div>
-          ) : budgetChartData.length > 0 ? (
+          ) : costCurveChartData.length > 0 ? (
             renderChart(
-              budgetChartData,
-              (budgetQuery.data ?? []).map((d) => d.name),
+              costCurveChartData,
+              [
+                "总成本",
+                "人工成本",
+                "材料成本",
+                "租赁成本",
+                "管理成本",
+                "机械成本",
+              ],
               "万元",
             )
           ) : (
