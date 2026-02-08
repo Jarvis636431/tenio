@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useState, useCallback, useEffect } from "react";
+import dagre from "dagre";
 import type { PlanTask } from "@/types/domain/plan";
 
 interface NetworkDiagramProps {
@@ -13,12 +14,20 @@ type Node = {
   end: string;
   level: number;
   task: PlanTask;
+  critical: boolean;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 };
 
 type Edge = {
   from: string;
   to: string;
+  points: Array<{ x: number; y: number }>;
 };
+
+type TaskStatus = "not_started" | "in_progress" | "completed";
 
 function parseDependencyIds(value: string): string[] {
   return value
@@ -27,7 +36,169 @@ function parseDependencyIds(value: string): string[] {
     .filter((id) => id.length > 0);
 }
 
+/* ── 节点尺寸常量（匹配 HTML 样式） ── */
+const MIN_NODE_W = 280;
+const NODE_H = 130;
+const DATE_BOX_W = 105;
+const DATE_BOX_H = 30;
+const DOT_R = 7;
+const CAPSULE_INSET_X = 14;
+const CAPSULE_H = 52;
+const CAPSULE_PAD_X = 50; // 胶囊内文字左右 padding
+const STATUS_COLORS: Record<TaskStatus, { capsule: string; dot: string }> = {
+  not_started: { capsule: "#d1d5db", dot: "#ffffff" },
+  in_progress: { capsule: "#fdeeb3", dot: "#fdeeb3" },
+  completed: { capsule: "#C8E5B3", dot: "#C8E5B3" },
+};
+
+/** 估算文字像素宽度（中文≈fontSize，其他≈fontSize*0.55） */
+function estimateTextWidth(text: string, fontSize: number): number {
+  let w = 0;
+  for (const ch of text) {
+    w += ch.charCodeAt(0) > 0x7f ? fontSize : fontSize * 0.55;
+  }
+  return w;
+}
+
+/** 根据标题文字长度计算节点宽度 */
+function calcNodeWidth(title: string): number {
+  const textW = estimateTextWidth(title, 16);
+  const capsuleW = textW + CAPSULE_PAD_X;
+  const nodeW = capsuleW + CAPSULE_INSET_X * 2;
+  return Math.max(MIN_NODE_W, Math.ceil(nodeW));
+}
+
+function toDate(value?: string): Date | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatDate(value: Date | null): string {
+  if (!value) return "-";
+  return value.toISOString().slice(0, 10);
+}
+
+function getTaskStatus(
+  start: string,
+  end: string,
+  current: Date | null,
+): TaskStatus {
+  const startDate = toDate(start);
+  const endDate = toDate(end);
+  if (!current || !startDate || !endDate) return "not_started";
+  const currentTime = current.getTime();
+  if (currentTime < startDate.getTime()) return "not_started";
+  if (currentTime > endDate.getTime()) return "completed";
+  return "in_progress";
+}
+
+/* ── 单个节点块 ── */
+function NodeBlock({
+  node,
+  onNodeClick,
+  status,
+}: {
+  node: Node;
+  onNodeClick?: (task: PlanTask) => void;
+  status: TaskStatus;
+}) {
+  const { x, y, w, h, critical, task, id, title, start, end } = node;
+  const durationText =
+    task.duration ||
+    (task.actualWorkDays ? `${task.actualWorkDays} (天)` : "");
+  const statusColor = STATUS_COLORS[status];
+
+  const capsuleY = y + h / 2 - CAPSULE_H / 2 + 4;
+  const capsuleW = w - CAPSULE_INSET_X * 2;
+
+  /* 日期框 — 跨在主框边线上（上半在外，下半在内） */
+  const dateInsetX = 15;
+  const dateOverlap = DATE_BOX_H / 2; // 一半在框外，一半在框内
+  const topDateY = y - dateOverlap;
+  const bottomDateY = y + h - dateOverlap;
+
+  return (
+    <g
+      onClick={() => onNodeClick?.(task)}
+      className={onNodeClick ? "cursor-pointer" : undefined}
+    >
+      {/* 主体方框 */}
+      <rect
+        x={x}
+        y={y}
+        width={w}
+        height={h}
+        fill="#ffffff"
+        stroke={critical ? "rgb(60, 140, 221)" : "#000000"}
+        strokeWidth="1.5"
+      />
+
+      {/* ── 四角日期框 ── */}
+      {/* 左上 ES */}
+      <rect x={x + dateInsetX} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
+      <text x={x + dateInsetX + DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{start || "-"}</text>
+
+      {/* 右上 EF */}
+      <rect x={x + w - dateInsetX - DATE_BOX_W} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
+      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{end || "-"}</text>
+
+      {/* 左下 LS */}
+      <rect x={x + dateInsetX} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
+      <text x={x + dateInsetX + DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{start || "-"}</text>
+
+      {/* 右下 LF */}
+      <rect x={x + w - dateInsetX - DATE_BOX_W} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
+      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{end || "-"}</text>
+
+      {/* ── 左右连接圆点 — 正好在节点边缘，与连线对齐 ── */}
+      <circle
+        cx={x}
+        cy={y + h / 2}
+        r={DOT_R}
+        fill={statusColor.dot}
+        stroke={critical ? "rgb(60, 140, 221)" : "#000000"}
+        strokeWidth="1.5"
+      />
+      <circle
+        cx={x + w}
+        cy={y + h / 2}
+        r={DOT_R}
+        fill={statusColor.dot}
+        stroke={critical ? "rgb(60, 140, 221)" : "#000000"}
+        strokeWidth="1.5"
+      />
+
+      {/* ── 中间内容 ── */}
+      <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill="#333333" textAnchor="middle">#{id}</text>
+
+      {/* 黄色胶囊 */}
+      <rect
+        x={x + CAPSULE_INSET_X}
+        y={capsuleY}
+        width={capsuleW}
+        height={CAPSULE_H}
+        rx="12"
+        fill={statusColor.capsule}
+      />
+      <text x={x + w / 2} y={capsuleY + CAPSULE_H / 2 + 6} fontSize="16" fill="#000000" fontWeight="bold" textAnchor="middle">{title}</text>
+
+      {/* ── 底部工期（主框内底部，两个日期框之间） ── */}
+      <text x={x + w / 2} y={y + h - 8} fontSize="14" fill="#666666" textAnchor="middle">{durationText}</text>
+    </g>
+  );
+}
+
 export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const isPanningRef = useRef(false);
+  const lastPointRef = useRef({ x: 0, y: 0 });
+  const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
+  const [initialized, setInitialized] = useState(false);
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [minScale, setMinScale] = useState(0.1);
+
   const { nodes, edges, width, height } = useMemo(() => {
     if (tasks.length === 0) {
       return { nodes: [] as Node[], edges: [] as Edge[], width: 0, height: 0 };
@@ -36,87 +207,160 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
     const taskMap = new Map<string, PlanTask>();
     tasks.forEach((task) => taskMap.set(task.id, task));
 
-    const edges: Edge[] = [];
-    const inDegree = new Map<string, number>();
-    const levelMap = new Map<string, number>();
-
-    tasks.forEach((task) => {
-      inDegree.set(task.id, 0);
-      levelMap.set(task.id, 0);
-    });
-
+    const rawEdges: Array<{ from: string; to: string }> = [];
     tasks.forEach((task) => {
       const deps = task.prerequisiteProcess
         ? parseDependencyIds(task.prerequisiteProcess)
         : [];
       deps.forEach((depId) => {
         if (!taskMap.has(depId)) return;
-        edges.push({ from: depId, to: task.id });
-        inDegree.set(task.id, (inDegree.get(task.id) ?? 0) + 1);
+        rawEdges.push({ from: depId, to: task.id });
       });
     });
 
-    const queue: string[] = [];
-    inDegree.forEach((deg, id) => {
-      if (deg === 0) queue.push(id);
-    });
+    const padding = 80;
 
-    while (queue.length > 0) {
-      const current = queue.shift()!;
-      const currentLevel = levelMap.get(current) ?? 0;
-      edges
-        .filter((edge) => edge.from === current)
-        .forEach((edge) => {
-          const nextLevel = Math.max(
-            levelMap.get(edge.to) ?? 0,
-            currentLevel + 1,
-          );
-          levelMap.set(edge.to, nextLevel);
-          inDegree.set(edge.to, (inDegree.get(edge.to) ?? 0) - 1);
-          if ((inDegree.get(edge.to) ?? 0) === 0) {
-            queue.push(edge.to);
-          }
-        });
-    }
-
-    const nodes: Node[] = tasks.map((task) => ({
+    const baseNodes: Node[] = tasks.map((task) => ({
       id: task.id,
       title: task.task,
       start: task.startTime,
       end: task.endTime,
-      level: levelMap.get(task.id) ?? 0,
+      level: 0,
       task,
+      critical: Boolean(task.criticalPath),
+      x: 0,
+      y: 0,
+      w: calcNodeWidth(task.task),
+      h: NODE_H,
     }));
 
-    const levelGroups = new Map<number, Node[]>();
-    nodes.forEach((node) => {
-      const list = levelGroups.get(node.level) ?? [];
-      list.push(node);
-      levelGroups.set(node.level, list);
+    const graph = new dagre.graphlib.Graph();
+    graph.setGraph({ rankdir: "LR", nodesep: 60, ranksep: 100 });
+    graph.setDefaultEdgeLabel(() => ({}));
+
+    baseNodes.forEach((node) => {
+      graph.setNode(node.id, { width: node.w + 40, height: node.h + 40 });
+    });
+    rawEdges.forEach((edge) => {
+      graph.setEdge(edge.from, edge.to);
     });
 
-    const levelGap = 260;
-    const rowGap = 120;
-    const nodeWidth = 220;
-    const nodeHeight = 70;
-    const padding = 40;
-    const maxLevel = Math.max(...nodes.map((n) => n.level));
-    const maxRows =
-      Math.max(...Array.from(levelGroups.values()).map((list) => list.length)) ||
-      1;
+    dagre.layout(graph);
 
-    const width = padding * 2 + (maxLevel + 1) * levelGap;
-    const height = padding * 2 + maxRows * rowGap;
+    const graphMeta = graph.graph();
+    const layoutWidth = (graphMeta.width ?? 0) + padding * 2;
+    const layoutHeight = (graphMeta.height ?? 0) + padding * 2;
 
-    const positioned = nodes.map((node) => {
-      const index = levelGroups.get(node.level)?.indexOf(node) ?? 0;
-      const x = padding + node.level * levelGap;
-      const y = padding + index * rowGap;
-      return { ...node, x, y, w: nodeWidth, h: nodeHeight };
+    const positioned = baseNodes.map((node) => {
+      const pos = graph.node(node.id);
+      return {
+        ...node,
+        x: (pos?.x ?? 0) - node.w / 2 + padding,
+        y: (pos?.y ?? 0) - node.h / 2 + padding,
+      };
     });
 
-    return { nodes: positioned, edges, width, height };
+    const edges: Edge[] = rawEdges.map((edge) => {
+      const info = graph.edge(edge.from, edge.to);
+      const points = (
+        info?.points ?? []
+      ).map((point: { x: number; y: number }) => ({
+        x: point.x + padding,
+        y: point.y + padding,
+      }));
+      return { ...edge, points };
+    });
+
+    return { nodes: positioned, edges, width: layoutWidth, height: layoutHeight };
   }, [tasks]);
+
+  const { minDate, maxDate } = useMemo(() => {
+    const startDates = nodes.map((n) => toDate(n.start)).filter(Boolean) as Date[];
+    const endDates = nodes.map((n) => toDate(n.end)).filter(Boolean) as Date[];
+    if (!startDates.length || !endDates.length) {
+      return { minDate: null, maxDate: null };
+    }
+    const minTime = Math.min(...startDates.map((d) => d.getTime()));
+    const maxTime = Math.max(...endDates.map((d) => d.getTime()));
+    return { minDate: new Date(minTime), maxDate: new Date(maxTime) };
+  }, [nodes]);
+
+  const totalDays = useMemo(() => {
+    if (!minDate || !maxDate) return 0;
+    const diff = maxDate.getTime() - minDate.getTime();
+    return Math.max(0, Math.round(diff / (24 * 60 * 60 * 1000)));
+  }, [minDate, maxDate]);
+
+  const currentTime = useMemo(() => {
+    if (!minDate) return null;
+    const dayMs = 24 * 60 * 60 * 1000;
+    return new Date(minDate.getTime() + currentDayIndex * dayMs);
+  }, [minDate, currentDayIndex]);
+
+  /* ── 初始自适应居中 ── */
+  useEffect(() => {
+    if (!svgRef.current || width === 0) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const scaleX = rect.width / width;
+    const scaleY = rect.height / height;
+    const fitScale = Math.min(scaleX, scaleY) * 0.9;
+    setMinScale(fitScale);
+    if (initialized) return;
+    const offsetX = (rect.width - width * fitScale) / 2;
+    const offsetY = (rect.height - height * fitScale) / 2;
+    setView({ x: offsetX, y: offsetY, scale: fitScale });
+    setInitialized(true);
+  }, [width, height, initialized]);
+
+  const handleWheel = useCallback(
+    (event: React.WheelEvent<SVGSVGElement>) => {
+      event.preventDefault();
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+      const scaleBy = event.deltaY < 0 ? 1.1 : 0.9;
+      const nextScale = Math.min(3, Math.max(minScale, view.scale * scaleBy));
+      const ratio = nextScale / view.scale;
+      setView({
+        x: mouseX - (mouseX - view.x) * ratio,
+        y: mouseY - (mouseY - view.y) * ratio,
+        scale: nextScale,
+      });
+    },
+    [view, minScale],
+  );
+
+  const handlePointerDown: React.PointerEventHandler<SVGSVGElement> = (e) => {
+    isPanningRef.current = true;
+    lastPointRef.current = { x: e.clientX, y: e.clientY };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove: React.PointerEventHandler<SVGSVGElement> = (e) => {
+    if (!isPanningRef.current) return;
+    const dx = e.clientX - lastPointRef.current.x;
+    const dy = e.clientY - lastPointRef.current.y;
+    lastPointRef.current = { x: e.clientX, y: e.clientY };
+    setView((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+  };
+
+  const handlePointerUp: React.PointerEventHandler<SVGSVGElement> = (e) => {
+    isPanningRef.current = false;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
+  const handleDoubleClick: React.MouseEventHandler<SVGSVGElement> = () => {
+    if (!svgRef.current || width === 0) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const scaleX = rect.width / width;
+    const scaleY = rect.height / height;
+    const fitScale = Math.min(scaleX, scaleY) * 0.9;
+    const offsetX = (rect.width - width * fitScale) / 2;
+    const offsetY = (rect.height - height * fitScale) / 2;
+    setView({ x: offsetX, y: offsetY, scale: fitScale });
+    setMinScale(fitScale);
+  };
 
   if (tasks.length === 0) {
     return (
@@ -127,73 +371,115 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
   }
 
   return (
-    <div className="h-full w-full overflow-auto rounded-xl border border-gray-100 bg-white">
-      <div className="min-h-full min-w-full p-6">
-        <svg width={width} height={height}>
-          <defs>
-            <marker
-              id="arrow"
-              markerWidth="8"
-              markerHeight="8"
-              refX="7"
-              refY="4"
-              orient="auto"
-            >
-              <path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8" />
-            </marker>
-          </defs>
+    <div
+      ref={containerRef}
+      className="h-full w-full overflow-hidden overscroll-none rounded-xl border border-gray-200 bg-white"
+      onWheel={(e) => e.preventDefault()}
+    >
+      {minDate && maxDate && (
+        <div className="px-6 pt-4">
+          <div className="flex items-center justify-between text-sm text-slate-500">
+            <span>{formatDate(minDate)}</span>
+            <span>{formatDate(maxDate)}</span>
+          </div>
+          <div className="relative mt-2">
+            <input
+              type="range"
+              min={0}
+              max={totalDays}
+              step={1}
+              value={currentDayIndex}
+              onChange={(event) =>
+                setCurrentDayIndex(Number(event.target.value))
+              }
+              className="w-full accent-blue-500"
+            />
+            <div className="mt-1 text-center text-sm text-slate-600">
+              当前时间：{formatDate(currentTime)}
+            </div>
+          </div>
+        </div>
+      )}
+      <svg
+        ref={svgRef}
+        width="100%"
+        height="100%"
+        onWheel={handleWheel}
+        onDoubleClick={handleDoubleClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        style={{ cursor: "grab", touchAction: "none", display: "block" }}
+      >
+        <defs>
+          <marker
+            id="arrow"
+            markerWidth="8"
+            markerHeight="8"
+            refX="7"
+            refY="4"
+            orient="auto"
+          >
+            <path d="M0,0 L8,4 L0,8 Z" fill="#000000" />
+          </marker>
+          <marker
+            id="arrow-critical"
+            markerWidth="8"
+            markerHeight="8"
+            refX="7"
+            refY="4"
+            orient="auto"
+          >
+            <path d="M0,0 L8,4 L0,8 Z" fill="rgb(60, 140, 221)" />
+          </marker>
+        </defs>
+
+        <g transform={`translate(${view.x} ${view.y}) scale(${view.scale})`}>
+          {/* ── 连线 ── */}
           {edges.map((edge, index) => {
-            const from = nodes.find((node) => node.id === edge.from);
-            const to = nodes.find((node) => node.id === edge.to);
+            const from = nodes.find((n) => n.id === edge.from);
+            const to = nodes.find((n) => n.id === edge.to);
             if (!from || !to) return null;
-            const x1 = from.x + from.w;
-            const y1 = from.y + from.h / 2;
-            const x2 = to.x;
-            const y2 = to.y + to.h / 2;
-            const midX = (x1 + x2) / 2;
+            const isCritical = from.critical && to.critical;
+            const points = edge.points;
+            const d =
+              points.length > 1
+                ? `M ${points[0].x} ${points[0].y} ${points
+                    .slice(1)
+                    .map((p) => `L ${p.x} ${p.y}`)
+                    .join(" ")}`
+                : (() => {
+                    const x1 = from.x + from.w;
+                    const y1 = from.y + from.h / 2;
+                    const x2 = to.x;
+                    const y2 = to.y + to.h / 2;
+                    const mx = (x1 + x2) / 2;
+                    return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+                  })();
             return (
               <path
                 key={`${edge.from}-${edge.to}-${index}`}
-                d={`M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`}
-                stroke="#94a3b8"
-                strokeWidth="1.2"
+                d={d}
+                stroke={isCritical ? "rgb(60, 140, 221)" : "#000000"}
+                strokeWidth={isCritical ? "3" : "1.5"}
                 fill="none"
-                markerEnd="url(#arrow)"
+                markerEnd={isCritical ? "url(#arrow-critical)" : "url(#arrow)"}
               />
             );
           })}
 
+          {/* ── 节点 ── */}
           {nodes.map((node) => (
-            <g
+            <NodeBlock
               key={node.id}
-              onClick={() => onNodeClick?.(node.task)}
-              className={onNodeClick ? "cursor-pointer" : undefined}
-            >
-              <rect
-                x={node.x}
-                y={node.y}
-                width={node.w}
-                height={node.h}
-                rx="10"
-                fill="#ffffff"
-                stroke="#e2e8f0"
-              />
-              <text
-                x={node.x + 12}
-                y={node.y + 26}
-                fontSize="13"
-                fill="#0f172a"
-                fontWeight="600"
-              >
-                {node.title}
-              </text>
-              <text x={node.x + 12} y={node.y + 48} fontSize="11" fill="#64748b">
-                {node.start} → {node.end}
-              </text>
-            </g>
+              node={node}
+              onNodeClick={onNodeClick}
+              status={getTaskStatus(node.start, node.end, currentTime)}
+            />
           ))}
-        </svg>
-      </div>
+        </g>
+      </svg>
     </div>
   );
 }
