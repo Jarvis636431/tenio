@@ -75,13 +75,8 @@ export function Resources() {
     const points = costCurveQuery.data?.points ?? [];
     if (points.length === 0) return [];
     return points.map((point) => ({
-      date: point.date ?? `第${point.day_index}天`,
-      总成本: point.total_cost_with_material ?? point.total_cost,
-      人工成本: point.labor_cost ?? 0,
-      材料成本: point.material_cost ?? 0,
-      租赁成本: point.rental_cost ?? 0,
-      管理成本: point.manage_cost ?? 0,
-      机械成本: point.machine_cost ?? 0,
+      date: point.date,
+      总成本: point.total_cost,
     }));
   }, [costCurveQuery.data]);
   
@@ -177,14 +172,7 @@ export function Resources() {
           ) : costCurveChartData.length > 0 ? (
             renderChart(
               costCurveChartData,
-              [
-                "总成本",
-                "人工成本",
-                "材料成本",
-                "租赁成本",
-                "管理成本",
-                "机械成本",
-              ],
+              ["总成本"],
               "万元",
             )
           ) : (
