@@ -27,6 +27,17 @@ export function PreviewStep() {
     projectId,
   } = useOutletContext<CreateProjectContextType>();
   const { getIdsByDate, tagMap } = useProjectHighlight(projectId);
+  const fixedHighlightIds = useMemo(
+    () => [
+      "2j0dIGQjb7IBS38pr73$QB",
+      "2j0dIGQjb7IBS38pr73yHp",
+      "2j0dIGQjb7IBS38pr73yUZ",
+      "2j0dIGQjb7IBS38pr73yUc",
+      "2j0dIGQjb7IBS38pr73yUd",
+      "2j0dIGQjb7IBS38pr732e1",
+    ],
+    [],
+  );
 
   const onBack = () => {
     navigate("/create/selection");
@@ -241,6 +252,12 @@ export function PreviewStep() {
                     color: "#f59e0b",
                     opacity: 1,
                     customID: "inProgress",
+                  },
+                  {
+                    ids: fixedHighlightIds,
+                    color: "#000000",
+                    opacity: 0.05,
+                    customID: "fixed",
                   },
                 ]}
                 className="h-full"
