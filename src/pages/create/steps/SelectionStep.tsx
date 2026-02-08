@@ -109,7 +109,7 @@ export function SelectionStep() {
               stroke="#eee"
             />
             <XAxis dataKey="day" type="number" domain={["dataMin", "dataMax"]} hide />
-            <YAxis hide domain={[5100, "dataMax + 50"]} />
+            <YAxis hide domain={[6030, "dataMax + 50"]} />
             <Tooltip
               contentStyle={{
                 borderRadius: "8px",
