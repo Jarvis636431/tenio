@@ -12,6 +12,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useProject } from "@/hooks/useProject";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { getProjectCoreGraph } from "@/services/schedulepro-service";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function PreviewStep() {
   const navigate = useNavigate();
@@ -128,6 +138,24 @@ export function PreviewStep() {
 
   const startDate = solutionData?.start_date ?? "";
   const finishDate = solutionData?.finish_date ?? "";
+
+  const costCurveChartData = useMemo(() => {
+    const points = solutionData?.cost_curve ?? [];
+    if (points.length === 0) return [];
+    return points.map((point) => ({
+      date: point.date,
+      总成本: point.total_cost,
+    }));
+  }, [solutionData?.cost_curve]);
+
+  const headcountChartData = useMemo(() => {
+    const points = solutionData?.headcount_curve ?? [];
+    if (points.length === 0) return [];
+    return points.map((point) => ({
+      date: point.date,
+      劳动力人数: point.headcount,
+    }));
+  }, [solutionData?.headcount_curve]);
 
   const {
     selectedDateKey,
@@ -275,6 +303,59 @@ export function PreviewStep() {
               position={{ bottom: 0, right: 0 }}
               height="300px"
             />
+          </div>
+
+          {/* 曲线图区域 */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-[220px]">
+            <Tabs defaultValue="cost" className="h-full">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm font-semibold text-gray-900">
+                  资源曲线
+                </div>
+                <TabsList className="grid grid-cols-2 h-8">
+                  <TabsTrigger value="cost" className="text-xs">
+                    资金成本
+                  </TabsTrigger>
+                  <TabsTrigger value="headcount" className="text-xs">
+                    人员投入
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="cost" className="h-[160px]">
+                {costCurveChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={costCurveChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="总成本" stroke="#2563eb" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-gray-400">
+                    暂无成本曲线
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="headcount" className="h-[160px]">
+                {headcountChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={headcountChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="劳动力人数" stroke="#16a34a" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-gray-400">
+                    暂无人员曲线
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* 时间轴区域 - 独立区域 */}

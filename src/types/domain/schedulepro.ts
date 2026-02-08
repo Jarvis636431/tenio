@@ -58,6 +58,7 @@ export interface SelectSolutionResponse {
   holidays: HolidayInfo[];
   daily_schedule: Record<string, string[]>;
   cost_curve: CostCurvePoint[];
+  headcount_curve: HeadcountCurvePoint[];
 }
 
 export interface CoreGraphWorkProcess {
