@@ -256,6 +256,26 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
             : null;
         if (!obj) return null;
 
+        const extractInterrupt = () => {
+          const interrupts = obj.__interrupt__;
+          if (!Array.isArray(interrupts) || interrupts.length === 0) return null;
+          const last = interrupts[interrupts.length - 1];
+          if (typeof last === "string") {
+            const match = last.match(/Interrupt\\(value='([\\s\\S]*?)', id='.*?'\\)/);
+            if (match?.[1]) {
+              return match[1].replace(/\\\\n/g, "\n");
+            }
+            return last.replace(/\\\\n/g, "\n");
+          }
+          if (typeof last === "object" && last !== null) {
+            const value = (last as { value?: string }).value;
+            if (value) {
+              return value.replace(/\\\\n/g, "\n");
+            }
+          }
+          return null;
+        };
+
         const extractFromRoute = (routeKey: string) => {
           const routeObj = obj[routeKey] as
             | { messages?: Array<{ content?: string; type?: string }> }
@@ -273,6 +293,9 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
           extractFromRoute("knowledge_query") ??
           extractFromRoute("project_info_query");
         if (routed) return routed;
+
+        const interrupt = extractInterrupt();
+        if (interrupt) return interrupt;
 
         return null;
       };
