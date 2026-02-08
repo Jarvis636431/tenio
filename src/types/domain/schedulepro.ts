@@ -150,6 +150,18 @@ export interface CostCurveResponse {
   generated_at: string;
 }
 
+export interface TaskStatusResponse {
+  task_id: string;
+  algorithm_type: string;
+  status: "pending" | "running" | "completed" | "failed" | string;
+  created_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+  progress?: number | null;
+  error?: string | null;
+  current_result_id?: string | null;
+}
+
 export interface TeamAssignmentItem {
   team_id: string;
   team_name: string;

@@ -17,7 +17,6 @@ export function PreviewStep() {
   const navigate = useNavigate();
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const [indicatorPercent, setIndicatorPercent] = useState(0);
-  const chatPanel = useChatPanel();
   const { token } = useAuth();
   const { toast } = useToast();
   const { setCoreGraph } = useProject();
@@ -26,6 +25,7 @@ export function PreviewStep() {
     solutionData,
     projectId,
   } = useOutletContext<CreateProjectContextType>();
+  const chatPanel = useChatPanel({ projectId });
   const { getIdsByDate, tagMap } = useProjectHighlight(projectId);
   const fixedHighlightIds = useMemo(
     () => [

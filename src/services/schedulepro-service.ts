@@ -15,6 +15,7 @@ import type {
   CompressionStartPayload,
   CompressionStartResponse,
   CompressionStatusResponse,
+  TaskStatusResponse,
 } from "@/types/domain/schedulepro";
 
 const BASE_URL = API_BASE.projectService;
@@ -140,6 +141,15 @@ export async function getCompressionStatus(
   );
 }
 
+export async function getTaskStatus(
+  taskId: string,
+  token?: string,
+): Promise<TaskStatusResponse> {
+  return requestJson<TaskStatusResponse>(`${BASE_URL}/api/tasks/${taskId}/status`, {
+    token,
+  });
+}
+
 type CompressionPollOptions = {
   intervalMs?: number;
   timeoutMs?: number;
@@ -190,6 +200,46 @@ export async function pollCompressionStatus(
     }
 
     const status = await getCompressionStatus(projectId, runId, token);
+    onUpdate?.(status);
+
+    if (status.status === "completed" || status.status === "failed") {
+      return status;
+    }
+
+    if (timeoutMs > 0 && Date.now() - startedAt > timeoutMs) {
+      throw new Error("Polling timeout");
+    }
+
+    await sleepWithAbort(intervalMs, signal);
+  }
+}
+
+type TaskPollOptions = {
+  intervalMs?: number;
+  timeoutMs?: number;
+  signal?: AbortSignal;
+  onUpdate?: (status: TaskStatusResponse) => void;
+};
+
+export async function pollTaskStatus(
+  taskId: string,
+  token?: string,
+  options: TaskPollOptions = {},
+): Promise<TaskStatusResponse> {
+  const {
+    intervalMs = 2000,
+    timeoutMs = 5 * 60 * 1000,
+    signal,
+    onUpdate,
+  } = options;
+  const startedAt = Date.now();
+
+  while (true) {
+    if (signal?.aborted) {
+      throw new Error("Polling aborted");
+    }
+
+    const status = await getTaskStatus(taskId, token);
     onUpdate?.(status);
 
     if (status.status === "completed" || status.status === "failed") {

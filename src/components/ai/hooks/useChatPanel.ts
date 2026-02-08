@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { AI_SSE_URL, VOLC_SPEECH } from "@/config";
+import { useAuth } from "@/hooks/useAuth";
+import { useProject } from "@/hooks/useProject";
+import { useParams } from "react-router-dom";
+import {
+  getProjectCoreGraph,
+  pollTaskStatus,
+} from "@/services/schedulepro-service";
 
 export interface ChatMessage {
   id: string;
@@ -68,7 +75,14 @@ function logSilentError(message: string, error?: unknown) {
   console.warn(`[AI语音] ${message}`);
 }
 
-export function useChatPanel() {
+type ChatPanelOptions = {
+  projectId?: string;
+};
+
+export function useChatPanel(options: ChatPanelOptions = {}) {
+  const { id: routeProjectId } = useParams();
+  const { token } = useAuth();
+  const { currentProject, setCoreGraph } = useProject();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -85,6 +99,7 @@ export function useChatPanel() {
   const [isRecognizing, setIsRecognizing] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const pollAbortRef = useRef<AbortController | null>(null);
   const threadIdRef = useRef<string | null>(null);
   const lastContentRef = useRef<string>("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -111,6 +126,9 @@ export function useChatPanel() {
       if (abortRef.current) {
         abortRef.current.abort();
       }
+      if (pollAbortRef.current) {
+        pollAbortRef.current.abort();
+      }
       if (mediaRecorderRef.current?.state === "recording") {
         mediaRecorderRef.current.stop();
       }
@@ -132,6 +150,12 @@ export function useChatPanel() {
         timestamp: new Date(),
       },
     ]);
+  };
+
+  const refreshCoreGraph = async (projectId: string) => {
+    if (!token) return;
+    const response = await getProjectCoreGraph(projectId, token);
+    setCoreGraph(projectId, response);
   };
 
   const sendMessage = async (messageText: string) => {
@@ -161,6 +185,27 @@ export function useChatPanel() {
       abortRef.current.abort();
     }
     abortRef.current = new AbortController();
+    if (pollAbortRef.current) {
+      pollAbortRef.current.abort();
+    }
+    pollAbortRef.current = new AbortController();
+
+    const projectId =
+      options.projectId || routeProjectId || currentProject?.id || "";
+    if (projectId && token) {
+      pollTaskStatus(projectId, token, {
+        signal: pollAbortRef.current.signal,
+      })
+        .then((status) => {
+          if (status.status === "completed") {
+            return refreshCoreGraph(projectId);
+          }
+          return undefined;
+        })
+        .catch(() => {
+          // ignore polling errors
+        });
+    }
 
     const aiMessageId = createMessageId();
     lastContentRef.current = "";
