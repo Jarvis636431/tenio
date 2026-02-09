@@ -228,17 +228,21 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
   const [initialized, setInitialized] = useState(false);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [minScale, setMinScale] = useState(0.1);
+  const visibleTasks = useMemo(
+    () => tasks.filter((task) => task.startTime && task.endTime),
+    [tasks],
+  );
 
   const { nodes, edges, width, height } = useMemo(() => {
-    if (tasks.length === 0) {
+    if (visibleTasks.length === 0) {
       return { nodes: [] as Node[], edges: [] as Edge[], width: 0, height: 0 };
     }
 
     const taskMap = new Map<string, PlanTask>();
-    tasks.forEach((task) => taskMap.set(task.id, task));
+    visibleTasks.forEach((task) => taskMap.set(task.id, task));
 
     const rawEdges: Array<{ from: string; to: string }> = [];
-    tasks.forEach((task) => {
+    visibleTasks.forEach((task) => {
       const deps = task.prerequisiteProcess
         ? parseDependencyIds(task.prerequisiteProcess)
         : [];
@@ -250,7 +254,7 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
 
     const padding = 80;
 
-    const baseNodes: Node[] = tasks.map((task) => ({
+    const baseNodes: Node[] = visibleTasks.map((task) => ({
       id: task.id,
       displayId: task.seqNo ? String(task.seqNo) : task.id,
       title: task.task,
