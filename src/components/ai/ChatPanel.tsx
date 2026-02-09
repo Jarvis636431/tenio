@@ -214,29 +214,35 @@ export function ChatPanel({
         <CardContent className="px-0 flex-1 overflow-hidden min-h-0">
           <div className="h-full px-4 overflow-y-auto" ref={scrollAreaRef}>
             <div className="space-y-4 py-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn("flex", {
-                    "justify-end": message.sender === "user",
-                    "justify-start": message.sender !== "user",
-                  })}
-                >
+              {messages.map((message) => {
+                const isEmpty =
+                  message.sender === "ai" &&
+                  (!message.content || message.content.trim().length === 0);
+                if (isEmpty) return null;
+                return (
                   <div
-                    className={cn(
-                      "max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-line",
-                      {
-                        "bg-primary text-primary-foreground":
-                          message.sender === "user",
-                        "bg-muted text-muted-foreground":
-                          message.sender === "ai",
-                      },
-                    )}
+                    key={message.id}
+                    className={cn("flex", {
+                      "justify-end": message.sender === "user",
+                      "justify-start": message.sender !== "user",
+                    })}
                   >
-                    {renderMessageContent(message)}
+                    <div
+                      className={cn(
+                        "max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-line",
+                        {
+                          "bg-primary text-primary-foreground":
+                            message.sender === "user",
+                          "bg-muted text-muted-foreground":
+                            message.sender === "ai",
+                        },
+                      )}
+                    >
+                      {renderMessageContent(message)}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {isThinking && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Loader2 className="h-3 w-3 animate-spin" />
