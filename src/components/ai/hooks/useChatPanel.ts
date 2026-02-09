@@ -290,8 +290,31 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
           return buildVerifyMessage(obj.data);
         }
 
-        if (obj.type === "interrupt" && typeof obj.message === "string") {
-          return obj.message;
+        if (obj.type === "update") {
+          if (typeof obj.message === "string") return obj.message;
+          if (typeof obj.data === "string") return obj.data;
+          if (obj.data && typeof obj.data === "object") {
+            const dataObj = obj.data as Record<string, unknown>;
+            const routeObj =
+              (dataObj.project_info_query as
+                | { messages?: Array<{ content?: string; type?: string }> }
+                | undefined) ??
+              (dataObj.knowledge_query as
+                | { messages?: Array<{ content?: string; type?: string }> }
+                | undefined);
+            const messages = routeObj?.messages ?? [];
+            for (let i = messages.length - 1; i >= 0; i -= 1) {
+              const msg = messages[i];
+              if (msg?.type === "tool" || msg?.type === "system") continue;
+              if (msg?.content) return msg.content;
+            }
+          }
+          return null;
+        }
+
+        if (obj.type === "interrupt") {
+          if (typeof obj.message === "string") return obj.message;
+          if (typeof obj.data === "string") return obj.data;
         }
 
         const extractInterrupt = () => {
