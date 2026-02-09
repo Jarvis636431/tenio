@@ -171,7 +171,9 @@ function NodeBlock({
       />
 
       {/* ── 中间内容 ── */}
-      <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill="#333333" textAnchor="middle">#{displayId}</text>
+      {!title.toLowerCase().startsWith("lag") && (
+        <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill="#333333" textAnchor="middle">#{displayId}</text>
+      )}
 
       {/* 黄色胶囊 */}
       <rect
