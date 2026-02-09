@@ -80,6 +80,18 @@ function formatDate(value: Date | null): string {
   return value.toISOString().slice(0, 10);
 }
 
+function formatDateString(value: string): string {
+  if (!value) return "-";
+  // Prefer raw date part to avoid timezone display or shifts.
+  if (value.length >= 10) {
+    const datePart = value.slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+      return datePart;
+    }
+  }
+  return formatDate(toDate(value));
+}
+
 function getTaskStatus(
   start: string,
   end: string,
@@ -138,19 +150,19 @@ function NodeBlock({
       {/* ── 四角日期框 ── */}
       {/* 左上 ES */}
       <rect x={x + dateInsetX} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
-      <text x={x + dateInsetX + DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{start || "-"}</text>
+      <text x={x + dateInsetX + DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(start)}</text>
 
       {/* 右上 EF */}
       <rect x={x + w - dateInsetX - DATE_BOX_W} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
-      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{end || "-"}</text>
+      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(end)}</text>
 
       {/* 左下 LS */}
       <rect x={x + dateInsetX} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
-      <text x={x + dateInsetX + DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{start || "-"}</text>
+      <text x={x + dateInsetX + DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(start)}</text>
 
       {/* 右下 LF */}
       <rect x={x + w - dateInsetX - DATE_BOX_W} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
-      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{end || "-"}</text>
+      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(end)}</text>
 
       {/* ── 左右连接圆点 — 正好在节点边缘，与连线对齐 ── */}
       <circle
