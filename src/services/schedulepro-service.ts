@@ -17,6 +17,8 @@ import type {
   CompressionStatusResponse,
   HeadcountCurveResponse,
   TaskStatusResponse,
+  CreateWorkProcessPayload,
+  CreateWorkProcessResponse,
 } from "@/types/domain/schedulepro";
 
 const BASE_URL = API_BASE.projectService;
@@ -110,6 +112,23 @@ export async function getProjectHeadcountCurve(
   return requestJson<HeadcountCurveResponse>(
     `${BASE_URL}/api/projects/${projectId}/headcount-curve`,
     { token },
+  );
+}
+
+export async function createWorkProcess(
+  projectId: string,
+  payload: CreateWorkProcessPayload,
+  token?: string,
+): Promise<CreateWorkProcessResponse> {
+  return requestJson<CreateWorkProcessResponse>(
+    `${BASE_URL}/api/projects/${projectId}/work-processes`,
+    {
+      token,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
   );
 }
 

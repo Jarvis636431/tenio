@@ -163,6 +163,23 @@ export interface HeadcountCurveResponse {
   generated_at: string;
 }
 
+export interface CreateWorkProcessPayload {
+  name: string;
+  duration_days: number;
+  trade_id?: number;
+  predecessor_ids?: string[];
+  successor_ids?: string[];
+}
+
+export interface CreateWorkProcessResponse {
+  work_process_id: string;
+  project_id: string;
+  name: string;
+  duration_days: number;
+  trade_id?: number | null;
+  message: string;
+}
+
 export interface TaskStatusResponse {
   task_id: string;
   algorithm_type: string;
