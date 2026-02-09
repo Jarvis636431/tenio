@@ -106,6 +106,19 @@ function getTaskStatus(
   return "in_progress";
 }
 
+function formatDurationDays(value?: string | number): string {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value.toFixed(1);
+  }
+  if (typeof value === "string") {
+    const numeric = Number(value.replace(/[^\d.-]/g, ""));
+    if (Number.isFinite(numeric)) {
+      return numeric.toFixed(1);
+    }
+  }
+  return "";
+}
+
 /* ── 单个节点块 ── */
 function NodeBlock({
   node,
@@ -117,9 +130,11 @@ function NodeBlock({
   status: TaskStatus;
 }) {
   const { x, y, w, h, critical, task, displayId, title, start, end } = node;
-  const durationText =
-    task.duration ||
-    (task.actualWorkDays ? `${task.actualWorkDays} (天)` : "");
+  const durationValue =
+    task.duration !== ""
+      ? formatDurationDays(task.duration)
+      : formatDurationDays(task.actualWorkDays);
+  const durationText = durationValue ? `${durationValue}天` : "";
   const statusColor = STATUS_COLORS[status];
 
   const capsuleY = y + h / 2 - CAPSULE_H / 2 + 4;
