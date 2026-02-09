@@ -19,6 +19,7 @@ export interface ChatMessage {
 }
 
 export const CHAT_PANEL_OPEN_EVENT = "chat-panel:open";
+const UNEXPECTED_EVENT_PREFIX = "__unexpected_event__:";
 
 export function openChatPanel() {
   window.dispatchEvent(new CustomEvent(CHAT_PANEL_OPEN_EVENT));
@@ -158,6 +159,9 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     }
     const payload = data as Record<string, unknown>;
     const verifyType = (payload.verify_type as string) ?? "unknown";
+    if (verifyType === "unexpected_event") {
+      return `${UNEXPECTED_EVENT_PREFIX}${JSON.stringify(payload)}`;
+    }
     const lines: string[] = [];
     if (verifyType === "adjust_project") {
       lines.push("类型：项目工期调整验证");
