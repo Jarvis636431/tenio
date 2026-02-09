@@ -36,4 +36,5 @@ export interface PlanTask {
   specialty?: string;
   component?: string;
   criticalPath?: boolean;
+  seqNo?: number;
 }

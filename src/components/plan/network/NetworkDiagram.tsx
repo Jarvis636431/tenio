@@ -9,6 +9,7 @@ interface NetworkDiagramProps {
 
 type Node = {
   id: string;
+  displayId: string;
   title: string;
   start: string;
   end: string;
@@ -103,7 +104,7 @@ function NodeBlock({
   onNodeClick?: (task: PlanTask) => void;
   status: TaskStatus;
 }) {
-  const { x, y, w, h, critical, task, id, title, start, end } = node;
+  const { x, y, w, h, critical, task, displayId, title, start, end } = node;
   const durationText =
     task.duration ||
     (task.actualWorkDays ? `${task.actualWorkDays} (天)` : "");
@@ -170,7 +171,7 @@ function NodeBlock({
       />
 
       {/* ── 中间内容 ── */}
-      <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill="#333333" textAnchor="middle">#{id}</text>
+      <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill="#333333" textAnchor="middle">#{displayId}</text>
 
       {/* 黄色胶囊 */}
       <rect
@@ -222,6 +223,7 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
 
     const baseNodes: Node[] = tasks.map((task) => ({
       id: task.id,
+      displayId: task.seqNo ? String(task.seqNo) : task.id,
       title: task.task,
       start: task.startTime,
       end: task.endTime,

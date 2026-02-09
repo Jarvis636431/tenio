@@ -57,6 +57,7 @@ export function PlanPage() {
       const deps = depsByTarget.get(wp.id) ?? [];
       return {
         id: wp.id,
+        seqNo: wp.seq_no,
         task: wp.name || wp.code || "未命名工序",
         workerCount: wp.team_size ?? wp.suggested_team_count ?? 0,
         jobType: wp.trade?.name ?? "",

@@ -64,6 +64,7 @@ export interface SelectSolutionResponse {
 export interface CoreGraphWorkProcess {
   id: string;
   project_id: string;
+  seq_no?: number;
   code?: string;
   name?: string;
   is_dummy?: boolean;
