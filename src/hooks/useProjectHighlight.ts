@@ -79,84 +79,14 @@ export function useProjectHighlight(projectId?: string) {
     );
   }, [processHighlights, resolveHighlightIds]);
 
-  if (processHighlights.length === 0 && coreGraph?.work_processes?.length) {
-    console.debug("[highlight] no processHighlights mapped", {
-      workProcessCount: coreGraph.work_processes.length,
-    });
-  }
-
-  if (processHighlights.length > 0) {
-    console.debug("[highlight] mapped highlights", {
-      count: processHighlights.length,
-      withExpress: processHighlights.filter((t) => t.expressIds.length > 0)
-        .length,
-      withTag: processHighlights.filter((t) => t.tagIds.length > 0).length,
-    });
-
-    const lengthMismatch = processHighlights.filter(
-      (t) =>
-        t.tagIds.length > 0 &&
-        t.expressIds.length > 0 &&
-        t.tagIds.length !== t.expressIds.length,
-    );
-    if (lengthMismatch.length > 0) {
-      console.debug("[highlight] tag/express length mismatch", {
-        count: lengthMismatch.length,
-        sample: lengthMismatch.slice(0, 5).map((t) => ({
-          id: t.id,
-          name: t.name,
-          tagCount: t.tagIds.length,
-          expressCount: t.expressIds.length,
-        })),
-      });
-    }
-
-    const tagOnly = processHighlights.filter(
-      (t) => t.tagIds.length > 0 && t.expressIds.length === 0,
-    );
-    const expressOnly = processHighlights.filter(
-      (t) => t.expressIds.length > 0 && t.tagIds.length === 0,
-    );
-    if (tagOnly.length || expressOnly.length) {
-      console.debug("[highlight] tag/express only tasks", {
-        tagOnly: tagOnly.length,
-        expressOnly: expressOnly.length,
-        tagOnlySample: tagOnly.slice(0, 3).map((t) => ({
-          id: t.id,
-          name: t.name,
-          tagCount: t.tagIds.length,
-        })),
-        expressOnlySample: expressOnly.slice(0, 3).map((t) => ({
-          id: t.id,
-          name: t.name,
-          expressCount: t.expressIds.length,
-        })),
-      });
-    }
-  }
-
   const getIdsByDate = useMemo(() => {
     return (date: Date) => {
-      if (processHighlights.length > 0) {
-        console.debug("[highlight] getIdsByDate", {
-          date: date.toISOString(),
-          sample: processHighlights[0]
-            ? {
-                id: processHighlights[0].id,
-                name: processHighlights[0].name,
-                start: processHighlights[0].start?.toISOString?.() ?? null,
-                end: processHighlights[0].end?.toISOString?.() ?? null,
-                expressIds: processHighlights[0].expressIds?.length ?? 0,
-                tagIds: processHighlights[0].tagIds?.length ?? 0,
-              }
-            : null,
-        });
-      }
       const target = new Date(date);
       target.setHours(12, 0, 0, 0);
       const completedSet = new Set<string>();
       const inProgressSet = new Set<string>();
       const upcomingSet = new Set<string>();
+      const blockedSet = new Set<string>();
       let withTags = 0;
       let withExpress = 0;
 
@@ -171,21 +101,59 @@ export function useProjectHighlight(projectId?: string) {
         if (task.tagIds?.length) withTags += 1;
         if (task.expressIds?.length) withExpress += 1;
         if (!task.calc) {
-          resolvedIds.forEach((id) => {
-            completedSet.delete(id);
-            inProgressSet.delete(id);
-            upcomingSet.delete(id);
-          });
+          // Once we reach the start of a non-calc task, block these ids permanently for later dates.
+          if (target >= start) {
+            resolvedIds.forEach((id) => blockedSet.add(id));
+          }
           return;
         }
         if (target < start) {
-          resolvedIds.forEach((id) => upcomingSet.add(id));
+          resolvedIds.forEach((id) => {
+            if (!blockedSet.has(id)) upcomingSet.add(id);
+          });
         } else if (target > end) {
-          resolvedIds.forEach((id) => completedSet.add(id));
+          resolvedIds.forEach((id) => {
+            if (!blockedSet.has(id)) completedSet.add(id);
+          });
         } else {
-          resolvedIds.forEach((id) => inProgressSet.add(id));
+          resolvedIds.forEach((id) => {
+            if (!blockedSet.has(id)) inProgressSet.add(id);
+          });
         }
       });
+
+      if (blockedSet.size > 0) {
+        blockedSet.forEach((id) => {
+          completedSet.delete(id);
+          inProgressSet.delete(id);
+          upcomingSet.delete(id);
+        });
+      }
+
+      if (processHighlights.length > 0) {
+        const targetId = "25XjhlxiHEqAJW4TuCxEyF";
+        const sample = processHighlights[0];
+        console.debug("[highlight] idsByDate summary", {
+          date: target.toISOString(),
+          completed: completedSet.size,
+          inProgress: inProgressSet.size,
+          upcoming: upcomingSet.size,
+          targetIdStatus: {
+            completed: completedSet.has(targetId),
+            inProgress: inProgressSet.has(targetId),
+            upcoming: upcomingSet.has(targetId),
+          },
+          sample: sample
+            ? {
+                id: sample.id,
+                name: sample.name,
+                calc: sample.calc,
+                expressIds: sample.expressIds?.length ?? 0,
+                tagIds: sample.tagIds?.length ?? 0,
+              }
+            : null,
+        });
+      }
 
       return {
         completedIds: Array.from(completedSet),
