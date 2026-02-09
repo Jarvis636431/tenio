@@ -150,11 +150,11 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
 
   const buildVerifyMessage = (data: unknown) => {
     if (!data || typeof data !== "object") {
-      return "收到验证请求，请确认是否继续。";
+      return "";
     }
     const payload = data as Record<string, unknown>;
     const verifyType = (payload.verify_type as string) ?? "unknown";
-    const lines: string[] = ["收到验证请求："];
+    const lines: string[] = [];
     if (verifyType === "adjust_project") {
       lines.push("类型：项目工期调整验证");
       if (payload.target_date) lines.push(`目标日期：${payload.target_date}`);
@@ -173,7 +173,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       lines.push(`类型：${verifyType}`);
       lines.push(`数据：${JSON.stringify(payload)}`);
     }
-    lines.push("请确认是否执行此调整？(是/否)");
     return lines.join("\n");
   };
 
