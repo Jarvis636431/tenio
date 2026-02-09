@@ -3,7 +3,11 @@ import { AI_SSE_URL, VOLC_SPEECH } from "@/config";
 import { useAuth } from "@/hooks/useAuth";
 import { useProject } from "@/hooks/useProject";
 import { useParams } from "react-router-dom";
-import { getProjectCoreGraph } from "@/services/schedulepro-service";
+import {
+  getProjectCoreGraph,
+  getProjectCostCurve,
+  getProjectHeadcountCurve,
+} from "@/services/schedulepro-service";
 import { resumeAgentStream } from "@/services/ai-service";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -366,14 +370,20 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
 
   const refreshCoreGraph = async (projectId: string) => {
     if (!token) return;
-    const response = await getProjectCoreGraph(projectId, token);
-    setCoreGraph(projectId, response);
-    queryClient.invalidateQueries({
-      queryKey: ["funding-materials", "cost-curve", projectId],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["funding-materials", "headcount-curve", projectId],
-    });
+    const [coreGraph, costCurve, headcountCurve] = await Promise.all([
+      getProjectCoreGraph(projectId, token),
+      getProjectCostCurve(projectId, token),
+      getProjectHeadcountCurve(projectId, token),
+    ]);
+    setCoreGraph(projectId, coreGraph);
+    queryClient.setQueryData(
+      ["funding-materials", "cost-curve", projectId],
+      costCurve,
+    );
+    queryClient.setQueryData(
+      ["funding-materials", "headcount-curve", projectId],
+      headcountCurve,
+    );
   };
 
   const sendMessage = async (messageText: string) => {
