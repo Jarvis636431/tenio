@@ -3,10 +3,7 @@ import { AI_SSE_URL, VOLC_SPEECH } from "@/config";
 import { useAuth } from "@/hooks/useAuth";
 import { useProject } from "@/hooks/useProject";
 import { useParams } from "react-router-dom";
-import {
-  getProjectCoreGraph,
-  pollTaskStatus,
-} from "@/services/schedulepro-service";
+import { getProjectCoreGraph } from "@/services/schedulepro-service";
 import { resumeAgent } from "@/services/ai-service";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -102,8 +99,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   const [isRecognizing, setIsRecognizing] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const pollAbortRef = useRef<AbortController | null>(null);
-  const pollDelayRef = useRef<number | null>(null);
   const threadIdRef = useRef<string | null>(null);
   const lastContentRef = useRef<string>("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -129,12 +124,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     return () => {
       if (abortRef.current) {
         abortRef.current.abort();
-      }
-      if (pollAbortRef.current) {
-        pollAbortRef.current.abort();
-      }
-      if (pollDelayRef.current !== null) {
-        window.clearTimeout(pollDelayRef.current);
       }
       if (mediaRecorderRef.current?.state === "recording") {
         mediaRecorderRef.current.stop();
@@ -168,33 +157,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       approved,
       thread_id: threadIdRef.current,
     });
-
-    if (pollAbortRef.current) {
-      pollAbortRef.current.abort();
-    }
-    pollAbortRef.current = new AbortController();
-    if (pollDelayRef.current !== null) {
-      window.clearTimeout(pollDelayRef.current);
-    }
-
-    const projectId =
-      options.projectId || routeProjectId || currentProject?.id || "";
-    if (projectId && token) {
-      pollDelayRef.current = window.setTimeout(() => {
-        pollTaskStatus(projectId, token, {
-          signal: pollAbortRef.current?.signal,
-        })
-          .then((status) => {
-            if (status.status === "completed") {
-              return refreshCoreGraph(projectId);
-            }
-            return undefined;
-          })
-          .catch(() => {
-            // ignore polling errors
-          });
-      }, 3000);
-    }
   };
 
   const refreshCoreGraph = async (projectId: string) => {
@@ -250,8 +212,8 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     ]);
 
     try {
-      const response = await fetch(AI_SSE_URL, {
-        method: "POST",
+    const response = await fetch(AI_SSE_URL, {
+      method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "text/event-stream",
@@ -279,12 +241,54 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
         );
       };
 
+      const buildVerifyMessage = (data: unknown) => {
+        if (!data || typeof data !== "object") {
+          return "收到验证请求，请确认是否继续。";
+        }
+        const payload = data as Record<string, unknown>;
+        const verifyType = (payload.verify_type as string) ?? "unknown";
+        const lines: string[] = ["收到验证请求："];
+        if (verifyType === "adjust_project") {
+          lines.push("类型：项目工期调整验证");
+          if (payload.target_date) lines.push(`目标日期：${payload.target_date}`);
+          if (payload.finish_date) lines.push(`完成日期：${payload.finish_date}`);
+        } else if (verifyType === "adjust_task") {
+          lines.push("类型：任务工期调整验证");
+          if (payload.task_name) lines.push(`任务名称：${payload.task_name}`);
+          if (payload.finish_date) lines.push(`完成日期：${payload.finish_date}`);
+        } else if (verifyType === "unexpected_event") {
+          lines.push("类型：突发事件验证");
+          if (payload.intent) lines.push(`意图：${payload.intent}`);
+          if (payload.affected_task_ids) {
+            lines.push(`受影响任务：${JSON.stringify(payload.affected_task_ids)}`);
+          }
+        } else {
+          lines.push(`类型：${verifyType}`);
+          lines.push(`数据：${JSON.stringify(payload)}`);
+        }
+        lines.push("请确认是否执行此调整？(是/否)");
+        return lines.join("\n");
+      };
+
       const extractContent = (payload: unknown) => {
         const obj =
           typeof payload === "object" && payload !== null
             ? (payload as Record<string, unknown>)
             : null;
         if (!obj) return null;
+
+        if (obj.type === "refetch") {
+          const projectId =
+            options.projectId || routeProjectId || currentProject?.id || "";
+          if (projectId && token) {
+            void refreshCoreGraph(projectId);
+          }
+          return null;
+        }
+
+        if (obj.type === "verify") {
+          return buildVerifyMessage(obj.data);
+        }
 
         if (obj.type === "interrupt" && typeof obj.message === "string") {
           return obj.message;
