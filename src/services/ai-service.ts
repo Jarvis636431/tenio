@@ -33,3 +33,16 @@ export async function resumeAgent(
     },
   );
 }
+
+export async function resumeAgentStream(
+  payload: AgentResumePayload,
+): Promise<Response> {
+  return fetch(`${API_BASE.aiService}/api/agent/chat/resume`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "text/event-stream",
+    },
+    body: JSON.stringify(payload),
+  });
+}
