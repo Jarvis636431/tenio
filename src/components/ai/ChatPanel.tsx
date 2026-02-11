@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { ChatPanelState } from "@/components/ai/hooks/useChatPanel";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const UNEXPECTED_EVENT_PREFIX = "__unexpected_event__:";
 
@@ -263,7 +265,54 @@ export function ChatPanel({
       return renderInterruptMessage(content, message.id);
     }
     const normalized = content.replace(/\\n/g, "\n").replace(/\/n/g, "\n");
-    return <div>{normalized}</div>;
+    if (message.sender !== "ai") {
+      return <div>{normalized}</div>;
+    }
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        className="break-words"
+        components={{
+          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+          ul: ({ children }) => <ul className="list-disc pl-5 space-y-1">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal pl-5 space-y-1">{children}</ol>,
+          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-2 border-slate-300 pl-3 text-slate-600">
+              {children}
+            </blockquote>
+          ),
+          a: ({ href, children }) => (
+            <a href={href} className="text-blue-600 underline" target="_blank" rel="noreferrer">
+              {children}
+            </a>
+          ),
+          code: ({ children }) => (
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[12px]">
+              {children}
+            </code>
+          ),
+          pre: ({ children }) => (
+            <pre className="overflow-x-auto rounded bg-slate-100 p-2 text-[12px]">
+              {children}
+            </pre>
+          ),
+          table: ({ children }) => (
+            <table className="w-full border-collapse text-xs">{children}</table>
+          ),
+          th: ({ children }) => (
+            <th className="border border-slate-200 bg-slate-50 px-2 py-1 text-left">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="border border-slate-200 px-2 py-1">{children}</td>
+          ),
+        }}
+      >
+        {normalized}
+      </ReactMarkdown>
+    );
   };
 
   return (
@@ -315,7 +364,7 @@ export function ChatPanel({
                   >
                     <div
                       className={cn(
-                        "max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-line",
+                        "max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-line break-words",
                         {
                           "bg-primary text-primary-foreground":
                             message.sender === "user",
