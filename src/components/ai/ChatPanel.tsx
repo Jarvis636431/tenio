@@ -149,12 +149,12 @@ export function ChatPanel({
         tasks.push(currentTask);
         continue;
       }
-      if (currentTask && line.startsWith("开始:")) {
-        currentTask.start = line.replace(/^开始:\\s*/, "").trim();
+      if (currentTask && (line.startsWith("开始:") || line.startsWith("开始："))) {
+        currentTask.start = line.replace(/^开始[:：]\\s*/, "").trim();
         continue;
       }
-      if (currentTask && line.startsWith("结束:")) {
-        currentTask.end = line.replace(/^结束:\\s*/, "").trim();
+      if (currentTask && (line.startsWith("结束:") || line.startsWith("结束："))) {
+        currentTask.end = line.replace(/^结束[:：]\\s*/, "").trim();
         continue;
       }
     }
@@ -164,6 +164,8 @@ export function ChatPanel({
         {line}
       </div>
     );
+    const normalizeTimeLabel = (value?: string) =>
+      value ? value.replace(/^开始[:：]\s*/, "").replace(/^结束[:：]\s*/, "") : value;
 
     return (
       <div className="space-y-3">
@@ -174,7 +176,9 @@ export function ChatPanel({
               (line) =>
                 !line.startsWith("- ") &&
                 !line.startsWith("开始:") &&
+                !line.startsWith("开始：") &&
                 !line.startsWith("结束:") &&
+                !line.startsWith("结束：") &&
                 !line.startsWith("建议方案：") &&
                 !line.startsWith("请确认是否执行此调整") &&
                 !line.startsWith("受影响的任务") &&
@@ -198,8 +202,8 @@ export function ChatPanel({
                     ID: {task.id}
                   </div>
                 )}
-                {task.start && <div>开始: {task.start}</div>}
-                {task.end && <div>结束: {task.end}</div>}
+                {task.start && <div>开始: {normalizeTimeLabel(task.start)}</div>}
+                {task.end && <div>结束: {normalizeTimeLabel(task.end)}</div>}
               </div>
             ))}
           </div>
