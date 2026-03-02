@@ -5,7 +5,6 @@ import {
   BarChart3,
   Activity,
   Users,
-  Info,
   Plus,
   User,
   LogOut,
@@ -59,11 +58,6 @@ const mainMenuItems = [
   },
 ];
 const projectMenuItems = [
-  {
-    id: "basic-info",
-    label: "基础信息",
-    icon: Info,
-  },
   {
     id: "plan",
     label: "施工总览",

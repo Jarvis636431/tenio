@@ -7,7 +7,6 @@ export interface PrecreateProjectPayload {
 export interface Project {
   id: string;
   name: string;
-  hasBasicInfo?: boolean;
   // 可编辑基础信息字段
   city?: string;
   buildingType?: string;

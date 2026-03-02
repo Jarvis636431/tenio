@@ -91,7 +91,6 @@ export default function Create() {
       const newProject = {
         id: newProjectId,
         name: finalProjectName,
-        hasBasicInfo: true,
         status: response.status,
       };
 
