@@ -14,13 +14,8 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  DollarSign,
   ClipboardList,
   Package,
-  Wrench,
-  CheckCircle,
-  BookOpen,
-  MessageCircleQuestion,
 } from "lucide-react";
 import {
   Sidebar,
@@ -102,28 +97,6 @@ const projectMenuItems = [
     label: "资金物料",
     icon: Package,
   },
-  {
-    id: "toolbox",
-    label: "工具箱",
-    icon: Wrench,
-    subItems: [
-      {
-        id: "quality",
-        label: "质量检测",
-        icon: CheckCircle,
-      },
-      {
-        id: "daily-log",
-        label: "每日日志",
-        icon: BookOpen,
-      },
-      {
-        id: "qa",
-        label: "知识问答",
-        icon: MessageCircleQuestion,
-      },
-    ],
-  },
 ];
 
 export function AppSidebar() {
@@ -132,10 +105,7 @@ export function AppSidebar() {
   const { currentProject, projects, setCurrentProject } = useProject();
   const navigate = useNavigate();
   const location = useLocation();
-  const [expandedItems, setExpandedItems] = useState<string[]>([
-    "plan",
-    "toolbox",
-  ]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["plan"]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{
