@@ -7,7 +7,6 @@ import {
   PlanContent,
   PlanDialogs,
   usePlanFilters,
-  usePlanPagination,
   usePlanExport,
   usePlanDialogs,
 } from "@/pages/project/plan";
@@ -99,13 +98,6 @@ export function PlanPage() {
   } = usePlanFilters(allData);
 
   const {
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    paginatedData,
-    itemsPerPage,
-  } = usePlanPagination(filteredData);
-
   const { handleExportCSV } = usePlanExport(filteredData);
 
   const {
@@ -176,7 +168,7 @@ export function PlanPage() {
         onFloorFilterChange={setFloorFilter}
         jobTypes={jobTypes}
         floorTypes={floorTypes}
-        activeView={tab || "overview"}
+        activeView={tab || "gantt"}
         timelineScale={timelineScale}
         onTimelineScaleChange={setTimelineScale}
         filteredDataLength={filteredData.length}
@@ -187,14 +179,6 @@ export function PlanPage() {
 
       <PlanContent
         tab={tab}
-        paginatedData={paginatedData}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        filteredDataLength={filteredData.length}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        onEditClick={handleEditClick}
-        onDetailClick={handleDetailClick}
         onMoreClick={handleMoreClick}
         ganttData={ganttData}
         timelineScale={timelineScale}

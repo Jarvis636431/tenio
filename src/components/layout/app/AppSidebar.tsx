@@ -1,7 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home,
-  Calendar,
   BarChart3,
   Activity,
   Users,
@@ -63,11 +62,6 @@ const projectMenuItems = [
     label: "施工总览",
     icon: ClipboardList,
     subItems: [
-      {
-        id: "overview",
-        label: "任务总览",
-        icon: Calendar,
-      },
       {
         id: "gantt",
         label: "施工甘特图",

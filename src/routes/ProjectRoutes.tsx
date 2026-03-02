@@ -21,7 +21,7 @@ export function ProjectRoutes() {
   return (
     <>
       <Route index element={<Overview />} />
-      <Route path="plan" element={<Navigate to="overview" replace />} />
+      <Route path="plan" element={<Navigate to="gantt" replace />} />
       <Route path="plan/:tab" element={<PlanPage />} />
       <Route path="funding" element={<Resources />} />
     </>
