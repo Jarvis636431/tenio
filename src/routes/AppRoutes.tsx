@@ -10,7 +10,6 @@ import { APP_DEFAULT_TITLE } from "@/config";
 
 // Lazy loaded pages
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const ProjectList = lazy(() => import("@/pages/ProjectList"));
 const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const CreateProject = lazy(() => import("@/pages/create/Create"));
@@ -58,16 +57,6 @@ export function AppRoutes() {
             <ProtectedRoute auth={auth}>
                 <AppLayout>
                   <Dashboard />
-                </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/project-management"
-          element={
-            <ProtectedRoute auth={auth}>
-                <AppLayout>
-                  <ProjectList />
                 </AppLayout>
             </ProtectedRoute>
           }

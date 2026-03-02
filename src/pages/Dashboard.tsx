@@ -72,20 +72,6 @@ const Dashboard = () => {
                   </CardHeader>
                 </Card>
 
-                <Card
-                  className="cursor-pointer transition-colors duration-200 border-success/20 hover:border-success/40 group bg-success/5 hover:bg-success/10 rounded-lg"
-                  onClick={() => navigate("/project-management")}
-                >
-                  <CardHeader className="py-6">
-                    <CardTitle className="flex items-center gap-3 text-lg ml-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-success to-success/80 rounded-lg flex items-center justify-center text-white">
-                        <Building2 className="h-5 w-5" />
-                      </div>
-                      项目管理
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-
                 {/* 系统状态卡片已移除 */}
               </div>
             </div>

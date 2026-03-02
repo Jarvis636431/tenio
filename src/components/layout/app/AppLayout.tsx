@@ -3,7 +3,6 @@ import { AppSidebar } from "@/components/layout/app/AppSidebar";
 import { ChatPanel } from "@/components/ai/ChatPanel";
 import { ChatButton } from "@/components/ai/ChatButton";
 import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
-import { ProjectBreadcrumb } from "@/components/layout/project/ProjectBreadcrumb";
 interface LayoutProps {
   children: React.ReactNode;
 }
@@ -16,7 +15,6 @@ function LayoutContent({ children }: LayoutProps) {
       <AppSidebar />
       
       <main className="flex-1 overflow-hidden px-3 py-3 bg-white">
-        <ProjectBreadcrumb />
         {children}
       </main>
 

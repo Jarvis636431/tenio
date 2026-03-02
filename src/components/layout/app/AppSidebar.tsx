@@ -1,6 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  Settings,
   Home,
   Calendar,
   BarChart3,
@@ -57,11 +56,6 @@ const mainMenuItems = [
     title: "主页",
     url: "/",
     icon: Home,
-  },
-  {
-    title: "项目管理",
-    url: "/project-management",
-    icon: Settings,
   },
 ];
 const projectMenuItems = [
