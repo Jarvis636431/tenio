@@ -97,7 +97,6 @@ export function PlanPage() {
     filteredData,
   } = usePlanFilters(allData);
 
-  const {
   const { handleExportCSV } = usePlanExport(filteredData);
 
   const {
