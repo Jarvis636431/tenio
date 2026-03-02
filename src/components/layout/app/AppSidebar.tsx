@@ -98,28 +98,6 @@ const projectMenuItems = [
     ],
   },
   {
-    id: "monitoring",
-    label: "实时监测",
-    icon: Activity,
-    subItems: [
-      {
-        id: "labor",
-        label: "施工人数",
-        icon: Users,
-      },
-      {
-        id: "cost",
-        label: "人工成本",
-        icon: DollarSign,
-      },
-    ],
-  },
-  {
-    id: "craftsman",
-    label: "工匠管理",
-    icon: Users,
-  },
-  {
     id: "funding",
     label: "资金物料",
     icon: Package,
@@ -156,7 +134,6 @@ export function AppSidebar() {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([
     "plan",
-    "monitoring",
     "toolbox",
   ]);
   const [dropdownOpen, setDropdownOpen] = useState(false);

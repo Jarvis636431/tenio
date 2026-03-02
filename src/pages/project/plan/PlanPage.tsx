@@ -114,8 +114,6 @@ export function PlanPage() {
     selectedItem,
     isEditMode,
     editedItem,
-    isNewTaskDialogOpen,
-    setIsNewTaskDialogOpen,
     isTaskDetailDialogOpen,
     setIsTaskDetailDialogOpen,
     selectedTaskForDetail,
@@ -184,7 +182,6 @@ export function PlanPage() {
         filteredDataLength={filteredData.length}
         ganttDataLength={ganttData.length}
         onExportCSV={handleExportCSV}
-        onNewTask={() => currentProject?.id && setIsNewTaskDialogOpen(true)}
         currentProjectId={currentProject?.id}
       />
 
@@ -217,14 +214,7 @@ export function PlanPage() {
         onSaveEdit={handleSaveEdit}
         onCancelEdit={handleCancelEdit}
         onEditedItemChange={setEditedItem}
-        isNewTaskDialogOpen={isNewTaskDialogOpen}
-        setIsNewTaskDialogOpen={setIsNewTaskDialogOpen}
-        existingTasks={allData}
         projectId={currentProject?.id ?? ""}
-        onTaskAdded={(task) => {
-          console.log("新增任务:", task);
-          setIsNewTaskDialogOpen(false);
-        }}
         isTaskDetailDialogOpen={isTaskDetailDialogOpen}
         setIsTaskDetailDialogOpen={setIsTaskDetailDialogOpen}
         selectedTaskForDetail={selectedTaskForDetail}

@@ -12,16 +12,6 @@ const PlanPage = lazy(() =>
     default: module.PlanPage,
   })),
 );
-const Monitoring = lazy(() =>
-  import("@/pages/project/Monitoring").then((module) => ({
-    default: module.Monitoring,
-  })),
-);
-const Craftsmen = lazy(() =>
-  import("@/pages/project/Craftsmen").then((module) => ({
-    default: module.Craftsmen,
-  })),
-);
 const Resources = lazy(() =>
   import("@/pages/project/Resources").then((module) => ({
     default: module.Resources,
@@ -50,9 +40,6 @@ export function ProjectRoutes() {
       <Route path="basic-info" element={<BasicInfo />} />
       <Route path="plan" element={<Navigate to="overview" replace />} />
       <Route path="plan/:tab" element={<PlanPage />} />
-      <Route path="monitoring" element={<Navigate to="labor" replace />} />
-      <Route path="monitoring/:tab" element={<Monitoring />} />
-      <Route path="craftsman" element={<Craftsmen />} />
       <Route path="funding" element={<Resources />} />
       <Route path="toolbox/quality" element={<QualityInspection />} />
       <Route path="toolbox/daily-log" element={<DailyLog />} />

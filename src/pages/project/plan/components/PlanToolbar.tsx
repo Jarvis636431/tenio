@@ -17,7 +17,6 @@ interface PlanToolbarProps {
   filteredDataLength: number;
   ganttDataLength: number;
   onExportCSV: () => void;
-  onNewTask: () => void;
   currentProjectId?: string;
 }
 
@@ -36,7 +35,6 @@ export function PlanToolbar({
   filteredDataLength,
   ganttDataLength,
   onExportCSV,
-  onNewTask,
   currentProjectId,
 }: PlanToolbarProps) {
   return (
@@ -58,7 +56,6 @@ export function PlanToolbar({
         filteredDataLength={filteredDataLength}
         ganttDataLength={ganttDataLength}
         onExportCSV={onExportCSV}
-        onNewTask={onNewTask}
         currentProjectId={currentProjectId}
       />
     </div>

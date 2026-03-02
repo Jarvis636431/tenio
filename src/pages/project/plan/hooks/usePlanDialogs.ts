@@ -6,7 +6,6 @@ export function usePlanDialogs() {
   const [selectedItem, setSelectedItem] = useState<PlanTask | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedItem, setEditedItem] = useState<PlanTask | null>(null);
-  const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
   const [selectedTaskForDetail, setSelectedTaskForDetail] =
     useState<PlanTask | null>(null);
@@ -68,8 +67,6 @@ export function usePlanDialogs() {
     selectedItem,
     isEditMode,
     editedItem,
-    isNewTaskDialogOpen,
-    setIsNewTaskDialogOpen,
     isTaskDetailDialogOpen,
     setIsTaskDetailDialogOpen,
     selectedTaskForDetail,

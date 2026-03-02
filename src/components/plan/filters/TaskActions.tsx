@@ -1,4 +1,4 @@
-import { Plus, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { TimelineScale } from "@/components/plan/gantt/GanttChart";
@@ -10,8 +10,6 @@ interface TaskActionsProps {
   filteredDataLength: number;
   ganttDataLength: number;
   onExportCSV: () => void;
-  onNewTask: () => void;
-  currentProjectId?: string;
 }
 
 const TIMELINE_SCALE_LABELS: Record<TimelineScale, string> = {
@@ -28,8 +26,6 @@ export function TaskActions({
   filteredDataLength,
   ganttDataLength,
   onExportCSV,
-  onNewTask,
-  currentProjectId
 }: TaskActionsProps) {
   return (
     <div className="flex items-center space-x-4">
@@ -60,14 +56,6 @@ export function TaskActions({
         <Button variant="outline" size="sm" onClick={onExportCSV}>
           <Download className="h-4 w-4 mr-2" />
           导出
-        </Button>
-        <Button
-          size="sm"
-          onClick={onNewTask}
-          disabled={!currentProjectId}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          新增任务
         </Button>
       </div>
     </div>

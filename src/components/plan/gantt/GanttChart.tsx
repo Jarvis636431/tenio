@@ -2,7 +2,6 @@ import { useMemo, useRef, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
-import { NewTaskDialog } from "../dialogs/NewTaskDialog";
 import { TaskDetailDialog } from "../dialogs/TaskDetailDialog";
 import { useProject } from "@/hooks/useProject";
 import type { ShutdownEventConfig } from "@/types/domain/project";
@@ -11,7 +10,6 @@ import type { PlanTask, TimelineScale } from "@/types/domain/plan";
 interface GanttChartProps {
   data: PlanTask[];
   onTaskDetail?: (task: PlanTask) => void;
-  onAddTask?: (task: Partial<PlanTask>) => void;
   scale?: TimelineScale;
   shutdownEvents?: ShutdownEventConfig[];
 }
@@ -156,15 +154,6 @@ type TimelineRow = PlanTask & {
   barLabel: string;
   color: string;
 };
-
-// 新增任务的表单数据类型，替代 any
-interface NewTaskFormData {
-  task: string;
-  startTime: string;
-  endTime: string;
-  jobType?: string;
-  workerCount?: number;
-}
 
 const generateHeaders = (
   startAnchor: Date,
@@ -332,7 +321,6 @@ const parseDate = (dateStr: string): Date => {
 export function GanttChart({
   data,
   onTaskDetail,
-  onAddTask,
   scale = "day",
   shutdownEvents = [],
 }: GanttChartProps) {
@@ -341,7 +329,6 @@ export function GanttChart({
   const [isScrolling, setIsScrolling] = useState(false);
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
   const [showDetailButton, setShowDetailButton] = useState<string | null>(null);
-  const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
   const [selectedTaskForDetail, setSelectedTaskForDetail] =
     useState<PlanTask | null>(null);
@@ -495,21 +482,6 @@ export function GanttChart({
   }, [data]); // 数据变化时重新建立同步并重置滚动位置
 
   // 生成日期标头
-
-  const handleAddTask = (taskData: NewTaskFormData) => {
-    if (onAddTask) {
-      const newTask: Partial<PlanTask> = {
-        task: taskData.task,
-        startDate: taskData.startTime,
-        endDate: taskData.endTime,
-        duration: "1天",
-        worker: taskData.jobType,
-        count: taskData.workerCount,
-        floor: 1,
-      };
-      onAddTask(newTask);
-    }
-  };
 
   const handleMoreClick = (task: PlanTask) => {
     setSelectedTaskForDetail(task);
@@ -707,39 +679,6 @@ export function GanttChart({
           </div>
         </div>
       </div>
-
-      {/* 新增任务对话框 */}
-      <NewTaskDialog
-        open={isNewTaskDialogOpen}
-        onOpenChange={setIsNewTaskDialogOpen}
-        onAdd={handleAddTask}
-        existingTasks={data.map((item) => ({
-          id: item.id,
-          task: item.task,
-          specialty: "",
-          component: "",
-          workerCount: item.count,
-          jobType: item.worker,
-          totalCost: 0,
-          startTime: item.startDate,
-          endTime: item.endDate,
-          constructionSituation: "",
-          prerequisiteProcess: "",
-          quantity: 0,
-          quantityUnit: "",
-          overtime: "",
-          duration: item.duration,
-          actualWorkDays: 0,
-          constructionMethod: "",
-          directDependency: "",
-          remarks: "",
-          selectedConstructionMethod: "",
-          materialCost: 0,
-          laborCost: 0,
-          floor: item.floor || 1,
-        }))}
-        projectId={currentProject?.id ?? ""}
-      />
 
       {/* 任务详情对话框 */}
       <TaskDetailDialog

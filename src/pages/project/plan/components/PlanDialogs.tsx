@@ -1,4 +1,3 @@
-import { NewTaskDialog } from "@/components/plan/dialogs/NewTaskDialog";
 import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
 import { TaskDetailSheet } from "@/components/plan/dialogs/TaskDetailSheet";
 import type { PlanTask } from "@/types/domain/plan";
@@ -13,11 +12,7 @@ interface PlanDialogsProps {
   onSaveEdit: () => void;
   onCancelEdit: () => void;
   onEditedItemChange: (item: PlanTask | null) => void;
-  isNewTaskDialogOpen: boolean;
-  setIsNewTaskDialogOpen: (open: boolean) => void;
-  existingTasks: PlanTask[];
   projectId: string;
-  onTaskAdded: (task: PlanTask) => void;
   isTaskDetailDialogOpen: boolean;
   setIsTaskDetailDialogOpen: (open: boolean) => void;
   selectedTaskForDetail: PlanTask | null;
@@ -33,11 +28,7 @@ export function PlanDialogs({
   onSaveEdit,
   onCancelEdit,
   onEditedItemChange,
-  isNewTaskDialogOpen,
-  setIsNewTaskDialogOpen,
-  existingTasks,
   projectId,
-  onTaskAdded,
   isTaskDetailDialogOpen,
   setIsTaskDetailDialogOpen,
   selectedTaskForDetail,
@@ -54,14 +45,6 @@ export function PlanDialogs({
         onSaveEdit={onSaveEdit}
         onCancelEdit={onCancelEdit}
         onEditedItemChange={onEditedItemChange}
-      />
-
-      <NewTaskDialog
-        open={isNewTaskDialogOpen}
-        onOpenChange={setIsNewTaskDialogOpen}
-        onAdd={onTaskAdded}
-        existingTasks={existingTasks}
-        projectId={projectId}
       />
 
       <TaskDetailDialog
