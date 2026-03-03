@@ -100,20 +100,10 @@ export function PlanPage() {
   const { handleExportCSV } = usePlanExport(filteredData);
 
   const {
-    isDetailDialogOpen,
-    setIsDetailDialogOpen,
-    selectedItem,
-    isEditMode,
-    editedItem,
     isTaskDetailDialogOpen,
     setIsTaskDetailDialogOpen,
     selectedTaskForDetail,
-    setEditedItem,
-    handleDetailClick,
     handleMoreClick,
-    handleEditClick,
-    handleSaveEdit,
-    handleCancelEdit,
     handleGanttTaskDetail,
   } = usePlanDialogs();
 
@@ -188,15 +178,6 @@ export function PlanPage() {
       />
 
       <PlanDialogs
-        isDetailDialogOpen={isDetailDialogOpen}
-        setIsDetailDialogOpen={setIsDetailDialogOpen}
-        selectedItem={selectedItem}
-        isEditMode={isEditMode}
-        editedItem={editedItem}
-        onEditClick={handleEditClick}
-        onSaveEdit={handleSaveEdit}
-        onCancelEdit={handleCancelEdit}
-        onEditedItemChange={setEditedItem}
         projectId={currentProject?.id ?? ""}
         isTaskDetailDialogOpen={isTaskDetailDialogOpen}
         setIsTaskDetailDialogOpen={setIsTaskDetailDialogOpen}
