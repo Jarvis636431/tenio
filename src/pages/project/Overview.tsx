@@ -406,7 +406,7 @@ export function Overview({
   }, [timeRange]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 bg-gradient-to-b from-[#020a1d] to-[#041332] px-1 py-1 text-slate-100">
+    <div className="flex h-full min-h-0 flex-col gap-2 bg-gradient-to-b from-[#020a1d] to-[#041332] px-1 pt-0 pb-1 text-slate-100">
       <div className="shrink-0">
         <ProjectHeader
           title={currentProjectName}
@@ -414,40 +414,40 @@ export function Overview({
           onsiteCount={onsiteCount}
           onExportReport={handleExportCSV}
         />
+      </div>
 
-        {timeRange && (
-          <Card className="mt-4 border-cyan-900/40 bg-[#071a39]/75">
-            <CardContent className="p-0">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-cyan-200">项目进度控制</div>
-                  <div className="text-xs text-cyan-300/70">
-                    拖动滑块查看不同天数的施工状态
-                  </div>
-                </div>
-                <Slider
-                  value={[currentDay]}
-                  min={timeRange.startDay}
-                  max={timeRange.endDay}
-                  step={1}
-                  onValueChange={(v) => setCurrentDay(v[0])}
-                />
-                <div className="flex justify-between text-xs text-cyan-300/70">
-                  <span>第 {timeRange.startDay} 天</span>
-                  <span>第 {timeRange.endDay} 天</span>
+      {timeRange && (
+        <Card className="shrink-0 border-cyan-900/40 bg-[#071a39]/75">
+          <CardContent className="p-0">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium text-cyan-200">项目进度控制</div>
+                <div className="text-xs text-cyan-300/70">
+                  拖动滑块查看不同天数的施工状态
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+              <Slider
+                value={[currentDay]}
+                min={timeRange.startDay}
+                max={timeRange.endDay}
+                step={1}
+                onValueChange={(v) => setCurrentDay(v[0])}
+              />
+              <div className="flex justify-between text-xs text-cyan-300/70">
+                <span>第 {timeRange.startDay} 天</span>
+                <span>第 {timeRange.endDay} 天</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid min-h-0 flex-1 grid-cols-10 gap-2 overflow-hidden">
         <div className="col-span-7 min-w-0 grid min-h-0 grid-rows-[0.75fr_0.75fr_1.25fr] gap-2 overflow-hidden">
           <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
               <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+                <CardTitle className="text-xs font-medium text-cyan-200 flex items-center gap-1.5">
                   <Users className="h-3.5 w-3.5 text-cyan-300" />
                   劳动力曲线
                 </CardTitle>
@@ -471,8 +471,8 @@ export function Overview({
 
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
               <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <ChartLine className="h-3.5 w-3.5 text-cyan-300" />
+                <CardTitle className="text-xs font-medium text-emerald-300 flex items-center gap-1.5">
+                  <ChartLine className="h-3.5 w-3.5 text-emerald-400" />
                   资金曲线
                 </CardTitle>
               </CardHeader>
@@ -497,8 +497,8 @@ export function Overview({
           <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
               <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <ListTodo className="h-3.5 w-3.5 text-cyan-300" />
+                <CardTitle className="text-xs font-medium text-amber-300 flex items-center gap-1.5">
+                  <ListTodo className="h-3.5 w-3.5 text-amber-400" />
                   甘特图
                 </CardTitle>
               </CardHeader>
@@ -521,8 +521,8 @@ export function Overview({
 
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
               <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                  <Network className="h-3.5 w-3.5 text-cyan-300" />
+                <CardTitle className="text-xs font-medium text-violet-300 flex items-center gap-1.5">
+                  <Network className="h-3.5 w-3.5 text-violet-400" />
                   网络图
                 </CardTitle>
               </CardHeader>
@@ -541,25 +541,8 @@ export function Overview({
           </div>
 
           <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
-            <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-              <CardTitle className="text-xs font-medium flex items-center gap-1.5">
-                <Boxes className="h-3.5 w-3.5 text-cyan-300" />
-                模型预览
-              </CardTitle>
-            </CardHeader>
             <CardContent className="flex-1 min-h-0 p-0">
               <div className="flex h-full min-h-0 flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-cyan-100">
-                    <span className="mr-3">
-                      进行中：{inProgressIds.length} 构件 ({taskStatusByTime.inProgress.length} 工序)
-                    </span>
-                    <span>已完成：{completedIds.length} 构件 ({taskStatusByTime.completed.length} 工序)</span>
-                    <span className="ml-3 text-cyan-300/70">
-                      高亮构件：{highlightInfo.highlightCount}
-                    </span>
-                  </div>
-                </div>
 
                 <div className="relative min-h-0 flex-1 w-full">
                   <ModelViewer
@@ -601,7 +584,7 @@ export function Overview({
 
         <Card className="col-span-3 min-w-0 flex h-full min-h-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
           <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-            <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+            <CardTitle className="text-xs font-medium text-cyan-200 flex items-center gap-1.5">
               <ListTodo className="h-3.5 w-3.5 text-cyan-300" />
               当日工序
             </CardTitle>
@@ -609,8 +592,8 @@ export function Overview({
               {selectedTimelineDateLabel || "未选择日期"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 min-h-0 p-0">
-            <ScrollArea className="h-full pr-2">
+          <CardContent className="flex-1 min-h-0 p-2">
+            <ScrollArea className="h-full">
               <div className="space-y-2">
                 {dailyProcesses.length === 0 ? (
                   <div className="rounded-md border border-dashed border-cyan-900/50 p-3 text-xs text-cyan-300/70">

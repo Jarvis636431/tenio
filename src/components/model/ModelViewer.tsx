@@ -757,7 +757,7 @@ export function ModelViewer({
   }, [highlightGlobalIds, highlightTagIds, highlightColor, highlightColorGroups, normalizedModels]);
 
   return (
-    <div className={cn("relative w-full h-full bg-gray-50", className)}>
+    <div className={cn("relative w-full h-full bg-[#03122e]", className)}>
       <div
         ref={containerRef}
         className="w-full h-full"

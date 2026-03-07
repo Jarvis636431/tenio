@@ -59,30 +59,30 @@ export function ProjectHeader({
 
   return (
     <div
-      className={`flex h-11 items-center justify-between rounded-md border border-[#0f2d56] bg-gradient-to-r from-[#030f2d] via-[#032554] to-[#073566] px-3 text-[#d8ebff] ${className}`}
+      className={`flex h-11 items-center justify-between rounded-md bg-[#03122e] px-3 text-[#d8ebff] ${className}`}
     >
       <div className="flex min-w-0 items-center gap-3 text-sm">
         <span className="inline-flex items-center gap-1.5 text-[#9cc7ff]">
-          <CalendarDays className="h-4 w-4" />
+          <CalendarDays className="h-3 w-3" />
           {dateText}
         </span>
         <span className="text-[#1c4d86]/80">|</span>
         <span className="inline-flex items-center gap-1.5 font-semibold text-[#66c9ff]">
-          <Clock3 className="h-4 w-4" />
+          <Clock3 className="h-3 w-3" />
           {timeText}
         </span>
         <span className="text-[#1c4d86]/80">|</span>
         <span className="inline-flex items-center gap-1.5 text-[#ff9f43]">
-          <Thermometer className="h-4 w-4" />
+          <Thermometer className="h-3 w-3" />
           {temperatureText}
         </span>
         <span className="inline-flex items-center gap-1.5 text-[#9cc7ff]">
-          <CloudRain className="h-4 w-4" />
+          <CloudRain className="h-3 w-3" />
           {weatherText}
         </span>
         {typeof onsiteCount === "number" && (
           <span className="inline-flex items-center gap-1.5 font-medium text-[#32d296]">
-            <Users className="h-4 w-4" />
+            <Users className="h-3 w-3" />
             {onsiteCount} 人在场
           </span>
         )}

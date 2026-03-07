@@ -539,7 +539,7 @@ export function GanttChart({
                       }}
                     >
                       <div className="flex items-center gap-1 flex-1 min-w-0">
-                        <div className="font-medium text-[9px] truncate max-w-[110px]">
+                        <div className="font-medium text-[9px] text-cyan-200 truncate max-w-[110px]">
                           {item.task}
                         </div>
                         <div className="w-px h-2 bg-border flex-shrink-0"></div>
@@ -551,7 +551,7 @@ export function GanttChart({
                           >
                             {item.worker}
                           </Badge>
-                          <span className="text-[8px] text-muted-foreground">
+                          <span className="text-[8px] text-cyan-300/70">
                             {item.count}人
                           </span>
                         </div>

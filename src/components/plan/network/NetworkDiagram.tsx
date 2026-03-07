@@ -166,19 +166,19 @@ function NodeBlock({
       {/* ── 四角日期框 ── */}
       {/* 左上 ES */}
       <rect x={x + dateInsetX} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
-      <text x={x + dateInsetX + DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(start)}</text>
+      <text x={x + dateInsetX + DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#1f4b7b" textAnchor="middle">{formatDateString(start)}</text>
 
       {/* 右上 EF */}
       <rect x={x + w - dateInsetX - DATE_BOX_W} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
-      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(end)}</text>
+      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#1f4b7b" textAnchor="middle">{formatDateString(end)}</text>
 
       {/* 左下 LS */}
       <rect x={x + dateInsetX} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
-      <text x={x + dateInsetX + DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(start)}</text>
+      <text x={x + dateInsetX + DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#1f4b7b" textAnchor="middle">{formatDateString(start)}</text>
 
       {/* 右下 LF */}
       <rect x={x + w - dateInsetX - DATE_BOX_W} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
-      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(end)}</text>
+      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#1f4b7b" textAnchor="middle">{formatDateString(end)}</text>
 
       {/* ── 左右连接圆点 — 正好在节点边缘，与连线对齐 ── */}
       <circle
@@ -200,7 +200,7 @@ function NodeBlock({
 
       {/* ── 中间内容 ── */}
       {!title.toLowerCase().startsWith("lag") && (
-        <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill="#333333" textAnchor="middle">#{displayId}</text>
+        <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill="#1f4b7b" textAnchor="middle">#{displayId}</text>
       )}
 
       {/* 黄色胶囊 */}
@@ -212,10 +212,10 @@ function NodeBlock({
         rx="12"
         fill={statusColor.capsule}
       />
-      <text x={x + w / 2} y={capsuleY + CAPSULE_H / 2 + 6} fontSize="16" fill="#000000" fontWeight="bold" textAnchor="middle">{title}</text>
+      <text x={x + w / 2} y={capsuleY + CAPSULE_H / 2 + 6} fontSize="16" fill="#0f2f57" fontWeight="bold" textAnchor="middle">{title}</text>
 
       {/* ── 底部工期（主框内底部，两个日期框之间） ── */}
-      <text x={x + w / 2} y={y + h - 8} fontSize="14" fill="#666666" textAnchor="middle">{durationText}</text>
+      <text x={x + w / 2} y={y + h - 8} fontSize="14" fill="#3b6ea1" textAnchor="middle">{durationText}</text>
     </g>
   );
 }
@@ -380,7 +380,7 @@ export function NetworkDiagram({
 
   if (tasks.length === 0) {
     return (
-      <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+      <div className="h-full w-full flex items-center justify-center text-cyan-300/70">
         当前项目暂无施工任务数据
       </div>
     );
