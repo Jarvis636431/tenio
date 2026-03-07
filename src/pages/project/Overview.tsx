@@ -385,204 +385,209 @@ export function Overview({
 
   return (
     <div className="h-full flex flex-col space-y-6">
-      <div>
+      <div className="shrink-0">
         <ProjectHeader
           title={currentProjectName}
           titleExtra={totalDurationLabel ? `总工期：${totalDurationLabel}` : undefined}
           onsiteCount={onsiteCount}
           onExportReport={handleExportCSV}
         />
-        <div className="mt-2 text-sm text-muted-foreground">
-          项目ID: {projectId} {isGraphLoading ? " · 核心数据加载中..." : ""}
-        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>模型预览</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                {timeRange ? (
-                  <>
-                    项目周期：第 {timeRange.startDay} 天 - 第 {timeRange.endDay} 天 (共 {timeRange.totalDays} 天)
-                    <br />
-                    当前进度：第 {currentDay} 天
-                    {tasks.some((item) => !item.start || !item.end) && (
-                      <>
-                        <br />
-                        <span className="text-amber-600">⚠️ 部分工序缺少时间数据</span>
-                      </>
-                    )}
-                  </>
+      <div className="grid grid-cols-10 gap-6">
+        <div className="col-span-9 space-y-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>人员投入趋势</CardTitle>
+                <CardDescription>展示每日劳动力总人数</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {headcountCurveQuery.isLoading ? (
+                  <Skeleton className="h-[320px] w-full" />
+                ) : headcountCurveQuery.isError ? (
+                  <div className="flex h-[320px] items-center justify-center text-sm text-destructive">
+                    无法获取人员数据
+                  </div>
+                ) : headcountChartData.length > 0 ? (
+                  renderChart(headcountChartData, ["劳动力人数"], "人")
                 ) : (
-                  '正在加载时间数据...'
+                  <div className="flex h-[320px] items-center justify-center text-muted-foreground">
+                    暂无人员数据
+                  </div>
                 )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>资金成本趋势</CardTitle>
+                <CardDescription>监控人工成本与总成本变化</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {costCurveQuery.isLoading ? (
+                  <Skeleton className="h-[320px] w-full" />
+                ) : costCurveQuery.isError ? (
+                  <div className="flex h-[320px] items-center justify-center text-sm text-destructive">
+                    无法获取成本数据
+                  </div>
+                ) : costCurveChartData.length > 0 ? (
+                  renderChart(costCurveChartData, ["总成本"], "万元")
+                ) : (
+                  <div className="flex h-[320px] items-center justify-center text-muted-foreground">
+                    暂无成本数据
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>施工计划</CardTitle>
+                  <CardDescription>在同一页面查看甘特图与网络图</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={activePlanView === "gantt" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setActivePlanView("gantt")}
+                  >
+                    甘特图
+                  </Button>
+                  <Button
+                    variant={activePlanView === "network" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setActivePlanView("network")}
+                  >
+                    网络图
+                  </Button>
+                </div>
               </div>
-              <div className="text-sm">
-                <span className="mr-3">
-                  进行中：{inProgressIds.length} 构件 ({taskStatusByTime.inProgress.length} 工序)
-                </span>
-                <span>已完成：{completedIds.length} 构件 ({taskStatusByTime.completed.length} 工序)</span>
-                <span className="ml-3 text-muted-foreground">
-                  高亮构件：{highlightInfo.highlightCount}
-                </span>
-              </div>
-            </div>
-            
-            {timeRange && (
-              <div className="space-y-2">
+            </CardHeader>
+            <CardContent>
+              {planTasks.length === 0 ? (
+                <div className="flex h-[420px] items-center justify-center text-muted-foreground">
+                  当前项目暂无施工任务数据
+                </div>
+              ) : activePlanView === "gantt" ? (
+                <div className="h-[520px] overflow-hidden">
+                  <GanttChart
+                    data={planTasks}
+                    scale="day"
+                    shutdownEvents={config?.shutdown_events ?? []}
+                  />
+                </div>
+              ) : (
+                <div className="h-[520px] overflow-hidden rounded-md border">
+                  <NetworkDiagram tasks={planTasks} />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>模型预览</CardTitle>
+              <CardDescription>
+                项目ID: {projectId} {isGraphLoading ? "· 核心数据加载中..." : ""}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium">项目进度控制</div>
-                  <div className="text-xs text-muted-foreground">
-                    拖动滑块查看不同天数的施工状态
+                  <div className="text-sm text-muted-foreground">
+                    {timeRange ? (
+                      <>
+                        项目周期：第 {timeRange.startDay} 天 - 第 {timeRange.endDay} 天 (共 {timeRange.totalDays} 天)
+                        <br />
+                        当前进度：第 {currentDay} 天
+                        {tasks.some((item) => !item.start || !item.end) && (
+                          <>
+                            <br />
+                            <span className="text-amber-600">⚠️ 部分工序缺少时间数据</span>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      "正在加载时间数据..."
+                    )}
+                  </div>
+                  <div className="text-sm">
+                    <span className="mr-3">
+                      进行中：{inProgressIds.length} 构件 ({taskStatusByTime.inProgress.length} 工序)
+                    </span>
+                    <span>已完成：{completedIds.length} 构件 ({taskStatusByTime.completed.length} 工序)</span>
+                    <span className="ml-3 text-muted-foreground">
+                      高亮构件：{highlightInfo.highlightCount}
+                    </span>
                   </div>
                 </div>
-                <Slider
-                  value={[currentDay]}
-                  min={timeRange.startDay}
-                  max={timeRange.endDay}
-                  step={1}
-                  onValueChange={(v) => setCurrentDay(v[0])}
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>第 {timeRange.startDay} 天</span>
-                  <span>第 {timeRange.endDay} 天</span>
+
+                {timeRange && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-medium">项目进度控制</div>
+                      <div className="text-xs text-muted-foreground">
+                        拖动滑块查看不同天数的施工状态
+                      </div>
+                    </div>
+                    <Slider
+                      value={[currentDay]}
+                      min={timeRange.startDay}
+                      max={timeRange.endDay}
+                      step={1}
+                      onValueChange={(v) => setCurrentDay(v[0])}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>第 {timeRange.startDay} 天</span>
+                      <span>第 {timeRange.endDay} 天</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="relative h-[500px] w-full">
+                  <ModelViewer
+                    models={[
+                      {
+                        key: "default",
+                        src: "/models/0202.ifc",
+                        tagMap,
+                      },
+                    ]}
+                    baseMaterialOverrides={{ transparent: true, opacity: 0 }}
+                    highlightColorGroups={[
+                      {
+                        ids: completedIds,
+                        color: "#22c55e",
+                        opacity: 0.18,
+                        customID: "completed",
+                      },
+                      {
+                        ids: inProgressIds,
+                        color: "#f59e0b",
+                        opacity: 1,
+                        customID: "inProgress",
+                      },
+                      {
+                        ids: fixedHighlightIds,
+                        color: "#000000",
+                        opacity: 0.05,
+                        customID: "fixed",
+                      },
+                    ]}
+                    className="h-full"
+                  />
                 </div>
               </div>
-            )}
+            </CardContent>
+          </Card>
+        </div>
 
-            <div className="relative w-full h-[500px]">
-              <ModelViewer
-                models={[
-                  {
-                    key: "default",
-                    src: "/models/0202.ifc",
-                    tagMap,
-                  },
-                ]}
-                baseMaterialOverrides={{ transparent: true, opacity: 0 }}
-                highlightColorGroups={[
-                  {
-                    ids: completedIds,
-                    color: "#22c55e",
-                    opacity: 0.18,
-                    customID: "completed",
-                  },
-                  {
-                    ids: inProgressIds,
-                    color: "#f59e0b",
-                    opacity: 1,
-                    customID: "inProgress",
-                  },
-                  {
-                    ids: fixedHighlightIds,
-                    color: "#000000",
-                    opacity: 0.05,
-                    customID: "fixed",
-                  },
-                ]}
-                className="h-full"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>施工计划</CardTitle>
-              <CardDescription>在同一页面查看甘特图与网络图</CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={activePlanView === "gantt" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActivePlanView("gantt")}
-              >
-                甘特图
-              </Button>
-              <Button
-                variant={activePlanView === "network" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActivePlanView("network")}
-              >
-                网络图
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {planTasks.length === 0 ? (
-            <div className="flex h-[420px] items-center justify-center text-muted-foreground">
-              当前项目暂无施工任务数据
-            </div>
-          ) : activePlanView === "gantt" ? (
-            <div className="h-[520px] overflow-hidden">
-              <GanttChart
-                data={planTasks}
-                scale="day"
-                shutdownEvents={config?.shutdown_events ?? []}
-              />
-            </div>
-          ) : (
-            <div className="h-[520px] overflow-hidden rounded-md border">
-              <NetworkDiagram tasks={planTasks} />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>人员投入趋势</CardTitle>
-            <CardDescription>展示每日劳动力总人数</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {headcountCurveQuery.isLoading ? (
-              <Skeleton className="h-[320px] w-full" />
-            ) : headcountCurveQuery.isError ? (
-              <div className="flex h-[320px] items-center justify-center text-sm text-destructive">
-                无法获取人员数据
-              </div>
-            ) : headcountChartData.length > 0 ? (
-              renderChart(headcountChartData, ["劳动力人数"], "人")
-            ) : (
-              <div className="flex h-[320px] items-center justify-center text-muted-foreground">
-                暂无人员数据
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>资金成本趋势</CardTitle>
-            <CardDescription>监控人工成本与总成本变化</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {costCurveQuery.isLoading ? (
-              <Skeleton className="h-[320px] w-full" />
-            ) : costCurveQuery.isError ? (
-              <div className="flex h-[320px] items-center justify-center text-sm text-destructive">
-                无法获取成本数据
-              </div>
-            ) : costCurveChartData.length > 0 ? (
-              renderChart(costCurveChartData, ["总成本"], "万元")
-            ) : (
-              <div className="flex h-[320px] items-center justify-center text-muted-foreground">
-                暂无成本数据
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="col-span-1 rounded-md border border-dashed border-muted-foreground/20 bg-muted/10" />
       </div>
-
     </div>
   );
 }
