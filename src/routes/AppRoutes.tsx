@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppLayout } from "@/components/layout/app/AppLayout";
-import { ProjectLayout } from "@/components/layout/project/ProjectLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { CreateProjectRoutes } from "@/routes/CreateProjectRoutes";
@@ -80,13 +79,11 @@ export function AppRoutes() {
           element={
             <ProtectedRoute auth={auth}>
               <AppLayout>
-                <ProjectLayout />
+                <Overview />
               </AppLayout>
             </ProtectedRoute>
           }
-        >
-          <Route index element={<Overview />} />
-        </Route>
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

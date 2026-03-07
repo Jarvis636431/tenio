@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +8,8 @@ import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectConfig } from "@/hooks/useProjectConfig";
+import { usePlanExport } from "@/pages/project/plan/hooks/usePlanExport";
+import { ProjectHeader } from "@/components/layout/project/ProjectHeader";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { Slider } from "@/components/ui/slider";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
@@ -40,8 +41,9 @@ export function Overview({
   const projectId = paramProjectId || propsProjectId || '';
   const { coreGraph, isLoading: isGraphLoading } = useProjectCoreGraph();
   const { config } = useProjectConfig();
-  const { currentProject } = useProject();
+  const { currentProject, projects } = useProject();
   const { token } = useAuth();
+  const { handleExportCSV } = usePlanExport(coreGraph);
   const { tagMap, processHighlights, allResolvedIds, getIdsByDate } =
     useProjectHighlight(projectId);
   const [currentDay, setCurrentDay] = useState(1);
@@ -236,6 +238,60 @@ export function Overview({
     );
   };
 
+  const currentProjectName = useMemo(() => {
+    if (!projectId) return currentProject?.name || "项目详情";
+    return (
+      projects.find((project) => project.id === projectId)?.name ||
+      currentProject?.name ||
+      "项目详情"
+    );
+  }, [projectId, projects, currentProject]);
+
+  const totalDurationLabel = useMemo(() => {
+    if (!coreGraph?.work_processes?.length) return "";
+    const times = coreGraph.work_processes
+      .map((wp) => ({
+        start: wp.execution_state?.planned_start_datetime,
+        end: wp.execution_state?.planned_end_datetime,
+      }))
+      .filter((t) => t.start && t.end) as Array<{ start: string; end: string }>;
+    if (!times.length) return "";
+    const starts = times
+      .map((t) => new Date(t.start).getTime())
+      .filter((v) => !Number.isNaN(v));
+    const ends = times
+      .map((t) => new Date(t.end).getTime())
+      .filter((v) => !Number.isNaN(v));
+    if (!starts.length || !ends.length) return "";
+    const minStart = Math.min(...starts);
+    const maxEnd = Math.max(...ends);
+    const totalDays = Math.max(
+      1,
+      Math.ceil((maxEnd - minStart) / (1000 * 60 * 60 * 24)) + 1,
+    );
+    return `${totalDays}天`;
+  }, [coreGraph]);
+
+  const onsiteCount = useMemo(() => {
+    if (!coreGraph?.work_processes?.length) return undefined;
+    const now = Date.now();
+    const activeWorkProcesses = coreGraph.work_processes.filter((wp) => {
+      const start = wp.execution_state?.planned_start_datetime
+        ? new Date(wp.execution_state.planned_start_datetime).getTime()
+        : NaN;
+      const end = wp.execution_state?.planned_end_datetime
+        ? new Date(wp.execution_state.planned_end_datetime).getTime()
+        : NaN;
+      if (Number.isNaN(start) || Number.isNaN(end)) return false;
+      return now >= start && now <= end;
+    });
+    if (!activeWorkProcesses.length) return 0;
+    return activeWorkProcesses.reduce(
+      (sum, wp) => sum + (wp.team_size ?? wp.suggested_team_count ?? 0),
+      0,
+    );
+  }, [coreGraph]);
+
   // 计算项目时间范围 - 处理相对时间
   const timeRange = useMemo(() => {
     if (!processHighlights.length) return null;
@@ -329,16 +385,15 @@ export function Overview({
 
   return (
     <div className="h-full flex flex-col space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-600">项目ID: {projectId}</p>
-          {isGraphLoading && <p className="text-gray-500">数据加载中...</p>}
-        </div>
-        <div>
-          <Button variant="outline" size="sm" disabled>
-            <RefreshCcw />
-            核心数据已加载
-          </Button>
+      <div>
+        <ProjectHeader
+          title={currentProjectName}
+          titleExtra={totalDurationLabel ? `总工期：${totalDurationLabel}` : undefined}
+          onsiteCount={onsiteCount}
+          onExportReport={handleExportCSV}
+        />
+        <div className="mt-2 text-sm text-muted-foreground">
+          项目ID: {projectId} {isGraphLoading ? " · 核心数据加载中..." : ""}
         </div>
       </div>
 
