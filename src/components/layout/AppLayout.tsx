@@ -9,10 +9,7 @@ function LayoutContent({ children }: LayoutProps) {
   const chatPanel = useChatPanel();
 
   return (
-    <div
-      className="h-screen w-full overflow-hidden bg-background grid"
-      style={{ gridTemplateColumns: "1fr 3fr 6fr" }}
-    >
+    <div className="grid h-screen w-full grid-cols-[56px_minmax(0,3fr)_minmax(0,6fr)] overflow-hidden bg-background">
       <AppSidebar />
 
       <div className="relative border-r border-gray-200 bg-white/80">

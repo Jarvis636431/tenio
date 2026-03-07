@@ -11,7 +11,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
 
   return (
-    <aside className="h-full border-r border-gray-200 bg-white">
+    <aside className="h-full w-14 border-r border-gray-200 bg-white">
       <TooltipProvider delayDuration={300}>
         <div className="flex h-full flex-col items-center py-4">
           <div
