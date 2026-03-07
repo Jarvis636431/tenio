@@ -11,6 +11,7 @@ import { useProjectExport } from "@/pages/project/hooks/useProjectExport";
 import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { Slider } from "@/components/ui/slider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
@@ -305,6 +306,22 @@ export function Overview({
     return { startDay: 1, endDay: totalDays, totalDays, baseDate: minStart };
   }, [processHighlights]);
 
+  const selectedTimelineDate = useMemo(() => {
+    if (!timeRange) return null;
+    const selected = new Date(timeRange.baseDate);
+    selected.setDate(timeRange.baseDate.getDate() + currentDay - 1);
+    selected.setHours(12, 0, 0, 0);
+    return selected;
+  }, [currentDay, timeRange]);
+
+  const selectedTimelineDateLabel = useMemo(() => {
+    if (!selectedTimelineDate) return "";
+    const y = selectedTimelineDate.getFullYear();
+    const m = String(selectedTimelineDate.getMonth() + 1).padStart(2, "0");
+    const d = String(selectedTimelineDate.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, [selectedTimelineDate]);
+
   const highlightInfo = useMemo(() => {
     const ids = allResolvedIds;
     return {
@@ -315,11 +332,8 @@ export function Overview({
 
   // 根据当前天数计算工序状态
   const taskStatusByTime = useMemo(() => {
-    if (!timeRange) return { completed: [], inProgress: [], upcoming: [] };
-    const base = timeRange.baseDate;
-    const currentDate = new Date(base);
-    currentDate.setDate(base.getDate() + currentDay - 1);
-    currentDate.setHours(12, 0, 0, 0);
+    if (!selectedTimelineDate) return { completed: [], inProgress: [], upcoming: [] };
+    const currentDate = selectedTimelineDate;
 
     const completed: string[] = [];
     const inProgress: string[] = [];
@@ -342,14 +356,11 @@ export function Overview({
     });
 
     return { completed, inProgress, upcoming };
-  }, [processHighlights, currentDay, timeRange]);
+  }, [processHighlights, selectedTimelineDate]);
 
   const completedIds = useMemo(() => {
-    if (!timeRange) return [] as string[];
-    const base = timeRange.baseDate;
-    const currentDate = new Date(base);
-    currentDate.setDate(base.getDate() + currentDay - 1);
-    const result = getIdsByDate(currentDate);
+    if (!selectedTimelineDate) return [] as string[];
+    const result = getIdsByDate(selectedTimelineDate);
     console.debug("[overview] highlightByDate", {
       day: currentDay,
       completed: result.completedIds.length,
@@ -357,21 +368,35 @@ export function Overview({
       debug: result.debug,
     });
     return result.completedIds;
-  }, [currentDay, getIdsByDate, timeRange]);
+  }, [currentDay, getIdsByDate, selectedTimelineDate]);
   
   const inProgressIds = useMemo(() => {
-    if (!timeRange) return [] as string[];
-    const base = timeRange.baseDate;
-    const currentDate = new Date(base);
-    currentDate.setDate(base.getDate() + currentDay - 1);
-    const result = getIdsByDate(currentDate);
+    if (!selectedTimelineDate) return [] as string[];
+    const result = getIdsByDate(selectedTimelineDate);
     console.debug("[overview] highlightByDate inProgress", {
       day: currentDay,
       inProgress: result.inProgressIds.length,
       debug: result.debug,
     });
     return result.inProgressIds;
-  }, [currentDay, getIdsByDate, timeRange]);
+  }, [currentDay, getIdsByDate, selectedTimelineDate]);
+
+  const dailyProcesses = useMemo(() => {
+    if (!selectedTimelineDate) return [];
+    return processHighlights
+      .filter((item) => {
+        if (!item.start || !item.end) return false;
+        const start = new Date(item.start);
+        const end = new Date(item.end);
+        start.setHours(12, 0, 0, 0);
+        end.setHours(12, 0, 0, 0);
+        return selectedTimelineDate >= start && selectedTimelineDate <= end;
+      })
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+      }));
+  }, [processHighlights, selectedTimelineDate]);
 
 
   // 初始化当前天数为项目开始天数
@@ -584,7 +609,34 @@ export function Overview({
           </Card>
         </div>
 
-        <div className="col-span-1 rounded-md border border-dashed border-muted-foreground/20 bg-muted/10" />
+        <Card className="col-span-1 min-h-0">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">当日工序</CardTitle>
+            <CardDescription className="text-xs">
+              {selectedTimelineDateLabel || "未选择日期"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <ScrollArea className="h-[920px] pr-2">
+              <div className="space-y-2">
+                {dailyProcesses.length === 0 ? (
+                  <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                    暂无当日工序
+                  </div>
+                ) : (
+                  dailyProcesses.map((item, index) => (
+                    <div key={item.id} className="rounded-md border bg-muted/20 p-2">
+                      <div className="text-[11px] text-muted-foreground">
+                        工序 {index + 1}
+                      </div>
+                      <div className="text-xs leading-5">{item.name}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
