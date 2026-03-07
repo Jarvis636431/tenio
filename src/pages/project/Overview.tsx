@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { Boxes, ChartLine, ListTodo, Network, Users } from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
@@ -445,8 +446,11 @@ export function Overview({
         <div className="col-span-7 min-w-0 grid min-h-0 grid-rows-[0.75fr_0.75fr_1.25fr] gap-2 overflow-hidden">
           <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-              <CardHeader className="p-2 pb-1">
-                <CardTitle className="text-xs font-medium">人员投入趋势</CardTitle>
+              <CardHeader className="p-2 pb-1 border-b border-gray-200">
+                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                  劳动力曲线
+                </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 min-h-0 p-0">
                 {headcountCurveQuery.isLoading ? (
@@ -466,8 +470,11 @@ export function Overview({
             </Card>
 
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-              <CardHeader className="p-2 pb-1">
-                <CardTitle className="text-xs font-medium">资金成本趋势</CardTitle>
+              <CardHeader className="p-2 pb-1 border-b border-gray-200">
+                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+                  <ChartLine className="h-3.5 w-3.5 text-muted-foreground" />
+                  资金曲线
+                </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 min-h-0 p-0">
                 {costCurveQuery.isLoading ? (
@@ -489,8 +496,11 @@ export function Overview({
 
           <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-              <CardHeader className="p-2 pb-1">
-                <CardTitle className="text-xs font-medium">甘特图</CardTitle>
+              <CardHeader className="p-2 pb-1 border-b border-gray-200">
+                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+                  <ListTodo className="h-3.5 w-3.5 text-muted-foreground" />
+                  甘特图
+                </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 min-h-0 p-0">
                 {planTasks.length === 0 ? (
@@ -510,8 +520,11 @@ export function Overview({
             </Card>
 
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-              <CardHeader className="p-2 pb-1">
-                <CardTitle className="text-xs font-medium">网络图</CardTitle>
+              <CardHeader className="p-2 pb-1 border-b border-gray-200">
+                <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+                  <Network className="h-3.5 w-3.5 text-muted-foreground" />
+                  网络图
+                </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 min-h-0 p-0">
                 {planTasks.length === 0 ? (
@@ -528,8 +541,11 @@ export function Overview({
           </div>
 
           <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-            <CardHeader className="p-2 pb-1">
-              <CardTitle className="text-xs font-medium">模型预览</CardTitle>
+            <CardHeader className="p-2 pb-1 border-b border-gray-200">
+              <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+                <Boxes className="h-3.5 w-3.5 text-muted-foreground" />
+                模型预览
+              </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 min-h-0 p-0">
               <div className="flex h-full min-h-0 flex-col gap-2">
@@ -584,8 +600,11 @@ export function Overview({
         </div>
 
         <Card className="col-span-3 min-w-0 flex h-full min-h-0 flex-col overflow-hidden">
-          <CardHeader className="p-2 pb-1">
-            <CardTitle className="text-xs font-medium">当日工序</CardTitle>
+          <CardHeader className="p-2 pb-1 border-b border-gray-200">
+            <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+              <ListTodo className="h-3.5 w-3.5 text-muted-foreground" />
+              当日工序
+            </CardTitle>
             <CardDescription className="text-xs">
               {selectedTimelineDateLabel || "未选择日期"}
             </CardDescription>
