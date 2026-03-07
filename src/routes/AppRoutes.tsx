@@ -4,7 +4,6 @@ import { AppLayout } from "@/components/layout/app/AppLayout";
 import { ProjectLayout } from "@/components/layout/project/ProjectLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
-import { ProjectRoutes } from "@/routes/ProjectRoutes";
 import { CreateProjectRoutes } from "@/routes/CreateProjectRoutes";
 import { APP_DEFAULT_TITLE } from "@/config";
 
@@ -13,6 +12,11 @@ const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const CreateProject = lazy(() => import("@/pages/create/Create"));
+const Overview = lazy(() =>
+  import("@/pages/project/Overview").then((module) => ({
+    default: module.Overview,
+  })),
+);
 
 const TITLE_RULES: Array<{ prefix: string; title: string }> = [
   { prefix: "/login", title: "登录" },
@@ -81,7 +85,7 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         >
-          {ProjectRoutes()}
+          <Route index element={<Overview />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
