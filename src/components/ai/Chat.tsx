@@ -1,4 +1,4 @@
-import { Loader2, Mic, Send, Sparkles, Square } from "lucide-react";
+import { Loader2, Mic, Paperclip, Send, Sparkles, Square } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -362,46 +362,60 @@ export function Chat({
           </div>
         </CardContent>
 
-        <CardFooter className="border-t px-4 py-3 flex flex-col gap-2">
-          <div className="flex space-x-2 w-full">
+        <CardFooter className="border-t px-4 py-3">
+          <div className="w-full rounded-2xl border border-cyan-900/70 bg-[#02102a] px-3 py-3 shadow-[inset_0_0_0_1px_rgba(8,145,178,0.18)]">
             <Input
-              placeholder="输入调整指令，如：'将钢筋绑扎延期3天'"
+              placeholder="想查点什么？（Enter 发送）"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleInputEnter}
               aria-label="输入调整指令"
-              className="flex-1"
+              className="h-9 border-0 bg-transparent px-0 text-slate-100 placeholder:text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
             />
-            <Button
-              onClick={toggleRecording}
-              size="icon"
-              variant={isRecording ? "default" : "outline"}
-              disabled={isRecognizing && !isRecording}
-              aria-label={isRecording ? "结束录音" : "开始录音"}
-              className={cn(
-                "relative transition-all",
-                isRecording
-                  ? "bg-red-500 text-white hover:bg-red-500 ring-2 ring-red-400/60 animate-pulse"
-                  : "",
-              )}
-              style={isRecording ? { animationDuration: "1.6s" } : undefined}
-            >
-              {isRecording ? (
-                <Square className="w-4 h-4" />
-              ) : (
-                <Mic className="w-4 h-4" />
-              )}
-            </Button>
-            <Button
-              onClick={handleSendMessage}
-              size="icon"
-              disabled={!inputMessage.trim()}
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+            <div className="mt-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  aria-label="附件"
+                  className="h-9 w-9 rounded-xl border border-cyan-900/70 bg-[#051a3d] text-slate-200 hover:bg-[#0a2a5c]"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={toggleRecording}
+                  size="icon"
+                  variant="ghost"
+                  disabled={isRecognizing && !isRecording}
+                  aria-label={isRecording ? "结束录音" : "开始录音"}
+                  className={cn(
+                    "h-9 w-9 rounded-xl border border-cyan-900/70 bg-[#051a3d] text-slate-200 hover:bg-[#0a2a5c]",
+                    isRecording
+                      ? "border-red-400/70 bg-red-900/30 text-red-100 animate-pulse"
+                      : "",
+                  )}
+                  style={isRecording ? { animationDuration: "1.6s" } : undefined}
+                >
+                  {isRecording ? (
+                    <Square className="w-4 h-4" />
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+              <Button
+                onClick={handleSendMessage}
+                size="icon"
+                disabled={!inputMessage.trim()}
+                className="h-10 w-10 rounded-xl bg-[#1d4e89] text-[#cfe8ff] hover:bg-[#286ab8] disabled:bg-slate-700/40 disabled:text-slate-400"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
           {isRecognizing && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" />
               正在识别语音，识别结果会填入输入框
             </div>
