@@ -11,7 +11,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
 
   return (
-    <aside className="h-full w-14 border-r border-gray-200 bg-white">
+    <aside className="h-full w-14 border-r border-cyan-900/40 bg-[#04142d]/85 backdrop-blur-sm">
       <TooltipProvider delayDuration={300}>
         <div className="flex h-full flex-col items-center py-4">
           <div
@@ -25,9 +25,9 @@ export function AppSidebar() {
             <TooltipTrigger asChild>
               <NavLink
                 to="/"
-                className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-cyan-200 hover:bg-cyan-900/40"
               >
-                <Home className="h-4 w-4 text-muted-foreground" />
+                <Home className="h-4 w-4" />
               </NavLink>
             </TooltipTrigger>
             <TooltipContent side="right">

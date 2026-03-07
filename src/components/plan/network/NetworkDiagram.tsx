@@ -159,25 +159,25 @@ function NodeBlock({
         width={w}
         height={h}
         fill="#ffffff"
-        stroke={critical ? "rgb(60, 140, 221)" : "#000000"}
+        stroke={critical ? "rgb(60, 140, 221)" : "#2f6fb4"}
         strokeWidth="1.5"
       />
 
       {/* ── 四角日期框 ── */}
       {/* 左上 ES */}
-      <rect x={x + dateInsetX} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
+      <rect x={x + dateInsetX} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
       <text x={x + dateInsetX + DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(start)}</text>
 
       {/* 右上 EF */}
-      <rect x={x + w - dateInsetX - DATE_BOX_W} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
+      <rect x={x + w - dateInsetX - DATE_BOX_W} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
       <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(end)}</text>
 
       {/* 左下 LS */}
-      <rect x={x + dateInsetX} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
+      <rect x={x + dateInsetX} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
       <text x={x + dateInsetX + DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(start)}</text>
 
       {/* 右下 LF */}
-      <rect x={x + w - dateInsetX - DATE_BOX_W} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#888888" strokeWidth="1.5" />
+      <rect x={x + w - dateInsetX - DATE_BOX_W} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
       <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#334455" textAnchor="middle">{formatDateString(end)}</text>
 
       {/* ── 左右连接圆点 — 正好在节点边缘，与连线对齐 ── */}
@@ -186,7 +186,7 @@ function NodeBlock({
         cy={y + h / 2}
         r={DOT_R}
         fill={statusColor.dot}
-        stroke={critical ? "rgb(60, 140, 221)" : "#000000"}
+        stroke={critical ? "rgb(60, 140, 221)" : "#2f6fb4"}
         strokeWidth="1.5"
       />
       <circle
@@ -194,7 +194,7 @@ function NodeBlock({
         cy={y + h / 2}
         r={DOT_R}
         fill={statusColor.dot}
-        stroke={critical ? "rgb(60, 140, 221)" : "#000000"}
+        stroke={critical ? "rgb(60, 140, 221)" : "#2f6fb4"}
         strokeWidth="1.5"
       />
 
@@ -389,7 +389,7 @@ export function NetworkDiagram({
   return (
     <div
       ref={containerRef}
-      className="h-full w-full overflow-hidden overscroll-none bg-white"
+      className="h-full w-full overflow-hidden overscroll-none bg-[#03112a]"
       onWheel={(e) => e.preventDefault()}
     >
       <svg
@@ -413,7 +413,7 @@ export function NetworkDiagram({
             refY="4"
             orient="auto"
           >
-            <path d="M0,0 L8,4 L0,8 Z" fill="#000000" />
+            <path d="M0,0 L8,4 L0,8 Z" fill="#2f6fb4" />
           </marker>
           <marker
             id="arrow-critical"
@@ -453,7 +453,7 @@ export function NetworkDiagram({
               <path
                 key={`${edge.from}-${edge.to}-${index}`}
                 d={d}
-                stroke={isCritical ? "rgb(60, 140, 221)" : "#000000"}
+                stroke={isCritical ? "rgb(60, 140, 221)" : "#2f6fb4"}
                 strokeWidth={isCritical ? "3" : "1.5"}
                 fill="none"
                 markerEnd={isCritical ? "url(#arrow-critical)" : "url(#arrow)"}

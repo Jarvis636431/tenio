@@ -491,18 +491,18 @@ export function GanttChart({
   return (
     <div className="w-full h-full flex flex-col">
       <div className="flex-1 overflow-hidden">
-        <div className="overflow-hidden h-full flex flex-col">
+        <div className="overflow-hidden h-full flex flex-col bg-[#03112a]">
           <div className="flex flex-1 overflow-hidden">
             {/* 左侧固定区域（虚拟滚动） */}
             <div className="w-56 flex-shrink-0 flex flex-col">
               {/* 任务名称表头 */}
-              <div className="bg-muted/50 border-r border-b px-1.5 py-0.5 text-[9px] font-semibold h-7 flex items-center">
+              <div className="bg-[#04142d] border-r border-b border-cyan-900/40 px-1.5 py-0.5 text-[9px] font-semibold text-cyan-200 h-7 flex items-center">
                 任务名称
               </div>
               {/* 任务列表（虚拟高度容器） */}
               <div
                 ref={taskListRef}
-                className="flex-1 overflow-hidden border-r bg-background relative"
+                className="flex-1 overflow-hidden border-r border-cyan-900/40 bg-[#03112a] relative"
               >
                 <div style={{ height: totalRows * ROW_HEIGHT }} />
                 {visibleRows.map((item, i) => {
@@ -511,7 +511,7 @@ export function GanttChart({
                   return (
                     <div
                       key={item.id}
-                      className="border-b p-0.5 flex items-center justify-between h-7 bg-gray-50/50 transition-colors relative group"
+                      className="border-b border-cyan-900/30 p-0.5 flex items-center justify-between h-7 bg-[#04142d]/40 transition-colors relative group"
                       onMouseEnter={() => {
                         setHoveredTaskId(item.id);
                         if (hoverTimeoutRef.current)
@@ -560,7 +560,7 @@ export function GanttChart({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 px-1 text-[9px] opacity-100 transition-all duration-200 z-20 bg-white/95 backdrop-blur-sm border-primary/30 text-primary hover:text-white hover:bg-gradient-to-r hover:from-primary hover:to-primary/80 hover:border-primary shadow-lg hover:shadow-xl"
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 px-1 text-[9px] opacity-100 transition-all duration-200 z-20 bg-[#06224a] border-cyan-700/40 text-cyan-200 hover:text-white hover:bg-cyan-700 shadow-lg"
                           onClick={() => onTaskDetail(item)}
                         >
                           详情
@@ -582,7 +582,7 @@ export function GanttChart({
                 className="flex-1"
               >
                 {/* 时间轴表头 */}
-                <div className="bg-muted/50 border-b sticky top-0 z-10">
+                <div className="bg-[#04142d] border-b border-cyan-900/40 sticky top-0 z-10">
                   <div
                     className="grid gap-0 h-7"
                     style={{
@@ -594,13 +594,13 @@ export function GanttChart({
                         key={header.key}
                         className={`border-r border-border/50 flex flex-col items-center justify-center text-[9px] p-0 ${
                           header.isWeekend
-                            ? "bg-muted/70 text-muted-foreground"
-                            : ""
+                            ? "bg-[#0a234a]/70 text-cyan-300/70"
+                            : "text-cyan-200"
                         }`}
                       >
                         <div className="font-medium">{header.primary}</div>
                         {header.secondary && (
-                          <div className="text-[7px] text-muted-foreground">
+                          <div className="text-[7px] text-cyan-300/60">
                             {header.secondary}
                           </div>
                         )}
@@ -618,7 +618,7 @@ export function GanttChart({
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                      backgroundImage: `repeating-linear-gradient(to right, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${columnWidth}px), repeating-linear-gradient(to bottom, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 1px, transparent ${ROW_HEIGHT}px)`,
+                      backgroundImage: `repeating-linear-gradient(to right, rgba(56,189,248,0.12) 0, rgba(56,189,248,0.12) 1px, transparent 1px, transparent ${columnWidth}px), repeating-linear-gradient(to bottom, rgba(56,189,248,0.08) 0, rgba(56,189,248,0.08) 1px, transparent 1px, transparent ${ROW_HEIGHT}px)`,
                     }}
                   />
                   {/* 停工期遮罩：覆盖内容区列，置于任务条下方 */}
@@ -636,7 +636,7 @@ export function GanttChart({
                     return (
                       <div
                         key={item.id}
-                        className="absolute left-0 right-0 border-b hover:bg-gray-50 transition-colors"
+                        className="absolute left-0 right-0 border-b border-cyan-900/30 hover:bg-[#0a234a]/35 transition-colors"
                         style={{ top, height: ROW_HEIGHT }}
                         onMouseEnter={() => setHoveredTaskId(item.id)}
                         onMouseLeave={() => setHoveredTaskId(null)}

@@ -311,11 +311,11 @@ export function Chat({
   };
 
   return (
-    <div className={cn("h-full w-full border-r border-gray-200 bg-white/80", className)}>
-      <Card className="h-full border-0 shadow-none flex flex-col">
+    <div className={cn("h-full w-full border-r border-cyan-900/40 bg-[#071a39]/75 backdrop-blur-sm", className)}>
+      <Card className="h-full border-0 bg-transparent shadow-none flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <CardTitle className="text-lg font-bold flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-category-blue-600" />
+          <CardTitle className="text-lg font-bold flex items-center gap-2 text-cyan-100">
+            <Sparkles className="w-5 h-5 text-cyan-300" />
             AI助手
           </CardTitle>
         </CardHeader>
@@ -340,9 +340,9 @@ export function Chat({
                       className={cn(
                         "max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-line break-words",
                         {
-                          "bg-primary text-primary-foreground":
+                          "bg-cyan-600/90 text-white":
                             message.sender === "user",
-                          "bg-muted text-muted-foreground":
+                          "bg-[#03112a] text-cyan-100 border border-cyan-900/40":
                             message.sender === "ai",
                         },
                       )}
@@ -353,7 +353,7 @@ export function Chat({
                 );
               })}
               {isThinking && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-cyan-300/70">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   AI 正在思考中...
                 </div>
@@ -362,7 +362,7 @@ export function Chat({
           </div>
         </CardContent>
 
-        <CardFooter className="border-t px-4 py-3">
+        <CardFooter className="border-t border-cyan-900/50 px-4 py-3">
           <div className="w-full rounded-2xl border border-cyan-900/70 bg-[#02102a] px-3 py-3 shadow-[inset_0_0_0_1px_rgba(8,145,178,0.18)]">
             <Input
               placeholder="想查点什么？（Enter 发送）"
@@ -415,7 +415,7 @@ export function Chat({
             </div>
           </div>
           {isRecognizing && (
-            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="mt-2 flex items-center gap-2 text-xs text-cyan-300/70">
               <Loader2 className="h-3 w-3 animate-spin" />
               正在识别语音，识别结果会填入输入框
             </div>
