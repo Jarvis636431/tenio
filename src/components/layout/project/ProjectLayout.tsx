@@ -4,60 +4,13 @@ import { useProjectCoreGraph } from '@/hooks/useProjectCoreGraph';
 import { ProjectHeader } from '@/components/layout/project/ProjectHeader';
 import { useMemo } from 'react';
 import { usePlanExport } from '@/pages/project/plan/hooks/usePlanExport';
-import type { PlanTask } from '@/types/domain/plan';
 
 export function ProjectLayout() {
   const { id } = useParams();
   const { projects } = useProject();
   const { coreGraph } = useProjectCoreGraph();
   const currentProject = projects.find(p => p.id === id);
-
-  const exportTasks = useMemo<PlanTask[]>(() => {
-    if (!coreGraph?.work_processes?.length) return [];
-    const depsByTarget = new Map<string, string[]>();
-    coreGraph.dependencies?.forEach((dep) => {
-      const toId = dep.to_work_process_id ?? dep.successor_id;
-      const fromId = dep.from_work_process_id ?? dep.predecessor_id;
-      if (!toId || !fromId) return;
-      const list = depsByTarget.get(toId) ?? [];
-      list.push(fromId);
-      depsByTarget.set(toId, list);
-    });
-
-    return coreGraph.work_processes.map((wp) => {
-      const exec = wp.execution_state;
-      const workerCount = wp.team_size ?? wp.suggested_team_count ?? 0;
-      return {
-        id: wp.id,
-        seqNo: wp.seq_no,
-        task: wp.name || wp.code || "未命名工序",
-        workerCount,
-        jobType: wp.trade?.name ?? "",
-        totalCost:
-          (wp.labor_cost ?? 0) +
-          (wp.material_cost ?? 0) +
-          (wp.device_rental_cost ?? 0),
-        startTime: exec?.planned_start_datetime ?? "",
-        endTime: exec?.planned_end_datetime ?? "",
-        constructionSituation: exec?.status ?? "",
-        prerequisiteProcess: (depsByTarget.get(wp.id) ?? []).join(", "),
-        quantity: wp.quantity ?? 0,
-        quantityUnit: wp.unit ?? "",
-        overtime: "否",
-        duration: wp.duration_days ? `${wp.duration_days}天` : "",
-        actualWorkDays: wp.duration_days ?? 0,
-        constructionMethod: wp.selected_method?.name ?? "",
-        directDependency: "",
-        remarks: "",
-        selectedConstructionMethod: wp.selected_method?.name ?? "",
-        materialCost: wp.material_cost ?? 0,
-        laborCost: wp.labor_cost ?? 0,
-        floor: 0,
-      };
-    });
-  }, [coreGraph]);
-
-  const { handleExportCSV } = usePlanExport(exportTasks);
+  const { handleExportCSV } = usePlanExport(coreGraph);
   
   // 总工期标签逻辑（从 ProjectDetail 移过来）
   const totalDurationLabel = useMemo(() => {
