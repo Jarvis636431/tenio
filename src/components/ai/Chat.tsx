@@ -311,7 +311,7 @@ export function Chat({
   };
 
   return (
-    <div className={cn("h-full w-full border-r border-cyan-900/40 bg-[#071a39]/75 backdrop-blur-sm", className)}>
+    <div className={cn("h-full w-full border-r border-cyan-900/40 bg-gradient-to-b from-[#020a1d] to-[#041332] backdrop-blur-sm", className)}>
       <Card className="h-full border-0 bg-transparent shadow-none flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2 text-cyan-100">
@@ -362,7 +362,7 @@ export function Chat({
           </div>
         </CardContent>
 
-        <CardFooter className="border-t border-cyan-900/50 px-4 py-3">
+        <CardFooter className="px-4 py-3">
           <div className="w-full rounded-2xl border border-cyan-900/70 bg-[#02102a] px-3 py-3 shadow-[inset_0_0_0_1px_rgba(8,145,178,0.18)]">
             <Input
               placeholder="想查点什么？（Enter 发送）"

@@ -1,8 +1,14 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Boxes, ChartLine, ListTodo, Network, Users } from "lucide-react";
+import {
+  ChartLine,
+  ListTodo,
+  Network,
+  Play,
+  Users,
+} from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
@@ -47,6 +53,9 @@ export function Overview({
   const { tagMap, processHighlights, allResolvedIds, getIdsByDate } =
     useProjectHighlight(projectId);
   const [currentDay, setCurrentDay] = useState(1);
+  const [playbackRate, setPlaybackRate] = useState<1 | 2 | 4>(1);
+  const [dailyProcessTab, setDailyProcessTab] = useState<"plan" | "actual">("plan");
+  const [dailyProcessKeyword, setDailyProcessKeyword] = useState("");
   const fixedHighlightIds = useMemo(
     () => [
       "2j0dIGQjb7IBS38pr73$QB",
@@ -321,6 +330,12 @@ export function Overview({
     return `${y}-${m}-${d}`;
   }, [selectedTimelineDate]);
 
+  const timelineProgress = useMemo(() => {
+    if (!timeRange) return 0;
+    const span = Math.max(1, timeRange.endDay - timeRange.startDay);
+    return Math.round(((currentDay - timeRange.startDay) / span) * 100);
+  }, [currentDay, timeRange]);
+
   const highlightInfo = useMemo(() => {
     const ids = allResolvedIds;
     return {
@@ -397,6 +412,13 @@ export function Overview({
       }));
   }, [processHighlights, selectedTimelineDate]);
 
+  const visibleDailyProcesses = dailyProcessTab === "plan" ? dailyProcesses : [];
+  const filteredDailyProcesses = useMemo(() => {
+    const keyword = dailyProcessKeyword.trim();
+    if (!keyword) return visibleDailyProcesses;
+    return visibleDailyProcesses.filter((item) => item.name.includes(keyword));
+  }, [dailyProcessKeyword, visibleDailyProcesses]);
+
 
   // 初始化当前天数为项目开始天数
   useEffect(() => {
@@ -406,7 +428,7 @@ export function Overview({
   }, [timeRange]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 bg-[#020a1d] px-1 pt-0 pb-1 text-slate-100">
+    <div className="flex h-full min-h-0 flex-col gap-2 bg-gradient-to-b from-[#020a1d] to-[#041332] px-1 pt-0 pb-1 text-slate-100">
       <div className="shrink-0">
         <ProjectHeader
           title={currentProjectName}
@@ -417,29 +439,74 @@ export function Overview({
       </div>
 
       {timeRange && (
-        <Card className="shrink-0 border-cyan-900/40 bg-[#071a39]/75">
-          <CardContent className="p-0">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium text-cyan-200">项目进度控制</div>
-                <div className="text-xs text-cyan-300/70">
-                  拖动滑块查看不同天数的施工状态
-                </div>
-              </div>
+        <div className="shrink-0 px-2 py-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-cyan-300/80 transition hover:text-cyan-100"
+                onClick={() => setCurrentDay((d) => Math.max(timeRange.startDay, d - 1))}
+                aria-label="上一天"
+              >
+                <Play className="h-3.5 w-3.5 rotate-180" />
+              </button>
+              <button
+                type="button"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-cyan-300 transition hover:text-cyan-100"
+                onClick={() => setCurrentDay((d) => Math.min(timeRange.endDay, d + 1))}
+                aria-label="播放下一天"
+              >
+                <Play className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-cyan-300/80 transition hover:text-cyan-100"
+                onClick={() => setCurrentDay((d) => Math.min(timeRange.endDay, d + 1))}
+                aria-label="下一天"
+              >
+                <Play className="h-3.5 w-3.5" />
+              </button>
+
+              {[1, 2, 4].map((rate) => (
+                <button
+                  key={rate}
+                  type="button"
+                  className={`ml-1 inline-flex h-7 min-w-9 items-center justify-center rounded-md px-2 text-[11px] font-medium transition ${
+                    playbackRate === rate
+                      ? "text-cyan-100"
+                      : "text-cyan-300/70 hover:text-cyan-200"
+                  }`}
+                  onClick={() => setPlaybackRate(rate as 1 | 2 | 4)}
+                >
+                  {rate}x
+                </button>
+              ))}
+            </div>
+
+            <div className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-cyan-200">
+              <span>{selectedTimelineDateLabel || "--"}</span>
+              <span className="text-cyan-300/70">{timelineProgress}%</span>
+            </div>
+          </div>
+
+          <div className="mt-2 px-0.5">
+            <div className="relative h-4">
+              <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-[#0a2a52]" />
+              <div
+                className="pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-[#5dd6ff]"
+                style={{ width: `${timelineProgress}%` }}
+              />
               <Slider
                 value={[currentDay]}
                 min={timeRange.startDay}
                 max={timeRange.endDay}
                 step={1}
                 onValueChange={(v) => setCurrentDay(v[0])}
+                className="relative z-10 [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:border-2 [&_[role=slider]]:border-cyan-100 [&_[role=slider]]:bg-[#5dd6ff] [&_[role=slider]]:shadow-[0_0_0_3px_rgba(93,214,255,0.2)] [&_[span]:first-child]:h-[3px] [&_[span]:first-child]:bg-transparent"
               />
-              <div className="flex justify-between text-xs text-cyan-300/70">
-                <span>第 {timeRange.startDay} 天</span>
-                <span>第 {timeRange.endDay} 天</span>
-              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       <div className="grid min-h-0 flex-1 grid-cols-10 gap-2 overflow-hidden">
@@ -583,24 +650,58 @@ export function Overview({
         </div>
 
         <Card className="col-span-3 min-w-0 flex h-full min-h-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
-          <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-            <CardTitle className="text-xs font-medium text-cyan-200 flex items-center gap-1.5">
-              <ListTodo className="h-3.5 w-3.5 text-cyan-300" />
-              当日工序
-            </CardTitle>
-            <CardDescription className="text-xs text-cyan-300/70">
-              {selectedTimelineDateLabel || "未选择日期"}
-            </CardDescription>
+          <CardHeader className="p-2 pb-1 bg-[#04142d]/80">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-xs font-medium text-cyan-200 flex items-center gap-1.5">
+                <ListTodo className="h-3.5 w-3.5 text-cyan-300" />
+                当日工序
+              </CardTitle>
+              <div className="inline-flex rounded-md border border-cyan-800/50 bg-[#03112a] p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setDailyProcessTab("plan")}
+                  className={`h-5 rounded px-2 text-[11px] transition ${
+                    dailyProcessTab === "plan"
+                      ? "bg-cyan-500/20 text-cyan-100"
+                      : "text-cyan-300/70 hover:text-cyan-200"
+                  }`}
+                >
+                  计划
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDailyProcessTab("actual")}
+                  className={`h-5 rounded px-2 text-[11px] transition ${
+                    dailyProcessTab === "actual"
+                      ? "bg-cyan-500/20 text-cyan-100"
+                      : "text-cyan-300/70 hover:text-cyan-200"
+                  }`}
+                >
+                  实际
+                </button>
+              </div>
+            </div>
+            <input
+              type="text"
+              value={dailyProcessKeyword}
+              onChange={(e) => setDailyProcessKeyword(e.target.value)}
+              placeholder="搜索工序..."
+              className="mt-1 h-7 w-full rounded-md border border-cyan-800/50 bg-[#03112a] px-2 text-xs text-cyan-100 placeholder:text-cyan-300/50 outline-none focus:border-cyan-500/70"
+            />
           </CardHeader>
           <CardContent className="flex-1 min-h-0 p-2">
             <ScrollArea className="h-full">
               <div className="space-y-2">
-                {dailyProcesses.length === 0 ? (
+                {filteredDailyProcesses.length === 0 ? (
                   <div className="rounded-md border border-dashed border-cyan-900/50 p-3 text-xs text-cyan-300/70">
-                    暂无当日工序
+                    {dailyProcessKeyword.trim()
+                      ? "未匹配到工序"
+                      : dailyProcessTab === "plan"
+                        ? "暂无当日工序"
+                        : "暂无当日实际工序"}
                   </div>
                 ) : (
-                  dailyProcesses.map((item, index) => (
+                  filteredDailyProcesses.map((item, index) => (
                     <div key={item.id} className="rounded-md border border-cyan-900/40 bg-[#03112a] p-2">
                       <div className="text-[11px] text-cyan-300/70">
                         工序 {index + 1}
