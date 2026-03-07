@@ -4,9 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import type { CreateProjectContextType } from "@/types/create-project";
-import { ChatButton } from "@/components/ai/ChatButton";
-import { ChatPanel } from "@/components/ai/ChatPanel";
-import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useProject } from "@/hooks/useProject";
@@ -35,7 +32,6 @@ export function PreviewStep() {
     solutionData,
     projectId,
   } = useOutletContext<CreateProjectContextType>();
-  const chatPanel = useChatPanel({ projectId });
   const { getIdsByDate, tagMap } = useProjectHighlight(projectId);
   const fixedHighlightIds = useMemo(
     () => [
@@ -290,19 +286,7 @@ export function PreviewStep() {
                 ]}
                 className="h-full"
               />
-              {/* AI 助手按钮 */}
-              {!chatPanel.isOpen && (
-                <div className="absolute bottom-4 right-4 z-20">
-                  <ChatButton size="lg" />
-                </div>
-              )}
             </div>
-            <ChatPanel
-              state={chatPanel}
-              positionType="absolute"
-              position={{ bottom: 0, right: 0 }}
-              height="300px"
-            />
           </div>
 
           {/* 曲线图区域 */}

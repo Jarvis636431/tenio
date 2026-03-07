@@ -18,12 +18,7 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-export const CHAT_PANEL_OPEN_EVENT = "chat-panel:open";
 const UNEXPECTED_EVENT_PREFIX = "__unexpected_event__:";
-
-export function openChatPanel() {
-  window.dispatchEvent(new CustomEvent(CHAT_PANEL_OPEN_EVENT));
-}
 
 function createMessageId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -88,7 +83,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   const { token } = useAuth();
   const { currentProject, setCoreGraph } = useProject();
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: createMessageId(),
@@ -114,16 +108,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     if (!scrollAreaRef.current) return;
     scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
   }, [messages, isThinking]);
-
-  useEffect(() => {
-    const handleOpen = () => {
-      setIsOpen(true);
-    };
-    window.addEventListener(CHAT_PANEL_OPEN_EVENT, handleOpen);
-    return () => {
-      window.removeEventListener(CHAT_PANEL_OPEN_EVENT, handleOpen);
-    };
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -604,8 +588,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   };
 
   return {
-    isOpen,
-    close: () => setIsOpen(false),
     messages,
     inputMessage,
     setInputMessage,

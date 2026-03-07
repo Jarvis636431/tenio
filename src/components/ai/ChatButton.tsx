@@ -1,21 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { openChatPanel } from "@/components/ai/hooks/useChatPanel";
 
 interface ChatButtonProps {
   className?: string;
   size?: "md" | "lg";
+  onClick?: () => void;
 }
 
-export function ChatButton({
-  className,
-  size = "md",
-}: ChatButtonProps) {
+export function ChatButton({ className, size = "md", onClick }: ChatButtonProps) {
   return (
     <Button
       type="button"
-      onClick={openChatPanel}
+      onClick={onClick}
       className={cn(
         "rounded-full bg-[#1975D2] text-white shadow-lg shadow-blue-200 hover:bg-[#1564b3] hover:scale-105 transition-all",
         size === "lg" ? "w-16 h-16 text-xs" : "w-14 h-14 text-xs",
