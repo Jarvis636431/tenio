@@ -5,6 +5,7 @@ import type { PlanTask } from "@/types/domain/plan";
 interface NetworkDiagramProps {
   tasks: PlanTask[];
   onNodeClick?: (task: PlanTask) => void;
+  currentDate?: Date | null;
 }
 
 type Node = {
@@ -219,14 +220,17 @@ function NodeBlock({
   );
 }
 
-export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
+export function NetworkDiagram({
+  tasks,
+  onNodeClick,
+  currentDate = null,
+}: NetworkDiagramProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const isPanningRef = useRef(false);
   const lastPointRef = useRef({ x: 0, y: 0 });
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [initialized, setInitialized] = useState(false);
-  const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [minScale, setMinScale] = useState(0.1);
   const visibleTasks = useMemo(
     () => tasks.filter((task) => task.startTime && task.endTime),
@@ -309,29 +313,6 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
     return { nodes: positioned, edges, width: layoutWidth, height: layoutHeight };
   }, [tasks]);
 
-  const { minDate, maxDate } = useMemo(() => {
-    const startDates = nodes.map((n) => toDate(n.start)).filter(Boolean) as Date[];
-    const endDates = nodes.map((n) => toDate(n.end)).filter(Boolean) as Date[];
-    if (!startDates.length || !endDates.length) {
-      return { minDate: null, maxDate: null };
-    }
-    const minTime = Math.min(...startDates.map((d) => d.getTime()));
-    const maxTime = Math.max(...endDates.map((d) => d.getTime()));
-    return { minDate: new Date(minTime), maxDate: new Date(maxTime) };
-  }, [nodes]);
-
-  const totalDays = useMemo(() => {
-    if (!minDate || !maxDate) return 0;
-    const diff = maxDate.getTime() - minDate.getTime();
-    return Math.max(0, Math.round(diff / (24 * 60 * 60 * 1000)));
-  }, [minDate, maxDate]);
-
-  const currentTime = useMemo(() => {
-    if (!minDate) return null;
-    const dayMs = 24 * 60 * 60 * 1000;
-    return new Date(minDate.getTime() + currentDayIndex * dayMs);
-  }, [minDate, currentDayIndex]);
-
   /* ── 初始自适应居中 ── */
   useEffect(() => {
     if (!svgRef.current || width === 0) return;
@@ -411,30 +392,6 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
       className="h-full w-full overflow-hidden overscroll-none rounded-xl border border-gray-200 bg-white"
       onWheel={(e) => e.preventDefault()}
     >
-      {minDate && maxDate && (
-        <div className="px-6 pt-4">
-          <div className="flex items-center justify-between text-sm text-slate-500">
-            <span>{formatDate(minDate)}</span>
-            <span>{formatDate(maxDate)}</span>
-          </div>
-          <div className="relative mt-2">
-            <input
-              type="range"
-              min={0}
-              max={totalDays}
-              step={1}
-              value={currentDayIndex}
-              onChange={(event) =>
-                setCurrentDayIndex(Number(event.target.value))
-              }
-              className="w-full accent-blue-500"
-            />
-            <div className="mt-1 text-center text-sm text-slate-600">
-              当前时间：{formatDate(currentTime)}
-            </div>
-          </div>
-        </div>
-      )}
       <svg
         ref={svgRef}
         width="100%"
@@ -510,7 +467,7 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
               key={node.id}
               node={node}
               onNodeClick={onNodeClick}
-              status={getTaskStatus(node.start, node.end, currentTime)}
+              status={getTaskStatus(node.start, node.end, currentDate)}
             />
           ))}
         </g>

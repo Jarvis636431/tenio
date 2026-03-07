@@ -448,8 +448,7 @@ export function Overview({
           <div className="grid min-h-0 min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
               <CardHeader>
-                <CardTitle>人员投入趋势</CardTitle>
-                <CardDescription>展示每日劳动力总人数</CardDescription>
+                <CardTitle className="text-xs font-medium">人员投入趋势</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 min-h-0">
                 {headcountCurveQuery.isLoading ? (
@@ -470,8 +469,7 @@ export function Overview({
 
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
               <CardHeader>
-                <CardTitle>资金成本趋势</CardTitle>
-                <CardDescription>监控人工成本与总成本变化</CardDescription>
+                <CardTitle className="text-xs font-medium">资金成本趋势</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 min-h-0">
                 {costCurveQuery.isLoading ? (
@@ -494,8 +492,7 @@ export function Overview({
           <div className="grid min-h-0 min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
               <CardHeader className="pb-3">
-                <CardTitle>施工计划 - 甘特图</CardTitle>
-                <CardDescription>展示任务时间轴与停工事件</CardDescription>
+                <CardTitle className="text-xs font-medium">施工计划 - 甘特图</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 min-h-0">
                 {planTasks.length === 0 ? (
@@ -516,8 +513,7 @@ export function Overview({
 
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
               <CardHeader className="pb-3">
-                <CardTitle>施工计划 - 网络图</CardTitle>
-                <CardDescription>展示任务依赖关系网络</CardDescription>
+                <CardTitle className="text-xs font-medium">施工计划 - 网络图</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 min-h-0">
                 {planTasks.length === 0 ? (
@@ -526,7 +522,7 @@ export function Overview({
                   </div>
                 ) : (
                   <div className="h-full min-h-0 overflow-hidden rounded-md border">
-                    <NetworkDiagram tasks={planTasks} />
+                    <NetworkDiagram tasks={planTasks} currentDate={selectedTimelineDate} />
                   </div>
                 )}
               </CardContent>
@@ -535,31 +531,11 @@ export function Overview({
 
           <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
             <CardHeader>
-              <CardTitle>模型预览</CardTitle>
-              <CardDescription>
-                项目ID: {projectId} {isGraphLoading ? "· 核心数据加载中..." : ""}
-              </CardDescription>
+              <CardTitle className="text-xs font-medium">模型预览</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 min-h-0">
               <div className="flex h-full min-h-0 flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    {timeRange ? (
-                      <>
-                        项目周期：第 {timeRange.startDay} 天 - 第 {timeRange.endDay} 天 (共 {timeRange.totalDays} 天)
-                        <br />
-                        当前进度：第 {currentDay} 天
-                        {tasks.some((item) => !item.start || !item.end) && (
-                          <>
-                            <br />
-                            <span className="text-amber-600">⚠️ 部分工序缺少时间数据</span>
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      "正在加载时间数据..."
-                    )}
-                  </div>
                   <div className="text-sm">
                     <span className="mr-3">
                       进行中：{inProgressIds.length} 构件 ({taskStatusByTime.inProgress.length} 工序)
@@ -611,7 +587,7 @@ export function Overview({
 
         <Card className="col-span-3 min-w-0 flex h-full min-h-0 flex-col overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">当日工序</CardTitle>
+            <CardTitle className="text-xs font-medium">当日工序</CardTitle>
             <CardDescription className="text-xs">
               {selectedTimelineDateLabel || "未选择日期"}
             </CardDescription>
