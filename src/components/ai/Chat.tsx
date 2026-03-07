@@ -1,6 +1,5 @@
 import { Loader2, Mic, Send, Sparkles, Square } from "lucide-react";
 import { useState } from "react";
-import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,21 +34,15 @@ function formatDateString(value?: string) {
   return value;
 }
 
-interface ChatPanelProps {
+interface ChatProps {
   state: ChatPanelState;
-  position?: Pick<CSSProperties, "top" | "right" | "bottom" | "left">;
-  positionType?: "fixed" | "absolute";
-  height?: number | string;
-  width?: number | string;
+  className?: string;
 }
 
-export function ChatPanel({
+export function Chat({
   state,
-  position,
-  positionType = "fixed",
-  height,
-  width,
-}: ChatPanelProps) {
+  className,
+}: ChatProps) {
   const {
     messages,
     inputMessage,
@@ -318,18 +311,8 @@ export function ChatPanel({
   };
 
   return (
-    <div
-      className={cn(
-        "z-50",
-        positionType === "fixed" ? "fixed" : "absolute",
-      )}
-      style={{
-        width: width ?? "24rem",
-        height: height ?? "32rem",
-        ...(position ?? { bottom: 24, right: 24 }),
-      }}
-    >
-      <Card className="h-full shadow-2xl border-2 flex flex-col">
+    <div className={cn("h-full w-full border-r border-gray-200 bg-white/80 p-3", className)}>
+      <Card className="h-full border-0 shadow-none flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-category-blue-600" />
