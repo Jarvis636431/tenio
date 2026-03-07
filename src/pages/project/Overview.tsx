@@ -8,7 +8,7 @@ import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectConfig } from "@/hooks/useProjectConfig";
-import { usePlanExport } from "@/pages/project/plan/hooks/usePlanExport";
+import { useProjectExport } from "@/pages/project/hooks/useProjectExport";
 import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { Slider } from "@/components/ui/slider";
@@ -43,7 +43,7 @@ export function Overview({
   const { config } = useProjectConfig();
   const { currentProject, projects } = useProject();
   const { token } = useAuth();
-  const { handleExportCSV } = usePlanExport(coreGraph);
+  const { handleExportCSV } = useProjectExport(coreGraph);
   const { tagMap, processHighlights, allResolvedIds, getIdsByDate } =
     useProjectHighlight(projectId);
   const [currentDay, setCurrentDay] = useState(1);

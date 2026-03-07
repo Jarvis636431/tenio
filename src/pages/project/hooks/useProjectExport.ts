@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { CoreGraphResponse } from "@/types/domain/schedulepro";
 
-export function usePlanExport(coreGraph?: CoreGraphResponse) {
+export function useProjectExport(coreGraph?: CoreGraphResponse) {
   const tasks = useMemo(() => {
     if (!coreGraph?.work_processes?.length) return [];
     const depsByTarget = new Map<string, string[]>();
