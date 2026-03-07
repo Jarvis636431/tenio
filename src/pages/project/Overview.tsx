@@ -1,5 +1,4 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -47,7 +46,6 @@ export function Overview({
   const { tagMap, processHighlights, allResolvedIds, getIdsByDate } =
     useProjectHighlight(projectId);
   const [currentDay, setCurrentDay] = useState(1);
-  const [activePlanView, setActivePlanView] = useState<"gantt" | "network">("gantt");
   const fixedHighlightIds = useMemo(
     () => [
       "2j0dIGQjb7IBS38pr73$QB",
@@ -392,6 +390,32 @@ export function Overview({
           onsiteCount={onsiteCount}
           onExportReport={handleExportCSV}
         />
+
+        {timeRange && (
+          <Card className="mt-4">
+            <CardContent className="pt-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium">项目进度控制</div>
+                  <div className="text-xs text-muted-foreground">
+                    拖动滑块查看不同天数的施工状态
+                  </div>
+                </div>
+                <Slider
+                  value={[currentDay]}
+                  min={timeRange.startDay}
+                  max={timeRange.endDay}
+                  step={1}
+                  onValueChange={(v) => setCurrentDay(v[0])}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>第 {timeRange.startDay} 天</span>
+                  <span>第 {timeRange.endDay} 天</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <div className="grid grid-cols-10 gap-6">
@@ -442,51 +466,47 @@ export function Overview({
             </Card>
           </div>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>施工计划</CardTitle>
-                  <CardDescription>在同一页面查看甘特图与网络图</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant={activePlanView === "gantt" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setActivePlanView("gantt")}
-                  >
-                    甘特图
-                  </Button>
-                  <Button
-                    variant={activePlanView === "network" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setActivePlanView("network")}
-                  >
-                    网络图
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {planTasks.length === 0 ? (
-                <div className="flex h-[420px] items-center justify-center text-muted-foreground">
-                  当前项目暂无施工任务数据
-                </div>
-              ) : activePlanView === "gantt" ? (
-                <div className="h-[520px] overflow-hidden">
-                  <GanttChart
-                    data={planTasks}
-                    scale="day"
-                    shutdownEvents={config?.shutdown_events ?? []}
-                  />
-                </div>
-              ) : (
-                <div className="h-[520px] overflow-hidden rounded-md border">
-                  <NetworkDiagram tasks={planTasks} />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>施工计划 - 甘特图</CardTitle>
+                <CardDescription>展示任务时间轴与停工事件</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {planTasks.length === 0 ? (
+                  <div className="flex h-[420px] items-center justify-center text-muted-foreground">
+                    当前项目暂无施工任务数据
+                  </div>
+                ) : (
+                  <div className="h-[520px] overflow-hidden">
+                    <GanttChart
+                      data={planTasks}
+                      scale="day"
+                      shutdownEvents={config?.shutdown_events ?? []}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>施工计划 - 网络图</CardTitle>
+                <CardDescription>展示任务依赖关系网络</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {planTasks.length === 0 ? (
+                  <div className="flex h-[420px] items-center justify-center text-muted-foreground">
+                    当前项目暂无施工任务数据
+                  </div>
+                ) : (
+                  <div className="h-[520px] overflow-hidden rounded-md border">
+                    <NetworkDiagram tasks={planTasks} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
           <Card>
             <CardHeader>
@@ -525,28 +545,6 @@ export function Overview({
                     </span>
                   </div>
                 </div>
-
-                {timeRange && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-medium">项目进度控制</div>
-                      <div className="text-xs text-muted-foreground">
-                        拖动滑块查看不同天数的施工状态
-                      </div>
-                    </div>
-                    <Slider
-                      value={[currentDay]}
-                      min={timeRange.startDay}
-                      max={timeRange.endDay}
-                      step={1}
-                      onValueChange={(v) => setCurrentDay(v[0])}
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>第 {timeRange.startDay} 天</span>
-                      <span>第 {timeRange.endDay} 天</span>
-                    </div>
-                  </div>
-                )}
 
                 <div className="relative h-[500px] w-full">
                   <ModelViewer
