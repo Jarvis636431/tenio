@@ -22,7 +22,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -220,7 +219,6 @@ export function Overview({
             tickFormatter={(value) => (unit ? `${value}${unit}` : `${value}`)}
           />
           <Tooltip />
-          <Legend />
           {seriesNames.map((name, index) => (
             <Line
               key={name}
@@ -407,7 +405,7 @@ export function Overview({
   }, [timeRange]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="shrink-0">
         <ProjectHeader
           title={currentProjectName}
@@ -418,7 +416,7 @@ export function Overview({
 
         {timeRange && (
           <Card className="mt-4">
-            <CardContent className="pt-4">
+            <CardContent className="p-0">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-medium">项目进度控制</div>
@@ -443,14 +441,14 @@ export function Overview({
         )}
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-10 gap-4 overflow-hidden">
-        <div className="col-span-7 min-w-0 grid min-h-0 grid-rows-[1fr_1fr_1.2fr] gap-4 overflow-hidden">
-          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid min-h-0 flex-1 grid-cols-10 gap-2 overflow-hidden">
+        <div className="col-span-7 min-w-0 grid min-h-0 grid-rows-[0.75fr_0.75fr_1.25fr] gap-2 overflow-hidden">
+          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-              <CardHeader>
+              <CardHeader className="p-2 pb-1">
                 <CardTitle className="text-xs font-medium">人员投入趋势</CardTitle>
               </CardHeader>
-              <CardContent className="flex-1 min-h-0">
+              <CardContent className="flex-1 min-h-0 p-0">
                 {headcountCurveQuery.isLoading ? (
                   <Skeleton className="h-full w-full" />
                 ) : headcountCurveQuery.isError ? (
@@ -468,10 +466,10 @@ export function Overview({
             </Card>
 
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-              <CardHeader>
+              <CardHeader className="p-2 pb-1">
                 <CardTitle className="text-xs font-medium">资金成本趋势</CardTitle>
               </CardHeader>
-              <CardContent className="flex-1 min-h-0">
+              <CardContent className="flex-1 min-h-0 p-0">
                 {costCurveQuery.isLoading ? (
                   <Skeleton className="h-full w-full" />
                 ) : costCurveQuery.isError ? (
@@ -489,12 +487,12 @@ export function Overview({
             </Card>
           </div>
 
-          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xs font-medium">施工计划 - 甘特图</CardTitle>
+              <CardHeader className="p-2 pb-1">
+                <CardTitle className="text-xs font-medium">甘特图</CardTitle>
               </CardHeader>
-              <CardContent className="flex-1 min-h-0">
+              <CardContent className="flex-1 min-h-0 p-0">
                 {planTasks.length === 0 ? (
                   <div className="flex h-full items-center justify-center text-muted-foreground">
                     当前项目暂无施工任务数据
@@ -512,16 +510,16 @@ export function Overview({
             </Card>
 
             <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xs font-medium">施工计划 - 网络图</CardTitle>
+              <CardHeader className="p-2 pb-1">
+                <CardTitle className="text-xs font-medium">网络图</CardTitle>
               </CardHeader>
-              <CardContent className="flex-1 min-h-0">
+              <CardContent className="flex-1 min-h-0 p-0">
                 {planTasks.length === 0 ? (
                   <div className="flex h-full items-center justify-center text-muted-foreground">
                     当前项目暂无施工任务数据
                   </div>
                 ) : (
-                  <div className="h-full min-h-0 overflow-hidden rounded-md border">
+                  <div className="h-full min-h-0 overflow-hidden">
                     <NetworkDiagram tasks={planTasks} currentDate={selectedTimelineDate} />
                   </div>
                 )}
@@ -530,11 +528,11 @@ export function Overview({
           </div>
 
           <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-            <CardHeader>
+            <CardHeader className="p-2 pb-1">
               <CardTitle className="text-xs font-medium">模型预览</CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 min-h-0">
-              <div className="flex h-full min-h-0 flex-col gap-4">
+            <CardContent className="flex-1 min-h-0 p-0">
+              <div className="flex h-full min-h-0 flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <div className="text-sm">
                     <span className="mr-3">
@@ -586,13 +584,13 @@ export function Overview({
         </div>
 
         <Card className="col-span-3 min-w-0 flex h-full min-h-0 flex-col overflow-hidden">
-          <CardHeader className="pb-2">
+          <CardHeader className="p-2 pb-1">
             <CardTitle className="text-xs font-medium">当日工序</CardTitle>
             <CardDescription className="text-xs">
               {selectedTimelineDateLabel || "未选择日期"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 min-h-0 pt-0">
+          <CardContent className="flex-1 min-h-0 p-0">
             <ScrollArea className="h-full pr-2">
               <div className="space-y-2">
                 {dailyProcesses.length === 0 ? (

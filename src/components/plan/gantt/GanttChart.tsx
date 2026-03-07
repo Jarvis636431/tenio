@@ -20,10 +20,10 @@ const MS_IN_DAY = MS_IN_HOUR * 24;
 const MS_IN_WEEK = MS_IN_DAY * 7;
 
 const COLUMN_WIDTH_MAP: Record<TimelineScale, number> = {
-  day: 80,
-  hour: 60,
-  week: 100,
-  month: 120,
+  day: 64,
+  hour: 48,
+  week: 80,
+  month: 96,
 };
 
 const UNIT_LABELS: Record<TimelineScale, string> = {
@@ -336,7 +336,7 @@ export function GanttChart({
   const [scrollTop, setScrollTop] = useState(0);
   const { currentProject } = useProject();
 
-  const ROW_HEIGHT = 48; // h-12
+  const ROW_HEIGHT = 28; // h-7
   const timelineScale = scale;
   const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
 
@@ -491,12 +491,12 @@ export function GanttChart({
   return (
     <div className="w-full h-full flex flex-col">
       <div className="flex-1 overflow-hidden">
-        <div className="border rounded-lg overflow-hidden h-full flex flex-col">
+        <div className="overflow-hidden h-full flex flex-col">
           <div className="flex flex-1 overflow-hidden">
             {/* 左侧固定区域（虚拟滚动） */}
-            <div className="w-80 flex-shrink-0 flex flex-col">
+            <div className="w-56 flex-shrink-0 flex flex-col">
               {/* 任务名称表头 */}
-              <div className="bg-muted/50 border-r border-b p-3 font-semibold h-12 flex items-center">
+              <div className="bg-muted/50 border-r border-b px-1.5 py-0.5 text-[9px] font-semibold h-7 flex items-center">
                 任务名称
               </div>
               {/* 任务列表（虚拟高度容器） */}
@@ -511,7 +511,7 @@ export function GanttChart({
                   return (
                     <div
                       key={item.id}
-                      className="border-b p-2 flex items-center justify-between h-12 bg-gray-50/50 transition-colors relative group"
+                      className="border-b p-0.5 flex items-center justify-between h-7 bg-gray-50/50 transition-colors relative group"
                       onMouseEnter={() => {
                         setHoveredTaskId(item.id);
                         if (hoverTimeoutRef.current)
@@ -538,20 +538,20 @@ export function GanttChart({
                         right: 0,
                       }}
                     >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate max-w-[200px]">
+                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                        <div className="font-medium text-[9px] truncate max-w-[110px]">
                           {item.task}
                         </div>
-                        <div className="w-px h-4 bg-border flex-shrink-0"></div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="w-px h-2 bg-border flex-shrink-0"></div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           <Badge
-                            className={`text-xs ${getWorkerBadgeClass(
+                            className={`text-[8px] px-1 py-0 ${getWorkerBadgeClass(
                               item.worker || "",
                             )}`}
                           >
                             {item.worker}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-[8px] text-muted-foreground">
                             {item.count}人
                           </span>
                         </div>
@@ -560,7 +560,7 @@ export function GanttChart({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 h-8 px-3 opacity-100 transition-all duration-200 z-20 bg-white/95 backdrop-blur-sm border-primary/30 text-primary hover:text-white hover:bg-gradient-to-r hover:from-primary hover:to-primary/80 hover:border-primary shadow-lg hover:shadow-xl"
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 px-1 text-[9px] opacity-100 transition-all duration-200 z-20 bg-white/95 backdrop-blur-sm border-primary/30 text-primary hover:text-white hover:bg-gradient-to-r hover:from-primary hover:to-primary/80 hover:border-primary shadow-lg hover:shadow-xl"
                           onClick={() => onTaskDetail(item)}
                         >
                           详情
@@ -584,7 +584,7 @@ export function GanttChart({
                 {/* 时间轴表头 */}
                 <div className="bg-muted/50 border-b sticky top-0 z-10">
                   <div
-                    className="grid gap-0 h-12"
+                    className="grid gap-0 h-7"
                     style={{
                       gridTemplateColumns: `repeat(${totalUnits}, ${columnWidth}px)`,
                     }}
@@ -592,7 +592,7 @@ export function GanttChart({
                     {headers.map((header) => (
                       <div
                         key={header.key}
-                        className={`border-r border-border/50 flex flex-col items-center justify-center text-xs p-1 ${
+                        className={`border-r border-border/50 flex flex-col items-center justify-center text-[9px] p-0 ${
                           header.isWeekend
                             ? "bg-muted/70 text-muted-foreground"
                             : ""
@@ -600,7 +600,7 @@ export function GanttChart({
                       >
                         <div className="font-medium">{header.primary}</div>
                         {header.secondary && (
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-[7px] text-muted-foreground">
                             {header.secondary}
                           </div>
                         )}
@@ -643,7 +643,7 @@ export function GanttChart({
                       >
                         {/* 任务条 - 可点击 */}
                         <div
-                          className="absolute top-1 h-10 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg transition-all duration-200 hover:brightness-110 z-10"
+                          className="absolute top-0.5 h-6 flex items-center justify-center text-white text-[9px] font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg transition-all duration-200 hover:brightness-110 z-10"
                           style={{
                             left: `${item.startOffset * columnWidth}px`,
                             width: `${item.spanUnits * columnWidth}px`,
@@ -658,15 +658,15 @@ export function GanttChart({
                           {/* 更多按钮 - 悬停时显示 */}
                           {hoveredTaskId === item.id && (
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="ghost"
-                              className="h-6 w-6 p-0 mr-1 opacity-80 hover:opacity-100 transition-opacity z-10"
+                              className="h-3.5 w-3.5 p-0 mr-1 opacity-80 hover:opacity-100 transition-opacity z-10"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleMoreClick(item);
                               }}
                             >
-                              <MoreHorizontal className="h-3 w-3" />
+                              <MoreHorizontal className="h-1.5 w-1.5" />
                             </Button>
                           )}
                         </div>

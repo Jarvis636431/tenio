@@ -389,7 +389,7 @@ export function NetworkDiagram({
   return (
     <div
       ref={containerRef}
-      className="h-full w-full overflow-hidden overscroll-none rounded-xl border border-gray-200 bg-white"
+      className="h-full w-full overflow-hidden overscroll-none bg-white"
       onWheel={(e) => e.preventDefault()}
     >
       <svg

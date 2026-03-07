@@ -59,7 +59,7 @@ export function ProjectHeader({
 
   return (
     <div
-      className={`mb-2 flex h-11 items-center justify-between rounded-md border border-[#0f2d56] bg-gradient-to-r from-[#030f2d] via-[#032554] to-[#073566] px-3 text-[#d8ebff] ${className}`}
+      className={`flex h-11 items-center justify-between rounded-md border border-[#0f2d56] bg-gradient-to-r from-[#030f2d] via-[#032554] to-[#073566] px-3 text-[#d8ebff] ${className}`}
     >
       <div className="flex min-w-0 items-center gap-3 text-sm">
         <span className="inline-flex items-center gap-1.5 text-[#9cc7ff]">
