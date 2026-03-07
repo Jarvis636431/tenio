@@ -1,12 +1,31 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
+import { useProject } from "@/hooks/useProject";
+import { useAuth } from "@/hooks/useAuth";
+import { useProjectConfig } from "@/hooks/useProjectConfig";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { Slider } from "@/components/ui/slider";
+import { GanttChart } from "@/components/plan/gantt/GanttChart";
+import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
+import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { PlanTask } from "@/types/domain/plan";
 
 interface OverviewProps {
   projectId?: string;
@@ -19,10 +38,14 @@ export function Overview({
   const { id: paramProjectId } = useParams();
   // 优先使用路由参数，其次使用props
   const projectId = paramProjectId || propsProjectId || '';
-  const { coreGraph, isLoading } = useProjectCoreGraph();
-  const { tagMap, processHighlights, resolveExpressIds, allResolvedIds, getIdsByDate } =
+  const { coreGraph, isLoading: isGraphLoading } = useProjectCoreGraph();
+  const { config } = useProjectConfig();
+  const { currentProject } = useProject();
+  const { token } = useAuth();
+  const { tagMap, processHighlights, allResolvedIds, getIdsByDate } =
     useProjectHighlight(projectId);
   const [currentDay, setCurrentDay] = useState(1);
+  const [activePlanView, setActivePlanView] = useState<"gantt" | "network">("gantt");
   const fixedHighlightIds = useMemo(
     () => [
       "2j0dIGQjb7IBS38pr73$QB",
@@ -57,6 +80,161 @@ export function Overview({
       };
     });
   }, [coreGraph]);
+
+  const planTasks = useMemo<PlanTask[]>(() => {
+    if (!coreGraph?.work_processes?.length) return [];
+    const depsByTarget = new Map<string, string[]>();
+    coreGraph.dependencies?.forEach((dep) => {
+      const toId = dep.to_work_process_id ?? dep.successor_id;
+      const fromId = dep.from_work_process_id ?? dep.predecessor_id;
+      if (!toId || !fromId) return;
+      const list = depsByTarget.get(toId) ?? [];
+      list.push(fromId);
+      depsByTarget.set(toId, list);
+    });
+
+    const resolvePlannedRange = (wp: typeof coreGraph.work_processes[number]) => {
+      const exec = wp.execution_state;
+      if (!exec) return { start: "", end: "" };
+      const start = exec.planned_start_datetime ?? "";
+      const end = exec.planned_end_datetime ?? "";
+      if (start && end) return { start, end };
+      const intervals = exec.planned_intervals ?? [];
+      if (intervals.length === 0) return { start, end };
+      const starts = intervals
+        .map((item) => new Date(item.start_datetime).getTime())
+        .filter((value) => !Number.isNaN(value));
+      const ends = intervals
+        .map((item) => new Date(item.end_datetime).getTime())
+        .filter((value) => !Number.isNaN(value));
+      if (!starts.length || !ends.length) return { start, end };
+      return {
+        start: new Date(Math.min(...starts)).toISOString(),
+        end: new Date(Math.max(...ends)).toISOString(),
+      };
+    };
+
+    return coreGraph.work_processes.map((wp) => {
+      const exec = wp.execution_state;
+      const { start, end } = resolvePlannedRange(wp);
+      const workerCount = wp.team_size ?? wp.suggested_team_count ?? 0;
+      const jobType = wp.trade?.name ?? "";
+      return {
+        id: wp.id,
+        seqNo: wp.seq_no,
+        task: wp.name || wp.code || "未命名工序",
+        workerCount,
+        jobType,
+        totalCost:
+          (wp.labor_cost ?? 0) +
+          (wp.material_cost ?? 0) +
+          (wp.device_rental_cost ?? 0),
+        startTime: start,
+        endTime: end,
+        constructionSituation: exec?.status ?? "",
+        prerequisiteProcess: (depsByTarget.get(wp.id) ?? []).join(", "),
+        quantity: wp.quantity ?? 0,
+        quantityUnit: wp.unit ?? "",
+        overtime: "否",
+        duration: wp.duration_days ? `${wp.duration_days}天` : "",
+        actualWorkDays: wp.duration_days ?? 0,
+        constructionMethod: wp.selected_method?.name ?? "",
+        directDependency: "",
+        remarks: "",
+        selectedConstructionMethod: wp.selected_method?.name ?? "",
+        materialCost: wp.material_cost ?? 0,
+        laborCost: wp.labor_cost ?? 0,
+        floor: 0,
+        criticalPath: exec?.critical_path ?? false,
+        worker: jobType,
+        count: workerCount,
+        startDate: start,
+        endDate: end,
+      };
+    });
+  }, [coreGraph]);
+
+  const headcountCurveQuery = useQuery({
+    queryKey: ["overview", "headcount-curve", currentProject?.id],
+    queryFn: async () => {
+      if (!currentProject?.id) {
+        throw new Error("缺少项目 ID");
+      }
+      return getProjectHeadcountCurve(currentProject.id, token || undefined);
+    },
+    enabled: Boolean(currentProject?.id && token),
+    refetchOnWindowFocus: false,
+  });
+
+  const costCurveQuery = useQuery({
+    queryKey: ["overview", "cost-curve", currentProject?.id],
+    queryFn: async () => {
+      if (!currentProject?.id) {
+        throw new Error("缺少项目 ID");
+      }
+      return getProjectCostCurve(currentProject.id, token || undefined);
+    },
+    enabled: Boolean(currentProject?.id && token),
+    refetchOnWindowFocus: false,
+  });
+
+  const headcountChartData = useMemo(() => {
+    const points = headcountCurveQuery.data?.points ?? [];
+    return points.map((point) => ({
+      date: point.date,
+      劳动力人数: point.headcount,
+    }));
+  }, [headcountCurveQuery.data]);
+
+  const costCurveChartData = useMemo(() => {
+    const points = costCurveQuery.data?.points ?? [];
+    return points.map((point) => ({
+      date: point.date,
+      总成本: point.total_cost,
+    }));
+  }, [costCurveQuery.data]);
+
+  const chartColors = ["#2563eb", "#16a34a", "#db2777", "#ea580c", "#8b5cf6", "#0891b2"];
+
+  const renderChart = (
+    data: Record<string, string | number>[],
+    seriesNames: string[],
+    unit: string,
+  ) => {
+    if (!data || data.length === 0) return null;
+    return (
+      <ResponsiveContainer width="100%" height={320}>
+        <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            dataKey="date"
+            tick={{ fontSize: 12 }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => (unit ? `${value}${unit}` : `${value}`)}
+          />
+          <Tooltip />
+          <Legend />
+          {seriesNames.map((name, index) => (
+            <Line
+              key={name}
+              type="monotone"
+              dataKey={name}
+              stroke={chartColors[index % chartColors.length]}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 6 }}
+            />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  };
 
   // 计算项目时间范围 - 处理相对时间
   const timeRange = useMemo(() => {
@@ -154,7 +332,7 @@ export function Overview({
       <div className="flex items-center justify-between">
         <div>
           <p className="text-gray-600">项目ID: {projectId}</p>
-          {isLoading && <p className="text-gray-500">数据加载中...</p>}
+          {isGraphLoading && <p className="text-gray-500">数据加载中...</p>}
         </div>
         <div>
           <Button variant="outline" size="sm" disabled>
@@ -257,6 +435,98 @@ export function Overview({
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>施工计划</CardTitle>
+              <CardDescription>在同一页面查看甘特图与网络图</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={activePlanView === "gantt" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActivePlanView("gantt")}
+              >
+                甘特图
+              </Button>
+              <Button
+                variant={activePlanView === "network" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActivePlanView("network")}
+              >
+                网络图
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {planTasks.length === 0 ? (
+            <div className="flex h-[420px] items-center justify-center text-muted-foreground">
+              当前项目暂无施工任务数据
+            </div>
+          ) : activePlanView === "gantt" ? (
+            <div className="h-[520px] overflow-hidden">
+              <GanttChart
+                data={planTasks}
+                scale="day"
+                shutdownEvents={config?.shutdown_events ?? []}
+              />
+            </div>
+          ) : (
+            <div className="h-[520px] overflow-hidden rounded-md border">
+              <NetworkDiagram tasks={planTasks} />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>人员投入趋势</CardTitle>
+            <CardDescription>展示每日劳动力总人数</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {headcountCurveQuery.isLoading ? (
+              <Skeleton className="h-[320px] w-full" />
+            ) : headcountCurveQuery.isError ? (
+              <div className="flex h-[320px] items-center justify-center text-sm text-destructive">
+                无法获取人员数据
+              </div>
+            ) : headcountChartData.length > 0 ? (
+              renderChart(headcountChartData, ["劳动力人数"], "人")
+            ) : (
+              <div className="flex h-[320px] items-center justify-center text-muted-foreground">
+                暂无人员数据
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>资金成本趋势</CardTitle>
+            <CardDescription>监控人工成本与总成本变化</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {costCurveQuery.isLoading ? (
+              <Skeleton className="h-[320px] w-full" />
+            ) : costCurveQuery.isError ? (
+              <div className="flex h-[320px] items-center justify-center text-sm text-destructive">
+                无法获取成本数据
+              </div>
+            ) : costCurveChartData.length > 0 ? (
+              renderChart(costCurveChartData, ["总成本"], "万元")
+            ) : (
+              <div className="flex h-[320px] items-center justify-center text-muted-foreground">
+                暂无成本数据
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
     </div>
   );
