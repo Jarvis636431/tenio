@@ -191,7 +191,7 @@ export function Overview({
     const points = costCurveQuery.data?.points ?? [];
     return points.map((point) => ({
       date: point.date,
-      总成本: point.total_cost,
+      总成本: point.total_cost / 10000,
     }));
   }, [costCurveQuery.data]);
 
@@ -406,7 +406,7 @@ export function Overview({
   }, [timeRange]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 bg-gradient-to-b from-[#020a1d] to-[#041332] px-1 pt-0 pb-1 text-slate-100">
+    <div className="flex h-full min-h-0 flex-col gap-2 bg-[#020a1d] px-1 pt-0 pb-1 text-slate-100">
       <div className="shrink-0">
         <ProjectHeader
           title={currentProjectName}
@@ -484,7 +484,7 @@ export function Overview({
                     无法获取成本数据
                   </div>
                 ) : costCurveChartData.length > 0 ? (
-                  <div className="h-full w-full">{renderChart(costCurveChartData, ["总成本"], "万元")}</div>
+                  <div className="h-full w-full">{renderChart(costCurveChartData, ["总成本"], "亿")}</div>
                 ) : (
                   <div className="flex h-full items-center justify-center text-cyan-300/70">
                     暂无成本数据

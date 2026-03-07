@@ -59,9 +59,9 @@ export function ProjectHeader({
 
   return (
     <div
-      className={`flex h-11 items-center justify-between rounded-md bg-[#03122e] px-3 text-[#d8ebff] ${className}`}
+      className={`flex h-9 items-center justify-between rounded-md text-[#d8ebff] ${className}`}
     >
-      <div className="flex min-w-0 items-center gap-3 text-sm">
+      <div className="flex min-w-0 items-center gap-3 text-xs">
         <span className="inline-flex items-center gap-1.5 text-[#9cc7ff]">
           <CalendarDays className="h-3 w-3" />
           {dateText}
