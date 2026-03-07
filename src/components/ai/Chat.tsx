@@ -311,7 +311,7 @@ export function Chat({
   };
 
   return (
-    <div className={cn("h-full w-full border-r border-gray-200 bg-white/80 p-3", className)}>
+    <div className={cn("h-full w-full border-r border-gray-200 bg-white/80", className)}>
       <Card className="h-full border-0 shadow-none flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">

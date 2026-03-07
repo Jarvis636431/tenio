@@ -204,7 +204,7 @@ export function Overview({
   ) => {
     if (!data || data.length === 0) return null;
     return (
-      <ResponsiveContainer width="100%" height={320}>
+      <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis
@@ -407,7 +407,7 @@ export function Overview({
   }, [timeRange]);
 
   return (
-    <div className="h-full flex flex-col space-y-6">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="shrink-0">
         <ProjectHeader
           title={currentProjectName}
@@ -443,47 +443,47 @@ export function Overview({
         )}
       </div>
 
-      <div className="grid grid-cols-10 gap-6">
-        <div className="col-span-9 space-y-6">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Card>
+      <div className="grid min-h-0 flex-1 grid-cols-10 gap-4 overflow-hidden">
+        <div className="col-span-7 min-w-0 grid min-h-0 grid-rows-[1fr_1fr_1.2fr] gap-4 overflow-hidden">
+          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+            <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
               <CardHeader>
                 <CardTitle>人员投入趋势</CardTitle>
                 <CardDescription>展示每日劳动力总人数</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 min-h-0">
                 {headcountCurveQuery.isLoading ? (
-                  <Skeleton className="h-[320px] w-full" />
+                  <Skeleton className="h-full w-full" />
                 ) : headcountCurveQuery.isError ? (
-                  <div className="flex h-[320px] items-center justify-center text-sm text-destructive">
+                  <div className="flex h-full items-center justify-center text-sm text-destructive">
                     无法获取人员数据
                   </div>
                 ) : headcountChartData.length > 0 ? (
-                  renderChart(headcountChartData, ["劳动力人数"], "人")
+                  <div className="h-full w-full">{renderChart(headcountChartData, ["劳动力人数"], "人")}</div>
                 ) : (
-                  <div className="flex h-[320px] items-center justify-center text-muted-foreground">
+                  <div className="flex h-full items-center justify-center text-muted-foreground">
                     暂无人员数据
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
               <CardHeader>
                 <CardTitle>资金成本趋势</CardTitle>
                 <CardDescription>监控人工成本与总成本变化</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 min-h-0">
                 {costCurveQuery.isLoading ? (
-                  <Skeleton className="h-[320px] w-full" />
+                  <Skeleton className="h-full w-full" />
                 ) : costCurveQuery.isError ? (
-                  <div className="flex h-[320px] items-center justify-center text-sm text-destructive">
+                  <div className="flex h-full items-center justify-center text-sm text-destructive">
                     无法获取成本数据
                   </div>
                 ) : costCurveChartData.length > 0 ? (
-                  renderChart(costCurveChartData, ["总成本"], "万元")
+                  <div className="h-full w-full">{renderChart(costCurveChartData, ["总成本"], "万元")}</div>
                 ) : (
-                  <div className="flex h-[320px] items-center justify-center text-muted-foreground">
+                  <div className="flex h-full items-center justify-center text-muted-foreground">
                     暂无成本数据
                   </div>
                 )}
@@ -491,19 +491,19 @@ export function Overview({
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Card>
+          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+            <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
               <CardHeader className="pb-3">
                 <CardTitle>施工计划 - 甘特图</CardTitle>
                 <CardDescription>展示任务时间轴与停工事件</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 min-h-0">
                 {planTasks.length === 0 ? (
-                  <div className="flex h-[420px] items-center justify-center text-muted-foreground">
+                  <div className="flex h-full items-center justify-center text-muted-foreground">
                     当前项目暂无施工任务数据
                   </div>
                 ) : (
-                  <div className="h-[520px] overflow-hidden">
+                  <div className="h-full min-h-0 overflow-hidden">
                     <GanttChart
                       data={planTasks}
                       scale="day"
@@ -514,18 +514,18 @@ export function Overview({
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
               <CardHeader className="pb-3">
                 <CardTitle>施工计划 - 网络图</CardTitle>
                 <CardDescription>展示任务依赖关系网络</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 min-h-0">
                 {planTasks.length === 0 ? (
-                  <div className="flex h-[420px] items-center justify-center text-muted-foreground">
+                  <div className="flex h-full items-center justify-center text-muted-foreground">
                     当前项目暂无施工任务数据
                   </div>
                 ) : (
-                  <div className="h-[520px] overflow-hidden rounded-md border">
+                  <div className="h-full min-h-0 overflow-hidden rounded-md border">
                     <NetworkDiagram tasks={planTasks} />
                   </div>
                 )}
@@ -533,15 +533,15 @@ export function Overview({
             </Card>
           </div>
 
-          <Card>
+          <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
             <CardHeader>
               <CardTitle>模型预览</CardTitle>
               <CardDescription>
                 项目ID: {projectId} {isGraphLoading ? "· 核心数据加载中..." : ""}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="flex-1 min-h-0">
+              <div className="flex h-full min-h-0 flex-col gap-4">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-muted-foreground">
                     {timeRange ? (
@@ -571,7 +571,7 @@ export function Overview({
                   </div>
                 </div>
 
-                <div className="relative h-[500px] w-full">
+                <div className="relative min-h-0 flex-1 w-full">
                   <ModelViewer
                     models={[
                       {
@@ -609,15 +609,15 @@ export function Overview({
           </Card>
         </div>
 
-        <Card className="col-span-1 min-h-0">
+        <Card className="col-span-3 min-w-0 flex h-full min-h-0 flex-col overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">当日工序</CardTitle>
             <CardDescription className="text-xs">
               {selectedTimelineDateLabel || "未选择日期"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-0">
-            <ScrollArea className="h-[920px] pr-2">
+          <CardContent className="flex-1 min-h-0 pt-0">
+            <ScrollArea className="h-full pr-2">
               <div className="space-y-2">
                 {dailyProcesses.length === 0 ? (
                   <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
