@@ -9,7 +9,7 @@ function LayoutContent({ children }: LayoutProps) {
   const chatPanel = useChatPanel();
 
   return (
-    <div className="grid h-screen w-full grid-cols-[56px_minmax(0,3fr)_minmax(0,6fr)] overflow-hidden bg-background">
+    <div className="grid h-screen w-full grid-cols-[56px_minmax(0,2fr)_minmax(0,7fr)] overflow-hidden bg-background">
       <AppSidebar />
 
       <Chat state={chatPanel} />
