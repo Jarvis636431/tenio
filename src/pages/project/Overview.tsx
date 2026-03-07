@@ -9,7 +9,7 @@ import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectConfig } from "@/hooks/useProjectConfig";
 import { usePlanExport } from "@/pages/project/plan/hooks/usePlanExport";
-import { ProjectHeader } from "@/components/layout/project/ProjectHeader";
+import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { Slider } from "@/components/ui/slider";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";

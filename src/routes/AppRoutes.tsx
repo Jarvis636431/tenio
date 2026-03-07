@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AppLayout } from "@/components/layout/app/AppLayout";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { CreateProjectRoutes } from "@/routes/CreateProjectRoutes";

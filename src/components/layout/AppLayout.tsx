@@ -1,4 +1,4 @@
-import { AppSidebar } from "@/components/layout/app/AppSidebar";
+import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ChatPanel } from "@/components/ai/ChatPanel";
 import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
 interface LayoutProps {
