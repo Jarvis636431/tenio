@@ -239,6 +239,12 @@ const getBaselineDate = () => {
   return baseline;
 };
 
+const formatWorkerCount = (count: unknown): string => {
+  const value = Number(count);
+  if (!Number.isFinite(value)) return "0";
+  return String(Math.round(value));
+};
+
 const parseDate = (dateStr: string): Date => {
   if (!dateStr) {
     return getBaselineDate();
@@ -495,9 +501,10 @@ export function GanttChart({
           <div className="flex flex-1 overflow-hidden">
             {/* 左侧固定区域（虚拟滚动） */}
             <div className="w-56 flex-shrink-0 flex flex-col">
-              {/* 任务名称表头 */}
-              <div className="bg-[#04142d] border-r border-b border-cyan-900/40 px-1.5 py-0.5 text-[9px] font-semibold text-cyan-200 h-7 flex items-center">
-                任务名称
+              {/* 左侧两列表头 */}
+              <div className="bg-[#04142d] border-r border-b border-cyan-900/40 h-7 px-2 text-[9px] font-semibold text-cyan-200 grid grid-cols-[minmax(0,1fr)_auto] items-center">
+                <span>任务名称</span>
+                <span className="text-cyan-300/80">工种/人数</span>
               </div>
               {/* 任务列表（虚拟高度容器） */}
               <div
@@ -511,7 +518,7 @@ export function GanttChart({
                   return (
                     <div
                       key={item.id}
-                      className="border-b border-cyan-900/30 p-0.5 flex items-center justify-between h-7 bg-[#04142d]/40 transition-colors relative group"
+                      className="border-b border-cyan-900/30 h-7 bg-[#04142d]/40 transition-colors relative group grid grid-cols-[minmax(0,1fr)_auto] items-center"
                       onMouseEnter={() => {
                         setHoveredTaskId(item.id);
                         if (hoverTimeoutRef.current)
@@ -538,23 +545,23 @@ export function GanttChart({
                         right: 0,
                       }}
                     >
-                      <div className="flex items-center gap-1 flex-1 min-w-0">
-                        <div className="font-medium text-[9px] text-cyan-200 truncate max-w-[110px]">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/90" />
+                        <div className="font-medium text-[9px] text-cyan-200 truncate">
                           {item.task}
                         </div>
-                        <div className="w-px h-2 bg-border flex-shrink-0"></div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <Badge
-                            className={`text-[8px] px-1 py-0 ${getWorkerBadgeClass(
-                              item.worker || "",
-                            )}`}
-                          >
-                            {item.worker}
-                          </Badge>
-                          <span className="text-[8px] text-cyan-300/70">
-                            {item.count}人
-                          </span>
-                        </div>
+                      </div>
+                      <div className="ml-2 flex items-center gap-1 whitespace-nowrap">
+                        <Badge
+                          className={`rounded-xs text-[8px] px-1 py-0 ${getWorkerBadgeClass(
+                            item.worker || "",
+                          )}`}
+                        >
+                          {item.worker}
+                        </Badge>
+                        <span className="text-[8px] text-cyan-300/80">
+                          {formatWorkerCount(item.count)}人
+                        </span>
                       </div>
                       {showDetailButton === item.id && onTaskDetail && (
                         <Button
