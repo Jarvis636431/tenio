@@ -73,6 +73,7 @@ export function Chat({
   const [interruptDecisions, setInterruptDecisions] = useState<
     Record<string, "yes" | "no">
   >({});
+  const [mode, setMode] = useState<"query" | "schedule">("query");
   const quickQueries = [
     { label: "当前施工进度如何？", icon: BarChart3 },
     { label: "今日在场人数？", icon: Users },
@@ -339,6 +340,30 @@ export function Chat({
             <Sparkles className="w-5 h-5 text-cyan-300" />
             AI助手
           </CardTitle>
+          <div className="inline-flex rounded-md border border-cyan-800/50 bg-[#03112a] p-0.5">
+            <button
+              type="button"
+              onClick={() => setMode("query")}
+              className={`h-6 rounded px-2 text-[11px] transition ${
+                mode === "query"
+                  ? "bg-cyan-500/20 text-cyan-100"
+                  : "text-cyan-300/70 hover:text-cyan-200"
+              }`}
+            >
+              查询模式
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("schedule")}
+              className={`h-6 rounded px-2 text-[11px] transition ${
+                mode === "schedule"
+                  ? "bg-cyan-500/20 text-cyan-100"
+                  : "text-cyan-300/70 hover:text-cyan-200"
+              }`}
+            >
+              调度模式
+            </button>
+          </div>
         </CardHeader>
 
         <CardContent className="px-0 flex-1 overflow-hidden min-h-0">
