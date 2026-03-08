@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProjectConfig } from "@/hooks/useProjectConfig";
 import { useProjectExport } from "@/pages/project/hooks/useProjectExport";
 import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
+import { PanelCard } from "@/pages/project/components/PanelCard";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -510,14 +511,11 @@ export function Overview({
       <div className="grid min-h-0 flex-1 grid-cols-10 gap-2 overflow-hidden">
         <div className="col-span-7 min-w-0 grid min-h-0 grid-rows-[0.75fr_0.75fr_1.25fr] gap-2 overflow-hidden">
           <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
-            <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
-              <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-                <CardTitle className="text-xs font-medium text-cyan-200 flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5 text-cyan-300" />
-                  劳动力曲线
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 min-h-0 p-0">
+            <PanelCard
+              title="劳动力曲线"
+              icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
+              titleClassName="text-cyan-200"
+            >
                 {headcountCurveQuery.isLoading ? (
                   <Skeleton className="h-full w-full" />
                 ) : headcountCurveQuery.isError ? (
@@ -531,17 +529,13 @@ export function Overview({
                     暂无人员数据
                   </div>
                 )}
-              </CardContent>
-            </Card>
+            </PanelCard>
 
-            <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
-              <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-                <CardTitle className="text-xs font-medium text-emerald-300 flex items-center gap-1.5">
-                  <ChartLine className="h-3.5 w-3.5 text-emerald-400" />
-                  资金曲线
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 min-h-0 p-0">
+            <PanelCard
+              title="资金曲线"
+              icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
+              titleClassName="text-emerald-300"
+            >
                 {costCurveQuery.isLoading ? (
                   <Skeleton className="h-full w-full" />
                 ) : costCurveQuery.isError ? (
@@ -555,19 +549,15 @@ export function Overview({
                     暂无成本数据
                   </div>
                 )}
-              </CardContent>
-            </Card>
+            </PanelCard>
           </div>
 
           <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
-            <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
-              <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-                <CardTitle className="text-xs font-medium text-amber-300 flex items-center gap-1.5">
-                  <ListTodo className="h-3.5 w-3.5 text-amber-400" />
-                  甘特图
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 min-h-0 p-0">
+            <PanelCard
+              title="甘特图"
+              icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
+              titleClassName="text-amber-300"
+            >
                 {planTasks.length === 0 ? (
                   <div className="flex h-full items-center justify-center text-cyan-300/70">
                     当前项目暂无施工任务数据
@@ -581,17 +571,13 @@ export function Overview({
                     />
                   </div>
                 )}
-              </CardContent>
-            </Card>
+            </PanelCard>
 
-            <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
-              <CardHeader className="p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80">
-                <CardTitle className="text-xs font-medium text-violet-300 flex items-center gap-1.5">
-                  <Network className="h-3.5 w-3.5 text-violet-400" />
-                  网络图
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 min-h-0 p-0">
+            <PanelCard
+              title="网络图"
+              icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
+              titleClassName="text-violet-300"
+            >
                 {planTasks.length === 0 ? (
                   <div className="flex h-full items-center justify-center text-cyan-300/70">
                     当前项目暂无施工任务数据
@@ -601,8 +587,7 @@ export function Overview({
                     <NetworkDiagram tasks={planTasks} currentDate={selectedTimelineDate} />
                   </div>
                 )}
-              </CardContent>
-            </Card>
+            </PanelCard>
           </div>
 
           <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
