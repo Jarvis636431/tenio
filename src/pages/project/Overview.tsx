@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -14,11 +14,14 @@ import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectConfig } from "@/hooks/useProjectConfig";
 import { useProjectExport } from "@/pages/project/hooks/useProjectExport";
+import { usePlanTasks } from "@/pages/project/hooks/usePlanTasks";
+import { useDailyProcesses } from "@/pages/project/hooks/useDailyProcesses";
+import { useTimelineHighlight } from "@/pages/project/hooks/useTimelineHighlight";
 import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
 import { PanelCard } from "@/pages/project/components/PanelCard";
 import { ProjectSlider } from "@/pages/project/components/ProjectSlider";
+import { DailyCard } from "@/pages/project/components/DailyCard";
 import { ModelViewer } from "@/components/model/ModelViewer";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
@@ -32,7 +35,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { PlanTask } from "@/types/domain/plan";
 
 interface OverviewProps {
   projectId?: string;
@@ -45,17 +47,15 @@ export function Overview({
   const { id: paramProjectId } = useParams();
   // 优先使用路由参数，其次使用props
   const projectId = paramProjectId || propsProjectId || '';
-  const { coreGraph, isLoading: isGraphLoading } = useProjectCoreGraph();
+  const { coreGraph } = useProjectCoreGraph();
   const { config } = useProjectConfig();
   const { currentProject, projects } = useProject();
   const { token } = useAuth();
   const { handleExportCSV } = useProjectExport(coreGraph);
-  const { tagMap, processHighlights, allResolvedIds, getIdsByDate } =
+  const { tagMap, processHighlights, getIdsByDate } =
     useProjectHighlight(projectId);
   const [currentDay, setCurrentDay] = useState(1);
   const [playbackRate, setPlaybackRate] = useState<1 | 2 | 4>(1);
-  const [dailyProcessTab, setDailyProcessTab] = useState<"plan" | "actual">("plan");
-  const [dailyProcessKeyword, setDailyProcessKeyword] = useState("");
   const fixedHighlightIds = useMemo(
     () => [
       "2j0dIGQjb7IBS38pr73$QB",
@@ -68,101 +68,7 @@ export function Overview({
     [],
   );
 
-  const tasks = useMemo(() => {
-    if (!coreGraph?.work_processes?.length) return [];
-    return coreGraph.work_processes.map((wp) => {
-      const exec = wp.execution_state;
-      const start = exec?.planned_start_datetime ?? "";
-      const end = exec?.planned_end_datetime ?? "";
-      return {
-        id: wp.id,
-        name: wp.name || wp.code || "未命名工序",
-        start,
-        end,
-        durationDays: wp.duration_days ?? 0,
-        laborCost: wp.labor_cost ?? 0,
-        materialCost: wp.material_cost ?? 0,
-        deviceCost: wp.device_rental_cost ?? 0,
-        teamSize: wp.team_size ?? wp.suggested_team_count ?? 0,
-        status: exec?.status ?? "planned",
-        expressIds: wp.express_ids ?? [],
-        tagIds: wp.tag ?? [],
-      };
-    });
-  }, [coreGraph]);
-
-  const planTasks = useMemo<PlanTask[]>(() => {
-    if (!coreGraph?.work_processes?.length) return [];
-    const depsByTarget = new Map<string, string[]>();
-    coreGraph.dependencies?.forEach((dep) => {
-      const toId = dep.to_work_process_id ?? dep.successor_id;
-      const fromId = dep.from_work_process_id ?? dep.predecessor_id;
-      if (!toId || !fromId) return;
-      const list = depsByTarget.get(toId) ?? [];
-      list.push(fromId);
-      depsByTarget.set(toId, list);
-    });
-
-    const resolvePlannedRange = (wp: typeof coreGraph.work_processes[number]) => {
-      const exec = wp.execution_state;
-      if (!exec) return { start: "", end: "" };
-      const start = exec.planned_start_datetime ?? "";
-      const end = exec.planned_end_datetime ?? "";
-      if (start && end) return { start, end };
-      const intervals = exec.planned_intervals ?? [];
-      if (intervals.length === 0) return { start, end };
-      const starts = intervals
-        .map((item) => new Date(item.start_datetime).getTime())
-        .filter((value) => !Number.isNaN(value));
-      const ends = intervals
-        .map((item) => new Date(item.end_datetime).getTime())
-        .filter((value) => !Number.isNaN(value));
-      if (!starts.length || !ends.length) return { start, end };
-      return {
-        start: new Date(Math.min(...starts)).toISOString(),
-        end: new Date(Math.max(...ends)).toISOString(),
-      };
-    };
-
-    return coreGraph.work_processes.map((wp) => {
-      const exec = wp.execution_state;
-      const { start, end } = resolvePlannedRange(wp);
-      const workerCount = wp.team_size ?? wp.suggested_team_count ?? 0;
-      const jobType = wp.trade?.name ?? "";
-      return {
-        id: wp.id,
-        seqNo: wp.seq_no,
-        task: wp.name || wp.code || "未命名工序",
-        workerCount,
-        jobType,
-        totalCost:
-          (wp.labor_cost ?? 0) +
-          (wp.material_cost ?? 0) +
-          (wp.device_rental_cost ?? 0),
-        startTime: start,
-        endTime: end,
-        constructionSituation: exec?.status ?? "",
-        prerequisiteProcess: (depsByTarget.get(wp.id) ?? []).join(", "),
-        quantity: wp.quantity ?? 0,
-        quantityUnit: wp.unit ?? "",
-        overtime: "否",
-        duration: wp.duration_days ? `${wp.duration_days}天` : "",
-        actualWorkDays: wp.duration_days ?? 0,
-        constructionMethod: wp.selected_method?.name ?? "",
-        directDependency: "",
-        remarks: "",
-        selectedConstructionMethod: wp.selected_method?.name ?? "",
-        materialCost: wp.material_cost ?? 0,
-        laborCost: wp.labor_cost ?? 0,
-        floor: 0,
-        criticalPath: exec?.critical_path ?? false,
-        worker: jobType,
-        count: workerCount,
-        startDate: start,
-        endDate: end,
-      };
-    });
-  }, [coreGraph]);
+  const planTasks = usePlanTasks(coreGraph);
 
   const headcountCurveQuery = useQuery({
     queryKey: ["overview", "headcount-curve", currentProject?.id],
@@ -336,93 +242,15 @@ export function Overview({
     return Math.round(((currentDay - timeRange.startDay) / span) * 100);
   }, [currentDay, timeRange]);
 
-  const highlightInfo = useMemo(() => {
-    const ids = allResolvedIds;
-    return {
-      highlightCount: ids.length,
-      highlightIds: ids,
-    };
-  }, [allResolvedIds]);
-
-  // 根据当前天数计算工序状态
-  const taskStatusByTime = useMemo(() => {
-    if (!selectedTimelineDate) return { completed: [], inProgress: [], upcoming: [] };
-    const currentDate = selectedTimelineDate;
-
-    const completed: string[] = [];
-    const inProgress: string[] = [];
-    const upcoming: string[] = [];
-
-    processHighlights.forEach((item) => {
-      if (!item.start || !item.end) return;
-      const start = new Date(item.start);
-      const end = new Date(item.end);
-      start.setHours(12, 0, 0, 0);
-      end.setHours(12, 0, 0, 0);
-
-      if (currentDate < start) {
-        upcoming.push(item.name);
-      } else if (currentDate > end) {
-        completed.push(item.name);
-      } else {
-        inProgress.push(item.name);
-      }
-    });
-
-    return { completed, inProgress, upcoming };
-  }, [processHighlights, selectedTimelineDate]);
-
-  const completedIds = useMemo(() => {
-    if (!selectedTimelineDate) return [] as string[];
-    const result = getIdsByDate(selectedTimelineDate);
-    console.debug("[overview] highlightByDate", {
-      day: currentDay,
-      completed: result.completedIds.length,
-      inProgress: result.inProgressIds.length,
-      debug: result.debug,
-    });
-    return result.completedIds;
-  }, [currentDay, getIdsByDate, selectedTimelineDate]);
-  
-  const inProgressIds = useMemo(() => {
-    if (!selectedTimelineDate) return [] as string[];
-    const result = getIdsByDate(selectedTimelineDate);
-    console.debug("[overview] highlightByDate inProgress", {
-      day: currentDay,
-      inProgress: result.inProgressIds.length,
-      debug: result.debug,
-    });
-    return result.inProgressIds;
-  }, [currentDay, getIdsByDate, selectedTimelineDate]);
-
-  const dailyProcesses = useMemo(() => {
-    if (!selectedTimelineDate) return [];
-    const globalSeqMap = new Map<string, string | number>();
-    planTasks.forEach((task, index) => {
-      globalSeqMap.set(task.id, task.seqNo ?? index + 1);
-    });
-    return processHighlights
-      .filter((item) => {
-        if (!item.start || !item.end) return false;
-        const start = new Date(item.start);
-        const end = new Date(item.end);
-        start.setHours(12, 0, 0, 0);
-        end.setHours(12, 0, 0, 0);
-        return selectedTimelineDate >= start && selectedTimelineDate <= end;
-      })
-      .map((item) => ({
-        id: item.id,
-        name: item.name,
-        seqNo: globalSeqMap.get(item.id),
-      }));
-  }, [planTasks, processHighlights, selectedTimelineDate]);
-
-  const visibleDailyProcesses = dailyProcessTab === "plan" ? dailyProcesses : [];
-  const filteredDailyProcesses = useMemo(() => {
-    const keyword = dailyProcessKeyword.trim();
-    if (!keyword) return visibleDailyProcesses;
-    return visibleDailyProcesses.filter((item) => item.name.includes(keyword));
-  }, [dailyProcessKeyword, visibleDailyProcesses]);
+  const { completedIds, inProgressIds } = useTimelineHighlight(
+    selectedTimelineDate,
+    getIdsByDate,
+  );
+  const dailyProcesses = useDailyProcesses(
+    processHighlights,
+    planTasks,
+    selectedTimelineDate,
+  );
 
 
   // 初始化当前天数为项目开始天数
@@ -583,71 +411,7 @@ export function Overview({
           </Card>
         </div>
 
-        <Card className="col-span-3 min-w-0 flex h-full min-h-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
-          <CardHeader className="p-2 pb-1 bg-[#04142d]/80">
-            <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-xs font-medium text-cyan-200 flex items-center gap-1.5">
-                <ListTodo className="h-3.5 w-3.5 text-cyan-300" />
-                当日工序
-              </CardTitle>
-              <div className="inline-flex rounded-md border border-cyan-800/50 bg-[#03112a] p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setDailyProcessTab("plan")}
-                  className={`h-5 rounded px-2 text-[11px] transition ${
-                    dailyProcessTab === "plan"
-                      ? "bg-cyan-500/20 text-cyan-100"
-                      : "text-cyan-300/70 hover:text-cyan-200"
-                  }`}
-                >
-                  计划
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDailyProcessTab("actual")}
-                  className={`h-5 rounded px-2 text-[11px] transition ${
-                    dailyProcessTab === "actual"
-                      ? "bg-cyan-500/20 text-cyan-100"
-                      : "text-cyan-300/70 hover:text-cyan-200"
-                  }`}
-                >
-                  实际
-                </button>
-              </div>
-            </div>
-            <input
-              type="text"
-              value={dailyProcessKeyword}
-              onChange={(e) => setDailyProcessKeyword(e.target.value)}
-              placeholder="搜索工序..."
-              className="mt-1 h-7 w-full rounded-md border border-cyan-800/50 bg-[#03112a] px-2 text-xs text-cyan-100 placeholder:text-cyan-300/50 outline-none focus:border-cyan-500/70"
-            />
-          </CardHeader>
-          <CardContent className="flex-1 min-h-0 p-2">
-            <ScrollArea className="h-full">
-              <div className="space-y-2">
-                {filteredDailyProcesses.length === 0 ? (
-                  <div className="rounded-md border border-dashed border-cyan-900/50 p-3 text-xs text-cyan-300/70">
-                    {dailyProcessKeyword.trim()
-                      ? "未匹配到工序"
-                      : dailyProcessTab === "plan"
-                        ? "暂无当日工序"
-                        : "暂无当日实际工序"}
-                  </div>
-                ) : (
-                  filteredDailyProcesses.map((item) => (
-                    <div key={item.id} className="rounded-md border border-cyan-900/40 bg-[#03112a] p-2">
-                      <div className="text-[11px] text-cyan-300/70">
-                        工序 {item.seqNo ?? "-"}
-                      </div>
-                      <div className="text-xs leading-5 text-cyan-100">{item.name}</div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+        <DailyCard items={dailyProcesses} />
       </div>
     </div>
   );
