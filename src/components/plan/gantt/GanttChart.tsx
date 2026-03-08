@@ -20,10 +20,10 @@ const MS_IN_DAY = MS_IN_HOUR * 24;
 const MS_IN_WEEK = MS_IN_DAY * 7;
 
 const COLUMN_WIDTH_MAP: Record<TimelineScale, number> = {
-  day: 64,
-  hour: 48,
-  week: 80,
-  month: 96,
+  day: 44,
+  hour: 32,
+  week: 60,
+  month: 72,
 };
 
 const UNIT_LABELS: Record<TimelineScale, string> = {

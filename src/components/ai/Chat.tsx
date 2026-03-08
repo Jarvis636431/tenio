@@ -383,10 +383,10 @@ export function Chat({
           </div>
         </CardContent>
 
-        <CardFooter className="px-4 py-3">
+        <CardFooter className="block px-4 py-3">
           <div className="mb-3 w-full">
-            <div className="mb-2 text-sm font-semibold text-cyan-200">常用查询</div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="mb-2 text-xs font-semibold text-cyan-200">常用查询</div>
+            <div className="flex flex-wrap gap-2">
               {quickQueries.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -395,10 +395,10 @@ export function Chat({
                     type="button"
                     variant="ghost"
                     onClick={() => sendQuickMessage(item.label)}
-                    className="h-9 justify-start gap-2 rounded-full border border-cyan-900/60 bg-[#03112a] px-3 text-cyan-200 hover:bg-[#0a2a5c]"
+                    className="h-7 w-auto justify-start gap-1 rounded-full border border-cyan-900/60 bg-[#03112a] px-2 text-cyan-200 hover:bg-[#0a2a5c]"
                   >
-                    <Icon className="h-3.5 w-3.5 text-cyan-300" />
-                    <span className="truncate text-xs">{item.label}</span>
+                    <Icon className="h-2.5 w-2.5 text-cyan-300" />
+                    <span className="truncate text-[10px]">{item.label}</span>
                   </Button>
                 );
               })}
