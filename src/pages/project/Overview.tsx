@@ -30,6 +30,7 @@ import { ModelViewer } from "@/components/model/ModelViewer";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
+import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -233,6 +234,13 @@ export function Overview({
     planTasks,
     selectedTimelineDate,
   );
+  const agentBaseDate = useMemo(() => {
+    if (!timeRange?.baseDate) return "";
+    const y = timeRange.baseDate.getFullYear();
+    const m = String(timeRange.baseDate.getMonth() + 1).padStart(2, "0");
+    const d = String(timeRange.baseDate.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, [timeRange]);
   const showTrendPanels = panelVisibility.headcount || panelVisibility.cost;
   const showPlanPanels = panelVisibility.gantt || panelVisibility.network;
   const showModelPanel = panelVisibility.model;
@@ -240,6 +248,7 @@ export function Overview({
   const trendVisibleCount = Number(panelVisibility.headcount) + Number(panelVisibility.cost);
   const planVisibleCount = Number(panelVisibility.gantt) + Number(panelVisibility.network);
   const leftColumnRef = useRef<HTMLDivElement | null>(null);
+  const agentInitKeyRef = useRef<string | null>(null);
   const visiblePanelCount = useMemo(
     () => Object.values(panelVisibility).filter(Boolean).length,
     [panelVisibility],
@@ -252,6 +261,22 @@ export function Overview({
       setCurrentDay(timeRange.startDay);
     }
   }, [timeRange]);
+
+  useEffect(() => {
+    if (!projectId || !token || !agentBaseDate) return;
+    const key = `${projectId}:${agentBaseDate}`;
+    if (agentInitKeyRef.current === key) return;
+    agentInitKeyRef.current = key;
+
+    void initAgent({
+      project_id: projectId,
+      base_date: agentBaseDate,
+      solution_id: 0,
+      access_token: token,
+    }).catch(() => {
+      agentInitKeyRef.current = null;
+    });
+  }, [projectId, token, agentBaseDate]);
 
   useEffect(() => {
     if (!isPlaying || !timeRange) return;
