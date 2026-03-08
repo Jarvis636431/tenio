@@ -48,6 +48,7 @@ export function Overview({
     useProjectHighlight(projectId);
   const [currentDay, setCurrentDay] = useState(1);
   const [playbackRate, setPlaybackRate] = useState<1 | 2 | 4>(1);
+  const [isPlaying, setIsPlaying] = useState(false);
   const fixedHighlightIds = useMemo(
     () => [
       "2j0dIGQjb7IBS38pr73$QB",
@@ -211,6 +212,28 @@ export function Overview({
     }
   }, [timeRange]);
 
+  useEffect(() => {
+    if (!isPlaying || !timeRange) return;
+
+    const intervalByRate: Record<1 | 2 | 4, number> = {
+      1: 1000,
+      2: 500,
+      4: 250,
+    };
+
+    const timer = window.setInterval(() => {
+      setCurrentDay((prev) => {
+        if (prev >= timeRange.endDay) {
+          setIsPlaying(false);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, intervalByRate[playbackRate]);
+
+    return () => window.clearInterval(timer);
+  }, [isPlaying, playbackRate, timeRange]);
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 bg-gradient-to-b from-[#020a1d] to-[#041332] px-1 pt-0 pb-1 text-slate-100">
       <div className="shrink-0">
@@ -228,13 +251,30 @@ export function Overview({
           startDay={timeRange.startDay}
           endDay={timeRange.endDay}
           playbackRate={playbackRate}
+          isPlaying={isPlaying}
           dateLabel={selectedTimelineDateLabel}
           progress={timelineProgress}
-          onPreviousDay={() => setCurrentDay((d) => Math.max(timeRange.startDay, d - 1))}
-          onPlayNextDay={() => setCurrentDay((d) => Math.min(timeRange.endDay, d + 1))}
-          onNextDay={() => setCurrentDay((d) => Math.min(timeRange.endDay, d + 1))}
+          onPreviousDay={() => {
+            setIsPlaying(false);
+            setCurrentDay((d) => Math.max(timeRange.startDay, d - 1));
+          }}
+          onTogglePlay={() => {
+            if (currentDay >= timeRange.endDay) {
+              setCurrentDay(timeRange.startDay);
+              setIsPlaying(true);
+              return;
+            }
+            setIsPlaying((prev) => !prev);
+          }}
+          onNextDay={() => {
+            setIsPlaying(false);
+            setCurrentDay((d) => Math.min(timeRange.endDay, d + 1));
+          }}
           onChangeRate={setPlaybackRate}
-          onChangeDay={setCurrentDay}
+          onChangeDay={(day) => {
+            setIsPlaying(false);
+            setCurrentDay(day);
+          }}
         />
       )}
 

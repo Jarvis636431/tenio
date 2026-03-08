@@ -1,4 +1,4 @@
-import { Play } from "lucide-react";
+import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
 interface ProjectSliderProps {
@@ -6,10 +6,11 @@ interface ProjectSliderProps {
   startDay: number;
   endDay: number;
   playbackRate: 1 | 2 | 4;
+  isPlaying: boolean;
   dateLabel: string;
   progress: number;
   onPreviousDay: () => void;
-  onPlayNextDay: () => void;
+  onTogglePlay: () => void;
   onNextDay: () => void;
   onChangeRate: (rate: 1 | 2 | 4) => void;
   onChangeDay: (day: number) => void;
@@ -20,10 +21,11 @@ export function ProjectSlider({
   startDay,
   endDay,
   playbackRate,
+  isPlaying,
   dateLabel,
   progress,
   onPreviousDay,
-  onPlayNextDay,
+  onTogglePlay,
   onNextDay,
   onChangeRate,
   onChangeDay,
@@ -38,15 +40,19 @@ export function ProjectSlider({
             onClick={onPreviousDay}
             aria-label="上一天"
           >
-            <Play className="h-3.5 w-3.5 rotate-180" />
+            <SkipBack className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-cyan-300 transition hover:text-cyan-100"
-            onClick={onPlayNextDay}
-            aria-label="播放下一天"
+            onClick={onTogglePlay}
+            aria-label={isPlaying ? "暂停播放" : "开始播放"}
           >
-            <Play className="h-3.5 w-3.5" />
+            {isPlaying ? (
+              <Pause className="h-3.5 w-3.5" />
+            ) : (
+              <Play className="h-3.5 w-3.5" />
+            )}
           </button>
           <button
             type="button"
@@ -54,7 +60,7 @@ export function ProjectSlider({
             onClick={onNextDay}
             aria-label="下一天"
           >
-            <Play className="h-3.5 w-3.5" />
+            <SkipForward className="h-3.5 w-3.5" />
           </button>
 
           {[1, 2, 4].map((rate) => (
