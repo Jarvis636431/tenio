@@ -65,7 +65,6 @@ export function Overview({
   const { config } = useProjectConfig();
   const { currentProject, projects } = useProject();
   const { token } = useAuth();
-  const { handleExportCSV } = useProjectExport(coreGraph);
   const { tagMap, processHighlights, getIdsByDate } =
     useProjectHighlight(projectId);
   const [currentDay, setCurrentDay] = useState(1);
@@ -219,6 +218,22 @@ export function Overview({
     return `${y}-${m}-${d}`;
   }, [selectedTimelineDate]);
 
+  const reportPeriod = useMemo(() => {
+    if (!selectedTimelineDate) return { start: "", end: "" };
+    const weekStart = new Date(selectedTimelineDate);
+    const day = weekStart.getDay();
+    const diffToMonday = day === 0 ? 6 : day - 1;
+    weekStart.setDate(weekStart.getDate() - diffToMonday);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(
+        d.getDate(),
+      ).padStart(2, "0")}`;
+    return { start: fmt(weekStart), end: fmt(weekEnd), startDate: weekStart, endDate: weekEnd };
+  }, [selectedTimelineDate]);
+
   const timelineProgress = useMemo(() => {
     if (!timeRange) return 0;
     const span = Math.max(1, timeRange.endDay - timeRange.startDay);
@@ -234,6 +249,43 @@ export function Overview({
     planTasks,
     selectedTimelineDate,
   );
+  const weeklyTaskNames = useMemo(() => {
+    const { startDate, endDate } = reportPeriod;
+    if (!startDate || !endDate) return [];
+    return planTasks
+      .filter((task) => {
+        if (!task.startTime || !task.endTime) return false;
+        const start = new Date(task.startTime);
+        const end = new Date(task.endTime);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
+        return end >= startDate && start <= endDate;
+      })
+      .sort((a, b) => {
+        const aSeq = typeof a.seqNo === "number" ? a.seqNo : Number(a.seqNo ?? Number.MAX_SAFE_INTEGER);
+        const bSeq = typeof b.seqNo === "number" ? b.seqNo : Number(b.seqNo ?? Number.MAX_SAFE_INTEGER);
+        return aSeq - bSeq;
+      })
+      .map((task) => task.task);
+  }, [planTasks, reportPeriod]);
+  const plannedWorkerCount = useMemo(() => {
+    if (!headcountCurveQuery.data?.points?.length || !selectedTimelineDateLabel) return undefined;
+    const matched = headcountCurveQuery.data.points.find(
+      (point) => point.date.slice(0, 10) === selectedTimelineDateLabel,
+    );
+    return matched?.headcount;
+  }, [headcountCurveQuery.data, selectedTimelineDateLabel]);
+  const { handleExportDOC } = useProjectExport(coreGraph, {
+    projectName: currentProjectName,
+    projectLocation: currentProject?.description ?? "",
+    periodStart: reportPeriod.start,
+    periodEnd: reportPeriod.end,
+    plannedWorkerCount,
+    actualWorkerCount: onsiteCount,
+    weeklyTaskNames,
+    progressStatus:
+      timelineProgress < 33 ? "超前" : timelineProgress > 80 ? "滞后" : "符合计划",
+    remark: "",
+  });
   const agentBaseDate = useMemo(() => {
     if (!timeRange?.baseDate) return "";
     const y = timeRange.baseDate.getFullYear();
@@ -432,9 +484,9 @@ export function Overview({
               <Button
                 type="button"
                 size="sm"
-                onClick={handleExportCSV}
+                onClick={handleExportDOC}
                 className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-3 text-[#cfe6ff] hover:bg-[#12417c]"
-                disabled={!handleExportCSV}
+                disabled={!handleExportDOC}
               >
                 <Download className="mr-1.5 h-4 w-4" />
                 报告导出
