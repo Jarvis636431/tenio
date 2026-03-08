@@ -574,6 +574,7 @@ export function Overview({
                           <GanttChart
                             data={planTasks}
                             scale="day"
+                            currentDate={selectedTimelineDate}
                             shutdownEvents={config?.shutdown_events ?? []}
                           />
                         </div>

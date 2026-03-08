@@ -12,6 +12,7 @@ interface GanttChartProps {
   onTaskDetail?: (task: PlanTask) => void;
   scale?: TimelineScale;
   shutdownEvents?: ShutdownEventConfig[];
+  currentDate?: Date | null;
 }
 
 const BASELINE_DATE = new Date(2025, 0, 1); // 2025-10-01
@@ -329,6 +330,7 @@ export function GanttChart({
   onTaskDetail,
   scale = "day",
   shutdownEvents = [],
+  currentDate = null,
 }: GanttChartProps) {
   const taskListRef = useRef<HTMLDivElement>(null);
   const chartContentRef = useRef<HTMLDivElement>(null);
@@ -486,6 +488,51 @@ export function GanttChart({
       chartContent.removeEventListener("scroll", handleChartScroll);
     };
   }, [data]); // 数据变化时重新建立同步并重置滚动位置
+
+  useEffect(() => {
+    const chartContent = chartContentRef.current;
+    if (!chartContent || !currentDate || totalUnits <= 0) return;
+
+    const totalContentWidth = totalUnits * columnWidth;
+    const maxScrollLeft = Math.max(0, totalContentWidth - chartContent.clientWidth);
+    const currentOffset = calculateStartOffset(currentDate, startAnchor, timelineScale);
+    const targetLeft = Math.max(
+      0,
+      Math.min(
+        maxScrollLeft,
+        currentOffset * columnWidth - chartContent.clientWidth * 0.35,
+      ),
+    );
+
+    const activeRowIndex = timelineData.findIndex((task) => {
+      const start = parseDate(task.startDate ?? task.startTime ?? "");
+      const end = parseDate(task.endDate ?? task.endTime ?? "");
+      const t = currentDate.getTime();
+      return t >= start.getTime() && t <= end.getTime();
+    });
+    const rowIndex = activeRowIndex >= 0 ? activeRowIndex : 0;
+    const totalContentHeight = totalRows * ROW_HEIGHT;
+    const maxScrollTop = Math.max(0, totalContentHeight - chartContent.clientHeight);
+    const targetTop = Math.max(
+      0,
+      Math.min(maxScrollTop, rowIndex * ROW_HEIGHT - chartContent.clientHeight * 0.35),
+    );
+
+    chartContent.scrollTo({
+      left: targetLeft,
+      top: targetTop,
+      behavior: "smooth",
+    });
+  }, [
+    currentDate,
+    startAnchor,
+    timelineScale,
+    totalUnits,
+    columnWidth,
+    timelineData,
+    totalRows,
+    ROW_HEIGHT,
+  ]);
 
   // 生成日期标头
 

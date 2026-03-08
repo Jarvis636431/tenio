@@ -319,14 +319,43 @@ export function NetworkDiagram({
     const rect = svgRef.current.getBoundingClientRect();
     const scaleX = rect.width / width;
     const scaleY = rect.height / height;
-    const fitScale = Math.min(scaleX, scaleY) * 0.9;
+    const fitScale = Math.min(scaleX, scaleY) * 60;
     setMinScale(fitScale);
-    if (initialized) return;
+    if (initialized) return
     const offsetX = (rect.width - width * fitScale) / 2;
     const offsetY = (rect.height - height * fitScale) / 2;
     setView({ x: offsetX, y: offsetY, scale: fitScale });
     setInitialized(true);
   }, [width, height, initialized]);
+
+  useEffect(() => {
+    if (!initialized || !currentDate || nodes.length === 0 || !svgRef.current) return;
+
+    const inProgress = nodes.find(
+      (node) => getTaskStatus(node.start, node.end, currentDate) === "in_progress",
+    );
+    const targetNode =
+      inProgress ??
+      nodes
+        .filter((node) => {
+          const start = toDate(node.start);
+          return start ? start.getTime() >= currentDate.getTime() : false;
+        })
+        .sort(
+          (a, b) =>
+            (toDate(a.start)?.getTime() ?? Number.MAX_SAFE_INTEGER) -
+            (toDate(b.start)?.getTime() ?? Number.MAX_SAFE_INTEGER),
+        )[0] ??
+      nodes[nodes.length - 1];
+
+    const rect = svgRef.current.getBoundingClientRect();
+    const nextScale = Math.max(view.scale, minScale);
+    const nodeCenterX = targetNode.x + targetNode.w / 2;
+    const nodeCenterY = targetNode.y + targetNode.h / 2;
+    const offsetX = rect.width / 2 - nodeCenterX * nextScale;
+    const offsetY = rect.height / 2 - nodeCenterY * nextScale;
+    setView((prev) => ({ ...prev, x: offsetX, y: offsetY, scale: nextScale }));
+  }, [initialized, currentDate, nodes, minScale, view.scale]);
 
   const handleWheel = useCallback(
     (event: React.WheelEvent<SVGSVGElement>) => {
