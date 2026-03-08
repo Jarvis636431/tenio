@@ -4,14 +4,12 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { TaskDetailDialog } from "../dialogs/TaskDetailDialog";
 import { useProject } from "@/hooks/useProject";
-import type { ShutdownEventConfig } from "@/types/domain/project";
 import type { PlanTask, TimelineScale } from "@/types/domain/plan";
 
 interface GanttChartProps {
   data: PlanTask[];
   onTaskDetail?: (task: PlanTask) => void;
   scale?: TimelineScale;
-  shutdownEvents?: ShutdownEventConfig[];
   currentDate?: Date | null;
 }
 
@@ -329,7 +327,6 @@ export function GanttChart({
   data,
   onTaskDetail,
   scale = "day",
-  shutdownEvents = [],
   currentDate = null,
 }: GanttChartProps) {
   const taskListRef = useRef<HTMLDivElement>(null);
@@ -404,56 +401,6 @@ export function GanttChart({
       startAnchor,
     };
   }, [data, timelineScale]);
-
-  // 计算停工期遮罩段，仅用于内容区渲染
-  const shutdownSegments = useMemo(() => {
-    if (!shutdownEvents || shutdownEvents.length === 0)
-      return [] as { left: number; width: number; key: string }[];
-
-    const base = getBaselineDate();
-
-    return shutdownEvents
-      .map((ev, idx) => {
-        const sDay = Math.max(1, Number(ev?.start_time?.day ?? 1));
-        const sHour = Math.max(0, Number(ev?.start_time?.hour ?? 0));
-        const eDay = Math.max(sDay, Number(ev?.end_time?.day ?? sDay));
-        const eHour = Math.max(0, Number(ev?.end_time?.hour ?? sHour));
-
-        const startDate = new Date(base);
-        startDate.setDate(base.getDate() + (sDay - 1));
-        startDate.setHours(sHour, 0, 0, 0);
-
-        const endDate = new Date(base);
-        endDate.setDate(base.getDate() + (eDay - 1));
-        endDate.setHours(eHour, 0, 0, 0);
-
-        const startOffsetUnits = calculateStartOffset(
-          startDate,
-          startAnchor,
-          timelineScale,
-        );
-        const spanUnits = calculateSpanUnits(startDate, endDate, timelineScale);
-
-        if (startOffsetUnits >= totalUnits || spanUnits <= 0) {
-          return null;
-        }
-        const maxUnits = Math.max(0, totalUnits - startOffsetUnits);
-        const effectiveUnits = Math.max(0, Math.min(spanUnits, maxUnits));
-
-        return {
-          left: startOffsetUnits * columnWidth,
-          width: Math.max(columnWidth, effectiveUnits * columnWidth),
-          key: `${idx}-${sDay}-${sHour}-${eDay}-${eHour}`,
-        };
-      })
-      .filter(Boolean) as { left: number; width: number; key: string }[];
-  }, [shutdownEvents, columnWidth, totalUnits, timelineScale, startAnchor]);
-
-  useEffect(() => {
-    console.debug("[gantt] shutdownEvents changed", {
-      count: shutdownEvents?.length ?? 0,
-    });
-  }, [shutdownEvents]);
 
   const totalRows = timelineData.length;
   const visibleRowCount = 12; // 渲染窗口中的最大行数
@@ -675,15 +622,6 @@ export function GanttChart({
                       backgroundImage: `repeating-linear-gradient(to right, rgba(56,189,248,0.12) 0, rgba(56,189,248,0.12) 1px, transparent 1px, transparent ${columnWidth}px), repeating-linear-gradient(to bottom, rgba(56,189,248,0.08) 0, rgba(56,189,248,0.08) 1px, transparent 1px, transparent ${ROW_HEIGHT}px)`,
                     }}
                   />
-                  {/* 停工期遮罩：覆盖内容区列，置于任务条下方 */}
-                  {shutdownSegments.map((seg) => (
-                    <div
-                      key={seg.key}
-                      className="absolute top-0 bottom-0 bg-red-200/40 pointer-events-none z-0"
-                      style={{ left: seg.left, width: seg.width }}
-                      aria-hidden="true"
-                    />
-                  ))}
                   {visibleRows.map((item, i) => {
                     const rowIndex = startRowIndex + i;
                     const top = rowIndex * ROW_HEIGHT;

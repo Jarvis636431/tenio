@@ -4,7 +4,6 @@ import type {
   PrecreateProjectPayload,
   PrecreateProjectResponse,
   UploadDocsResponse,
-  ProjectConfigResponse,
   ProcessInfoResponse,
   ProjectListResponse,
   UploadDocsPayload,
@@ -72,14 +71,4 @@ export async function getProjectList(
     `${PROJECT_SERVICE_BASE_URL}/api/projects/`,
     { token },
   );
-}
-
-export async function getProjectConfig(
-  projectId: string,
-  token?: string,
-): Promise<ProjectConfigResponse> {
-  const url = buildUrl(PROJECT_SERVICE_BASE_URL, "/project_config", {
-    project_id: projectId,
-  });
-  return requestJson<ProjectConfigResponse>(url, { token });
 }

@@ -16,7 +16,6 @@ import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
-import { useProjectConfig } from "@/hooks/useProjectConfig";
 import { useProjectExport } from "@/pages/project/hooks/useProjectExport";
 import { usePlanTasks } from "@/pages/project/hooks/usePlanTasks";
 import { useDailyProcesses } from "@/pages/project/hooks/useDailyProcesses";
@@ -62,7 +61,6 @@ export function Overview({
   // 优先使用路由参数，其次使用props
   const projectId = paramProjectId || propsProjectId || '';
   const { coreGraph } = useProjectCoreGraph();
-  const { config } = useProjectConfig();
   const { currentProject, projects } = useProject();
   const { token } = useAuth();
   const { tagMap, processHighlights, getIdsByDate } =
@@ -627,7 +625,6 @@ export function Overview({
                             data={planTasks}
                             scale="day"
                             currentDate={selectedTimelineDate}
-                            shutdownEvents={config?.shutdown_events ?? []}
                           />
                         </div>
                       )}

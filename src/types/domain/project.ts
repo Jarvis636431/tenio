@@ -64,56 +64,6 @@ export interface ProcessGuidMappingResponse {
   process_guid_mapping: Record<string, Array<number | string>>;
 }
 
-export interface ShutdownEventTime {
-  day: number;
-  hour: number;
-}
-
-export interface ShutdownEventConfig {
-  name: string;
-  start_time: ShutdownEventTime;
-  end_time: ShutdownEventTime;
-  reason?: string; // 兼容不同定义
-  a_level_tasks?: string[];
-  b_level_tasks?: string[];
-  [key: string]: unknown;
-}
-
-export interface ConstructionMethodConfig {
-  task_name: string;
-  method_index: number;
-  [key: string]: unknown;
-}
-
-export interface CompressStrategyConfig {
-  target_days: number;
-  add_carpenter_first: boolean;
-  [key: string]: unknown;
-}
-
-export interface ProjectConfig {
-  construction_methods: ConstructionMethodConfig[];
-  overtime_tasks: string[];
-  shutdown_events: ShutdownEventConfig[];
-  work_start_hour: number;
-  work_end_hour: number;
-  backgrounds: string[];
-  compress: CompressStrategyConfig;
-  [key: string]: unknown;
-}
-
-export interface ProjectConfigResponse {
-  project_id?: string;
-  name?: string;
-  description?: string;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
-  config?: ProjectConfig; // 某些接口可能直接返回 config 对象或包含 config 属性
-  shutdown_events?: ShutdownEventConfig[]; // 兼容旧接口
-  [key: string]: unknown;
-}
-
 export interface ProcessInfoData {
   [key: string]: unknown;
   施工工序?: string;
