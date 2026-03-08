@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AI_SSE_URL, VOLC_SPEECH } from "@/config";
 import { useAuth } from "@/hooks/useAuth";
 import { useProject } from "@/hooks/useProject";
@@ -83,13 +83,18 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   const { token } = useAuth();
   const { currentProject, setCoreGraph } = useProject();
   const queryClient = useQueryClient();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
+  const defaultWelcomeMessage: ChatMessage = useMemo(
+    () => ({
       id: createMessageId(),
-      content:
-        "您好！我是 AI 助手，您可以输入施工相关问题或调整指令。",
+      content: "您好！我是 AI 助手，您可以输入施工相关问题或调整指令。",
       sender: "ai",
       timestamp: new Date(),
+    }),
+    [],
+  );
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      ...defaultWelcomeMessage,
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
@@ -99,15 +104,43 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const threadIdRef = useRef<string | null>(null);
+  const threadIdByProjectRef = useRef<Record<string, string | null>>({});
+  const messagesByProjectRef = useRef<Record<string, ChatMessage[]>>({});
+  const lastProjectKeyRef = useRef<string>("");
   const lastContentRef = useRef<string>("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingChunksRef = useRef<Blob[]>([]);
   const recordingStreamRef = useRef<MediaStream | null>(null);
 
+  const activeProjectKey = useMemo(
+    () => options.projectId || routeProjectId || currentProject?.id || "__default__",
+    [options.projectId, routeProjectId, currentProject?.id],
+  );
+
   useEffect(() => {
     if (!scrollAreaRef.current) return;
     scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
   }, [messages, isThinking]);
+
+  useEffect(() => {
+    const lastKey = lastProjectKeyRef.current;
+    if (lastKey && lastKey !== activeProjectKey) {
+      messagesByProjectRef.current[lastKey] = messages;
+      threadIdByProjectRef.current[lastKey] = threadIdRef.current;
+    }
+
+    const nextMessages = messagesByProjectRef.current[activeProjectKey];
+    setMessages(nextMessages?.length ? nextMessages : [{ ...defaultWelcomeMessage }]);
+    threadIdRef.current = threadIdByProjectRef.current[activeProjectKey] ?? null;
+    lastContentRef.current = "";
+    setInputMessage("");
+    setIsThinking(false);
+    lastProjectKeyRef.current = activeProjectKey;
+  }, [activeProjectKey, defaultWelcomeMessage]);
+
+  useEffect(() => {
+    messagesByProjectRef.current[activeProjectKey] = messages;
+  }, [activeProjectKey, messages]);
 
   useEffect(() => {
     return () => {
@@ -394,6 +427,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     // 生成或复用 thread_id
     if (!threadIdRef.current) {
       threadIdRef.current = `thread-${createMessageId()}`;
+      threadIdByProjectRef.current[activeProjectKey] = threadIdRef.current;
     }
 
     // 取消上一次请求

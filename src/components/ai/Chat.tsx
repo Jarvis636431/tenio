@@ -333,9 +333,14 @@ export function Chat({
   };
 
   return (
-    <div className={cn("h-full w-full border-r border-cyan-900/40 bg-gradient-to-b from-[#020a1d] to-[#041332] backdrop-blur-sm", className)}>
-      <Card className="h-full border-0 bg-transparent shadow-none flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+    <div
+      className={cn(
+        "h-full min-h-0 w-full overflow-hidden border-r border-cyan-900/40 bg-gradient-to-b from-[#020a1d] to-[#041332] backdrop-blur-sm",
+        className,
+      )}
+    >
+      <Card className="flex h-full min-h-0 flex-col border-0 bg-transparent shadow-none">
+        <CardHeader className="shrink-0 flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2 text-cyan-100">
             <Sparkles className="w-5 h-5 text-cyan-300" />
             AI助手
@@ -366,8 +371,8 @@ export function Chat({
           </div>
         </CardHeader>
 
-        <CardContent className="px-0 flex-1 overflow-hidden min-h-0">
-          <div className="h-full px-4 overflow-y-auto" ref={scrollAreaRef}>
+        <CardContent className="min-h-0 flex-1 overflow-hidden px-0">
+          <div className="h-full min-h-0 overflow-y-auto px-4" ref={scrollAreaRef}>
             <div className="space-y-4 py-4">
               {messages.map((message) => {
                 const isEmpty =
@@ -408,7 +413,7 @@ export function Chat({
           </div>
         </CardContent>
 
-        <CardFooter className="block px-4 py-3">
+        <CardFooter className="block shrink-0 px-4 py-3">
           <div className="mb-3 w-full">
             <div className="mb-2 text-xs font-semibold text-cyan-200">常用查询</div>
             <div className="flex flex-wrap gap-2">
