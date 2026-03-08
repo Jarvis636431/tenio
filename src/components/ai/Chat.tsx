@@ -1,4 +1,17 @@
-import { Loader2, Mic, Paperclip, Send, Sparkles, Square } from "lucide-react";
+import {
+  BarChart3,
+  Boxes,
+  CloudSun,
+  Loader2,
+  Mic,
+  Paperclip,
+  Send,
+  ShieldAlert,
+  Sparkles,
+  Square,
+  Users,
+  Zap,
+} from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -60,6 +73,14 @@ export function Chat({
   const [interruptDecisions, setInterruptDecisions] = useState<
     Record<string, "yes" | "no">
   >({});
+  const quickQueries = [
+    { label: "当前施工进度如何？", icon: BarChart3 },
+    { label: "今日在场人数？", icon: Users },
+    { label: "今天天气情况", icon: CloudSun },
+    { label: "本周安全隐患", icon: ShieldAlert },
+    { label: "材料库存状态", icon: Boxes },
+    { label: "关键路径节点", icon: Zap },
+  ];
 
   const renderUnexpectedEvent = (payload: UnexpectedEventPayload) => {
     const tasks = payload.affected_tasks ?? [];
@@ -363,6 +384,26 @@ export function Chat({
         </CardContent>
 
         <CardFooter className="px-4 py-3">
+          <div className="mb-3 w-full">
+            <div className="mb-2 text-sm font-semibold text-cyan-200">常用查询</div>
+            <div className="grid grid-cols-2 gap-2">
+              {quickQueries.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Button
+                    key={item.label}
+                    type="button"
+                    variant="ghost"
+                    onClick={() => sendQuickMessage(item.label)}
+                    className="h-9 justify-start gap-2 rounded-full border border-cyan-900/60 bg-[#03112a] px-3 text-cyan-200 hover:bg-[#0a2a5c]"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-cyan-300" />
+                    <span className="truncate text-xs">{item.label}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
           <div className="w-full rounded-2xl border border-cyan-900/70 bg-[#02102a] px-3 py-3 shadow-[inset_0_0_0_1px_rgba(8,145,178,0.18)]">
             <Input
               placeholder="想查点什么？（Enter 发送）"
