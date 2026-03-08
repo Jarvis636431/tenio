@@ -21,19 +21,11 @@ import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
 import { PanelCard } from "@/pages/project/components/PanelCard";
 import { ProjectSlider } from "@/pages/project/components/ProjectSlider";
 import { DailyCard } from "@/pages/project/components/DailyCard";
+import { ProjectTrendChart } from "@/pages/project/components/ProjectTrendChart";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface OverviewProps {
@@ -109,47 +101,6 @@ export function Overview({
       总成本: point.total_cost / 10000,
     }));
   }, [costCurveQuery.data]);
-
-  const chartColors = ["#2563eb", "#16a34a", "#db2777", "#ea580c", "#8b5cf6", "#0891b2"];
-
-  const renderChart = (
-    data: Record<string, string | number>[],
-    seriesNames: string[],
-    unit: string,
-  ) => {
-    if (!data || data.length === 0) return null;
-    return (
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 12 }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 12 }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(value) => (unit ? `${value}${unit}` : `${value}`)}
-          />
-          <Tooltip />
-          {seriesNames.map((name, index) => (
-            <Line
-              key={name}
-              type="monotone"
-              dataKey={name}
-              stroke={chartColors[index % chartColors.length]}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 6 }}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-    );
-  };
 
   const currentProjectName = useMemo(() => {
     if (!projectId) return currentProject?.name || "项目详情";
@@ -302,7 +253,13 @@ export function Overview({
                     无法获取人员数据
                   </div>
                 ) : headcountChartData.length > 0 ? (
-                  <div className="h-full w-full">{renderChart(headcountChartData, ["劳动力人数"], "人")}</div>
+                  <div className="h-full w-full">
+                    <ProjectTrendChart
+                      data={headcountChartData}
+                      seriesNames={["劳动力人数"]}
+                      unit="人"
+                    />
+                  </div>
                 ) : (
                   <div className="flex h-full items-center justify-center text-cyan-300/70">
                     暂无人员数据
@@ -322,7 +279,13 @@ export function Overview({
                     无法获取成本数据
                   </div>
                 ) : costCurveChartData.length > 0 ? (
-                  <div className="h-full w-full">{renderChart(costCurveChartData, ["总成本"], "亿")}</div>
+                  <div className="h-full w-full">
+                    <ProjectTrendChart
+                      data={costCurveChartData}
+                      seriesNames={["总成本"]}
+                      unit="亿"
+                    />
+                  </div>
                 ) : (
                   <div className="flex h-full items-center justify-center text-cyan-300/70">
                     暂无成本数据
