@@ -6,7 +6,6 @@ import {
   ChartLine,
   ListTodo,
   Network,
-  Play,
   Users,
 } from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
@@ -17,8 +16,8 @@ import { useProjectConfig } from "@/hooks/useProjectConfig";
 import { useProjectExport } from "@/pages/project/hooks/useProjectExport";
 import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
 import { PanelCard } from "@/pages/project/components/PanelCard";
+import { ProjectSlider } from "@/pages/project/components/ProjectSlider";
 import { ModelViewer } from "@/components/model/ModelViewer";
-import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
@@ -445,67 +444,19 @@ export function Overview({
       </div>
 
       {timeRange && (
-        <div className="shrink-0 px-2 py-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-cyan-300/80 transition hover:text-cyan-100"
-                onClick={() => setCurrentDay((d) => Math.max(timeRange.startDay, d - 1))}
-                aria-label="上一天"
-              >
-                <Play className="h-3.5 w-3.5 rotate-180" />
-              </button>
-              <button
-                type="button"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-cyan-300 transition hover:text-cyan-100"
-                onClick={() => setCurrentDay((d) => Math.min(timeRange.endDay, d + 1))}
-                aria-label="播放下一天"
-              >
-                <Play className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-cyan-300/80 transition hover:text-cyan-100"
-                onClick={() => setCurrentDay((d) => Math.min(timeRange.endDay, d + 1))}
-                aria-label="下一天"
-              >
-                <Play className="h-3.5 w-3.5" />
-              </button>
-
-              {[1, 2, 4].map((rate) => (
-                <button
-                  key={rate}
-                  type="button"
-                  className={`ml-1 inline-flex h-7 min-w-9 items-center justify-center rounded-md px-2 text-[11px] font-medium transition ${
-                    playbackRate === rate
-                      ? "text-cyan-100"
-                      : "text-cyan-300/70 hover:text-cyan-200"
-                  }`}
-                  onClick={() => setPlaybackRate(rate as 1 | 2 | 4)}
-                >
-                  {rate}x
-                </button>
-              ))}
-            </div>
-
-            <div className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-cyan-200">
-              <span>{selectedTimelineDateLabel || "--"}</span>
-              <span className="text-cyan-300/70">{timelineProgress}%</span>
-            </div>
-          </div>
-
-          <div className="mt-2 px-0.5">
-            <Slider
-              value={[currentDay]}
-              min={timeRange.startDay}
-              max={timeRange.endDay}
-              step={1}
-              onValueChange={(v) => setCurrentDay(v[0])}
-              className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:border-2 [&_[role=slider]]:border-cyan-100 [&_[role=slider]]:bg-[#5dd6ff] [&_[role=slider]]:shadow-[0_0_0_3px_rgba(93,214,255,0.2)] [&>span:first-child]:h-[3px] [&>span:first-child]:bg-[#0a2a52] [&>span:first-child>span]:bg-[#5dd6ff]"
-            />
-          </div>
-        </div>
+        <ProjectSlider
+          currentDay={currentDay}
+          startDay={timeRange.startDay}
+          endDay={timeRange.endDay}
+          playbackRate={playbackRate}
+          dateLabel={selectedTimelineDateLabel}
+          progress={timelineProgress}
+          onPreviousDay={() => setCurrentDay((d) => Math.max(timeRange.startDay, d - 1))}
+          onPlayNextDay={() => setCurrentDay((d) => Math.min(timeRange.endDay, d + 1))}
+          onNextDay={() => setCurrentDay((d) => Math.min(timeRange.endDay, d + 1))}
+          onChangeRate={setPlaybackRate}
+          onChangeDay={setCurrentDay}
+        />
       )}
 
       <div className="grid min-h-0 flex-1 grid-cols-10 gap-2 overflow-hidden">
