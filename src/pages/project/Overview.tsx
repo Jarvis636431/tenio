@@ -397,6 +397,10 @@ export function Overview({
 
   const dailyProcesses = useMemo(() => {
     if (!selectedTimelineDate) return [];
+    const globalSeqMap = new Map<string, string | number>();
+    planTasks.forEach((task, index) => {
+      globalSeqMap.set(task.id, task.seqNo ?? index + 1);
+    });
     return processHighlights
       .filter((item) => {
         if (!item.start || !item.end) return false;
@@ -409,8 +413,9 @@ export function Overview({
       .map((item) => ({
         id: item.id,
         name: item.name,
+        seqNo: globalSeqMap.get(item.id),
       }));
-  }, [processHighlights, selectedTimelineDate]);
+  }, [planTasks, processHighlights, selectedTimelineDate]);
 
   const visibleDailyProcesses = dailyProcessTab === "plan" ? dailyProcesses : [];
   const filteredDailyProcesses = useMemo(() => {
@@ -701,10 +706,10 @@ export function Overview({
                         : "暂无当日实际工序"}
                   </div>
                 ) : (
-                  filteredDailyProcesses.map((item, index) => (
+                  filteredDailyProcesses.map((item) => (
                     <div key={item.id} className="rounded-md border border-cyan-900/40 bg-[#03112a] p-2">
                       <div className="text-[11px] text-cyan-300/70">
-                        工序 {index + 1}
+                        工序 {item.seqNo ?? "-"}
                       </div>
                       <div className="text-xs leading-5 text-cyan-100">{item.name}</div>
                     </div>
