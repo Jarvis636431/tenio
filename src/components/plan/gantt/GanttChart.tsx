@@ -589,7 +589,7 @@ export function GanttChart({
                 className="flex-1"
               >
                 {/* 时间轴表头 */}
-                <div className="bg-[#04142d] border-b border-cyan-900/40 sticky top-0 z-10">
+                <div className="bg-[#04142d] border-b border-cyan-900/40 sticky top-0 z-30">
                   <div
                     className="grid gap-0 h-7"
                     style={{
@@ -650,7 +650,7 @@ export function GanttChart({
                       >
                         {/* 任务条 - 可点击 */}
                         <div
-                          className="absolute top-0.5 h-6 flex items-center justify-center text-white text-[9px] font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg transition-all duration-200 hover:brightness-110 z-10"
+                          className="absolute top-0.5 h-6 flex items-center justify-center text-white text-[9px] font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg transition-all duration-200 hover:brightness-110 z-[5]"
                           style={{
                             left: `${item.startOffset * columnWidth}px`,
                             width: `${item.spanUnits * columnWidth}px`,

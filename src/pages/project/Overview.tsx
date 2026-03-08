@@ -3,9 +3,13 @@ import { useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Check,
   ChartLine,
+  Download,
   ListTodo,
   Network,
+  Boxes,
+  SlidersHorizontal,
   Users,
 } from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
@@ -27,11 +31,28 @@ import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface OverviewProps {
   projectId?: string;
   projectName?: string;
 }
+
+type PanelVisibility = {
+  headcount: boolean;
+  cost: boolean;
+  gantt: boolean;
+  network: boolean;
+  model: boolean;
+};
 
 export function Overview({
   projectId: propsProjectId,
@@ -49,6 +70,13 @@ export function Overview({
   const [currentDay, setCurrentDay] = useState(1);
   const [playbackRate, setPlaybackRate] = useState<1 | 2 | 4>(1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [panelVisibility, setPanelVisibility] = useState<PanelVisibility>({
+    headcount: true,
+    cost: true,
+    gantt: true,
+    network: true,
+    model: true,
+  });
   const fixedHighlightIds = useMemo(
     () => [
       "2j0dIGQjb7IBS38pr73$QB",
@@ -203,6 +231,22 @@ export function Overview({
     planTasks,
     selectedTimelineDate,
   );
+  const showTrendPanels = panelVisibility.headcount || panelVisibility.cost;
+  const showPlanPanels = panelVisibility.gantt || panelVisibility.network;
+  const showModelPanel = panelVisibility.model;
+  const trendVisibleCount = Number(panelVisibility.headcount) + Number(panelVisibility.cost);
+  const planVisibleCount = Number(panelVisibility.gantt) + Number(panelVisibility.network);
+  const visiblePanelCount = useMemo(
+    () => Object.values(panelVisibility).filter(Boolean).length,
+    [panelVisibility],
+  );
+  const leftRowTemplate = useMemo(() => {
+    const rows: string[] = [];
+    if (showTrendPanels) rows.push("0.75fr");
+    if (showPlanPanels) rows.push("0.75fr");
+    if (showModelPanel) rows.push("1.25fr");
+    return rows.length ? rows.join(" ") : "1fr";
+  }, [showModelPanel, showPlanPanels, showTrendPanels]);
 
 
   // 初始化当前天数为项目开始天数
@@ -241,7 +285,105 @@ export function Overview({
           title={currentProjectName}
           titleExtra={totalDurationLabel ? `总工期：${totalDurationLabel}` : undefined}
           onsiteCount={onsiteCount}
-          onExportReport={handleExportCSV}
+          actions={(
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-2 text-[#cfe6ff] hover:bg-[#12417c]"
+                  >
+                    <SlidersHorizontal className="mr-1.5 h-4 w-4" />
+                    视图 {visiblePanelCount}/5
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-44 border-cyan-900/60 bg-[#03112a] text-cyan-100"
+                >
+                  <DropdownMenuLabel className="text-cyan-200">显示面板</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-cyan-900/60" />
+                  <DropdownMenuItem
+                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setPanelVisibility((prev) => ({ ...prev, headcount: !prev.headcount }));
+                    }}
+                  >
+                    <Users className="mr-2 h-4 w-4 text-cyan-300" />
+                    <span className="flex-1">劳动力曲线</span>
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
+                      {panelVisibility.headcount && <Check className="h-3 w-3 text-cyan-200" />}
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setPanelVisibility((prev) => ({ ...prev, cost: !prev.cost }));
+                    }}
+                  >
+                    <ChartLine className="mr-2 h-4 w-4 text-emerald-300" />
+                    <span className="flex-1">资金曲线</span>
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
+                      {panelVisibility.cost && <Check className="h-3 w-3 text-cyan-200" />}
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setPanelVisibility((prev) => ({ ...prev, gantt: !prev.gantt }));
+                    }}
+                  >
+                    <ListTodo className="mr-2 h-4 w-4 text-amber-300" />
+                    <span className="flex-1">甘特图</span>
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
+                      {panelVisibility.gantt && <Check className="h-3 w-3 text-cyan-200" />}
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setPanelVisibility((prev) => ({ ...prev, network: !prev.network }));
+                    }}
+                  >
+                    <Network className="mr-2 h-4 w-4 text-violet-300" />
+                    <span className="flex-1">网络图</span>
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
+                      {panelVisibility.network && <Check className="h-3 w-3 text-cyan-200" />}
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setPanelVisibility((prev) => ({ ...prev, model: !prev.model }));
+                    }}
+                  >
+                    <Boxes className="mr-2 h-4 w-4 text-cyan-300" />
+                    <span className="flex-1">模型区</span>
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
+                      {panelVisibility.model && <Check className="h-3 w-3 text-cyan-200" />}
+                    </span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleExportCSV}
+                className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-3 text-[#cfe6ff] hover:bg-[#12417c]"
+                disabled={!handleExportCSV}
+              >
+                <Download className="mr-1.5 h-4 w-4" />
+                报告导出
+              </Button>
+            </div>
+          )}
         />
       </div>
 
@@ -279,139 +421,163 @@ export function Overview({
       )}
 
       <div className="grid min-h-0 flex-1 grid-cols-10 gap-2 overflow-hidden">
-        <div className="col-span-7 min-w-0 grid min-h-0 grid-rows-[0.75fr_0.75fr_1.25fr] gap-2 overflow-hidden">
-          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
-            <PanelCard
-              title="劳动力曲线"
-              icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
-              titleClassName="text-cyan-200"
+        <div
+          className="col-span-7 min-w-0 grid min-h-0 gap-2 overflow-hidden"
+          style={{ gridTemplateRows: leftRowTemplate }}
+        >
+          {showTrendPanels && (
+            <div
+              className={`grid min-h-0 min-w-0 grid-cols-1 gap-2 ${
+                trendVisibleCount > 1 ? "lg:grid-cols-2" : "lg:grid-cols-1"
+              }`}
             >
-                {headcountCurveQuery.isLoading ? (
-                  <Skeleton className="h-full w-full" />
-                ) : headcountCurveQuery.isError ? (
-                  <div className="flex h-full items-center justify-center text-sm text-destructive">
-                    无法获取人员数据
-                  </div>
-                ) : headcountChartData.length > 0 ? (
-                  <div className="h-full w-full">
-                    <ProjectTrendChart
-                      data={headcountChartData}
-                      seriesNames={["劳动力人数"]}
-                      unit="人"
+              {panelVisibility.headcount && (
+                <PanelCard
+                  title="劳动力曲线"
+                  icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
+                  titleClassName="text-cyan-200"
+                >
+                  {headcountCurveQuery.isLoading ? (
+                    <Skeleton className="h-full w-full" />
+                  ) : headcountCurveQuery.isError ? (
+                    <div className="flex h-full items-center justify-center text-sm text-destructive">
+                      无法获取人员数据
+                    </div>
+                  ) : headcountChartData.length > 0 ? (
+                    <div className="h-full w-full">
+                      <ProjectTrendChart
+                        data={headcountChartData}
+                        seriesNames={["劳动力人数"]}
+                        unit="人"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-cyan-300/70">
+                      暂无人员数据
+                    </div>
+                  )}
+                </PanelCard>
+              )}
+
+              {panelVisibility.cost && (
+                <PanelCard
+                  title="资金曲线"
+                  icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
+                  titleClassName="text-emerald-300"
+                >
+                  {costCurveQuery.isLoading ? (
+                    <Skeleton className="h-full w-full" />
+                  ) : costCurveQuery.isError ? (
+                    <div className="flex h-full items-center justify-center text-sm text-destructive">
+                      无法获取成本数据
+                    </div>
+                  ) : costCurveChartData.length > 0 ? (
+                    <div className="h-full w-full">
+                      <ProjectTrendChart
+                        data={costCurveChartData}
+                        seriesNames={["总成本"]}
+                        unit="亿"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-cyan-300/70">
+                      暂无成本数据
+                    </div>
+                  )}
+                </PanelCard>
+              )}
+            </div>
+          )}
+
+          {showPlanPanels && (
+            <div
+              className={`grid min-h-0 min-w-0 grid-cols-1 gap-2 ${
+                planVisibleCount > 1 ? "lg:grid-cols-2" : "lg:grid-cols-1"
+              }`}
+            >
+              {panelVisibility.gantt && (
+                <PanelCard
+                  title="甘特图"
+                  icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
+                  titleClassName="text-amber-300"
+                >
+                  {planTasks.length === 0 ? (
+                    <div className="flex h-full items-center justify-center text-cyan-300/70">
+                      当前项目暂无施工任务数据
+                    </div>
+                  ) : (
+                    <div className="h-full min-h-0 overflow-hidden">
+                      <GanttChart
+                        data={planTasks}
+                        scale="day"
+                        shutdownEvents={config?.shutdown_events ?? []}
+                      />
+                    </div>
+                  )}
+                </PanelCard>
+              )}
+
+              {panelVisibility.network && (
+                <PanelCard
+                  title="网络图"
+                  icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
+                  titleClassName="text-violet-300"
+                >
+                  {planTasks.length === 0 ? (
+                    <div className="flex h-full items-center justify-center text-cyan-300/70">
+                      当前项目暂无施工任务数据
+                    </div>
+                  ) : (
+                    <div className="h-full min-h-0 overflow-hidden">
+                      <NetworkDiagram tasks={planTasks} currentDate={selectedTimelineDate} />
+                    </div>
+                  )}
+                </PanelCard>
+              )}
+            </div>
+          )}
+
+          {showModelPanel && (
+            <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
+              <CardContent className="flex-1 min-h-0 p-0">
+                <div className="flex h-full min-h-0 flex-col gap-2">
+                  <div className="relative min-h-0 flex-1 w-full">
+                    <ModelViewer
+                      models={[
+                        {
+                          key: "default",
+                          src: "/models/0202.ifc",
+                          tagMap,
+                        },
+                      ]}
+                      baseMaterialOverrides={{ transparent: true, opacity: 0 }}
+                      highlightColorGroups={[
+                        {
+                          ids: completedIds,
+                          color: "#22c55e",
+                          opacity: 0.18,
+                          customID: "completed",
+                        },
+                        {
+                          ids: inProgressIds,
+                          color: "#f59e0b",
+                          opacity: 1,
+                          customID: "inProgress",
+                        },
+                        {
+                          ids: fixedHighlightIds,
+                          color: "#000000",
+                          opacity: 0.05,
+                          customID: "fixed",
+                        },
+                      ]}
+                      className="h-full"
                     />
                   </div>
-                ) : (
-                  <div className="flex h-full items-center justify-center text-cyan-300/70">
-                    暂无人员数据
-                  </div>
-                )}
-            </PanelCard>
-
-            <PanelCard
-              title="资金曲线"
-              icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
-              titleClassName="text-emerald-300"
-            >
-                {costCurveQuery.isLoading ? (
-                  <Skeleton className="h-full w-full" />
-                ) : costCurveQuery.isError ? (
-                  <div className="flex h-full items-center justify-center text-sm text-destructive">
-                    无法获取成本数据
-                  </div>
-                ) : costCurveChartData.length > 0 ? (
-                  <div className="h-full w-full">
-                    <ProjectTrendChart
-                      data={costCurveChartData}
-                      seriesNames={["总成本"]}
-                      unit="亿"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex h-full items-center justify-center text-cyan-300/70">
-                    暂无成本数据
-                  </div>
-                )}
-            </PanelCard>
-          </div>
-
-          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
-            <PanelCard
-              title="甘特图"
-              icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
-              titleClassName="text-amber-300"
-            >
-                {planTasks.length === 0 ? (
-                  <div className="flex h-full items-center justify-center text-cyan-300/70">
-                    当前项目暂无施工任务数据
-                  </div>
-                ) : (
-                  <div className="h-full min-h-0 overflow-hidden">
-                    <GanttChart
-                      data={planTasks}
-                      scale="day"
-                      shutdownEvents={config?.shutdown_events ?? []}
-                    />
-                  </div>
-                )}
-            </PanelCard>
-
-            <PanelCard
-              title="网络图"
-              icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
-              titleClassName="text-violet-300"
-            >
-                {planTasks.length === 0 ? (
-                  <div className="flex h-full items-center justify-center text-cyan-300/70">
-                    当前项目暂无施工任务数据
-                  </div>
-                ) : (
-                  <div className="h-full min-h-0 overflow-hidden">
-                    <NetworkDiagram tasks={planTasks} currentDate={selectedTimelineDate} />
-                  </div>
-                )}
-            </PanelCard>
-          </div>
-
-          <Card className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">
-            <CardContent className="flex-1 min-h-0 p-0">
-              <div className="flex h-full min-h-0 flex-col gap-2">
-
-                <div className="relative min-h-0 flex-1 w-full">
-                  <ModelViewer
-                    models={[
-                      {
-                        key: "default",
-                        src: "/models/0202.ifc",
-                        tagMap,
-                      },
-                    ]}
-                    baseMaterialOverrides={{ transparent: true, opacity: 0 }}
-                    highlightColorGroups={[
-                      {
-                        ids: completedIds,
-                        color: "#22c55e",
-                        opacity: 0.18,
-                        customID: "completed",
-                      },
-                      {
-                        ids: inProgressIds,
-                        color: "#f59e0b",
-                        opacity: 1,
-                        customID: "inProgress",
-                      },
-                      {
-                        ids: fixedHighlightIds,
-                        color: "#000000",
-                        opacity: 0.05,
-                        customID: "fixed",
-                      },
-                    ]}
-                    className="h-full"
-                  />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <DailyCard items={dailyProcesses} />
