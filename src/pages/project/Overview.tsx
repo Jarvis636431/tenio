@@ -495,21 +495,14 @@ export function Overview({
           </div>
 
           <div className="mt-2 px-0.5">
-            <div className="relative h-4">
-              <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-[#0a2a52]" />
-              <div
-                className="pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-[#5dd6ff]"
-                style={{ width: `${timelineProgress}%` }}
-              />
-              <Slider
-                value={[currentDay]}
-                min={timeRange.startDay}
-                max={timeRange.endDay}
-                step={1}
-                onValueChange={(v) => setCurrentDay(v[0])}
-                className="relative z-10 [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:border-2 [&_[role=slider]]:border-cyan-100 [&_[role=slider]]:bg-[#5dd6ff] [&_[role=slider]]:shadow-[0_0_0_3px_rgba(93,214,255,0.2)] [&_[span]:first-child]:h-[3px] [&_[span]:first-child]:bg-transparent"
-              />
-            </div>
+            <Slider
+              value={[currentDay]}
+              min={timeRange.startDay}
+              max={timeRange.endDay}
+              step={1}
+              onValueChange={(v) => setCurrentDay(v[0])}
+              className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:border-2 [&_[role=slider]]:border-cyan-100 [&_[role=slider]]:bg-[#5dd6ff] [&_[role=slider]]:shadow-[0_0_0_3px_rgba(93,214,255,0.2)] [&>span:first-child]:h-[3px] [&>span:first-child]:bg-[#0a2a52] [&>span:first-child>span]:bg-[#5dd6ff]"
+            />
           </div>
         </div>
       )}
