@@ -6,6 +6,7 @@ export interface PrecreateProjectPayload {
 
 export interface Project {
   id: string;
+  code?: string;
   name: string;
   // 可编辑基础信息字段
   city?: string;
@@ -106,6 +107,7 @@ export type BudgetData = TimeSeriesData<number>;
 
 export interface ProjectListItem {
   project_id: string;
+  project_code?: string;
   project_name: string;
   description?: string;
   status: string;
@@ -114,6 +116,16 @@ export interface ProjectListItem {
 }
 
 export type ProjectListResponse = ProjectListItem[];
+
+export interface ProjectByCodeResponse {
+  project_id: string;
+  project_code?: string;
+  project_name?: string;
+  description?: string;
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export interface AddProcessPayload {
   project_id: string;

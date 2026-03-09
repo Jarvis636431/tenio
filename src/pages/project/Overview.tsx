@@ -58,13 +58,14 @@ export function Overview({
   projectId: propsProjectId,
 }: OverviewProps = {}) {
   const { id: paramProjectId } = useParams();
-  // 优先使用路由参数，其次使用props
-  const projectId = paramProjectId || propsProjectId || '';
-  const { coreGraph } = useProjectCoreGraph();
   const { currentProject, projects } = useProject();
+  const requestedProjectRef = paramProjectId || propsProjectId || currentProject?.id || "";
+  const { projectId: resolvedProjectId, coreGraph } = useProjectCoreGraph({
+    projectId: requestedProjectRef,
+  });
   const { token } = useAuth();
   const { tagMap, processHighlights, getIdsByDate } =
-    useProjectHighlight(projectId);
+    useProjectHighlight(resolvedProjectId);
   const [currentDay, setCurrentDay] = useState(1);
   const [playbackRate, setPlaybackRate] = useState<1 | 2 | 4>(1);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -92,26 +93,26 @@ export function Overview({
   const planTasks = usePlanTasks(coreGraph);
 
   const headcountCurveQuery = useQuery({
-    queryKey: ["overview", "headcount-curve", currentProject?.id],
+    queryKey: ["overview", "headcount-curve", resolvedProjectId],
     queryFn: async () => {
-      if (!currentProject?.id) {
+      if (!resolvedProjectId) {
         throw new Error("缺少项目 ID");
       }
-      return getProjectHeadcountCurve(currentProject.id, token || undefined);
+      return getProjectHeadcountCurve(resolvedProjectId, token || undefined);
     },
-    enabled: Boolean(currentProject?.id && token),
+    enabled: Boolean(resolvedProjectId && token),
     refetchOnWindowFocus: false,
   });
 
   const costCurveQuery = useQuery({
-    queryKey: ["overview", "cost-curve", currentProject?.id],
+    queryKey: ["overview", "cost-curve", resolvedProjectId],
     queryFn: async () => {
-      if (!currentProject?.id) {
+      if (!resolvedProjectId) {
         throw new Error("缺少项目 ID");
       }
-      return getProjectCostCurve(currentProject.id, token || undefined);
+      return getProjectCostCurve(resolvedProjectId, token || undefined);
     },
-    enabled: Boolean(currentProject?.id && token),
+    enabled: Boolean(resolvedProjectId && token),
     refetchOnWindowFocus: false,
   });
 
@@ -132,13 +133,18 @@ export function Overview({
   }, [costCurveQuery.data]);
 
   const currentProjectName = useMemo(() => {
-    if (!projectId) return currentProject?.name || "项目详情";
+    if (!requestedProjectRef && !resolvedProjectId) {
+      return currentProject?.name || "项目详情";
+    }
+    const matchedProject =
+      projects.find((project) => project.id === resolvedProjectId) ||
+      projects.find((project) => project.code === requestedProjectRef);
     return (
-      projects.find((project) => project.id === projectId)?.name ||
+      matchedProject?.name ||
       currentProject?.name ||
       "项目详情"
     );
-  }, [projectId, projects, currentProject]);
+  }, [requestedProjectRef, resolvedProjectId, projects, currentProject]);
 
   const totalDurationLabel = useMemo(() => {
     if (!coreGraph?.work_processes?.length) return "";
@@ -313,20 +319,20 @@ export function Overview({
   }, [timeRange]);
 
   useEffect(() => {
-    if (!projectId || !token || !agentBaseDate) return;
-    const key = `${projectId}:${agentBaseDate}`;
+    if (!resolvedProjectId || !token || !agentBaseDate) return;
+    const key = `${resolvedProjectId}:${agentBaseDate}`;
     if (agentInitKeyRef.current === key) return;
     agentInitKeyRef.current = key;
 
     void initAgent({
-      project_id: projectId,
+      project_id: resolvedProjectId,
       base_date: agentBaseDate,
       solution_id: 0,
       access_token: token,
     }).catch(() => {
       agentInitKeyRef.current = null;
     });
-  }, [projectId, token, agentBaseDate]);
+  }, [resolvedProjectId, token, agentBaseDate]);
 
   useEffect(() => {
     if (!isPlaying || !timeRange) return;

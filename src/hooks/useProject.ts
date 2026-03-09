@@ -55,7 +55,7 @@ export function useProject() {
   // 路由同步：当 URL 中的项目 ID 变化时，自动切换当前项目
   useEffect(() => {
     if (id && projects.length > 0) {
-      const project = projects.find(p => p.id === id);
+      const project = projects.find(p => p.id === id || p.code === id);
       if (project && project.id !== currentProject?.id) {
         setCurrentProject(project);
       }

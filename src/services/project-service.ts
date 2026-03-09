@@ -6,6 +6,7 @@ import type {
   UploadDocsResponse,
   ProcessInfoResponse,
   ProjectListResponse,
+  ProjectByCodeResponse,
   UploadDocsPayload,
 } from "@/types/domain/project";
 
@@ -69,6 +70,16 @@ export async function getProjectList(
 ): Promise<ProjectListResponse> {
   return requestApiData<ProjectListResponse>(
     `${PROJECT_SERVICE_BASE_URL}/api/v1/projects`,
+    { token },
+  );
+}
+
+export async function getProjectByCode(
+  projectCode: string,
+  token?: string,
+): Promise<ProjectByCodeResponse> {
+  return requestApiData<ProjectByCodeResponse>(
+    `${PROJECT_SERVICE_BASE_URL}/api/v1/projects/by-code/${projectCode}`,
     { token },
   );
 }

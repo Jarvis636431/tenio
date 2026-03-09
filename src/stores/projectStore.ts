@@ -119,6 +119,7 @@ export const useProjectStore = create<ProjectState>()(
           const response = await getProjectList(token);
           const projectList: Project[] = response.map(item => ({
             id: item.project_id,
+            code: item.project_code,
             name: item.project_name,
             description: item.description,
             status: item.status,

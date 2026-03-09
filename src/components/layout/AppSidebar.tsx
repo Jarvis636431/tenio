@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { Home, LogOut } from "lucide-react";
+import { Home, LogOut, Building2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -16,8 +16,6 @@ export function AppSidebar() {
   const resetProjectStore = useProjectStore((state) => state.reset);
   const projectQuickLinks = [
     { to: "/project/project_001", tooltip: "项目 001" },
-    { to: "/project/project_002", tooltip: "项目 002" },
-    { to: "/project/project_003", tooltip: "项目 003" },
   ];
 
   const handleLogout = () => {
@@ -66,7 +64,7 @@ export function AppSidebar() {
                       }`
                     }
                   >
-                    <Home className="h-4 w-4 text-cyan-200" />
+                    <Building2 className="h-4 w-4 text-cyan-200" />
                   </NavLink>
                 </TooltipTrigger>
                 <TooltipContent side="right">
