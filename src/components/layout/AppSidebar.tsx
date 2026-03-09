@@ -1,19 +1,31 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { Home } from "lucide-react";
+import { Home, LogOut } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/useAuth";
+import { useProjectStore } from "@/stores/projectStore";
+import { TOKEN_STORAGE_KEY } from "@/services/user-service";
 
 export function AppSidebar() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+  const resetProjectStore = useProjectStore((state) => state.reset);
   const projectQuickLinks = [
     { to: "/project/project_001", tooltip: "项目 001" },
     { to: "/project/project_002", tooltip: "项目 002" },
     { to: "/project/project_003", tooltip: "项目 003" },
   ];
+
+  const handleLogout = () => {
+    logout();
+    resetProjectStore();
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    navigate("/login", { replace: true });
+  };
 
   return (
     <aside className="h-full w-14 border-r border-cyan-900/40 bg-[#04142d]/85 backdrop-blur-sm">
@@ -62,6 +74,24 @@ export function AppSidebar() {
                 </TooltipContent>
               </Tooltip>
             ))}
+          </div>
+
+          <div className="mt-auto">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-cyan-200 hover:bg-cyan-900/40"
+                  aria-label="退出登录"
+                >
+                  <LogOut className="h-4 w-4 text-cyan-200" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>退出登录</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </TooltipProvider>

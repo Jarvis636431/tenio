@@ -1,4 +1,4 @@
-import { requestJson, buildUrl } from "@/services/http";
+import { requestJson, buildUrl, requestApiData } from "@/services/http";
 import { API_BASE } from "@/config";
 import type {
   PrecreateProjectPayload,
@@ -67,8 +67,8 @@ export async function getProcessInfo(
 export async function getProjectList(
   token?: string,
 ): Promise<ProjectListResponse> {
-  return requestJson<ProjectListResponse>(
-    `${PROJECT_SERVICE_BASE_URL}/api/projects/`,
+  return requestApiData<ProjectListResponse>(
+    `${PROJECT_SERVICE_BASE_URL}/api/v1/projects`,
     { token },
   );
 }
