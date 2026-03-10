@@ -397,14 +397,11 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       getProjectHeadcountCurve(projectId, token),
     ]);
     setCoreGraph(projectId, coreGraph);
-    queryClient.setQueryData(
-      ["funding-materials", "cost-curve", projectId],
-      costCurve,
-    );
-    queryClient.setQueryData(
-      ["funding-materials", "headcount-curve", projectId],
-      headcountCurve,
-    );
+    // 兼容当前项目页与历史面板使用的不同 query key，确保 AI 调整后界面立即刷新
+    queryClient.setQueryData(["overview", "cost-curve", projectId], costCurve);
+    queryClient.setQueryData(["overview", "headcount-curve", projectId], headcountCurve);
+    queryClient.setQueryData(["funding-materials", "cost-curve", projectId], costCurve);
+    queryClient.setQueryData(["funding-materials", "headcount-curve", projectId], headcountCurve);
   };
 
   const sendMessage = async (messageText: string) => {
