@@ -147,9 +147,16 @@ export interface CostCurvePoint {
 }
 
 export interface CostCurveResponse {
+  id?: string;
   project_id: string;
-  points: CostCurvePoint[];
-  generated_at: string;
+  start_date?: string;
+  days: number[];
+  dates: string[];
+  total_costs: number[];
+  material_costs?: number[];
+  floating_costs?: number[];
+  created_at?: string;
+  generated_at?: string;
 }
 
 export interface HeadcountCurvePoint {
@@ -158,9 +165,14 @@ export interface HeadcountCurvePoint {
 }
 
 export interface HeadcountCurveResponse {
+  id?: string;
   project_id: string;
-  points: HeadcountCurvePoint[];
-  generated_at: string;
+  start_date?: string;
+  days: number[];
+  dates: string[];
+  headcounts: number[];
+  created_at?: string;
+  generated_at?: string;
 }
 
 export interface CreateWorkProcessPayload {
