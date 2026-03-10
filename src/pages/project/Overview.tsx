@@ -117,18 +117,22 @@ export function Overview({
   });
 
   const headcountChartData = useMemo(() => {
-    const points = headcountCurveQuery.data?.points ?? [];
-    return points.map((point) => ({
-      date: point.date,
-      劳动力人数: point.headcount,
+    const dates = headcountCurveQuery.data?.dates ?? [];
+    const headcounts = headcountCurveQuery.data?.headcounts ?? [];
+    const length = Math.min(dates.length, headcounts.length);
+    return Array.from({ length }, (_, index) => ({
+      date: dates[index],
+      劳动力人数: headcounts[index],
     }));
   }, [headcountCurveQuery.data]);
 
   const costCurveChartData = useMemo(() => {
-    const points = costCurveQuery.data?.points ?? [];
-    return points.map((point) => ({
-      date: point.date,
-      总成本: point.total_cost / 10000,
+    const dates = costCurveQuery.data?.dates ?? [];
+    const totalCosts = costCurveQuery.data?.total_costs ?? [];
+    const length = Math.min(dates.length, totalCosts.length);
+    return Array.from({ length }, (_, index) => ({
+      date: dates[index],
+      总成本: totalCosts[index] / 10000,
     }));
   }, [costCurveQuery.data]);
 
@@ -272,11 +276,11 @@ export function Overview({
       .map((task) => task.task);
   }, [planTasks, reportPeriod]);
   const plannedWorkerCount = useMemo(() => {
-    if (!headcountCurveQuery.data?.points?.length || !selectedTimelineDateLabel) return undefined;
-    const matched = headcountCurveQuery.data.points.find(
-      (point) => point.date.slice(0, 10) === selectedTimelineDateLabel,
-    );
-    return matched?.headcount;
+    if (!headcountCurveQuery.data?.dates?.length || !selectedTimelineDateLabel) return undefined;
+    const { dates, headcounts } = headcountCurveQuery.data;
+    const index = dates.findIndex((date) => date.slice(0, 10) === selectedTimelineDateLabel);
+    if (index < 0) return undefined;
+    return headcounts[index];
   }, [headcountCurveQuery.data, selectedTimelineDateLabel]);
   const { handleExportDOC } = useProjectExport(coreGraph, {
     projectName: currentProjectName,

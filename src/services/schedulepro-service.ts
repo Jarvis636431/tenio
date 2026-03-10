@@ -12,10 +12,58 @@ import type {
   CoreGraphResponse,
   CostCurveResponse,
   HeadcountCurveResponse,
+  CostCurvePoint,
+  HeadcountCurvePoint,
 } from "@/types/domain/schedulepro";
 
 const BASE_URL = API_BASE.projectService;
 const API_V1 = `${BASE_URL}/api/v1`;
+
+type LegacyCostCurveResponse = {
+  project_id: string;
+  points: CostCurvePoint[];
+  generated_at?: string;
+};
+
+type LegacyHeadcountCurveResponse = {
+  project_id: string;
+  points: HeadcountCurvePoint[];
+  generated_at?: string;
+};
+
+function normalizeCostCurveResponse(
+  payload: CostCurveResponse | LegacyCostCurveResponse,
+): CostCurveResponse {
+  if ("dates" in payload && "total_costs" in payload) {
+    return payload;
+  }
+  const points = payload.points ?? [];
+  return {
+    project_id: payload.project_id,
+    days: points.map((_, index) => index + 1),
+    dates: points.map((point) => point.date),
+    total_costs: points.map((point) => point.total_cost),
+    material_costs: points.map((point) => point.material_cost ?? 0),
+    floating_costs: points.map((point) => point.floating_cost ?? 0),
+    generated_at: payload.generated_at,
+  };
+}
+
+function normalizeHeadcountCurveResponse(
+  payload: HeadcountCurveResponse | LegacyHeadcountCurveResponse,
+): HeadcountCurveResponse {
+  if ("dates" in payload && "headcounts" in payload) {
+    return payload;
+  }
+  const points = payload.points ?? [];
+  return {
+    project_id: payload.project_id,
+    days: points.map((_, index) => index + 1),
+    dates: points.map((point) => point.date),
+    headcounts: points.map((point) => point.headcount),
+    generated_at: payload.generated_at,
+  };
+}
 
 // Auth
 export async function registerUser(
@@ -93,18 +141,20 @@ export async function getProjectCostCurve(
   projectId: string,
   token?: string,
 ): Promise<CostCurveResponse> {
-  return requestApiData<CostCurveResponse>(
+  const response = await requestApiData<CostCurveResponse | LegacyCostCurveResponse>(
     `${API_V1}/projects/${projectId}/cost-curve`,
     { token },
   );
+  return normalizeCostCurveResponse(response);
 }
 
 export async function getProjectHeadcountCurve(
   projectId: string,
   token?: string,
 ): Promise<HeadcountCurveResponse> {
-  return requestApiData<HeadcountCurveResponse>(
+  const response = await requestApiData<HeadcountCurveResponse | LegacyHeadcountCurveResponse>(
     `${API_V1}/projects/${projectId}/headcount-curve`,
     { token },
   );
+  return normalizeHeadcountCurveResponse(response);
 }

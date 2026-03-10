@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Home, LogOut, Building2 } from "lucide-react";
 import {
   Tooltip,
@@ -9,13 +9,18 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectStore } from "@/stores/projectStore";
 import { TOKEN_STORAGE_KEY } from "@/services/user-service";
+import { getProjectByCode } from "@/services/project-service";
 
 export function AppSidebar() {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, token } = useAuth();
   const resetProjectStore = useProjectStore((state) => state.reset);
+  const projects = useProjectStore((state) => state.projects);
+  const addProject = useProjectStore((state) => state.addProject);
+  const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
   const projectQuickLinks = [
-    { to: "/project/project_001", tooltip: "项目 001" },
+    { code: "project_001", tooltip: "项目 001" },
   ];
 
   const handleLogout = () => {
@@ -23,6 +28,34 @@ export function AppSidebar() {
     resetProjectStore();
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     navigate("/login", { replace: true });
+  };
+
+  const handleProjectNavigate = async (projectCode: string) => {
+    const localProject = projects.find(
+      (project) => project.code === projectCode || project.id === projectCode,
+    );
+    if (localProject) {
+      setCurrentProject(localProject);
+      navigate(`/project/${localProject.id}`);
+      return;
+    }
+
+    try {
+      const response = await getProjectByCode(projectCode, token || undefined);
+      const resolvedProject = {
+        id: response.project_id,
+        code: response.project_code ?? projectCode,
+        name: response.project_name ?? projectCode,
+        description: response.description,
+        status: response.status,
+        createdAt: response.created_at,
+      };
+      addProject(resolvedProject);
+      setCurrentProject(resolvedProject);
+      navigate(`/project/${response.project_id}`);
+    } catch {
+      navigate(`/project/${projectCode}`);
+    }
   };
 
   return (
@@ -52,20 +85,19 @@ export function AppSidebar() {
 
           <div className="mt-3 flex w-full flex-col items-center gap-2">
             {projectQuickLinks.map((item) => (
-              <Tooltip key={item.to}>
+              <Tooltip key={item.code}>
                 <TooltipTrigger asChild>
-                  <NavLink
-                    to={item.to}
-                    className={({ isActive }) =>
-                      `mx-auto flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
-                        isActive
-                          ? "bg-cyan-900/40 text-cyan-200"
-                          : "text-cyan-200 hover:bg-cyan-900/40"
-                      }`
-                    }
+                  <button
+                    type="button"
+                    onClick={() => void handleProjectNavigate(item.code)}
+                    className={`mx-auto flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
+                      location.pathname.startsWith("/project/")
+                        ? "bg-cyan-900/40 text-cyan-200"
+                        : "text-cyan-200 hover:bg-cyan-900/40"
+                    }`}
                   >
                     <Building2 className="h-4 w-4 text-cyan-200" />
-                  </NavLink>
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent side="right">
                   <p>{item.tooltip}</p>

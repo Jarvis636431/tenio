@@ -8,6 +8,7 @@ import {
   getProjectCostCurve,
   getProjectHeadcountCurve,
 } from "@/services/schedulepro-service";
+import { getProjectByCode } from "@/services/project-service";
 import { resumeAgentStream } from "@/services/ai-service";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -81,7 +82,7 @@ type ChatPanelOptions = {
 export function useChatPanel(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
   const { token } = useAuth();
-  const { currentProject, setCoreGraph } = useProject();
+  const { currentProject, projects, setCoreGraph, setCurrentProject, addProject } = useProject();
   const queryClient = useQueryClient();
   const defaultWelcomeMessage: ChatMessage = useMemo(
     () => ({
@@ -116,6 +117,37 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     () => options.projectId || routeProjectId || currentProject?.id || "__default__",
     [options.projectId, routeProjectId, currentProject?.id],
   );
+
+  const resolveProjectId = async (projectRef: string) => {
+    if (!projectRef) return "";
+    const directMatch = projects.find((project) => project.id === projectRef);
+    if (directMatch) return directMatch.id;
+
+    const codeMatch = projects.find((project) => project.code === projectRef);
+    if (codeMatch) {
+      if (currentProject?.id !== codeMatch.id) {
+        setCurrentProject(codeMatch);
+      }
+      return codeMatch.id;
+    }
+
+    try {
+      const response = await getProjectByCode(projectRef, token || undefined);
+      const resolvedProject = {
+        id: response.project_id,
+        code: response.project_code ?? projectRef,
+        name: response.project_name ?? projectRef,
+        description: response.description,
+        status: response.status,
+        createdAt: response.created_at,
+      };
+      addProject(resolvedProject);
+      setCurrentProject(resolvedProject);
+      return response.project_id;
+    } catch {
+      return projectRef;
+    }
+  };
 
   useEffect(() => {
     if (!scrollAreaRef.current) return;
@@ -209,10 +241,14 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     if (!obj) return null;
 
     if (obj.type === "refetch") {
-      const projectId =
-        options.projectId || routeProjectId || currentProject?.id || "";
-      if (projectId && token) {
-        void refreshCoreGraph(projectId);
+      const projectRef = options.projectId || routeProjectId || currentProject?.id || "";
+      if (projectRef && token) {
+        void (async () => {
+          const projectId = await resolveProjectId(projectRef);
+          if (projectId) {
+            await refreshCoreGraph(projectId);
+          }
+        })();
       }
       return null;
     }
@@ -397,11 +433,22 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       getProjectHeadcountCurve(projectId, token),
     ]);
     setCoreGraph(projectId, coreGraph);
+<<<<<<< HEAD
     // 兼容当前项目页与历史面板使用的不同 query key，确保 AI 调整后界面立即刷新
     queryClient.setQueryData(["overview", "cost-curve", projectId], costCurve);
     queryClient.setQueryData(["overview", "headcount-curve", projectId], headcountCurve);
     queryClient.setQueryData(["funding-materials", "cost-curve", projectId], costCurve);
     queryClient.setQueryData(["funding-materials", "headcount-curve", projectId], headcountCurve);
+=======
+    queryClient.setQueryData(
+      ["overview", "cost-curve", projectId],
+      costCurve,
+    );
+    queryClient.setQueryData(
+      ["overview", "headcount-curve", projectId],
+      headcountCurve,
+    );
+>>>>>>> 3c919d522a7954aff3321f19972150826154a7ed
   };
 
   const sendMessage = async (messageText: string) => {
