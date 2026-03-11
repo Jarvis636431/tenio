@@ -31,6 +31,19 @@ type Edge = {
 
 type TaskStatus = "not_started" | "in_progress" | "completed";
 
+const NODE_THEME = {
+  critical: {
+    bg: "#9fb7d4",
+    border: "#3c8cdd",
+    text: "#ffffff",
+  },
+  normal: {
+    bg: "#5f5f61",
+    border: "#6b6b6e",
+    text: "#ffffff",
+  },
+} as const;
+
 function parseDependencyIds(value: string): string[] {
   return value
     .split(/[,\s]+/)
@@ -137,6 +150,7 @@ function NodeBlock({
       : formatDurationDays(task.actualWorkDays);
   const durationText = durationValue ? `${durationValue}天` : "";
   const statusColor = STATUS_COLORS[status];
+  const theme = critical ? NODE_THEME.critical : NODE_THEME.normal;
 
   const capsuleY = y + h / 2 - CAPSULE_H / 2 + 4;
   const capsuleW = w - CAPSULE_INSET_X * 2;
@@ -158,27 +172,27 @@ function NodeBlock({
         y={y}
         width={w}
         height={h}
-        fill="#ffffff"
-        stroke={critical ? "rgb(60, 140, 221)" : "#2f6fb4"}
+        fill={theme.bg}
+        stroke={theme.border}
         strokeWidth="1.5"
       />
 
       {/* ── 四角日期框 ── */}
       {/* 左上 ES */}
-      <rect x={x + dateInsetX} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
-      <text x={x + dateInsetX + DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#1f4b7b" textAnchor="middle">{formatDateString(start)}</text>
+      <rect x={x + dateInsetX} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill={theme.bg} stroke={theme.border} strokeWidth="1.5" />
+      <text x={x + dateInsetX + DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill={theme.text} textAnchor="middle">{formatDateString(start)}</text>
 
       {/* 右上 EF */}
-      <rect x={x + w - dateInsetX - DATE_BOX_W} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
-      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#1f4b7b" textAnchor="middle">{formatDateString(end)}</text>
+      <rect x={x + w - dateInsetX - DATE_BOX_W} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill={theme.bg} stroke={theme.border} strokeWidth="1.5" />
+      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill={theme.text} textAnchor="middle">{formatDateString(end)}</text>
 
       {/* 左下 LS */}
-      <rect x={x + dateInsetX} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
-      <text x={x + dateInsetX + DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#1f4b7b" textAnchor="middle">{formatDateString(start)}</text>
+      <rect x={x + dateInsetX} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill={theme.bg} stroke={theme.border} strokeWidth="1.5" />
+      <text x={x + dateInsetX + DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill={theme.text} textAnchor="middle">{formatDateString(start)}</text>
 
       {/* 右下 LF */}
-      <rect x={x + w - dateInsetX - DATE_BOX_W} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill="#ffffff" stroke="#5c8fbd" strokeWidth="1.5" />
-      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill="#1f4b7b" textAnchor="middle">{formatDateString(end)}</text>
+      <rect x={x + w - dateInsetX - DATE_BOX_W} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill={theme.bg} stroke={theme.border} strokeWidth="1.5" />
+      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill={theme.text} textAnchor="middle">{formatDateString(end)}</text>
 
       {/* ── 左右连接圆点 — 正好在节点边缘，与连线对齐 ── */}
       <circle
@@ -186,7 +200,7 @@ function NodeBlock({
         cy={y + h / 2}
         r={DOT_R}
         fill={statusColor.dot}
-        stroke={critical ? "rgb(60, 140, 221)" : "#2f6fb4"}
+        stroke={theme.border}
         strokeWidth="1.5"
       />
       <circle
@@ -194,13 +208,13 @@ function NodeBlock({
         cy={y + h / 2}
         r={DOT_R}
         fill={statusColor.dot}
-        stroke={critical ? "rgb(60, 140, 221)" : "#2f6fb4"}
+        stroke={theme.border}
         strokeWidth="1.5"
       />
 
       {/* ── 中间内容 ── */}
       {!title.toLowerCase().startsWith("lag") && (
-        <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill="#1f4b7b" textAnchor="middle">#{displayId}</text>
+        <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill={theme.text} textAnchor="middle">#{displayId}</text>
       )}
 
       {/* 黄色胶囊 */}
@@ -210,12 +224,12 @@ function NodeBlock({
         width={capsuleW}
         height={CAPSULE_H}
         rx="12"
-        fill={statusColor.capsule}
+        fill={theme.bg}
       />
-      <text x={x + w / 2} y={capsuleY + CAPSULE_H / 2 + 6} fontSize="16" fill="#0f2f57" fontWeight="bold" textAnchor="middle">{title}</text>
+      <text x={x + w / 2} y={capsuleY + CAPSULE_H / 2 + 6} fontSize="16" fill={theme.text} fontWeight="bold" textAnchor="middle">{title}</text>
 
       {/* ── 底部工期（主框内底部，两个日期框之间） ── */}
-      <text x={x + w / 2} y={y + h - 8} fontSize="14" fill="#3b6ea1" textAnchor="middle">{durationText}</text>
+      <text x={x + w / 2} y={y + h - 8} fontSize="14" fill={theme.text} textAnchor="middle">{durationText}</text>
     </g>
   );
 }

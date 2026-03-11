@@ -28,10 +28,13 @@ import { ProjectTrendChart } from "@/pages/project/components/ProjectTrendChart"
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
+import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
 import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
 import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import type { PlanTask } from "@/types/domain/plan";
+import type { DailyProcessItem } from "@/pages/project/hooks/useDailyProcesses";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,6 +81,9 @@ export function Overview({
     network: true,
     model: true,
   });
+  const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
+  const [selectedTaskForDetail, setSelectedTaskForDetail] =
+    useState<PlanTask | null>(null);
   const fixedHighlightIds = useMemo(
     () => [
       "2j0dIGQjb7IBS38pr73$QB",
@@ -257,6 +263,28 @@ export function Overview({
     planTasks,
     selectedTimelineDate,
   );
+  const dailyTaskNames = useMemo(() => {
+    return [...dailyProcesses]
+      .sort((a, b) => {
+        const aSeq =
+          typeof a.seqNo === "number"
+            ? a.seqNo
+            : Number(a.seqNo ?? Number.MAX_SAFE_INTEGER);
+        const bSeq =
+          typeof b.seqNo === "number"
+            ? b.seqNo
+            : Number(b.seqNo ?? Number.MAX_SAFE_INTEGER);
+        return aSeq - bSeq;
+      })
+      .map((item) => item.name);
+  }, [dailyProcesses]);
+  const dailyDateText = useMemo(() => {
+    if (!selectedTimelineDate) return "";
+    const y = selectedTimelineDate.getFullYear();
+    const m = String(selectedTimelineDate.getMonth() + 1).padStart(2, "0");
+    const d = String(selectedTimelineDate.getDate()).padStart(2, "0");
+    return `${y}/${m}/${d}`;
+  }, [selectedTimelineDate]);
   const weeklyTaskNames = useMemo(() => {
     const { startDate, endDate } = reportPeriod;
     if (!startDate || !endDate) return [];
@@ -282,14 +310,16 @@ export function Overview({
     if (index < 0) return undefined;
     return headcounts[index];
   }, [headcountCurveQuery.data, selectedTimelineDateLabel]);
-  const { handleExportDOC } = useProjectExport(coreGraph, {
+  const { handleExportWeeklyDOC, handleExportDailyDOC } = useProjectExport(coreGraph, {
     projectName: currentProjectName,
     projectLocation: currentProject?.description ?? "",
     periodStart: reportPeriod.start,
     periodEnd: reportPeriod.end,
+    dailyDate: dailyDateText,
     plannedWorkerCount,
     actualWorkerCount: onsiteCount,
     weeklyTaskNames,
+    dailyTaskNames,
     progressStatus:
       timelineProgress < 33 ? "超前" : timelineProgress > 80 ? "滞后" : "符合计划",
     remark: "",
@@ -395,6 +425,19 @@ export function Overview({
     };
   }, [isResizingModel]);
 
+  const handleTaskDetail = (task: PlanTask) => {
+    setSelectedTaskForDetail(task);
+    setIsTaskDetailDialogOpen(true);
+  };
+
+  const handleDailyProcessClick = (item: DailyProcessItem) => {
+    const matchedTask =
+      planTasks.find((task) => task.id === item.id) ??
+      planTasks.find((task) => task.task === item.name);
+    if (!matchedTask) return;
+    handleTaskDetail(matchedTask);
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 bg-gradient-to-b from-[#020a1d] to-[#041332] px-1 pt-0 pb-1 text-slate-100">
       <div className="shrink-0">
@@ -489,16 +532,41 @@ export function Overview({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleExportDOC}
-                className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-3 text-[#cfe6ff] hover:bg-[#12417c]"
-                disabled={!handleExportDOC}
-              >
-                <Download className="mr-1.5 h-4 w-4" />
-                报告导出
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-3 text-[#cfe6ff] hover:bg-[#12417c]"
+                  >
+                    <Download className="mr-1.5 h-4 w-4" />
+                    报告导出
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-[var(--radix-dropdown-menu-trigger-width)] border-cyan-900/60 bg-[#03112a] text-cyan-100"
+                >
+                  <DropdownMenuItem
+                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleExportWeeklyDOC();
+                    }}
+                  >
+                    导出周报
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleExportDailyDOC();
+                    }}
+                  >
+                    导出日报
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         />
@@ -633,6 +701,7 @@ export function Overview({
                         <div className="h-full min-h-0 overflow-hidden">
                           <GanttChart
                             data={planTasks}
+                            onTaskDetail={handleTaskDetail}
                             scale="day"
                             currentDate={selectedTimelineDate}
                           />
@@ -653,7 +722,11 @@ export function Overview({
                         </div>
                       ) : (
                         <div className="h-full min-h-0 overflow-hidden">
-                          <NetworkDiagram tasks={planTasks} currentDate={selectedTimelineDate} />
+                          <NetworkDiagram
+                            tasks={planTasks}
+                            onNodeClick={handleTaskDetail}
+                            currentDate={selectedTimelineDate}
+                          />
                         </div>
                       )}
                     </PanelCard>
@@ -721,8 +794,19 @@ export function Overview({
           )}
         </div>
 
-        <DailyCard items={dailyProcesses} />
+        <DailyCard
+          items={dailyProcesses}
+          onItemClick={handleDailyProcessClick}
+        />
       </div>
+
+      <TaskDetailDialog
+        open={isTaskDetailDialogOpen}
+        onOpenChange={setIsTaskDetailDialogOpen}
+        task={selectedTaskForDetail}
+        projectId={resolvedProjectId || currentProject?.id || undefined}
+        workProcessName={selectedTaskForDetail?.task}
+      />
     </div>
   );
 }
