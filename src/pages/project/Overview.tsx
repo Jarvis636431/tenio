@@ -262,6 +262,28 @@ export function Overview({
     planTasks,
     selectedTimelineDate,
   );
+  const dailyTaskNames = useMemo(() => {
+    return [...dailyProcesses]
+      .sort((a, b) => {
+        const aSeq =
+          typeof a.seqNo === "number"
+            ? a.seqNo
+            : Number(a.seqNo ?? Number.MAX_SAFE_INTEGER);
+        const bSeq =
+          typeof b.seqNo === "number"
+            ? b.seqNo
+            : Number(b.seqNo ?? Number.MAX_SAFE_INTEGER);
+        return aSeq - bSeq;
+      })
+      .map((item) => item.name);
+  }, [dailyProcesses]);
+  const dailyDateText = useMemo(() => {
+    if (!selectedTimelineDate) return "";
+    const y = selectedTimelineDate.getFullYear();
+    const m = String(selectedTimelineDate.getMonth() + 1).padStart(2, "0");
+    const d = String(selectedTimelineDate.getDate()).padStart(2, "0");
+    return `${y}/${m}/${d}`;
+  }, [selectedTimelineDate]);
   const weeklyTaskNames = useMemo(() => {
     const { startDate, endDate } = reportPeriod;
     if (!startDate || !endDate) return [];
@@ -287,14 +309,16 @@ export function Overview({
     if (index < 0) return undefined;
     return headcounts[index];
   }, [headcountCurveQuery.data, selectedTimelineDateLabel]);
-  const { handleExportDOC } = useProjectExport(coreGraph, {
+  const { handleExportWeeklyDOC, handleExportDailyDOC } = useProjectExport(coreGraph, {
     projectName: currentProjectName,
     projectLocation: currentProject?.description ?? "",
     periodStart: reportPeriod.start,
     periodEnd: reportPeriod.end,
+    dailyDate: dailyDateText,
     plannedWorkerCount,
     actualWorkerCount: onsiteCount,
     weeklyTaskNames,
+    dailyTaskNames,
     progressStatus:
       timelineProgress < 33 ? "超前" : timelineProgress > 80 ? "滞后" : "符合计划",
     remark: "",
@@ -499,16 +523,41 @@ export function Overview({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleExportDOC}
-                className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-3 text-[#cfe6ff] hover:bg-[#12417c]"
-                disabled={!handleExportDOC}
-              >
-                <Download className="mr-1.5 h-4 w-4" />
-                报告导出
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-3 text-[#cfe6ff] hover:bg-[#12417c]"
+                  >
+                    <Download className="mr-1.5 h-4 w-4" />
+                    报告导出
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-[var(--radix-dropdown-menu-trigger-width)] border-cyan-900/60 bg-[#03112a] text-cyan-100"
+                >
+                  <DropdownMenuItem
+                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleExportWeeklyDOC();
+                    }}
+                  >
+                    导出周报
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleExportDailyDOC();
+                    }}
+                  >
+                    导出日报
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         />
