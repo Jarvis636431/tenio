@@ -6,9 +6,10 @@ import type { DailyProcessItem } from "@/pages/project/hooks/useDailyProcesses";
 
 interface DailyCardProps {
   items: DailyProcessItem[];
+  onItemClick?: (item: DailyProcessItem) => void;
 }
 
-export function DailyCard({ items }: DailyCardProps) {
+export function DailyCard({ items, onItemClick }: DailyCardProps) {
   const [tab, setTab] = useState<"plan" | "actual">("plan");
   const [keyword, setKeyword] = useState("");
 
@@ -76,7 +77,10 @@ export function DailyCard({ items }: DailyCardProps) {
               filteredItems.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-md border border-cyan-900/40 bg-[#03112a] p-2"
+                  className={`rounded-md border border-cyan-900/40 bg-[#03112a] p-2 ${
+                    onItemClick ? "cursor-pointer hover:bg-[#08264d]" : ""
+                  }`}
+                  onClick={() => onItemClick?.(item)}
                 >
                   <div className="text-[11px] text-cyan-300/70">工序 {item.seqNo ?? "-"}</div>
                   <div className="text-xs leading-5 text-cyan-100">{item.name}</div>

@@ -34,6 +34,7 @@ import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import type { PlanTask } from "@/types/domain/plan";
+import type { DailyProcessItem } from "@/pages/project/hooks/useDailyProcesses";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -429,6 +430,14 @@ export function Overview({
     setIsTaskDetailDialogOpen(true);
   };
 
+  const handleDailyProcessClick = (item: DailyProcessItem) => {
+    const matchedTask =
+      planTasks.find((task) => task.id === item.id) ??
+      planTasks.find((task) => task.task === item.name);
+    if (!matchedTask) return;
+    handleTaskDetail(matchedTask);
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 bg-gradient-to-b from-[#020a1d] to-[#041332] px-1 pt-0 pb-1 text-slate-100">
       <div className="shrink-0">
@@ -785,7 +794,10 @@ export function Overview({
           )}
         </div>
 
-        <DailyCard items={dailyProcesses} />
+        <DailyCard
+          items={dailyProcesses}
+          onItemClick={handleDailyProcessClick}
+        />
       </div>
 
       <TaskDetailDialog
