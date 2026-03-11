@@ -1,9 +1,5 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
-import { TaskDetailDialog } from "../dialogs/TaskDetailDialog";
-import { useProject } from "@/hooks/useProject";
 import type { PlanTask, TimelineScale } from "@/types/domain/plan";
 
 interface GanttChartProps {
@@ -332,14 +328,7 @@ export function GanttChart({
   const taskListRef = useRef<HTMLDivElement>(null);
   const chartContentRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(false);
-  const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
-  const [showDetailButton, setShowDetailButton] = useState<string | null>(null);
-  const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
-  const [selectedTaskForDetail, setSelectedTaskForDetail] =
-    useState<PlanTask | null>(null);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
-  const { currentProject } = useProject();
 
   const ROW_HEIGHT = 28; // h-7
   const timelineScale = scale;
@@ -483,9 +472,8 @@ export function GanttChart({
 
   // 生成日期标头
 
-  const handleMoreClick = (task: PlanTask) => {
-    setSelectedTaskForDetail(task);
-    setIsTaskDetailDialogOpen(true);
+  const handleTaskClick = (task: PlanTask) => {
+    onTaskDetail?.(task);
   };
 
   return (
@@ -513,23 +501,6 @@ export function GanttChart({
                     <div
                       key={item.id}
                       className="border-b border-cyan-900/30 h-7 bg-[#04142d]/40 transition-colors relative group grid grid-cols-[minmax(0,1fr)_auto] items-center"
-                      onMouseEnter={() => {
-                        setHoveredTaskId(item.id);
-                        if (hoverTimeoutRef.current)
-                          clearTimeout(hoverTimeoutRef.current);
-                        hoverTimeoutRef.current = setTimeout(
-                          () => setShowDetailButton(item.id),
-                          150,
-                        );
-                      }}
-                      onMouseLeave={() => {
-                        setHoveredTaskId(null);
-                        setShowDetailButton(null);
-                        if (hoverTimeoutRef.current) {
-                          clearTimeout(hoverTimeoutRef.current);
-                          hoverTimeoutRef.current = null;
-                        }
-                      }}
                       style={{
                         paddingLeft: "8px",
                         paddingRight: "8px",
@@ -557,16 +528,6 @@ export function GanttChart({
                           {formatWorkerCount(item.count)}人
                         </span>
                       </div>
-                      {showDetailButton === item.id && onTaskDetail && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 px-1 text-[9px] opacity-100 transition-all duration-200 z-20 bg-[#06224a] border-cyan-700/40 text-cyan-200 hover:text-white hover:bg-cyan-700 shadow-lg"
-                          onClick={() => onTaskDetail(item)}
-                        >
-                          详情
-                        </Button>
-                      )}
                     </div>
                   );
                 })}
@@ -630,8 +591,6 @@ export function GanttChart({
                         key={item.id}
                         className="absolute left-0 right-0 border-b border-cyan-900/30 hover:bg-[#0a234a]/35 transition-colors"
                         style={{ top, height: ROW_HEIGHT }}
-                        onMouseEnter={() => setHoveredTaskId(item.id)}
-                        onMouseLeave={() => setHoveredTaskId(null)}
                       >
                         {/* 任务条 - 可点击 */}
                         <div
@@ -642,25 +601,11 @@ export function GanttChart({
                             backgroundColor: item.color,
                             minWidth: `${columnWidth}px`,
                           }}
-                          onClick={() => onTaskDetail?.(item)}
+                          onClick={() => handleTaskClick(item)}
                         >
                           <div className="px-2 text-center flex-1">
                             <div className="font-medium">{item.barLabel}</div>
                           </div>
-                          {/* 更多按钮 - 悬停时显示 */}
-                          {hoveredTaskId === item.id && (
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-3.5 w-3.5 p-0 mr-1 opacity-80 hover:opacity-100 transition-opacity z-10"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleMoreClick(item);
-                              }}
-                            >
-                              <MoreHorizontal className="h-1.5 w-1.5" />
-                            </Button>
-                          )}
                         </div>
                       </div>
                     );
@@ -672,14 +617,6 @@ export function GanttChart({
         </div>
       </div>
 
-      {/* 任务详情对话框 */}
-      <TaskDetailDialog
-        open={isTaskDetailDialogOpen}
-        onOpenChange={setIsTaskDetailDialogOpen}
-        task={selectedTaskForDetail}
-        projectId={currentProject?.id}
-        workProcessName={selectedTaskForDetail?.task}
-      />
     </div>
   );
 }

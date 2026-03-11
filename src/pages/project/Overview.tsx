@@ -28,10 +28,12 @@ import { ProjectTrendChart } from "@/pages/project/components/ProjectTrendChart"
 import { ModelViewer } from "@/components/model/ModelViewer";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
+import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
 import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
 import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import type { PlanTask } from "@/types/domain/plan";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,6 +80,9 @@ export function Overview({
     network: true,
     model: true,
   });
+  const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
+  const [selectedTaskForDetail, setSelectedTaskForDetail] =
+    useState<PlanTask | null>(null);
   const fixedHighlightIds = useMemo(
     () => [
       "2j0dIGQjb7IBS38pr73$QB",
@@ -395,6 +400,11 @@ export function Overview({
     };
   }, [isResizingModel]);
 
+  const handleTaskDetail = (task: PlanTask) => {
+    setSelectedTaskForDetail(task);
+    setIsTaskDetailDialogOpen(true);
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 bg-gradient-to-b from-[#020a1d] to-[#041332] px-1 pt-0 pb-1 text-slate-100">
       <div className="shrink-0">
@@ -633,6 +643,7 @@ export function Overview({
                         <div className="h-full min-h-0 overflow-hidden">
                           <GanttChart
                             data={planTasks}
+                            onTaskDetail={handleTaskDetail}
                             scale="day"
                             currentDate={selectedTimelineDate}
                           />
@@ -653,7 +664,11 @@ export function Overview({
                         </div>
                       ) : (
                         <div className="h-full min-h-0 overflow-hidden">
-                          <NetworkDiagram tasks={planTasks} currentDate={selectedTimelineDate} />
+                          <NetworkDiagram
+                            tasks={planTasks}
+                            onNodeClick={handleTaskDetail}
+                            currentDate={selectedTimelineDate}
+                          />
                         </div>
                       )}
                     </PanelCard>
@@ -723,6 +738,14 @@ export function Overview({
 
         <DailyCard items={dailyProcesses} />
       </div>
+
+      <TaskDetailDialog
+        open={isTaskDetailDialogOpen}
+        onOpenChange={setIsTaskDetailDialogOpen}
+        task={selectedTaskForDetail}
+        projectId={resolvedProjectId || currentProject?.id || undefined}
+        workProcessName={selectedTaskForDetail?.task}
+      />
     </div>
   );
 }
