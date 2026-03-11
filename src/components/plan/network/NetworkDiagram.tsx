@@ -93,6 +93,12 @@ function toDate(value?: string): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function normalizeToMidday(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(12, 0, 0, 0);
+  return normalized;
+}
+
 function formatDate(value: Date | null): string {
   if (!value) return "-";
   return value.toISOString().slice(0, 10);
@@ -118,9 +124,11 @@ function getTaskStatus(
   const startDate = toDate(start);
   const endDate = toDate(end);
   if (!current || !startDate || !endDate) return "not_started";
-  const currentTime = current.getTime();
-  if (currentTime < startDate.getTime()) return "not_started";
-  if (currentTime > endDate.getTime()) return "completed";
+  const currentTime = normalizeToMidday(current).getTime();
+  const startTime = normalizeToMidday(startDate).getTime();
+  const endTime = normalizeToMidday(endDate).getTime();
+  if (currentTime < startTime) return "not_started";
+  if (currentTime > endTime) return "completed";
   return "in_progress";
 }
 

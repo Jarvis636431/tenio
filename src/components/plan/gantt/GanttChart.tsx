@@ -322,6 +322,23 @@ const parseDate = (dateStr: string): Date => {
   return getBaselineDate();
 };
 
+const normalizeToMidday = (date: Date) => {
+  const normalized = new Date(date);
+  normalized.setHours(12, 0, 0, 0);
+  return normalized;
+};
+
+const isTaskActiveOnDate = (
+  current: Date,
+  startRaw: string,
+  endRaw: string,
+) => {
+  const currentDay = normalizeToMidday(current).getTime();
+  const startDay = normalizeToMidday(parseDate(startRaw)).getTime();
+  const endDay = normalizeToMidday(parseDate(endRaw)).getTime();
+  return currentDay >= startDay && currentDay <= endDay;
+};
+
 export function GanttChart({
   data,
   onTaskDetail,
@@ -472,16 +489,18 @@ export function GanttChart({
 
     const activeCriticalRowIndex = timelineData.findIndex((task) => {
       if (!task.criticalPath) return false;
-      const start = parseDate(task.startDate ?? task.startTime ?? "");
-      const end = parseDate(task.endDate ?? task.endTime ?? "");
-      const t = currentDate.getTime();
-      return t >= start.getTime() && t <= end.getTime();
+      return isTaskActiveOnDate(
+        currentDate,
+        task.startDate ?? task.startTime ?? "",
+        task.endDate ?? task.endTime ?? "",
+      );
     });
     const activeRowIndex = timelineData.findIndex((task) => {
-      const start = parseDate(task.startDate ?? task.startTime ?? "");
-      const end = parseDate(task.endDate ?? task.endTime ?? "");
-      const t = currentDate.getTime();
-      return t >= start.getTime() && t <= end.getTime();
+      return isTaskActiveOnDate(
+        currentDate,
+        task.startDate ?? task.startTime ?? "",
+        task.endDate ?? task.endTime ?? "",
+      );
     });
     const rowIndex =
       activeCriticalRowIndex >= 0
