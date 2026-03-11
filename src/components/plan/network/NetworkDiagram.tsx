@@ -51,6 +51,10 @@ function parseDependencyIds(value: string): string[] {
     .filter((id) => id.length > 0);
 }
 
+function isLagTask(taskName?: string): boolean {
+  return (taskName ?? "").trim().toLowerCase().startsWith("lag");
+}
+
 /* ── 节点尺寸常量（匹配 HTML 样式） ── */
 const MIN_NODE_W = 280;
 const NODE_H = 130;
@@ -248,7 +252,11 @@ export function NetworkDiagram({
   const [initialized, setInitialized] = useState(false);
   const [minScale, setMinScale] = useState(0.1);
   const visibleTasks = useMemo(
-    () => tasks.filter((task) => task.startTime && task.endTime),
+    () =>
+      tasks.filter(
+        (task) =>
+          task.startTime && task.endTime && !isLagTask(task.task),
+      ),
     [tasks],
   );
 
@@ -346,10 +354,16 @@ export function NetworkDiagram({
   useEffect(() => {
     if (!initialized || !currentDate || nodes.length === 0 || !svgRef.current) return;
 
+    const criticalInProgress = nodes.find(
+      (node) =>
+        node.critical &&
+        getTaskStatus(node.start, node.end, currentDate) === "in_progress",
+    );
     const inProgress = nodes.find(
       (node) => getTaskStatus(node.start, node.end, currentDate) === "in_progress",
     );
     const targetNode =
+      criticalInProgress ??
       inProgress ??
       nodes
         .filter((node) => {

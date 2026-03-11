@@ -240,6 +240,9 @@ const formatWorkerCount = (count: unknown): string => {
   return String(Math.round(value));
 };
 
+const isLagTask = (taskName?: string) =>
+  (taskName ?? "").trim().toLowerCase().startsWith("lag");
+
 const parseDate = (dateStr: string): Date => {
   if (!dateStr) {
     return getBaselineDate();
@@ -334,10 +337,14 @@ export function GanttChart({
   const [viewportHeight, setViewportHeight] = useState(ROW_HEIGHT * 12);
   const timelineScale = scale;
   const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
+  const filteredData = useMemo(
+    () => data.filter((task) => !isLagTask(task.task)),
+    [data],
+  );
 
   const { timelineData, totalUnits, headers, startAnchor } = useMemo(() => {
     const baseline = getBaselineDate();
-    const parsedItems = data.map((item) => {
+    const parsedItems = filteredData.map((item) => {
       const start = item.startDate ? parseDate(item.startDate) : null;
       const end = item.endDate ? parseDate(item.endDate) : null;
       return { item, start, end };
@@ -390,7 +397,7 @@ export function GanttChart({
       headers,
       startAnchor,
     };
-  }, [data, timelineScale]);
+  }, [filteredData, timelineScale]);
 
   useEffect(() => {
     const chartContent = chartContentRef.current;
@@ -446,7 +453,7 @@ export function GanttChart({
     return () => {
       chartContent.removeEventListener("scroll", handleChartScroll);
     };
-  }, [data]); // 数据变化时重新建立同步并重置滚动位置
+  }, [filteredData]); // 数据变化时重新建立同步并重置滚动位置
 
   useEffect(() => {
     const chartContent = chartContentRef.current;
@@ -463,13 +470,25 @@ export function GanttChart({
       ),
     );
 
+    const activeCriticalRowIndex = timelineData.findIndex((task) => {
+      if (!task.criticalPath) return false;
+      const start = parseDate(task.startDate ?? task.startTime ?? "");
+      const end = parseDate(task.endDate ?? task.endTime ?? "");
+      const t = currentDate.getTime();
+      return t >= start.getTime() && t <= end.getTime();
+    });
     const activeRowIndex = timelineData.findIndex((task) => {
       const start = parseDate(task.startDate ?? task.startTime ?? "");
       const end = parseDate(task.endDate ?? task.endTime ?? "");
       const t = currentDate.getTime();
       return t >= start.getTime() && t <= end.getTime();
     });
-    const rowIndex = activeRowIndex >= 0 ? activeRowIndex : 0;
+    const rowIndex =
+      activeCriticalRowIndex >= 0
+        ? activeCriticalRowIndex
+        : activeRowIndex >= 0
+          ? activeRowIndex
+          : 0;
     const totalContentHeight = totalRows * ROW_HEIGHT;
     const maxScrollTop = Math.max(0, totalContentHeight - chartContent.clientHeight);
     const targetTop = Math.max(
