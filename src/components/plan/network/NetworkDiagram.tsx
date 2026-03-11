@@ -163,6 +163,7 @@ function NodeBlock({
 
   return (
     <g
+      data-node-block="true"
       onClick={() => onNodeClick?.(task)}
       className={onNodeClick ? "cursor-pointer" : undefined}
     >
@@ -391,6 +392,10 @@ export function NetworkDiagram({
   );
 
   const handlePointerDown: React.PointerEventHandler<SVGSVGElement> = (e) => {
+    const target = e.target as Element | null;
+    if (target?.closest("[data-node-block='true']")) {
+      return;
+    }
     isPanningRef.current = true;
     lastPointRef.current = { x: e.clientX, y: e.clientY };
     e.currentTarget.setPointerCapture(e.pointerId);
