@@ -331,6 +331,7 @@ export function GanttChart({
   const [scrollTop, setScrollTop] = useState(0);
 
   const ROW_HEIGHT = 28; // h-7
+  const [viewportHeight, setViewportHeight] = useState(ROW_HEIGHT * 12);
   const timelineScale = scale;
   const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
 
@@ -391,8 +392,30 @@ export function GanttChart({
     };
   }, [data, timelineScale]);
 
+  useEffect(() => {
+    const chartContent = chartContentRef.current;
+    if (!chartContent) return;
+
+    const updateViewportHeight = () => {
+      // 排除时间轴表头高度，得到任务内容区域可见高度
+      const contentHeight = Math.max(ROW_HEIGHT, chartContent.clientHeight - ROW_HEIGHT);
+      setViewportHeight(contentHeight);
+    };
+
+    updateViewportHeight();
+
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(updateViewportHeight);
+      observer.observe(chartContent);
+      return () => observer.disconnect();
+    }
+
+    window.addEventListener("resize", updateViewportHeight);
+    return () => window.removeEventListener("resize", updateViewportHeight);
+  }, [ROW_HEIGHT]);
+
   const totalRows = timelineData.length;
-  const visibleRowCount = 12; // 渲染窗口中的最大行数
+  const visibleRowCount = Math.max(1, Math.ceil(viewportHeight / ROW_HEIGHT) + 2);
   const startRowIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2);
   const endRowIndex = Math.min(totalRows, startRowIndex + visibleRowCount + 4);
   const visibleRows = timelineData.slice(startRowIndex, endRowIndex);
