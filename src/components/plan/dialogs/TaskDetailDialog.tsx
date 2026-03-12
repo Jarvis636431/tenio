@@ -62,7 +62,7 @@ export function TaskDetailDialog({
   projectId,
   workProcessName,
 }: TaskDetailDialogProps) {
-  const [activeTab, setActiveTab] = useState("3d");
+  const [activeTab, setActiveTab] = useState("drawings");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [orderInfo, setOrderInfo] = useState<OrderInfoData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,6 +103,7 @@ export function TaskDetailDialog({
 
   useEffect(() => {
     if (!open) return;
+    setActiveTab("drawings");
     let cancelled = false;
     setMediaLoading(true);
     fetch("/Database/图片 url.json")
