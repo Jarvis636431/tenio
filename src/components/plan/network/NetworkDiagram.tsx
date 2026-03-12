@@ -51,6 +51,10 @@ function parseDependencyIds(value: string): string[] {
     .filter((id) => id.length > 0);
 }
 
+function isLagTask(taskName?: string): boolean {
+  return (taskName ?? "").trim().toLowerCase().startsWith("lag");
+}
+
 /* ── 节点尺寸常量（匹配 HTML 样式） ── */
 const MIN_NODE_W = 280;
 const NODE_H = 130;
@@ -89,6 +93,12 @@ function toDate(value?: string): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function normalizeToMidday(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(12, 0, 0, 0);
+  return normalized;
+}
+
 function formatDate(value: Date | null): string {
   if (!value) return "-";
   return value.toISOString().slice(0, 10);
@@ -114,9 +124,11 @@ function getTaskStatus(
   const startDate = toDate(start);
   const endDate = toDate(end);
   if (!current || !startDate || !endDate) return "not_started";
-  const currentTime = current.getTime();
-  if (currentTime < startDate.getTime()) return "not_started";
-  if (currentTime > endDate.getTime()) return "completed";
+  const currentTime = normalizeToMidday(current).getTime();
+  const startTime = normalizeToMidday(startDate).getTime();
+  const endTime = normalizeToMidday(endDate).getTime();
+  if (currentTime < startTime) return "not_started";
+  if (currentTime > endTime) return "completed";
   return "in_progress";
 }
 
@@ -163,6 +175,7 @@ function NodeBlock({
 
   return (
     <g
+      data-node-block="true"
       onClick={() => onNodeClick?.(task)}
       className={onNodeClick ? "cursor-pointer" : undefined}
     >
@@ -247,7 +260,11 @@ export function NetworkDiagram({
   const [initialized, setInitialized] = useState(false);
   const [minScale, setMinScale] = useState(0.1);
   const visibleTasks = useMemo(
-    () => tasks.filter((task) => task.startTime && task.endTime),
+    () =>
+      tasks.filter(
+        (task) =>
+          task.startTime && task.endTime && !isLagTask(task.task),
+      ),
     [tasks],
   );
 
@@ -345,10 +362,16 @@ export function NetworkDiagram({
   useEffect(() => {
     if (!initialized || !currentDate || nodes.length === 0 || !svgRef.current) return;
 
+    const criticalInProgress = nodes.find(
+      (node) =>
+        node.critical &&
+        getTaskStatus(node.start, node.end, currentDate) === "in_progress",
+    );
     const inProgress = nodes.find(
       (node) => getTaskStatus(node.start, node.end, currentDate) === "in_progress",
     );
     const targetNode =
+      criticalInProgress ??
       inProgress ??
       nodes
         .filter((node) => {
@@ -391,6 +414,10 @@ export function NetworkDiagram({
   );
 
   const handlePointerDown: React.PointerEventHandler<SVGSVGElement> = (e) => {
+    const target = e.target as Element | null;
+    if (target?.closest("[data-node-block='true']")) {
+      return;
+    }
     isPanningRef.current = true;
     lastPointRef.current = { x: e.clientX, y: e.clientY };
     e.currentTarget.setPointerCapture(e.pointerId);

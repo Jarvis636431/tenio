@@ -132,14 +132,35 @@ export function Overview({
     }));
   }, [headcountCurveQuery.data]);
 
-  const costCurveChartData = useMemo(() => {
+  const costCurveChart = useMemo(() => {
     const dates = costCurveQuery.data?.dates ?? [];
     const totalCosts = costCurveQuery.data?.total_costs ?? [];
+    const numericCosts = totalCosts
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value));
+    const maxAbsCost = numericCosts.length
+      ? Math.max(...numericCosts.map((value) => Math.abs(value)))
+      : 0;
+    const unitMeta =
+      maxAbsCost >= 1e8
+        ? { divisor: 1e8, unit: "亿" }
+        : maxAbsCost >= 1e4
+          ? { divisor: 1e4, unit: "万" }
+          : { divisor: 1, unit: "元" };
     const length = Math.min(dates.length, totalCosts.length);
-    return Array.from({ length }, (_, index) => ({
-      date: dates[index],
-      总成本: totalCosts[index] / 10000,
-    }));
+    return {
+      unit: unitMeta.unit,
+      points: Array.from({ length }, (_, index) => {
+        const rawCost = Number(totalCosts[index]);
+        const normalized = Number.isFinite(rawCost)
+          ? rawCost / unitMeta.divisor
+          : 0;
+        return {
+          date: dates[index],
+          总成本: Number(normalized.toFixed(2)),
+        };
+      }),
+    };
   }, [costCurveQuery.data]);
 
   const currentProjectName = useMemo(() => {
@@ -662,12 +683,12 @@ export function Overview({
                         <div className="flex h-full items-center justify-center text-sm text-destructive">
                           无法获取成本数据
                         </div>
-                      ) : costCurveChartData.length > 0 ? (
+                      ) : costCurveChart.points.length > 0 ? (
                         <div className="h-full w-full">
                           <ProjectTrendChart
-                            data={costCurveChartData}
+                            data={costCurveChart.points}
                             seriesNames={["总成本"]}
-                            unit="亿"
+                            unit={costCurveChart.unit}
                           />
                         </div>
                       ) : (

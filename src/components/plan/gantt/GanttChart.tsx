@@ -240,6 +240,9 @@ const formatWorkerCount = (count: unknown): string => {
   return String(Math.round(value));
 };
 
+const isLagTask = (taskName?: string) =>
+  (taskName ?? "").trim().toLowerCase().startsWith("lag");
+
 const parseDate = (dateStr: string): Date => {
   if (!dateStr) {
     return getBaselineDate();
@@ -319,6 +322,23 @@ const parseDate = (dateStr: string): Date => {
   return getBaselineDate();
 };
 
+const normalizeToMidday = (date: Date) => {
+  const normalized = new Date(date);
+  normalized.setHours(12, 0, 0, 0);
+  return normalized;
+};
+
+const isTaskActiveOnDate = (
+  current: Date,
+  startRaw: string,
+  endRaw: string,
+) => {
+  const currentDay = normalizeToMidday(current).getTime();
+  const startDay = normalizeToMidday(parseDate(startRaw)).getTime();
+  const endDay = normalizeToMidday(parseDate(endRaw)).getTime();
+  return currentDay >= startDay && currentDay <= endDay;
+};
+
 export function GanttChart({
   data,
   onTaskDetail,
@@ -334,10 +354,14 @@ export function GanttChart({
   const [viewportHeight, setViewportHeight] = useState(ROW_HEIGHT * 12);
   const timelineScale = scale;
   const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
+  const filteredData = useMemo(
+    () => data.filter((task) => !isLagTask(task.task)),
+    [data],
+  );
 
   const { timelineData, totalUnits, headers, startAnchor } = useMemo(() => {
     const baseline = getBaselineDate();
-    const parsedItems = data.map((item) => {
+    const parsedItems = filteredData.map((item) => {
       const start = item.startDate ? parseDate(item.startDate) : null;
       const end = item.endDate ? parseDate(item.endDate) : null;
       return { item, start, end };
@@ -390,7 +414,7 @@ export function GanttChart({
       headers,
       startAnchor,
     };
-  }, [data, timelineScale]);
+  }, [filteredData, timelineScale]);
 
   useEffect(() => {
     const chartContent = chartContentRef.current;
@@ -446,7 +470,7 @@ export function GanttChart({
     return () => {
       chartContent.removeEventListener("scroll", handleChartScroll);
     };
-  }, [data]); // 数据变化时重新建立同步并重置滚动位置
+  }, [filteredData]); // 数据变化时重新建立同步并重置滚动位置
 
   useEffect(() => {
     const chartContent = chartContentRef.current;
@@ -463,13 +487,27 @@ export function GanttChart({
       ),
     );
 
-    const activeRowIndex = timelineData.findIndex((task) => {
-      const start = parseDate(task.startDate ?? task.startTime ?? "");
-      const end = parseDate(task.endDate ?? task.endTime ?? "");
-      const t = currentDate.getTime();
-      return t >= start.getTime() && t <= end.getTime();
+    const activeCriticalRowIndex = timelineData.findIndex((task) => {
+      if (!task.criticalPath) return false;
+      return isTaskActiveOnDate(
+        currentDate,
+        task.startDate ?? task.startTime ?? "",
+        task.endDate ?? task.endTime ?? "",
+      );
     });
-    const rowIndex = activeRowIndex >= 0 ? activeRowIndex : 0;
+    const activeRowIndex = timelineData.findIndex((task) => {
+      return isTaskActiveOnDate(
+        currentDate,
+        task.startDate ?? task.startTime ?? "",
+        task.endDate ?? task.endTime ?? "",
+      );
+    });
+    const rowIndex =
+      activeCriticalRowIndex >= 0
+        ? activeCriticalRowIndex
+        : activeRowIndex >= 0
+          ? activeRowIndex
+          : 0;
     const totalContentHeight = totalRows * ROW_HEIGHT;
     const maxScrollTop = Math.max(0, totalContentHeight - chartContent.clientHeight);
     const targetTop = Math.max(
