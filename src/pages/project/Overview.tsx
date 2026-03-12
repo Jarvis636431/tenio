@@ -382,7 +382,7 @@ export function Overview({
     void initAgent({
       project_id: resolvedProjectId,
       base_date: agentBaseDate,
-      solution_id: 0,
+      solution_id: 4,
       access_token: token,
     }).catch(() => {
       agentInitKeyRef.current = null;

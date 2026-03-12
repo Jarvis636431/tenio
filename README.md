@@ -61,6 +61,15 @@ VITE_AMAP_SECURITY_CODE=your_amap_security_code
 
 运行时配置统一在 `src/config/index.ts` 管理（API Base、AI 地址、地图 Key、环境标志等）。
 
+## AI Agent 初始化
+
+- 接口：`POST ${API_BASE.aiService}/api/agent/init`
+- 封装位置：`src/services/ai-service.ts` 中 `initAgent(payload)`
+- 入参：`project_id`、`base_date`、`solution_id`、`access_token`
+- `project_id` 由页面上下文传入，不做前端写死：
+  - 创建流程页 `src/pages/create/steps/SelectionStep.tsx` 使用 `projectId`
+  - 项目总览页 `src/pages/project/Overview.tsx` 使用 `resolvedProjectId`
+
 ## Mock
 
 开发环境支持 MSW（`src/main.tsx`，worker 位于 `public/mockServiceWorker.js`）。
