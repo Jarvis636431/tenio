@@ -655,6 +655,17 @@ export function ModelViewer({
             }));
 
             const ifcLoader = new IFCLoader();
+            try {
+              await ifcLoader.ifcManager.useWebWorkers(
+                true,
+                "/wasm/IFCWorker.js",
+              );
+            } catch (error) {
+              console.warn(
+                "[ModelViewer] IFC Worker 初始化失败，回退主线程解析",
+                error,
+              );
+            }
             ifcLoader.ifcManager.setWasmPath("/wasm/");
             ifcLoaderRef.current = ifcLoader;
             const model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
