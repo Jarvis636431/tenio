@@ -68,6 +68,7 @@ export function SelectionStep() {
         (response as { data?: typeof response }).data ?? response;
       setSolutionData(resolved);
       await initAgent({
+        project_id: projectId,
         base_date: resolved.start_date,
         solution_id: resolved.solution_id,
         access_token: token,

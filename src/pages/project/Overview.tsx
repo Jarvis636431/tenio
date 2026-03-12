@@ -380,6 +380,7 @@ export function Overview({
     agentInitKeyRef.current = key;
 
     void initAgent({
+      project_id: resolvedProjectId,
       base_date: agentBaseDate,
       solution_id: 0,
       access_token: token,
