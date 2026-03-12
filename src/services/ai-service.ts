@@ -9,12 +9,17 @@ import type {
 export async function initAgent(
   payload: AgentInitPayload,
 ): Promise<AgentInitResponse> {
+  const normalizedPayload = {
+    ...payload,
+    project_id: "project_001",
+  };
+
   return requestJson<AgentInitResponse>(`${API_BASE.aiService}/api/agent/init`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalizedPayload),
   });
 }
 
