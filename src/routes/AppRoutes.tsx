@@ -6,7 +6,6 @@ import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { APP_DEFAULT_TITLE } from "@/config";
 
 // Lazy loaded pages
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Overview = lazy(() =>
@@ -14,6 +13,8 @@ const Overview = lazy(() =>
     default: module.Overview,
   })),
 );
+
+const DEFAULT_PROJECT_ROUTE = "/project/project_001";
 
 const TITLE_RULES: Array<{ prefix: string; title: string }> = [
   { prefix: "/login", title: "登录" },
@@ -55,9 +56,7 @@ export function AppRoutes() {
           path="/"
           element={
             <ProtectedRoute auth={auth}>
-                <AppLayout>
-                  <Dashboard />
-                </AppLayout>
+              <Navigate to={DEFAULT_PROJECT_ROUTE} replace />
             </ProtectedRoute>
           }
         />
