@@ -101,7 +101,7 @@ export async function createJiuanProject(
   payload: CreateJiuanProjectPayload,
   token?: string,
 ): Promise<CreateJiuanProjectResponse> {
-  return requestApiData<CreateJiuanProjectResponse>(`${API_V1}/projects`, {
+  return requestApiData<CreateJiuanProjectResponse>(`${API_V1}/projects/jiuan`, {
     token,
     headers: {
       "Content-Type": "application/json",
