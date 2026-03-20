@@ -11,6 +11,7 @@ import {
   Boxes,
   SlidersHorizontal,
   Users,
+  RotateCcw,
 } from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
@@ -468,6 +469,14 @@ export function Overview({
           onsiteCount={onsiteCount}
           actions={(
             <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-2 text-[#cfe6ff] hover:bg-[#12417c]"
+              >
+                <RotateCcw className="mr-1.5 h-4 w-4" />
+                重置项目
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
