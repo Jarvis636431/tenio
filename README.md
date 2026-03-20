@@ -15,7 +15,6 @@
 - 顶层路由：
   - `/login`
   - `/`
-  - `/create`（创建流程）
   - `/project/:id`（项目工作台，核心为 `Overview`）
 - 应用主布局 `AppLayout` 为三栏：
   - 左：极简侧边栏（logo + home）
@@ -67,7 +66,6 @@ VITE_AMAP_SECURITY_CODE=your_amap_security_code
 - 封装位置：`src/services/ai-service.ts` 中 `initAgent(payload)`
 - 入参：`project_id`、`base_date`、`solution_id`、`access_token`
 - `project_id` 由页面上下文传入，不做前端写死：
-  - 创建流程页 `src/pages/create/steps/SelectionStep.tsx` 使用 `projectId`
   - 项目总览页 `src/pages/project/Overview.tsx` 使用 `resolvedProjectId`
 
 ## Mock
