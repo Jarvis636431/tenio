@@ -30,7 +30,7 @@ import { ModelViewer } from "@/components/model/ModelViewer";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
-import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
+import { getProjectCostCurve, getProjectHeadcountCurve, createJiuanProject } from "@/services/schedulepro-service";
 import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,18 @@ export function Overview({
     projectId: requestedProjectRef,
   });
   const { token } = useAuth();
+
+  const handleResetProject = async () => {
+    if (!token) return;
+    const randomName = `项目_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    try {
+      const response = await createJiuanProject({ project_name: randomName }, token);
+      console.log("重置项目成功:", response);
+    } catch (error) {
+      console.error("重置项目失败:", error);
+    }
+  };
+
   const { tagMap, processHighlights, getIdsByDate } =
     useProjectHighlight(resolvedProjectId);
   const [currentDay, setCurrentDay] = useState(1);
@@ -473,6 +485,7 @@ export function Overview({
                 type="button"
                 size="sm"
                 className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-2 text-[#cfe6ff] hover:bg-[#12417c]"
+                onClick={handleResetProject}
               >
                 <RotateCcw className="mr-1.5 h-4 w-4" />
                 重置项目
