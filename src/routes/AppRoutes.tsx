@@ -1,19 +1,13 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
+import { ResolvedProjectRoute } from "@/routes/ResolvedProjectRoute";
 import { APP_DEFAULT_TITLE } from "@/config";
 
 // Lazy loaded pages
 const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const Overview = lazy(() =>
-  import("@/pages/project/Overview").then((module) => ({
-    default: module.Overview,
-  })),
-);
-
 const DEFAULT_PROJECT_ROUTE = "/project/project_001";
 
 const TITLE_RULES: Array<{ prefix: string; title: string }> = [
@@ -64,9 +58,7 @@ export function AppRoutes() {
           path="/project/:id"
           element={
             <ProtectedRoute auth={auth}>
-              <AppLayout>
-                <Overview />
-              </AppLayout>
+              <ResolvedProjectRoute />
             </ProtectedRoute>
           }
         />

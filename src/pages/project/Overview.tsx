@@ -63,7 +63,7 @@ export function Overview({
 }: OverviewProps = {}) {
   const { id: paramProjectId } = useParams();
   const { currentProject, projects } = useProject();
-  const requestedProjectRef = paramProjectId || propsProjectId || currentProject?.id || "";
+  const requestedProjectRef = propsProjectId || paramProjectId || currentProject?.id || "";
   const { projectId: resolvedProjectId, coreGraph } = useProjectCoreGraph({
     projectId: requestedProjectRef,
   });

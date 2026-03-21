@@ -7,8 +7,6 @@ import type {
   AuthMeResponse,
   CreateJiuanProjectPayload,
   CreateJiuanProjectResponse,
-  SelectSolutionPayload,
-  SelectSolutionResponse,
   CoreGraphResponse,
   CostCurveResponse,
   HeadcountCurveResponse,
@@ -108,23 +106,6 @@ export async function createJiuanProject(
     },
     body: JSON.stringify(payload),
   });
-}
-
-export async function selectProjectSolution(
-  projectId: string,
-  payload: SelectSolutionPayload,
-  token?: string,
-): Promise<SelectSolutionResponse> {
-  return requestApiData<SelectSolutionResponse>(
-    `${API_V1}/projects/${projectId}/solutions`,
-    {
-      token,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    },
-  );
 }
 
 export async function getProjectCoreGraph(
