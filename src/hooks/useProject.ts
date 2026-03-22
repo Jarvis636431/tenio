@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuth } from '@/hooks/useAuth';
 
+let lastInitializedToken: string | null = null;
+
 /**
  * 兼容原有 ProjectContext 的 hook
  * 提供相同的 API，但使用 Zustand 作为底层实现
@@ -30,13 +32,22 @@ export function useProject() {
 
     const fetchProjects = async () => {
       if (!token) {
+        lastInitializedToken = null;
         useProjectStore.getState().reset();
         return;
       }
 
+      if (lastInitializedToken === token) {
+        return;
+      }
+      lastInitializedToken = token;
+
       setLoading(true);
       try {
         await refreshProjects(token);
+      } catch (error) {
+        lastInitializedToken = null;
+        throw error;
       } finally {
         if (active) {
           setLoading(false);
