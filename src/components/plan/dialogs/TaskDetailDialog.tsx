@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProject } from "@/hooks/useProject";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import type { PlanTask } from "@/types/domain/plan";
+import { RESOURCE_BASE_URL } from "@/config";
 
 // 验收数据接口
 interface AcceptanceData {
@@ -53,6 +54,13 @@ interface TaskDetailDialogProps {
   task: PlanTask | null;
   projectId?: string | null;
   workProcessName?: string;
+}
+
+function encodeResourcePath(path: string) {
+  return path
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
 }
 
 export function TaskDetailDialog({
@@ -137,7 +145,7 @@ export function TaskDetailDialog({
     if (trimmed.startsWith("/")) {
       return trimmed;
     }
-    return `/resources/${trimmed}`;
+    return `${RESOURCE_BASE_URL}/${encodeResourcePath(trimmed)}`;
   };
 
   const planeDrawings = useMemo(() => {

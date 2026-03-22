@@ -21,6 +21,10 @@ export const AMAP = {
 export const AI_SSE_URL =
   env.VITE_AI_SSE_URL ?? `${API_BASE.aiService}/api/agent/chat/sse`;
 
+export const RESOURCE_BASE_URL =
+  trimTrailingSlash(env.VITE_RESOURCE_BASE_URL) ??
+  "https://apmoss.emio.cn/public/resources";
+
 export const VOLC_SPEECH = {
   apiUrl: "https://openspeech.bytedance.com/api/v3/auc/bigmodel/recognize/flash",
   resourceId: "volc.bigasr.auc_turbo",
