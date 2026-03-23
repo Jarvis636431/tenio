@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useMemo, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   ChartLine,
@@ -63,7 +62,6 @@ export function Overview({
 }: OverviewProps = {}) {
   const { id: paramProjectId } = useParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { currentProject, projects, addProject, setCurrentProject } = useProject();
   const requestedProjectRef = propsProjectId || paramProjectId || currentProject?.id || "";
   const { projectId: resolvedProjectId, coreGraph } = useProjectCoreGraph({
@@ -77,23 +75,17 @@ export function Overview({
     try {
       const response = await createJiuanProject({ project_name: randomName }, token);
       console.log("重置项目成功:", response);
-      
-      // 添加新项目到 store
+
       const newProject = {
         id: response.project_id,
+        code: response.project_id,
         name: response.project_name,
         status: response.status,
       };
       addProject(newProject);
       setCurrentProject(newProject);
-      
-      // 导航到新项目页面
+
       navigate(`/project/${response.project_id}`);
-      
-      // 刷新相关数据
-      queryClient.invalidateQueries({ queryKey: ["overview", "headcount-curve", response.project_id] });
-      queryClient.invalidateQueries({ queryKey: ["overview", "cost-curve", response.project_id] });
-      queryClient.invalidateQueries({ queryKey: ["project", "core-graph", response.project_id] });
     } catch (error) {
       console.error("重置项目失败:", error);
     }
