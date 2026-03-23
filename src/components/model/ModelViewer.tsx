@@ -13,6 +13,13 @@ import { useResize } from "./hooks/useResize";
 const MODEL_RESPONSE_CACHE_NAME = "tenio-ifc-model-cache-v1";
 const modelBufferCache = new Map<string, ArrayBuffer>();
 const inflightModelRequests = new Map<string, Promise<ArrayBuffer>>();
+const modelMetadataCache = new Map<
+  string,
+  {
+    globalIdMap: Map<string, number>;
+    tagMap: Record<string, string[]>;
+  }
+>();
 
 type MaterialOverrides = Omit<THREE.MeshStandardMaterialParameters, "color"> & {
   color?: string | number;
@@ -72,6 +79,16 @@ async function loadModelBuffer(
   } finally {
     inflightModelRequests.delete(src);
   }
+}
+
+function cloneGlobalIdMap(globalIdMap: Map<string, number>) {
+  return new Map(globalIdMap);
+}
+
+function cloneTagMap(tagMap: Record<string, string[]>) {
+  return Object.fromEntries(
+    Object.entries(tagMap).map(([key, values]) => [key, [...values]]),
+  );
 }
 
 interface ModelViewerProps {
@@ -717,11 +734,23 @@ export function ModelViewer({
             const model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
               modelID: number;
             };
-            const idMap = await buildGlobalIdMap(ifcLoader, model.modelID);
-            const modelTagMap = await buildTagMap(ifcLoader, model.modelID);
+            const cachedMetadata = modelMetadataCache.get(item.src);
+            const idMap = cachedMetadata
+              ? cloneGlobalIdMap(cachedMetadata.globalIdMap)
+              : await buildGlobalIdMap(ifcLoader, model.modelID);
+            const modelTagMap = cachedMetadata
+              ? cloneTagMap(cachedMetadata.tagMap)
+              : await buildTagMap(ifcLoader, model.modelID);
+            if (!cachedMetadata) {
+              modelMetadataCache.set(item.src, {
+                globalIdMap: cloneGlobalIdMap(idMap),
+                tagMap: cloneTagMap(modelTagMap),
+              });
+            }
             console.debug("[ModelViewer] tag map built", {
               modelKey: item.key,
               tagKeys: Object.keys(modelTagMap).length,
+              fromCache: Boolean(cachedMetadata),
             });
 
             if (abortControllerRef.current?.signal.aborted) return;
