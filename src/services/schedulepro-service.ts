@@ -12,6 +12,8 @@ import type {
   HeadcountCurveResponse,
   CostCurvePoint,
   HeadcountCurvePoint,
+  SelectSolutionPayload,
+  SelectSolutionResponse,
 } from "@/types/domain/schedulepro";
 
 const BASE_URL = API_BASE.projectService;
@@ -138,4 +140,21 @@ export async function getProjectHeadcountCurve(
     { token },
   );
   return normalizeHeadcountCurveResponse(response);
+}
+
+// Solutions
+export async function selectSolution(
+  projectId: string,
+  payload: SelectSolutionPayload,
+  token?: string,
+): Promise<SelectSolutionResponse> {
+  return requestApiData<SelectSolutionResponse>
+    (`${API_V1}/projects/${projectId}/solutions`, {
+    method: "POST",
+    token,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 }
