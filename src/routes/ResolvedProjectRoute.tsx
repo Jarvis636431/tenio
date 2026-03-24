@@ -6,6 +6,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProjectStore } from "@/stores/projectStore";
 import { getProjectByCode } from "@/services/project-service";
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function ResolvedProjectRoute() {
   const { id = "" } = useParams();
   const { token } = useAuth();
@@ -40,6 +43,12 @@ export function ResolvedProjectRoute() {
       if (currentProject?.id !== codeMatch.id) {
         setCurrentProject(codeMatch);
       }
+      return;
+    }
+
+    if (UUID_PATTERN.test(id)) {
+      setResolvedProjectId(id);
+      setIsResolving(false);
       return;
     }
 
