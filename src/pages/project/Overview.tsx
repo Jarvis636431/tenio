@@ -30,7 +30,7 @@ import { ModelViewer } from "@/components/model/ModelViewer";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
-import { getProjectCostCurve, getProjectHeadcountCurve, createJiuanProject } from "@/services/schedulepro-service";
+import { getProjectCostCurve, getProjectHeadcountCurve, createJiuanProject, selectSolution } from "@/services/schedulepro-service";
 import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,14 @@ export function Overview({
       };
       addProject(newProject);
       setCurrentProject(newProject);
+
+      // 调用选择方案接口，solution_id 为 4
+      const solutionResponse = await selectSolution(
+        response.project_id,
+        { solution_id: 4 },
+        token
+      );
+      console.log("选择方案成功:", solutionResponse);
 
       navigate(`/project/${response.project_id}`);
     } catch (error) {
