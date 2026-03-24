@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useProject } from "@/hooks/useProject";
 import { getProjectCoreGraph } from "@/services/schedulepro-service";
@@ -11,6 +11,7 @@ type UseProjectCoreGraphOptions = {
 
 export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
   const { id: paramProjectId } = useParams();
+  const navigate = useNavigate();
   const { token } = useAuth();
   const {
     currentProject,
@@ -21,8 +22,8 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
     addProject,
   } = useProject();
   const projectRef = options.projectId || paramProjectId || currentProject?.id || "";
-  const [projectId, setProjectId] = useState(projectRef);
-  const [isResolvingProjectId, setIsResolvingProjectId] = useState(false);
+  const [projectId, setProjectId] = useState("");
+  const [isResolvingProjectId, setIsResolvingProjectId] = useState(Boolean(projectRef));
 
   useEffect(() => {
     if (!projectRef) {
@@ -35,6 +36,9 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
     if (directMatch) {
       setProjectId(directMatch.id);
       setIsResolvingProjectId(false);
+      if (paramProjectId && paramProjectId !== directMatch.id) {
+        navigate(`/project/${directMatch.id}`, { replace: true });
+      }
       return;
     }
 
@@ -45,23 +49,30 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
       if (currentProject?.id !== codeMatch.id) {
         setCurrentProject(codeMatch);
       }
+      if (paramProjectId && paramProjectId !== codeMatch.id) {
+        navigate(`/project/${codeMatch.id}`, { replace: true });
+      }
       return;
     }
 
     if (!token) {
-      setProjectId(projectRef);
+      setProjectId("");
       setIsResolvingProjectId(false);
       return;
     }
 
     let isMounted = true;
     setIsResolvingProjectId(true);
+    setProjectId("");
     getProjectByCode(projectRef, token)
       .then((response) => {
         if (!isMounted) return;
         const resolvedId = response.project_id;
         setProjectId(resolvedId);
         setIsResolvingProjectId(false);
+        if (paramProjectId && paramProjectId !== resolvedId) {
+          navigate(`/project/${resolvedId}`, { replace: true });
+        }
 
         const existing = projects.find((project) => project.id === resolvedId);
         if (existing) {
@@ -93,10 +104,10 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
     return () => {
       isMounted = false;
     };
-  }, [projectRef, projects, currentProject?.id, token, setCurrentProject, addProject]);
+  }, [projectRef, projects, currentProject?.id, token, setCurrentProject, addProject, paramProjectId, navigate]);
 
   useEffect(() => {
-    if (!projectId || !token) {
+    if (!projectId || !token || isResolvingProjectId) {
       return;
     }
 
@@ -113,7 +124,7 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
     return () => {
       isMounted = false;
     };
-  }, [projectId, token, setCoreGraph]);
+  }, [projectId, token, isResolvingProjectId, setCoreGraph]);
 
   const coreGraph = useMemo(
     () => (projectId ? coreGraphByProjectId[projectId] : undefined),

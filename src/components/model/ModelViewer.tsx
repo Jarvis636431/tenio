@@ -10,9 +10,86 @@ import { useRenderLoop } from "./hooks/useRenderLoop";
 import type { HighlightGroup } from "./hooks/useHighlight";
 import { useResize } from "./hooks/useResize";
 
+const MODEL_RESPONSE_CACHE_NAME = "tenio-ifc-model-cache-v1";
+const modelBufferCache = new Map<string, ArrayBuffer>();
+const inflightModelRequests = new Map<string, Promise<ArrayBuffer>>();
+const modelMetadataCache = new Map<
+  string,
+  {
+    globalIdMap: Map<string, number>;
+    tagMap: Record<string, string[]>;
+  }
+>();
+
 type MaterialOverrides = Omit<THREE.MeshStandardMaterialParameters, "color"> & {
   color?: string | number;
 };
+
+async function loadModelBuffer(
+  src: string,
+  signal?: AbortSignal,
+): Promise<ArrayBuffer> {
+  if (modelBufferCache.has(src)) {
+    return modelBufferCache.get(src)!.slice(0);
+  }
+
+  const inflight = inflightModelRequests.get(src);
+  if (inflight) {
+    return (await inflight).slice(0);
+  }
+
+  const request = (async () => {
+    let response: Response | undefined;
+
+    if ("caches" in globalThis) {
+      const cacheStorage = await caches.open(MODEL_RESPONSE_CACHE_NAME);
+      const cachedResponse = await cacheStorage.match(src);
+      if (cachedResponse) {
+        response = cachedResponse;
+      } else {
+        const networkResponse = await fetch(src, {
+          signal,
+          cache: "force-cache",
+        });
+        if (!networkResponse.ok) {
+          throw new Error(`请求模型文件失败: ${networkResponse.status}`);
+        }
+        await cacheStorage.put(src, networkResponse.clone());
+        response = networkResponse;
+      }
+    } else {
+      response = await fetch(src, {
+        signal,
+        cache: "force-cache",
+      });
+      if (!response.ok) {
+        throw new Error(`请求模型文件失败: ${response.status}`);
+      }
+    }
+
+    const buffer = await response.arrayBuffer();
+    modelBufferCache.set(src, buffer);
+    return buffer;
+  })();
+
+  inflightModelRequests.set(src, request);
+
+  try {
+    return (await request).slice(0);
+  } finally {
+    inflightModelRequests.delete(src);
+  }
+}
+
+function cloneGlobalIdMap(globalIdMap: Map<string, number>) {
+  return new Map(globalIdMap);
+}
+
+function cloneTagMap(tagMap: Record<string, string[]>) {
+  return Object.fromEntries(
+    Object.entries(tagMap).map(([key, values]) => [key, [...values]]),
+  );
+}
 
 interface ModelViewerProps {
   className?: string;
@@ -624,13 +701,10 @@ export function ModelViewer({
         const buffers = await Promise.all(
           normalizedModelsRef.current.map(async (item) => {
             console.log("[ModelViewer] fetching model:", item.src);
-            const response = await fetch(item.src, {
-              signal: abortControllerRef.current?.signal,
-            });
-            if (!response.ok) {
-              throw new Error(`请求模型文件失败: ${response.status}`);
-            }
-            return response.arrayBuffer();
+            return loadModelBuffer(
+              item.src,
+              abortControllerRef.current?.signal,
+            );
           }),
         );
 
@@ -660,11 +734,23 @@ export function ModelViewer({
             const model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
               modelID: number;
             };
-            const idMap = await buildGlobalIdMap(ifcLoader, model.modelID);
-            const modelTagMap = await buildTagMap(ifcLoader, model.modelID);
+            const cachedMetadata = modelMetadataCache.get(item.src);
+            const idMap = cachedMetadata
+              ? cloneGlobalIdMap(cachedMetadata.globalIdMap)
+              : await buildGlobalIdMap(ifcLoader, model.modelID);
+            const modelTagMap = cachedMetadata
+              ? cloneTagMap(cachedMetadata.tagMap)
+              : await buildTagMap(ifcLoader, model.modelID);
+            if (!cachedMetadata) {
+              modelMetadataCache.set(item.src, {
+                globalIdMap: cloneGlobalIdMap(idMap),
+                tagMap: cloneTagMap(modelTagMap),
+              });
+            }
             console.debug("[ModelViewer] tag map built", {
               modelKey: item.key,
               tagKeys: Object.keys(modelTagMap).length,
+              fromCache: Boolean(cachedMetadata),
             });
 
             if (abortControllerRef.current?.signal.aborted) return;

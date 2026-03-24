@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useMemo, useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Check,
@@ -11,6 +11,7 @@ import {
   Boxes,
   SlidersHorizontal,
   Users,
+  RotateCcw,
 } from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
@@ -29,7 +30,7 @@ import { ModelViewer } from "@/components/model/ModelViewer";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
-import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
+import { getProjectCostCurve, getProjectHeadcountCurve, createJiuanProject, selectSolution } from "@/services/schedulepro-service";
 import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -61,12 +62,44 @@ export function Overview({
   projectId: propsProjectId,
 }: OverviewProps = {}) {
   const { id: paramProjectId } = useParams();
-  const { currentProject, projects } = useProject();
-  const requestedProjectRef = paramProjectId || propsProjectId || currentProject?.id || "";
+  const navigate = useNavigate();
+  const { currentProject, projects, addProject, setCurrentProject } = useProject();
+  const requestedProjectRef = propsProjectId || paramProjectId || currentProject?.id || "";
   const { projectId: resolvedProjectId, coreGraph } = useProjectCoreGraph({
     projectId: requestedProjectRef,
   });
   const { token } = useAuth();
+
+  const handleResetProject = async () => {
+    if (!token) return;
+    const randomName = `项目_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    try {
+      const response = await createJiuanProject({ project_name: randomName }, token);
+      console.log("重置项目成功:", response);
+
+      const newProject = {
+        id: response.project_id,
+        code: response.project_id,
+        name: response.project_name,
+        status: response.status,
+      };
+      addProject(newProject);
+      setCurrentProject(newProject);
+
+      // 调用选择方案接口，solution_id 为 4
+      const solutionResponse = await selectSolution(
+        response.project_id,
+        { solution_id: 4 },
+        token
+      );
+      console.log("选择方案成功:", solutionResponse);
+
+      navigate(`/project/${response.project_id}`);
+    } catch (error) {
+      console.error("重置项目失败:", error);
+    }
+  };
+
   const { tagMap, processHighlights, getIdsByDate } =
     useProjectHighlight(resolvedProjectId);
   const [currentDay, setCurrentDay] = useState(1);
@@ -382,7 +415,7 @@ export function Overview({
     void initAgent({
       project_id: resolvedProjectId,
       base_date: agentBaseDate,
-      solution_id: 0,
+      solution_id: 4,
       access_token: token,
     }).catch(() => {
       agentInitKeyRef.current = null;
@@ -468,6 +501,15 @@ export function Overview({
           onsiteCount={onsiteCount}
           actions={(
             <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-2 text-[#cfe6ff] hover:bg-[#12417c]"
+                onClick={handleResetProject}
+              >
+                <RotateCcw className="mr-1.5 h-4 w-4" />
+                重置项目
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

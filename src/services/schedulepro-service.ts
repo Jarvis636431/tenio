@@ -7,13 +7,13 @@ import type {
   AuthMeResponse,
   CreateJiuanProjectPayload,
   CreateJiuanProjectResponse,
-  SelectSolutionPayload,
-  SelectSolutionResponse,
   CoreGraphResponse,
   CostCurveResponse,
   HeadcountCurveResponse,
   CostCurvePoint,
   HeadcountCurvePoint,
+  SelectSolutionPayload,
+  SelectSolutionResponse,
 } from "@/types/domain/schedulepro";
 
 const BASE_URL = API_BASE.projectService;
@@ -101,30 +101,13 @@ export async function createJiuanProject(
   payload: CreateJiuanProjectPayload,
   token?: string,
 ): Promise<CreateJiuanProjectResponse> {
-  return requestApiData<CreateJiuanProjectResponse>(`${API_V1}/projects`, {
+  return requestApiData<CreateJiuanProjectResponse>(`${API_V1}/projects/jiuan`, {
     token,
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
-}
-
-export async function selectProjectSolution(
-  projectId: string,
-  payload: SelectSolutionPayload,
-  token?: string,
-): Promise<SelectSolutionResponse> {
-  return requestApiData<SelectSolutionResponse>(
-    `${API_V1}/projects/${projectId}/solutions`,
-    {
-      token,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    },
-  );
 }
 
 export async function getProjectCoreGraph(
@@ -157,4 +140,21 @@ export async function getProjectHeadcountCurve(
     { token },
   );
   return normalizeHeadcountCurveResponse(response);
+}
+
+// Solutions
+export async function selectSolution(
+  projectId: string,
+  payload: SelectSolutionPayload,
+  token?: string,
+): Promise<SelectSolutionResponse> {
+  return requestApiData<SelectSolutionResponse>
+    (`${API_V1}/projects/${projectId}/solutions`, {
+    method: "POST",
+    token,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 }

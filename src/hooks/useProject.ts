@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuth } from '@/hooks/useAuth';
+
+let lastInitializedToken: string | null = null;
 
 /**
  * 兼容原有 ProjectContext 的 hook
@@ -9,7 +11,6 @@ import { useAuth } from '@/hooks/useAuth';
  */
 export function useProject() {
   const { id } = useParams();
-  const location = useLocation();
   const { token } = useAuth();
   
   const {
@@ -31,13 +32,22 @@ export function useProject() {
 
     const fetchProjects = async () => {
       if (!token) {
+        lastInitializedToken = null;
         useProjectStore.getState().reset();
         return;
       }
 
+      if (lastInitializedToken === token) {
+        return;
+      }
+      lastInitializedToken = token;
+
       setLoading(true);
       try {
         await refreshProjects(token);
+      } catch (error) {
+        lastInitializedToken = null;
+        throw error;
       } finally {
         if (active) {
           setLoading(false);
@@ -61,12 +71,6 @@ export function useProject() {
       }
     }
   }, [id, projects, currentProject, setCurrentProject]);
-
-  useEffect(() => {
-    if (location.pathname === "/create" && currentProject) {
-      setCurrentProject(null);
-    }
-  }, [location.pathname, currentProject, setCurrentProject]);
 
   // 包装 refreshProjects 以自动传入 token 和 userId
   const wrappedRefreshProjects = async () => {

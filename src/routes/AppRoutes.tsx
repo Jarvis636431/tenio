@@ -1,25 +1,17 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
-import { CreateProjectRoutes } from "@/routes/CreateProjectRoutes";
+import { ResolvedProjectRoute } from "@/routes/ResolvedProjectRoute";
 import { APP_DEFAULT_TITLE } from "@/config";
 
 // Lazy loaded pages
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const CreateProject = lazy(() => import("@/pages/create/Create"));
-const Overview = lazy(() =>
-  import("@/pages/project/Overview").then((module) => ({
-    default: module.Overview,
-  })),
-);
+const DEFAULT_PROJECT_ROUTE = "/project/project_001";
 
 const TITLE_RULES: Array<{ prefix: string; title: string }> = [
   { prefix: "/login", title: "登录" },
-  { prefix: "/create", title: "创建" },
 ];
 
 export function AppRoutes() {
@@ -58,29 +50,15 @@ export function AppRoutes() {
           path="/"
           element={
             <ProtectedRoute auth={auth}>
-                <AppLayout>
-                  <Dashboard />
-                </AppLayout>
+              <Navigate to={DEFAULT_PROJECT_ROUTE} replace />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/create"
-          element={
-            <ProtectedRoute auth={auth}>
-              <CreateProject />
-            </ProtectedRoute>
-          }
-        >
-          {CreateProjectRoutes()}
-        </Route>
-        <Route
           path="/project/:id"
           element={
             <ProtectedRoute auth={auth}>
-              <AppLayout>
-                <Overview />
-              </AppLayout>
+              <ResolvedProjectRoute />
             </ProtectedRoute>
           }
         />
