@@ -255,7 +255,7 @@ export function TaskDetailDialog({
               models={[
                 {
                   key: "default",
-                  src: "/models/0202.ifc",
+                  src: "https://amp-frontend.oss-cn-beijing.aliyuncs.com/public/models/0202.ifc",
                 },
               ]}
               highlightGlobalIds={highlightedComponentIds}
