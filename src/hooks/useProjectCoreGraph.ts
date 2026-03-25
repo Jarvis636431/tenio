@@ -9,6 +9,9 @@ type UseProjectCoreGraphOptions = {
   projectId?: string;
 };
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
   const { id: paramProjectId } = useParams();
   const navigate = useNavigate();
@@ -52,6 +55,12 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
       if (paramProjectId && paramProjectId !== codeMatch.id) {
         navigate(`/project/${codeMatch.id}`, { replace: true });
       }
+      return;
+    }
+
+    if (UUID_PATTERN.test(projectRef)) {
+      setProjectId(projectRef);
+      setIsResolvingProjectId(false);
       return;
     }
 
