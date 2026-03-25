@@ -822,7 +822,7 @@ export function Overview({
                         models={[
                           {
                             key: "default",
-                            src: "https://amp-frontend.oss-cn-beijing.aliyuncs.com/public/models/0202.ifc",
+                            src: "https://apmoss.emio.cn/public/models/0202.ifc",
                             tagMap,
                           },
                         ]}
