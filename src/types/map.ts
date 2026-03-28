@@ -42,7 +42,10 @@ export type AMapNamespace = {
   }) => {
     search: (
       keyword: string,
-      callback: (status: string, result: any) => void,
+      callback: (
+        status: string,
+        result: { districtList?: DistrictNode[] },
+      ) => void,
     ) => void;
   };
 };

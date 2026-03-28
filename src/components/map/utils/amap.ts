@@ -3,7 +3,13 @@ import type { AMapNamespace } from "@/types/map";
 import { AMAP } from "@/config";
 
 export async function loadAMap(plugins: string[]) {
-  (window as any)._AMapSecurityConfig = {
+  (
+    window as Window & {
+      _AMapSecurityConfig?: {
+        securityJsCode: string;
+      };
+    }
+  )._AMapSecurityConfig = {
     securityJsCode: AMAP.securityCode,
   };
 

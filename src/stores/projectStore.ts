@@ -195,7 +195,7 @@ export const useProjectStore = create<ProjectState>()(
         currentProjectId: state.currentProject?.id,
       }),
       // Custom merge function to handle restoration
-      merge: (_persistedState: any, currentState) => {
+      merge: (_persistedState: unknown, currentState) => {
         // Don't restore from persisted state, we'll use localStorage directly
         return currentState;
       },

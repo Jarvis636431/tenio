@@ -86,7 +86,7 @@ export interface OrderInfoData {
   技术验收标准?: string;
   构件?: Array<number | string>;
   视频?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ProcessInfoResponse {
