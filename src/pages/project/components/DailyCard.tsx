@@ -13,13 +13,12 @@ export function DailyCard({ items, onItemClick }: DailyCardProps) {
   const [tab, setTab] = useState<"plan" | "actual">("plan");
   const [keyword, setKeyword] = useState("");
 
-  const visibleItems = tab === "plan" ? items : [];
-
   const filteredItems = useMemo(() => {
+    const visibleItems = tab === "plan" ? items : [];
     const normalized = keyword.trim();
     if (!normalized) return visibleItems;
     return visibleItems.filter((item) => item.name.includes(normalized));
-  }, [keyword, visibleItems]);
+  }, [items, keyword, tab]);
 
   return (
     <Card className="col-span-3 min-w-0 flex h-full min-h-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75">

@@ -34,6 +34,13 @@ export function MapContainer({
   const amapRef = useRef<AMapNamespace | null>(null);
   const markerRef = useRef<MarkerInstance | null>(null);
   const geocoderRef = useRef<GeocoderInstance | null>(null);
+  const onSelectRef = useRef(onSelect);
+  const initialCenterRef = useRef(center);
+  const initialZoomRef = useRef(zoom);
+
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
 
   useEffect(() => {
     let map: MapInstance | null = null;
@@ -46,8 +53,8 @@ export function MapContainer({
         // 3. 初始化地图
         map = new AMap.Map(mapRef.current, {
           viewMode: "3D", // 是否为 3D 地图模式
-          zoom: zoom, // 初始化地图级别
-          center: center, // 初始化地图中心点位置
+          zoom: initialZoomRef.current, // 初始化地图级别
+          center: initialCenterRef.current, // 初始化地图中心点位置
         });
 
         // 添加插件
@@ -57,9 +64,9 @@ export function MapContainer({
         setMapInstance(map);
 
         const handleClick = (event: MapClickEvent) => {
-          if (!onSelect) return;
+          if (!onSelectRef.current) return;
           const position: [number, number] = [event.lnglat.getLng(), event.lnglat.getLat()];
-          onSelect(position);
+          onSelectRef.current(position);
         };
 
         clickHandler = handleClick;

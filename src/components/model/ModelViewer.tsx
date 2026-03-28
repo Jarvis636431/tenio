@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import * as THREE from "three";
 import { IFCLoader } from "web-ifc-three/IFCLoader";
@@ -185,12 +185,12 @@ export function ModelViewer({
 
   const { handleResize } = useResize({ containerRef, rendererRef, cameraRef });
 
-  const resolveColor = (value: string | number | undefined, fallback: string) => {
+  const resolveColor = useCallback((value: string | number | undefined, fallback: string) => {
     if (value === undefined || value === null) return new THREE.Color(fallback);
     return new THREE.Color(value as string | number);
-  };
+  }, []);
 
-  const ensureHighlightMaterial = () => {
+  const ensureHighlightMaterial = useCallback(() => {
     const nextColor = new THREE.Color(highlightColor).getStyle();
     if (!highlightMaterialRef.current) {
       highlightMaterialRef.current = new THREE.MeshStandardMaterial({
@@ -208,9 +208,9 @@ export function ModelViewer({
     }
 
     return highlightMaterialRef.current;
-  };
+  }, [highlightColor, highlightMaterial, resolveColor]);
 
-  const applyMultiHighlight = () => {
+  const applyMultiHighlight = useCallback(() => {
     if (!isInitializedRef.current || !modelsRef.current.size) return;
 
     const useGroups = Array.isArray(highlightColorGroups) && highlightColorGroups.length > 0;
@@ -509,9 +509,17 @@ export function ModelViewer({
     });
 
     needsRenderRef.current = true;
-  };
+  }, [
+    ensureHighlightMaterial,
+    highlightGroupMaterial,
+    highlightColorGroups,
+    highlightGlobalIds,
+    highlightTagIds,
+    normalizedModels,
+    resolveColor,
+  ]);
 
-  const disposeModel = (model: THREE.Object3D) => {
+  const disposeModel = useCallback((model: THREE.Object3D) => {
     model.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         if (child.geometry) {
@@ -525,9 +533,9 @@ export function ModelViewer({
         }
       }
     });
-  };
+  }, []);
 
-  const cleanup = () => {
+  const cleanup = useCallback(() => {
     if (animateIdRef.current) {
       cancelAnimationFrame(animateIdRef.current);
       animateIdRef.current = null;
@@ -584,7 +592,7 @@ export function ModelViewer({
       }
       ifcLoaderRef.current = null;
     }
-  };
+  }, [disposeModel]);
 
   useEffect(() => {
     window.addEventListener("resize", handleResize);
@@ -802,11 +810,19 @@ export function ModelViewer({
     return () => {
       cleanup();
     };
-  }, [modelsSignature, startRenderLoop]);
+  }, [
+    applyMultiHighlight,
+    baseMaterialOverrides,
+    cleanup,
+    modelsSignature,
+    normalizedModels.length,
+    resolveColor,
+    startRenderLoop,
+  ]);
 
   useEffect(() => {
     applyMultiHighlight();
-  }, [highlightGlobalIds, highlightTagIds, highlightColor, highlightColorGroups, normalizedModels]);
+  }, [applyMultiHighlight]);
 
   return (
     <div className={cn("relative w-full h-full bg-[#03122e]", className)}>

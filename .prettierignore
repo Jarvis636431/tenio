@@ -1,4 +1,8 @@
 dist
 node_modules
+.claude
+docs
 public/mockServiceWorker.js
+public/wasm
 pnpm-lock.yaml
+REST_API_IMPLEMENTATION_SUMMARY.md

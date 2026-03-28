@@ -412,6 +412,11 @@ export function GanttChart({
   const startRowIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2);
   const endRowIndex = Math.min(totalRows, startRowIndex + visibleRowCount + 4);
   const visibleRows = timelineData.slice(startRowIndex, endRowIndex);
+  const isScrollingRef = useRef(isScrolling);
+
+  useEffect(() => {
+    isScrollingRef.current = isScrolling;
+  }, [isScrolling]);
 
   // 同步滚动逻辑 - 只监听右侧滚动，同步到左侧
   useEffect(() => {
@@ -421,7 +426,7 @@ export function GanttChart({
     if (!taskList || !chartContent) return;
 
     const handleChartScroll = () => {
-      if (isScrolling) return;
+      if (isScrollingRef.current) return;
       setIsScrolling(true);
       taskList.scrollTop = chartContent.scrollTop;
       setScrollTop(chartContent.scrollTop);

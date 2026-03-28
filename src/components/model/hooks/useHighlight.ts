@@ -50,6 +50,21 @@ export function useHighlight({
     ((model: THREE.Object3D & { modelID: number }, attempt?: number) => void | Promise<void>) | null
   >(null);
 
+  const scheduleHighlightRetry = useCallback(
+    (nextAttempt: number) => {
+      if (highlightRetryTimeoutRef.current) {
+        clearTimeout(highlightRetryTimeoutRef.current);
+      }
+      highlightRetryTimeoutRef.current = window.setTimeout(() => {
+        highlightRetryTimeoutRef.current = null;
+        if (modelRef.current && applyHighlightRef.current) {
+          applyHighlightRef.current(modelRef.current, nextAttempt);
+        }
+      }, highlightRetryDelay);
+    },
+    [highlightRetryDelay, highlightRetryTimeoutRef, modelRef],
+  );
+
   const applyHighlight = useCallback(
     async (model: THREE.Object3D & { modelID: number }, attempt = 0) => {
       const hasHighlightRequest =
@@ -252,25 +267,11 @@ export function useHighlight({
       highlightSubsetsRef,
       needsRenderRef,
       maxHighlightRetry,
+      scheduleHighlightRetry,
     ],
   );
 
   applyHighlightRef.current = applyHighlight;
-
-  const scheduleHighlightRetry = useCallback(
-    (nextAttempt: number) => {
-      if (highlightRetryTimeoutRef.current) {
-        clearTimeout(highlightRetryTimeoutRef.current);
-      }
-      highlightRetryTimeoutRef.current = window.setTimeout(() => {
-        highlightRetryTimeoutRef.current = null;
-        if (modelRef.current && applyHighlightRef.current) {
-          applyHighlightRef.current(modelRef.current, nextAttempt);
-        }
-      }, highlightRetryDelay);
-    },
-    [highlightRetryDelay, highlightRetryTimeoutRef, modelRef],
-  );
 
   return { applyHighlight };
 }

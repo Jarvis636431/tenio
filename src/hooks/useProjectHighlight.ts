@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useProject } from "@/hooks/useProject";
 import type { CoreGraphWorkProcess } from "@/types/domain/schedulepro";
 
@@ -12,7 +12,7 @@ export function useProjectHighlight(projectId?: string) {
     return Number.isNaN(date.getTime()) ? null : date;
   };
 
-  const resolvePlannedRange = (wp: CoreGraphWorkProcess) => {
+  const resolvePlannedRange = useCallback((wp: CoreGraphWorkProcess) => {
     const exec = wp.execution_state;
     if (!exec) return { start: null, end: null };
     const directStart = parseDate(exec.planned_start_datetime);
@@ -29,7 +29,7 @@ export function useProjectHighlight(projectId?: string) {
       start: new Date(Math.min(...starts.map((d) => d.getTime()))),
       end: new Date(Math.max(...ends.map((d) => d.getTime()))),
     };
-  };
+  }, []);
 
   const processHighlights = useMemo(() => {
     const workProcesses = coreGraph?.work_processes ?? [];
@@ -42,7 +42,7 @@ export function useProjectHighlight(projectId?: string) {
       start: resolvePlannedRange(wp).start,
       end: resolvePlannedRange(wp).end,
     }));
-  }, [coreGraph]);
+  }, [coreGraph, resolvePlannedRange]);
 
   const tagMap = useMemo(() => ({}) as Record<string, string[]>, []);
 

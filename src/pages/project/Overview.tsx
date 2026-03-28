@@ -377,7 +377,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     if (timeRange && currentDay === 1) {
       setCurrentDay(timeRange.startDay);
     }
-  }, [timeRange]);
+  }, [currentDay, timeRange]);
 
   useEffect(() => {
     if (!resolvedProjectId || !token || !agentBaseDate) return;

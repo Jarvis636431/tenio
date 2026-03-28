@@ -403,7 +403,7 @@ export function NetworkDiagram({ tasks, onNodeClick, currentDate = null }: Netwo
     });
 
     return { nodes: positioned, edges, width: layoutWidth, height: layoutHeight };
-  }, [tasks]);
+  }, [visibleTasks]);
 
   /* ── 初始自适应居中 ── */
   useEffect(() => {

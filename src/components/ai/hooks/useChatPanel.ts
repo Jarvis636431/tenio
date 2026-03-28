@@ -62,11 +62,9 @@ function blobToBase64(blob: Blob) {
 
 function logSilentError(message: string, error?: unknown) {
   if (error) {
-    // eslint-disable-next-line no-console
     console.warn(`[AI语音] ${message}`, error);
     return;
   }
-  // eslint-disable-next-line no-console
   console.warn(`[AI语音] ${message}`);
 }
 
@@ -102,6 +100,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   const threadIdRef = useRef<string | null>(null);
   const threadIdByProjectRef = useRef<Record<string, string | null>>({});
   const messagesByProjectRef = useRef<Record<string, ChatMessage[]>>({});
+  const latestMessagesRef = useRef<ChatMessage[]>(messages);
   const lastProjectKeyRef = useRef<string>("");
   const lastContentRef = useRef<string>("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -152,7 +151,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   useEffect(() => {
     const lastKey = lastProjectKeyRef.current;
     if (lastKey && lastKey !== activeProjectKey) {
-      messagesByProjectRef.current[lastKey] = messages;
+      messagesByProjectRef.current[lastKey] = latestMessagesRef.current;
       threadIdByProjectRef.current[lastKey] = threadIdRef.current;
     }
 
@@ -167,6 +166,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
 
   useEffect(() => {
     messagesByProjectRef.current[activeProjectKey] = messages;
+    latestMessagesRef.current = messages;
   }, [activeProjectKey, messages]);
 
   useEffect(() => {
