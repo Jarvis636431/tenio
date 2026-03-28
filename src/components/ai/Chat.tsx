@@ -87,30 +87,30 @@ export function Chat({
     const tasks = payload.affected_tasks ?? [];
     return (
       <div className="space-y-3">
-        <div className="text-sm font-semibold text-amber-900">突发事件</div>
+        <div className="text-sm font-semibold text-amber-200">突发事件</div>
         {payload.intent && (
-          <div className="text-xs text-slate-700">{payload.intent}</div>
+          <div className="text-xs text-cyan-100/80">{payload.intent}</div>
         )}
         {tasks.length > 0 && (
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-slate-700">
+            <div className="text-xs font-semibold text-cyan-100/75">
               受影响任务
             </div>
             {tasks.map((task, index) => (
               <div
                 key={`${task.name ?? "task"}-${index}`}
-                className="rounded-md border border-amber-200 bg-amber-50/70 px-2 py-2 text-xs text-slate-700"
+                className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-2 text-xs text-cyan-100/80"
               >
-                <div className="font-medium text-slate-900">
+                <div className="font-medium text-cyan-50">
                   {task.name || "未命名任务"}
                 </div>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-                  <div className="text-slate-500">开始</div>
+                  <div className="text-cyan-300/70">开始</div>
                   <div>
                     {formatDateString(task.raw_startdate)} →{" "}
                     {formatDateString(task.current_startdate)}
                   </div>
-                  <div className="text-slate-500">结束</div>
+                  <div className="text-cyan-300/70">结束</div>
                   <div>
                     {formatDateString(task.raw_enddate)} →{" "}
                     {formatDateString(task.current_enddate)}
@@ -118,7 +118,7 @@ export function Chat({
                   {(task.raw_duration !== undefined ||
                     task.current_duration !== undefined) && (
                     <>
-                      <div className="text-slate-500">工期(h)</div>
+                      <div className="text-cyan-300/70">工期(h)</div>
                       <div>
                         {task.raw_duration ?? "-"} →{" "}
                         {task.current_duration ?? "-"}
@@ -173,7 +173,7 @@ export function Chat({
     }
 
     const renderLine = (line: string) => (
-      <div key={line} className="text-xs text-slate-700">
+      <div key={line} className="text-xs text-cyan-100/80">
         {line}
       </div>
     );
@@ -182,7 +182,7 @@ export function Chat({
 
     return (
       <div className="space-y-3">
-        <div className="text-sm font-semibold text-amber-900">{header}</div>
+        <div className="text-sm font-semibold text-amber-200">{header}</div>
         <div className="space-y-1">
           {detailLines
             .filter(
@@ -201,17 +201,17 @@ export function Chat({
         </div>
         {tasks.length > 0 && (
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-slate-700">
+            <div className="text-xs font-semibold text-cyan-100/75">
               受影响任务
             </div>
             {tasks.map((task) => (
               <div
                 key={`${task.name}-${task.id ?? ""}`}
-                className="rounded-md border border-amber-200 bg-amber-50/70 px-2 py-2 text-xs text-slate-700"
+                className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-2 text-xs text-cyan-100/80"
               >
-                <div className="font-medium text-slate-900">{task.name}</div>
+                <div className="font-medium text-cyan-50">{task.name}</div>
                 {task.id && (
-                  <div className="text-[11px] text-slate-500">
+                  <div className="text-[11px] text-cyan-300/70">
                     ID: {task.id}
                   </div>
                 )}
@@ -221,17 +221,17 @@ export function Chat({
             ))}
           </div>
         )}
-        <div className="text-xs text-slate-700">
+        <div className="text-xs text-cyan-100/80">
           {detailLines.find((line) => line.startsWith("建议方案：")) ?? ""}
         </div>
-        <div className="rounded-md bg-amber-100 px-2 py-2 text-xs font-medium text-amber-900">
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/15 px-2 py-2 text-xs font-medium text-amber-100">
           {detailLines.find((line) => line.startsWith("请确认是否执行此调整？")) ??
             "请确认是否执行此调整？"}
         </div>
         <div className="flex gap-2">
           <Button
             size="sm"
-            className="h-8 rounded-md bg-amber-600 text-white hover:bg-amber-700"
+            className="h-8 rounded-md bg-amber-500/85 text-slate-950 hover:bg-amber-400"
             onClick={() => {
               setInterruptDecisions((prev) => ({
                 ...prev,
@@ -246,7 +246,7 @@ export function Chat({
           <Button
             size="sm"
             variant="outline"
-            className="h-8 rounded-md border-amber-300 text-amber-700 hover:bg-amber-50"
+            className="h-8 rounded-md border-amber-500/40 bg-transparent text-amber-100 hover:bg-amber-500/10"
             onClick={() => {
               setInterruptDecisions((prev) => ({
                 ...prev,
@@ -295,35 +295,44 @@ export function Chat({
           ol: ({ children }) => <ol className="list-decimal pl-5 space-y-1">{children}</ol>,
           li: ({ children }) => <li className="leading-relaxed">{children}</li>,
           blockquote: ({ children }) => (
-            <blockquote className="border-l-2 border-slate-300 pl-3 text-slate-600">
+            <blockquote className="border-l-2 border-cyan-500/40 pl-3 text-cyan-100/70">
               {children}
             </blockquote>
           ),
           a: ({ href, children }) => (
-            <a href={href} className="text-blue-600 underline" target="_blank" rel="noreferrer">
+            <a
+              href={href}
+              className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200"
+              target="_blank"
+              rel="noreferrer"
+            >
               {children}
             </a>
           ),
           code: ({ children }) => (
-            <code className="rounded bg-slate-100 px-1 py-0.5 text-[12px]">
+            <code className="rounded bg-cyan-950/70 px-1 py-0.5 text-[12px] text-cyan-100">
               {children}
             </code>
           ),
           pre: ({ children }) => (
-            <pre className="overflow-x-auto rounded bg-slate-100 p-2 text-[12px]">
+            <pre className="overflow-x-auto rounded-lg border border-cyan-900/50 bg-[#020d22] p-2 text-[12px] text-cyan-100">
               {children}
             </pre>
           ),
           table: ({ children }) => (
-            <table className="w-full border-collapse text-xs">{children}</table>
+            <table className="w-full border-collapse text-xs text-cyan-100/85">
+              {children}
+            </table>
           ),
           th: ({ children }) => (
-            <th className="border border-slate-200 bg-slate-50 px-2 py-1 text-left">
+            <th className="border border-cyan-900/50 bg-cyan-950/60 px-2 py-1 text-left text-cyan-100">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="border border-slate-200 px-2 py-1">{children}</td>
+            <td className="border border-cyan-900/40 px-2 py-1 text-cyan-100/80">
+              {children}
+            </td>
           ),
         }}
       >
