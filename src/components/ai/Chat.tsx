@@ -52,10 +52,7 @@ interface ChatProps {
   className?: string;
 }
 
-export function Chat({
-  state,
-  className,
-}: ChatProps) {
+export function Chat({ state, className }: ChatProps) {
   const {
     messages,
     inputMessage,
@@ -70,9 +67,7 @@ export function Chat({
     toggleRecording,
     scrollAreaRef,
   } = state;
-  const [interruptDecisions, setInterruptDecisions] = useState<
-    Record<string, "yes" | "no">
-  >({});
+  const [interruptDecisions, setInterruptDecisions] = useState<Record<string, "yes" | "no">>({});
   const [mode, setMode] = useState<"query" | "schedule">("query");
   const quickQueries = [
     { label: "当前施工进度如何？", icon: BarChart3 },
@@ -88,22 +83,16 @@ export function Chat({
     return (
       <div className="space-y-3">
         <div className="text-sm font-semibold text-amber-200">突发事件</div>
-        {payload.intent && (
-          <div className="text-xs text-cyan-100/80">{payload.intent}</div>
-        )}
+        {payload.intent && <div className="text-xs text-cyan-100/80">{payload.intent}</div>}
         {tasks.length > 0 && (
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-cyan-100/75">
-              受影响任务
-            </div>
+            <div className="text-xs font-semibold text-cyan-100/75">受影响任务</div>
             {tasks.map((task, index) => (
               <div
                 key={`${task.name ?? "task"}-${index}`}
                 className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-2 text-xs text-cyan-100/80"
               >
-                <div className="font-medium text-cyan-50">
-                  {task.name || "未命名任务"}
-                </div>
+                <div className="font-medium text-cyan-50">{task.name || "未命名任务"}</div>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
                   <div className="text-cyan-300/70">开始</div>
                   <div>
@@ -112,16 +101,13 @@ export function Chat({
                   </div>
                   <div className="text-cyan-300/70">结束</div>
                   <div>
-                    {formatDateString(task.raw_enddate)} →{" "}
-                    {formatDateString(task.current_enddate)}
+                    {formatDateString(task.raw_enddate)} → {formatDateString(task.current_enddate)}
                   </div>
-                  {(task.raw_duration !== undefined ||
-                    task.current_duration !== undefined) && (
+                  {(task.raw_duration !== undefined || task.current_duration !== undefined) && (
                     <>
                       <div className="text-cyan-300/70">工期(h)</div>
                       <div>
-                        {task.raw_duration ?? "-"} →{" "}
-                        {task.current_duration ?? "-"}
+                        {task.raw_duration ?? "-"} → {task.current_duration ?? "-"}
                       </div>
                     </>
                   )}
@@ -201,20 +187,14 @@ export function Chat({
         </div>
         {tasks.length > 0 && (
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-cyan-100/75">
-              受影响任务
-            </div>
+            <div className="text-xs font-semibold text-cyan-100/75">受影响任务</div>
             {tasks.map((task) => (
               <div
                 key={`${task.name}-${task.id ?? ""}`}
                 className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-2 text-xs text-cyan-100/80"
               >
                 <div className="font-medium text-cyan-50">{task.name}</div>
-                {task.id && (
-                  <div className="text-[11px] text-cyan-300/70">
-                    ID: {task.id}
-                  </div>
-                )}
+                {task.id && <div className="text-[11px] text-cyan-300/70">ID: {task.id}</div>}
                 {task.start && <div>开始: {normalizeTimeLabel(task.start)}</div>}
                 {task.end && <div>结束: {normalizeTimeLabel(task.end)}</div>}
               </div>
@@ -276,8 +256,7 @@ export function Chat({
     }
     const isInterrupt =
       message.sender === "ai" &&
-      (content.includes("突发事件分析完成") ||
-        content.includes("请确认是否执行此调整"));
+      (content.includes("突发事件分析完成") || content.includes("请确认是否执行此调整"));
     if (isInterrupt) {
       return renderInterruptMessage(content, message.id);
     }
@@ -320,9 +299,7 @@ export function Chat({
             </pre>
           ),
           table: ({ children }) => (
-            <table className="w-full border-collapse text-xs text-cyan-100/85">
-              {children}
-            </table>
+            <table className="w-full border-collapse text-xs text-cyan-100/85">{children}</table>
           ),
           th: ({ children }) => (
             <th className="border border-cyan-900/50 bg-cyan-950/60 px-2 py-1 text-left text-cyan-100">
@@ -330,9 +307,7 @@ export function Chat({
             </th>
           ),
           td: ({ children }) => (
-            <td className="border border-cyan-900/40 px-2 py-1 text-cyan-100/80">
-              {children}
-            </td>
+            <td className="border border-cyan-900/40 px-2 py-1 text-cyan-100/80">{children}</td>
           ),
         }}
       >
@@ -400,8 +375,7 @@ export function Chat({
                       className={cn(
                         "max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-line break-words",
                         {
-                          "bg-cyan-600/90 text-white":
-                            message.sender === "user",
+                          "bg-cyan-600/90 text-white": message.sender === "user",
                           "bg-[#03112a] text-cyan-100 border border-cyan-900/40":
                             message.sender === "ai",
                         },
@@ -471,17 +445,11 @@ export function Chat({
                   aria-label={isRecording ? "结束录音" : "开始录音"}
                   className={cn(
                     "h-9 w-9 rounded-xl border border-cyan-900/70 bg-[#051a3d] text-slate-200 hover:bg-[#0a2a5c]",
-                    isRecording
-                      ? "border-red-400/70 bg-red-900/30 text-red-100 animate-pulse"
-                      : "",
+                    isRecording ? "border-red-400/70 bg-red-900/30 text-red-100 animate-pulse" : "",
                   )}
                   style={isRecording ? { animationDuration: "1.6s" } : undefined}
                 >
-                  {isRecording ? (
-                    <Square className="w-4 h-4" />
-                  ) : (
-                    <Mic className="w-4 h-4" />
-                  )}
+                  {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                 </Button>
               </div>
               <Button

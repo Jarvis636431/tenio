@@ -77,12 +77,7 @@ function isApiResponseEnvelope<T>(payload: unknown): payload is ApiResponse<T> {
   if (!payload || typeof payload !== "object") return false;
   const record = payload as Record<string, unknown>;
   if (!("data" in record)) return false;
-  return (
-    "message" in record ||
-    "status" in record ||
-    "timestamp" in record ||
-    "code" in record
-  );
+  return "message" in record || "status" in record || "timestamp" in record || "code" in record;
 }
 
 export function unwrapApiResponseData<T>(payload: T | ApiResponse<T>): T {

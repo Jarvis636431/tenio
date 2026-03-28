@@ -30,7 +30,12 @@ import { ModelViewer } from "@/components/model/ModelViewer";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
-import { getProjectCostCurve, getProjectHeadcountCurve, createJiuanProject, selectSolution } from "@/services/schedulepro-service";
+import {
+  getProjectCostCurve,
+  getProjectHeadcountCurve,
+  createJiuanProject,
+  selectSolution,
+} from "@/services/schedulepro-service";
 import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -58,9 +63,7 @@ type PanelVisibility = {
   model: boolean;
 };
 
-export function Overview({
-  projectId: propsProjectId,
-}: OverviewProps = {}) {
+export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const { id: paramProjectId } = useParams();
   const navigate = useNavigate();
   const { currentProject, projects, addProject, setCurrentProject } = useProject();
@@ -87,11 +90,7 @@ export function Overview({
       setCurrentProject(newProject);
 
       // 调用选择方案接口，solution_id 为 4
-      const solutionResponse = await selectSolution(
-        response.project_id,
-        { solution_id: 4 },
-        token
-      );
+      const solutionResponse = await selectSolution(response.project_id, { solution_id: 4 }, token);
       console.log("选择方案成功:", solutionResponse);
 
       navigate(`/project/${response.project_id}`);
@@ -100,8 +99,7 @@ export function Overview({
     }
   };
 
-  const { tagMap, processHighlights, getIdsByDate } =
-    useProjectHighlight(resolvedProjectId);
+  const { tagMap, processHighlights, getIdsByDate } = useProjectHighlight(resolvedProjectId);
   const [currentDay, setCurrentDay] = useState(1);
   const [playbackRate, setPlaybackRate] = useState<1 | 2 | 4>(1);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -115,8 +113,7 @@ export function Overview({
     model: true,
   });
   const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
-  const [selectedTaskForDetail, setSelectedTaskForDetail] =
-    useState<PlanTask | null>(null);
+  const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<PlanTask | null>(null);
   const fixedHighlightIds = useMemo(
     () => [
       "2j0dIGQjb7IBS38pr73$QB",
@@ -185,9 +182,7 @@ export function Overview({
       unit: unitMeta.unit,
       points: Array.from({ length }, (_, index) => {
         const rawCost = Number(totalCosts[index]);
-        const normalized = Number.isFinite(rawCost)
-          ? rawCost / unitMeta.divisor
-          : 0;
+        const normalized = Number.isFinite(rawCost) ? rawCost / unitMeta.divisor : 0;
         return {
           date: dates[index],
           总成本: Number(normalized.toFixed(2)),
@@ -203,11 +198,7 @@ export function Overview({
     const matchedProject =
       projects.find((project) => project.id === resolvedProjectId) ||
       projects.find((project) => project.code === requestedProjectRef);
-    return (
-      matchedProject?.name ||
-      currentProject?.name ||
-      "项目详情"
-    );
+    return matchedProject?.name || currentProject?.name || "项目详情";
   }, [requestedProjectRef, resolvedProjectId, projects, currentProject]);
 
   const totalDurationLabel = useMemo(() => {
@@ -219,19 +210,12 @@ export function Overview({
       }))
       .filter((t) => t.start && t.end) as Array<{ start: string; end: string }>;
     if (!times.length) return "";
-    const starts = times
-      .map((t) => new Date(t.start).getTime())
-      .filter((v) => !Number.isNaN(v));
-    const ends = times
-      .map((t) => new Date(t.end).getTime())
-      .filter((v) => !Number.isNaN(v));
+    const starts = times.map((t) => new Date(t.start).getTime()).filter((v) => !Number.isNaN(v));
+    const ends = times.map((t) => new Date(t.end).getTime()).filter((v) => !Number.isNaN(v));
     if (!starts.length || !ends.length) return "";
     const minStart = Math.min(...starts);
     const maxEnd = Math.max(...ends);
-    const totalDays = Math.max(
-      1,
-      Math.ceil((maxEnd - minStart) / (1000 * 60 * 60 * 24)) + 1,
-    );
+    const totalDays = Math.max(1, Math.ceil((maxEnd - minStart) / (1000 * 60 * 60 * 24)) + 1);
     return `${totalDays}天`;
   }, [coreGraph]);
 
@@ -308,26 +292,15 @@ export function Overview({
     return Math.round(((currentDay - timeRange.startDay) / span) * 100);
   }, [currentDay, timeRange]);
 
-  const { completedIds, inProgressIds } = useTimelineHighlight(
-    selectedTimelineDate,
-    getIdsByDate,
-  );
-  const dailyProcesses = useDailyProcesses(
-    processHighlights,
-    planTasks,
-    selectedTimelineDate,
-  );
+  const { completedIds, inProgressIds } = useTimelineHighlight(selectedTimelineDate, getIdsByDate);
+  const dailyProcesses = useDailyProcesses(processHighlights, planTasks, selectedTimelineDate);
   const dailyTaskNames = useMemo(() => {
     return [...dailyProcesses]
       .sort((a, b) => {
         const aSeq =
-          typeof a.seqNo === "number"
-            ? a.seqNo
-            : Number(a.seqNo ?? Number.MAX_SAFE_INTEGER);
+          typeof a.seqNo === "number" ? a.seqNo : Number(a.seqNo ?? Number.MAX_SAFE_INTEGER);
         const bSeq =
-          typeof b.seqNo === "number"
-            ? b.seqNo
-            : Number(b.seqNo ?? Number.MAX_SAFE_INTEGER);
+          typeof b.seqNo === "number" ? b.seqNo : Number(b.seqNo ?? Number.MAX_SAFE_INTEGER);
         return aSeq - bSeq;
       })
       .map((item) => item.name);
@@ -351,8 +324,10 @@ export function Overview({
         return end >= startDate && start <= endDate;
       })
       .sort((a, b) => {
-        const aSeq = typeof a.seqNo === "number" ? a.seqNo : Number(a.seqNo ?? Number.MAX_SAFE_INTEGER);
-        const bSeq = typeof b.seqNo === "number" ? b.seqNo : Number(b.seqNo ?? Number.MAX_SAFE_INTEGER);
+        const aSeq =
+          typeof a.seqNo === "number" ? a.seqNo : Number(a.seqNo ?? Number.MAX_SAFE_INTEGER);
+        const bSeq =
+          typeof b.seqNo === "number" ? b.seqNo : Number(b.seqNo ?? Number.MAX_SAFE_INTEGER);
         return aSeq - bSeq;
       })
       .map((task) => task.task);
@@ -374,8 +349,7 @@ export function Overview({
     actualWorkerCount: onsiteCount,
     weeklyTaskNames,
     dailyTaskNames,
-    progressStatus:
-      timelineProgress < 33 ? "超前" : timelineProgress > 80 ? "滞后" : "符合计划",
+    progressStatus: timelineProgress < 33 ? "超前" : timelineProgress > 80 ? "滞后" : "符合计划",
     remark: "",
   });
   const agentBaseDate = useMemo(() => {
@@ -397,7 +371,6 @@ export function Overview({
     () => Object.values(panelVisibility).filter(Boolean).length,
     [panelVisibility],
   );
-
 
   // 初始化当前天数为项目开始天数
   useEffect(() => {
@@ -456,10 +429,7 @@ export function Overview({
       const minUpperPx = 140;
       const minModelPx = 160;
       const offsetY = event.clientY - rect.top;
-      const clampedUpper = Math.min(
-        Math.max(offsetY, minUpperPx),
-        rect.height - minModelPx,
-      );
+      const clampedUpper = Math.min(Math.max(offsetY, minUpperPx), rect.height - minModelPx);
       const ratio = (rect.height - clampedUpper) / rect.height;
       setModelPanelRatio(Math.min(0.8, Math.max(0.25, ratio)));
     };
@@ -499,7 +469,7 @@ export function Overview({
           title={currentProjectName}
           titleExtra={totalDurationLabel ? `总工期：${totalDurationLabel}` : undefined}
           onsiteCount={onsiteCount}
-          actions={(
+          actions={
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -631,7 +601,7 @@ export function Overview({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          )}
+          }
         />
       </div>
 
@@ -857,10 +827,7 @@ export function Overview({
           )}
         </div>
 
-        <DailyCard
-          items={dailyProcesses}
-          onItemClick={handleDailyProcessClick}
-        />
+        <DailyCard items={dailyProcesses} onItemClick={handleDailyProcessClick} />
       </div>
 
       <TaskDetailDialog

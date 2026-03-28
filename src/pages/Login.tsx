@@ -92,9 +92,7 @@ export default function Login() {
             <div className="flex items-center justify-center mb-4">
               <img src="/logo.svg" alt="天友" className="h-12 w-12" />
             </div>
-            <h1 className="text-xl font-semibold text-foreground">
-              A.PM 智慧建管
-            </h1>
+            <h1 className="text-xl font-semibold text-foreground">A.PM 智慧建管</h1>
             <p className="text-muted-foreground mt-2">智慧建筑项目管理系统</p>
           </div>
 
@@ -180,9 +178,7 @@ export default function Login() {
                       type="password"
                       placeholder="请再次输入密码"
                       value={registerConfirmPassword}
-                      onChange={(e) =>
-                        setRegisterConfirmPassword(e.target.value)
-                      }
+                      onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                       disabled={isLoading}
                     />
                   </div>
@@ -199,11 +195,7 @@ export default function Login() {
       {/* 右侧图片区域 */}
       <div className="flex-1 relative overflow-hidden bg-primary/5">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5" />
-        <img
-          src={loginImage}
-          alt="智慧建筑科技"
-          className="w-full h-full object-cover"
-        />
+        <img src={loginImage} alt="智慧建筑科技" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
         <div className="absolute bottom-8 left-8 right-8"></div>
       </div>

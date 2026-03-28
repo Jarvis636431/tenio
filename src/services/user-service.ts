@@ -1,13 +1,5 @@
-import type {
-  LoginPayload,
-  LoginResponse,
-  UserProfile,
-} from "@/types/domain/user";
-import {
-  loginUser,
-  registerUser,
-  getCurrentUserProfile,
-} from "@/services/schedulepro-service";
+import type { LoginPayload, LoginResponse, UserProfile } from "@/types/domain/user";
+import { loginUser, registerUser, getCurrentUserProfile } from "@/services/schedulepro-service";
 
 const TOKEN_STORAGE_KEY = "auth_token";
 
@@ -19,9 +11,7 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
   };
 }
 
-export async function register(
-  payload: LoginPayload & { role?: string },
-): Promise<void> {
+export async function register(payload: LoginPayload & { role?: string }): Promise<void> {
   const randomEmail = `user_${Math.random().toString(36).slice(2, 10)}@example.com`;
   await registerUser({
     username: payload.username,

@@ -58,10 +58,7 @@ export function MapContainer({
 
         const handleClick = (event: MapClickEvent) => {
           if (!onSelect) return;
-          const position: [number, number] = [
-            event.lnglat.getLng(),
-            event.lnglat.getLat(),
-          ];
+          const position: [number, number] = [event.lnglat.getLng(), event.lnglat.getLat()];
           onSelect(position);
         };
 
@@ -113,9 +110,7 @@ export function MapContainer({
     if (!geocoderRef.current) {
       geocoderRef.current = new AMap.Geocoder({ city: searchCity });
     }
-    const resolvedQuery = searchCity
-      ? `${searchCity}${searchQuery}`
-      : searchQuery;
+    const resolvedQuery = searchCity ? `${searchCity}${searchQuery}` : searchQuery;
     geocoderRef.current.getLocation(resolvedQuery, (status, result) => {
       if (status === "complete" && result.geocodes?.length) {
         const location = result.geocodes[0].location;

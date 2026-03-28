@@ -9,8 +9,7 @@ type UseProjectCoreGraphOptions = {
   projectId?: string;
 };
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
   const { id: paramProjectId } = useParams();
@@ -113,7 +112,16 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
     return () => {
       isMounted = false;
     };
-  }, [projectRef, projects, currentProject?.id, token, setCurrentProject, addProject, paramProjectId, navigate]);
+  }, [
+    projectRef,
+    projects,
+    currentProject?.id,
+    token,
+    setCurrentProject,
+    addProject,
+    paramProjectId,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (!projectId || !token || isResolvingProjectId) {

@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useAuthStore } from '@/stores/authStore';
+import { useEffect } from "react";
+import { useAuthStore } from "@/stores/authStore";
 
 let authInitialized = false;
 
@@ -8,15 +8,7 @@ let authInitialized = false;
  * 提供相同的 API，但使用 Zustand 作为底层实现
  */
 export function useAuth() {
-  const {
-    user,
-    token,
-    isLoading,
-    login,
-    register,
-    logout,
-    initializeAuth,
-  } = useAuthStore();
+  const { user, token, isLoading, login, register, logout, initializeAuth } = useAuthStore();
 
   // 初始化认证状态（仅在首次加载时）
   useEffect(() => {

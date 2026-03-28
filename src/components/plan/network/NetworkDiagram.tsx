@@ -116,11 +116,7 @@ function formatDateString(value: string): string {
   return formatDate(toDate(value));
 }
 
-function getTaskStatus(
-  start: string,
-  end: string,
-  current: Date | null,
-): TaskStatus {
+function getTaskStatus(start: string, end: string, current: Date | null): TaskStatus {
   const startDate = toDate(start);
   const endDate = toDate(end);
   if (!current || !startDate || !endDate) return "not_started";
@@ -192,20 +188,84 @@ function NodeBlock({
 
       {/* ── 四角日期框 ── */}
       {/* 左上 ES */}
-      <rect x={x + dateInsetX} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill={theme.bg} stroke={theme.border} strokeWidth="1.5" />
-      <text x={x + dateInsetX + DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill={theme.text} textAnchor="middle">{formatDateString(start)}</text>
+      <rect
+        x={x + dateInsetX}
+        y={topDateY}
+        width={DATE_BOX_W}
+        height={DATE_BOX_H}
+        fill={theme.bg}
+        stroke={theme.border}
+        strokeWidth="1.5"
+      />
+      <text
+        x={x + dateInsetX + DATE_BOX_W / 2}
+        y={topDateY + DATE_BOX_H / 2 + 5}
+        fontSize="14"
+        fill={theme.text}
+        textAnchor="middle"
+      >
+        {formatDateString(start)}
+      </text>
 
       {/* 右上 EF */}
-      <rect x={x + w - dateInsetX - DATE_BOX_W} y={topDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill={theme.bg} stroke={theme.border} strokeWidth="1.5" />
-      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={topDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill={theme.text} textAnchor="middle">{formatDateString(end)}</text>
+      <rect
+        x={x + w - dateInsetX - DATE_BOX_W}
+        y={topDateY}
+        width={DATE_BOX_W}
+        height={DATE_BOX_H}
+        fill={theme.bg}
+        stroke={theme.border}
+        strokeWidth="1.5"
+      />
+      <text
+        x={x + w - dateInsetX - DATE_BOX_W / 2}
+        y={topDateY + DATE_BOX_H / 2 + 5}
+        fontSize="14"
+        fill={theme.text}
+        textAnchor="middle"
+      >
+        {formatDateString(end)}
+      </text>
 
       {/* 左下 LS */}
-      <rect x={x + dateInsetX} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill={theme.bg} stroke={theme.border} strokeWidth="1.5" />
-      <text x={x + dateInsetX + DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill={theme.text} textAnchor="middle">{formatDateString(start)}</text>
+      <rect
+        x={x + dateInsetX}
+        y={bottomDateY}
+        width={DATE_BOX_W}
+        height={DATE_BOX_H}
+        fill={theme.bg}
+        stroke={theme.border}
+        strokeWidth="1.5"
+      />
+      <text
+        x={x + dateInsetX + DATE_BOX_W / 2}
+        y={bottomDateY + DATE_BOX_H / 2 + 5}
+        fontSize="14"
+        fill={theme.text}
+        textAnchor="middle"
+      >
+        {formatDateString(start)}
+      </text>
 
       {/* 右下 LF */}
-      <rect x={x + w - dateInsetX - DATE_BOX_W} y={bottomDateY} width={DATE_BOX_W} height={DATE_BOX_H} fill={theme.bg} stroke={theme.border} strokeWidth="1.5" />
-      <text x={x + w - dateInsetX - DATE_BOX_W / 2} y={bottomDateY + DATE_BOX_H / 2 + 5} fontSize="14" fill={theme.text} textAnchor="middle">{formatDateString(end)}</text>
+      <rect
+        x={x + w - dateInsetX - DATE_BOX_W}
+        y={bottomDateY}
+        width={DATE_BOX_W}
+        height={DATE_BOX_H}
+        fill={theme.bg}
+        stroke={theme.border}
+        strokeWidth="1.5"
+      />
+      <text
+        x={x + w - dateInsetX - DATE_BOX_W / 2}
+        y={bottomDateY + DATE_BOX_H / 2 + 5}
+        fontSize="14"
+        fill={theme.text}
+        textAnchor="middle"
+      >
+        {formatDateString(end)}
+      </text>
 
       {/* ── 左右连接圆点 — 正好在节点边缘，与连线对齐 ── */}
       <circle
@@ -227,7 +287,9 @@ function NodeBlock({
 
       {/* ── 中间内容 ── */}
       {!title.toLowerCase().startsWith("lag") && (
-        <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill={theme.text} textAnchor="middle">#{displayId}</text>
+        <text x={x + w / 2} y={capsuleY - 4} fontSize="14" fill={theme.text} textAnchor="middle">
+          #{displayId}
+        </text>
       )}
 
       {/* 黄色胶囊 */}
@@ -239,19 +301,26 @@ function NodeBlock({
         rx="12"
         fill={theme.bg}
       />
-      <text x={x + w / 2} y={capsuleY + CAPSULE_H / 2 + 6} fontSize="16" fill={theme.text} fontWeight="bold" textAnchor="middle">{title}</text>
+      <text
+        x={x + w / 2}
+        y={capsuleY + CAPSULE_H / 2 + 6}
+        fontSize="16"
+        fill={theme.text}
+        fontWeight="bold"
+        textAnchor="middle"
+      >
+        {title}
+      </text>
 
       {/* ── 底部工期（主框内底部，两个日期框之间） ── */}
-      <text x={x + w / 2} y={y + h - 8} fontSize="14" fill={theme.text} textAnchor="middle">{durationText}</text>
+      <text x={x + w / 2} y={y + h - 8} fontSize="14" fill={theme.text} textAnchor="middle">
+        {durationText}
+      </text>
     </g>
   );
 }
 
-export function NetworkDiagram({
-  tasks,
-  onNodeClick,
-  currentDate = null,
-}: NetworkDiagramProps) {
+export function NetworkDiagram({ tasks, onNodeClick, currentDate = null }: NetworkDiagramProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const isPanningRef = useRef(false);
@@ -260,11 +329,7 @@ export function NetworkDiagram({
   const [initialized, setInitialized] = useState(false);
   const [minScale, setMinScale] = useState(0.1);
   const visibleTasks = useMemo(
-    () =>
-      tasks.filter(
-        (task) =>
-          task.startTime && task.endTime && !isLagTask(task.task),
-      ),
+    () => tasks.filter((task) => task.startTime && task.endTime && !isLagTask(task.task)),
     [tasks],
   );
 
@@ -278,9 +343,7 @@ export function NetworkDiagram({
 
     const rawEdges: Array<{ from: string; to: string }> = [];
     visibleTasks.forEach((task) => {
-      const deps = task.prerequisiteProcess
-        ? parseDependencyIds(task.prerequisiteProcess)
-        : [];
+      const deps = task.prerequisiteProcess ? parseDependencyIds(task.prerequisiteProcess) : [];
       deps.forEach((depId) => {
         if (!taskMap.has(depId)) return;
         rawEdges.push({ from: depId, to: task.id });
@@ -332,9 +395,7 @@ export function NetworkDiagram({
 
     const edges: Edge[] = rawEdges.map((edge) => {
       const info = graph.edge(edge.from, edge.to);
-      const points = (
-        info?.points ?? []
-      ).map((point: { x: number; y: number }) => ({
+      const points = (info?.points ?? []).map((point: { x: number; y: number }) => ({
         x: point.x + padding,
         y: point.y + padding,
       }));
@@ -352,7 +413,7 @@ export function NetworkDiagram({
     const scaleY = rect.height / height;
     const fitScale = Math.min(scaleX, scaleY) * 60;
     setMinScale(fitScale);
-    if (initialized) return
+    if (initialized) return;
     const offsetX = (rect.width - width * fitScale) / 2;
     const offsetY = (rect.height - height * fitScale) / 2;
     setView({ x: offsetX, y: offsetY, scale: fitScale });
@@ -363,9 +424,7 @@ export function NetworkDiagram({
     if (!initialized || !currentDate || nodes.length === 0 || !svgRef.current) return;
 
     const criticalInProgress = nodes.find(
-      (node) =>
-        node.critical &&
-        getTaskStatus(node.start, node.end, currentDate) === "in_progress",
+      (node) => node.critical && getTaskStatus(node.start, node.end, currentDate) === "in_progress",
     );
     const inProgress = nodes.find(
       (node) => getTaskStatus(node.start, node.end, currentDate) === "in_progress",
@@ -475,14 +534,7 @@ export function NetworkDiagram({
         style={{ cursor: "grab", touchAction: "none", display: "block" }}
       >
         <defs>
-          <marker
-            id="arrow"
-            markerWidth="8"
-            markerHeight="8"
-            refX="7"
-            refY="4"
-            orient="auto"
-          >
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
             <path d="M0,0 L8,4 L0,8 Z" fill="#2f6fb4" />
           </marker>
           <marker

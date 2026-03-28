@@ -22,12 +22,8 @@ export function useProjectHighlight(projectId?: string) {
     }
     const intervals = exec.planned_intervals ?? [];
     if (intervals.length === 0) return { start: directStart, end: directEnd };
-    const starts = intervals
-      .map((i) => parseDate(i.start_datetime))
-      .filter(Boolean) as Date[];
-    const ends = intervals
-      .map((i) => parseDate(i.end_datetime))
-      .filter(Boolean) as Date[];
+    const starts = intervals.map((i) => parseDate(i.start_datetime)).filter(Boolean) as Date[];
+    const ends = intervals.map((i) => parseDate(i.end_datetime)).filter(Boolean) as Date[];
     if (!starts.length || !ends.length) return { start: directStart, end: directEnd };
     return {
       start: new Date(Math.min(...starts.map((d) => d.getTime()))),
@@ -48,7 +44,7 @@ export function useProjectHighlight(projectId?: string) {
     }));
   }, [coreGraph]);
 
-  const tagMap = useMemo(() => ({} as Record<string, string[]>), []);
+  const tagMap = useMemo(() => ({}) as Record<string, string[]>, []);
 
   const resolveExpressIds = useMemo(() => {
     return (expressIds: string[] = [], tagIds: string[] = []) => {

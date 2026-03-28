@@ -66,7 +66,7 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 8% 94%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-    
+
     /* Custom sidebar selected state - more prominent */
     --sidebar-selected: 220 10% 92%;
     --sidebar-selected-foreground: 240 5.9% 10%;
@@ -176,19 +176,19 @@ All colors MUST be HSL.
   .text-lg.font-light {
     font-weight: 200; /* extralight - reduced from light(300) */
   }
-  
+
   .text-lg.font-normal {
     font-weight: 300; /* light - reduced from normal(400) */
   }
-  
+
   .text-lg.font-medium {
     font-weight: 400; /* normal - reduced from medium(500) */
   }
-  
+
   .text-lg.font-semibold {
     font-weight: 500; /* medium - reduced from semibold(600) */
   }
-  
+
   .text-lg.font-bold {
     font-weight: 600; /* semibold - reduced from bold(700) */
   }
@@ -197,19 +197,19 @@ All colors MUST be HSL.
   .text-xl.font-light {
     font-weight: 200;
   }
-  
+
   .text-xl.font-normal {
     font-weight: 300;
   }
-  
+
   .text-xl.font-medium {
     font-weight: 400;
   }
-  
+
   .text-xl.font-semibold {
     font-weight: 500;
   }
-  
+
   .text-xl.font-bold {
     font-weight: 600;
   }
@@ -218,19 +218,19 @@ All colors MUST be HSL.
   .text-2xl.font-light {
     font-weight: 200;
   }
-  
+
   .text-2xl.font-normal {
     font-weight: 300;
   }
-  
+
   .text-2xl.font-medium {
     font-weight: 400;
   }
-  
+
   .text-2xl.font-semibold {
     font-weight: 500;
   }
-  
+
   .text-2xl.font-bold {
     font-weight: 600;
   }
@@ -239,19 +239,19 @@ All colors MUST be HSL.
   .text-3xl.font-light {
     font-weight: 200;
   }
-  
+
   .text-3xl.font-normal {
     font-weight: 300;
   }
-  
+
   .text-3xl.font-medium {
     font-weight: 400;
   }
-  
+
   .text-3xl.font-semibold {
     font-weight: 500;
   }
-  
+
   .text-3xl.font-bold {
     font-weight: 600;
   }
@@ -262,25 +262,25 @@ All colors MUST be HSL.
   .text-6xl.font-light {
     font-weight: 200;
   }
-  
+
   .text-4xl.font-normal,
   .text-5xl.font-normal,
   .text-6xl.font-normal {
     font-weight: 300;
   }
-  
+
   .text-4xl.font-medium,
   .text-5xl.font-medium,
   .text-6xl.font-medium {
     font-weight: 400;
   }
-  
+
   .text-4xl.font-semibold,
   .text-5xl.font-semibold,
   .text-6xl.font-semibold {
     font-weight: 500;
   }
-  
+
   .text-4xl.font-bold,
   .text-5xl.font-bold,
   .text-6xl.font-bold {

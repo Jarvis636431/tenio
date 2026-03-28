@@ -6,14 +6,9 @@ export function useDistricts() {
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
   const [provinces, setProvinces] = useState<string[]>([]);
-  const [citiesByProvince, setCitiesByProvince] = useState<
-    Record<string, string[]>
-  >({});
+  const [citiesByProvince, setCitiesByProvince] = useState<Record<string, string[]>>({});
 
-  const cityOptions = useMemo(
-    () => citiesByProvince[province] ?? [],
-    [citiesByProvince, province],
-  );
+  const cityOptions = useMemo(() => citiesByProvince[province] ?? [], [citiesByProvince, province]);
 
   useEffect(() => {
     let active = true;
@@ -29,8 +24,7 @@ export function useDistricts() {
 
         districtSearch.search("中国", (status, result) => {
           if (!active || status !== "complete") return;
-          const list =
-            (result?.districtList?.[0]?.districtList as DistrictNode[]) ?? [];
+          const list = (result?.districtList?.[0]?.districtList as DistrictNode[]) ?? [];
           const provinceNames = list
             .filter((item) => item?.name && item?.adcode)
             .sort((a, b) => Number(a.adcode) - Number(b.adcode))
@@ -64,8 +58,7 @@ export function useDistricts() {
         });
         districtSearch.search(province, (status, result) => {
           if (!active || status !== "complete") return;
-          const list =
-            (result?.districtList?.[0]?.districtList as DistrictNode[]) ?? [];
+          const list = (result?.districtList?.[0]?.districtList as DistrictNode[]) ?? [];
           const cityNames = list
             .filter((item) => item?.name && item?.adcode)
             .sort((a, b) => Number(a.adcode) - Number(b.adcode))

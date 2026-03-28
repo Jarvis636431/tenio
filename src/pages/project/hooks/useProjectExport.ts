@@ -31,19 +31,13 @@ export function useProjectExport(
 ) {
   const taskNames = useMemo(() => {
     if (!coreGraph?.work_processes?.length) return [];
-    return coreGraph.work_processes.map(
-      (wp) => wp.name || wp.code || "未命名工序",
-    );
+    return coreGraph.work_processes.map((wp) => wp.name || wp.code || "未命名工序");
   }, [coreGraph]);
 
   const plannedWorkers =
-    typeof options.plannedWorkerCount === "number"
-      ? String(options.plannedWorkerCount)
-      : "";
+    typeof options.plannedWorkerCount === "number" ? String(options.plannedWorkerCount) : "";
   const actualWorkers =
-    typeof options.actualWorkerCount === "number"
-      ? String(options.actualWorkerCount)
-      : "";
+    typeof options.actualWorkerCount === "number" ? String(options.actualWorkerCount) : "";
   const status = options.progressStatus ?? "符合计划";
   const statusAhead = status === "超前" ? "☑" : "☐";
   const statusOnTrack = status === "符合计划" ? "☑" : "☐";
@@ -68,10 +62,9 @@ export function useProjectExport(
   };
 
   const createWeeklyHtml = () => {
-    const weeklyTasks =
-      options.weeklyTaskNames?.length
-        ? options.weeklyTaskNames
-        : taskNames.slice(0, 3).map((task) => String(task));
+    const weeklyTasks = options.weeklyTaskNames?.length
+      ? options.weeklyTaskNames
+      : taskNames.slice(0, 3).map((task) => String(task));
     const periodText =
       options.periodStart && options.periodEnd
         ? `${options.periodStart}-${options.periodEnd}`
@@ -120,10 +113,9 @@ export function useProjectExport(
   };
 
   const createDailyHtml = () => {
-    const dailyTasks =
-      options.dailyTaskNames?.length
-        ? options.dailyTaskNames
-        : taskNames.slice(0, 3).map((task) => String(task));
+    const dailyTasks = options.dailyTaskNames?.length
+      ? options.dailyTaskNames
+      : taskNames.slice(0, 3).map((task) => String(task));
     const dailyDate = options.dailyDate || "";
     const weather = options.weather || "";
     const dailyTaskLines = dailyTasks

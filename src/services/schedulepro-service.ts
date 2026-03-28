@@ -66,9 +66,7 @@ function normalizeHeadcountCurveResponse(
 }
 
 // Auth
-export async function registerUser(
-  payload: AuthRegisterPayload,
-): Promise<AuthTokenResponse> {
+export async function registerUser(payload: AuthRegisterPayload): Promise<AuthTokenResponse> {
   return requestApiData<AuthTokenResponse>(`${API_V1}/auth/register`, {
     method: "POST",
     headers: {
@@ -78,9 +76,7 @@ export async function registerUser(
   });
 }
 
-export async function loginUser(
-  payload: AuthLoginPayload,
-): Promise<AuthTokenResponse> {
+export async function loginUser(payload: AuthLoginPayload): Promise<AuthTokenResponse> {
   return requestApiData<AuthTokenResponse>(`${API_V1}/auth/login`, {
     method: "POST",
     headers: {
@@ -90,9 +86,7 @@ export async function loginUser(
   });
 }
 
-export async function getCurrentUserProfile(
-  token?: string,
-): Promise<AuthMeResponse> {
+export async function getCurrentUserProfile(token?: string): Promise<AuthMeResponse> {
   return requestApiData<AuthMeResponse>(`${API_V1}/auth/me`, { token });
 }
 
@@ -114,10 +108,7 @@ export async function getProjectCoreGraph(
   projectId: string,
   token?: string,
 ): Promise<CoreGraphResponse> {
-  return requestApiData<CoreGraphResponse>(
-    `${API_V1}/projects/${projectId}/graph`,
-    { token },
-  );
+  return requestApiData<CoreGraphResponse>(`${API_V1}/projects/${projectId}/graph`, { token });
 }
 
 export async function getProjectCostCurve(
@@ -148,8 +139,7 @@ export async function selectSolution(
   payload: SelectSolutionPayload,
   token?: string,
 ): Promise<SelectSolutionResponse> {
-  return requestApiData<SelectSolutionResponse>
-    (`${API_V1}/projects/${projectId}/solutions`, {
+  return requestApiData<SelectSolutionResponse>(`${API_V1}/projects/${projectId}/solutions`, {
     method: "POST",
     token,
     headers: {

@@ -6,8 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProjectStore } from "@/stores/projectStore";
 import { getProjectByCode } from "@/services/project-service";
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function ResolvedProjectRoute() {
   const { id = "" } = useParams();
@@ -93,9 +92,7 @@ export function ResolvedProjectRoute() {
   }
 
   if (isResolving) {
-    return (
-      <div className="flex items-center justify-center h-screen">加载中...</div>
-    );
+    return <div className="flex items-center justify-center h-screen">加载中...</div>;
   }
 
   if (resolvedProjectId && resolvedProjectId !== id) {

@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import type * as THREE from 'three';
+import { useCallback } from "react";
+import type * as THREE from "three";
 
 type Ref<T> = { current: T };
 

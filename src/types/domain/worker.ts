@@ -11,7 +11,7 @@
  * 主线程发送给 Worker 的消息
  */
 export interface WorkerMessage {
-  type: 'parse' | 'cancel';
+  type: "parse" | "cancel";
   data?: {
     arrayBuffer: ArrayBuffer;
     wasmPath: string;
@@ -26,7 +26,7 @@ export interface WorkerMessage {
  * Worker 发送给主线程的响应
  */
 export interface WorkerResponse {
-  type: 'progress' | 'success' | 'error';
+  type: "progress" | "success" | "error";
   data?: {
     progress?: number;
     message?: string;
@@ -91,8 +91,8 @@ export interface SerializedMesh {
  */
 export interface LoadingState {
   isLoading: boolean;
-  progress: number;  // 0-100
-  message: string;   // 当前阶段描述
+  progress: number; // 0-100
+  message: string; // 当前阶段描述
   error: string | null;
 }
 
@@ -100,13 +100,13 @@ export interface LoadingState {
  * 加载阶段
  */
 export enum LoadingPhase {
-  IDLE = 'idle',
-  DOWNLOADING = 'downloading',
-  PARSING = 'parsing',
-  PROCESSING = 'processing',
-  RENDERING = 'rendering',
-  COMPLETE = 'complete',
-  ERROR = 'error',
+  IDLE = "idle",
+  DOWNLOADING = "downloading",
+  PARSING = "parsing",
+  PROCESSING = "processing",
+  RENDERING = "rendering",
+  COMPLETE = "complete",
+  ERROR = "error",
 }
 
 // ============================================================================

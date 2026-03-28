@@ -48,10 +48,7 @@ export function usePlanTasks(coreGraph?: CoreGraphResponse | null): PlanTask[] {
         task: wp.name || wp.code || "未命名工序",
         workerCount,
         jobType,
-        totalCost:
-          (wp.labor_cost ?? 0) +
-          (wp.material_cost ?? 0) +
-          (wp.device_rental_cost ?? 0),
+        totalCost: (wp.labor_cost ?? 0) + (wp.material_cost ?? 0) + (wp.device_rental_cost ?? 0),
         startTime: start,
         endTime: end,
         constructionSituation: exec?.status ?? "",

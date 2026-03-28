@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { getProjectList } from '@/services/project-service';
-import type { Project } from '@/types/domain/project';
-import type { CoreGraphResponse } from '@/types/domain/schedulepro';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { getProjectList } from "@/services/project-service";
+import type { Project } from "@/types/domain/project";
+import type { CoreGraphResponse } from "@/types/domain/schedulepro";
 
 interface ProjectState {
   // State
@@ -10,7 +10,7 @@ interface ProjectState {
   projects: Project[];
   isLoading: boolean;
   coreGraphByProjectId: Record<string, CoreGraphResponse>;
-  
+
   // Actions
   setCurrentProject: (project: Project | null) => void;
   setProjects: (projects: Project[]) => void;
@@ -22,7 +22,7 @@ interface ProjectState {
   reset: () => void;
 }
 
-const STORAGE_KEY = 'currentProjectId';
+const STORAGE_KEY = "currentProjectId";
 
 export const useProjectStore = create<ProjectState>()(
   persist(
@@ -36,18 +36,18 @@ export const useProjectStore = create<ProjectState>()(
       // Set current project and persist to localStorage
       setCurrentProject: (project: Project | null) => {
         set({ currentProject: project });
-        
+
         if (project) {
           try {
             localStorage.setItem(STORAGE_KEY, project.id);
           } catch (error) {
-            console.error('Failed to save current project ID:', error);
+            console.error("Failed to save current project ID:", error);
           }
         } else {
           try {
             localStorage.removeItem(STORAGE_KEY);
           } catch (error) {
-            console.error('Failed to remove current project ID:', error);
+            console.error("Failed to remove current project ID:", error);
           }
         }
       },
@@ -60,19 +60,17 @@ export const useProjectStore = create<ProjectState>()(
       // Add or update a project in the list
       addProject: (project: Project) => {
         set((state) => {
-          const exists = state.projects.some(p => p.id === project.id);
-          
+          const exists = state.projects.some((p) => p.id === project.id);
+
           if (exists) {
             // Update existing project
             return {
-              projects: state.projects.map(p => 
-                p.id === project.id ? { ...p, ...project } : p
-              )
+              projects: state.projects.map((p) => (p.id === project.id ? { ...p, ...project } : p)),
             };
           } else {
             // Add new project
             return {
-              projects: [...state.projects, project]
+              projects: [...state.projects, project],
             };
           }
         });
@@ -81,18 +79,17 @@ export const useProjectStore = create<ProjectState>()(
       // Update a project
       updateProject: (updated: Project) => {
         set((state) => {
-          const newProjects = state.projects.map(p => 
-            p.id === updated.id ? { ...p, ...updated } : p
+          const newProjects = state.projects.map((p) =>
+            p.id === updated.id ? { ...p, ...updated } : p,
           );
-          
+
           // If updating the current project, update it too
-          const newCurrentProject = state.currentProject?.id === updated.id
-            ? updated
-            : state.currentProject;
-          
+          const newCurrentProject =
+            state.currentProject?.id === updated.id ? updated : state.currentProject;
+
           return {
             projects: newProjects,
-            currentProject: newCurrentProject
+            currentProject: newCurrentProject,
           };
         });
       },
@@ -114,10 +111,10 @@ export const useProjectStore = create<ProjectState>()(
         }
 
         set({ isLoading: true });
-        
+
         try {
           const response = await getProjectList(token);
-          const projectList: Project[] = response.map(item => ({
+          const projectList: Project[] = response.map((item) => ({
             id: item.project_id,
             code: item.project_code,
             name: item.project_name,
@@ -125,7 +122,7 @@ export const useProjectStore = create<ProjectState>()(
             status: item.status,
             createdAt: item.created_at,
           }));
-          
+
           set({ projects: projectList });
 
           if (projectList.length === 0) {
@@ -136,32 +133,32 @@ export const useProjectStore = create<ProjectState>()(
           // Try to restore current project from various sources
           const { currentProject } = get();
           const savedId = localStorage.getItem(STORAGE_KEY);
-          
+
           // Priority: current project in state > saved ID > first project
           let nextProject: Project | undefined;
-          
+
           if (currentProject) {
             // Check if current project still exists
-            nextProject = projectList.find(p => p.id === currentProject.id);
+            nextProject = projectList.find((p) => p.id === currentProject.id);
           }
-          
+
           if (!nextProject && savedId) {
             // Try to find saved project
-            nextProject = projectList.find(p => p.id === savedId);
+            nextProject = projectList.find((p) => p.id === savedId);
           }
-          
+
           if (!nextProject) {
             // Fallback to first project
             nextProject = projectList[0];
           }
-          
+
           if (nextProject) {
             get().setCurrentProject(nextProject);
           } else {
             set({ currentProject: null });
           }
         } catch (error) {
-          console.error('Failed to refresh project list:', error);
+          console.error("Failed to refresh project list:", error);
         } finally {
           set({ isLoading: false });
         }
@@ -183,12 +180,12 @@ export const useProjectStore = create<ProjectState>()(
         try {
           localStorage.removeItem(STORAGE_KEY);
         } catch (error) {
-          console.error('Failed to clear storage:', error);
+          console.error("Failed to clear storage:", error);
         }
       },
     }),
     {
-      name: 'project-storage',
+      name: "project-storage",
       // Only persist currentProject ID, not the full object
       partialize: (state) => ({
         // We only store the ID, actual data comes from server
@@ -199,6 +196,6 @@ export const useProjectStore = create<ProjectState>()(
         // Don't restore from persisted state, we'll use localStorage directly
         return currentState;
       },
-    }
-  )
+    },
+  ),
 );

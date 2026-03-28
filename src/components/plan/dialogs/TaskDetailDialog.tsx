@@ -1,16 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Loader2, ShieldAlert } from "lucide-react";
-import {
-  getProcessInfo,
-} from "@/services/project-service";
+import { getProcessInfo } from "@/services/project-service";
 import type { OrderInfoData } from "@/types/domain/project";
 import { useAuth } from "@/hooks/useAuth";
 import { useProject } from "@/hooks/useProject";
@@ -151,27 +144,15 @@ export function TaskDetailDialog({
   const planeDrawings = useMemo(() => {
     const taskName = task?.task ?? workProcessName ?? "";
     const matched = mediaRows.find((row) => row.name === taskName);
-    const images = [
-      ...(matched?.structureImages ?? []),
-      ...(matched?.extraImages ?? []),
-    ];
-    return images
-      .filter(Boolean)
-      .map(resolveResourceUrl)
-      .filter(Boolean);
+    const images = [...(matched?.structureImages ?? []), ...(matched?.extraImages ?? [])];
+    return images.filter(Boolean).map(resolveResourceUrl).filter(Boolean);
   }, [mediaRows, task?.task, workProcessName]);
 
   const detailImages = useMemo(() => {
     const taskName = task?.task ?? workProcessName ?? "";
     const matched = mediaRows.find((row) => row.name === taskName);
-    const images = [
-      ...(matched?.structureImages ?? []),
-      ...(matched?.extraImages ?? []),
-    ];
-    return images
-      .filter(Boolean)
-      .map(resolveResourceUrl)
-      .filter(Boolean);
+    const images = [...(matched?.structureImages ?? []), ...(matched?.extraImages ?? [])];
+    return images.filter(Boolean).map(resolveResourceUrl).filter(Boolean);
   }, [mediaRows, task?.task, workProcessName]);
 
   const tutorialVideo = useMemo(() => {
@@ -188,9 +169,7 @@ export function TaskDetailDialog({
     const taskName = task?.task ?? workProcessName ?? "";
     const match =
       coreGraph.work_processes.find((wp) => wp.id === taskId) ??
-      coreGraph.work_processes.find(
-        (wp) => (wp.name ?? wp.code ?? "") === taskName,
-      );
+      coreGraph.work_processes.find((wp) => (wp.name ?? wp.code ?? "") === taskName);
     const expressIds = match?.express_ids ?? [];
     return expressIds.map((id) => String(id));
   }, [coreGraph, task?.id, task?.task, workProcessName]);
@@ -201,9 +180,7 @@ export function TaskDetailDialog({
     const taskName = task?.task ?? workProcessName ?? "";
     const match =
       coreGraph.work_processes.find((wp) => wp.id === taskId) ??
-      coreGraph.work_processes.find(
-        (wp) => (wp.name ?? wp.code ?? "") === taskName,
-      );
+      coreGraph.work_processes.find((wp) => (wp.name ?? wp.code ?? "") === taskName);
     const tagIds = match?.tag ?? [];
     return tagIds.map((id) => String(id));
   }, [coreGraph, task?.id, task?.task, workProcessName]);
@@ -215,9 +192,7 @@ export function TaskDetailDialog({
           <DialogHeader>
             <DialogTitle>暂无任务信息</DialogTitle>
           </DialogHeader>
-          <div className="text-sm text-muted-foreground">
-            请选择任务后查看详情。
-          </div>
+          <div className="text-sm text-muted-foreground">请选择任务后查看详情。</div>
         </DialogContent>
       </Dialog>
     );
@@ -229,9 +204,7 @@ export function TaskDetailDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <span>{task.task ?? workProcessName ?? "未知工序"}</span>
-            {task.specialty && (
-              <Badge variant="outline">{task.specialty}</Badge>
-            )}
+            {task.specialty && <Badge variant="outline">{task.specialty}</Badge>}
             {task.jobType && <Badge variant="secondary">{task.jobType}</Badge>}
           </DialogTitle>
         </DialogHeader>
@@ -391,10 +364,7 @@ export function TaskDetailDialog({
 
         {/* 图片查看大图弹窗 */}
         {selectedImage && (
-          <Dialog
-            open={!!selectedImage}
-            onOpenChange={() => setSelectedImage(null)}
-          >
+          <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
             <DialogContent className="max-w-4xl">
               <DialogHeader>
                 <DialogTitle>节点大样图</DialogTitle>

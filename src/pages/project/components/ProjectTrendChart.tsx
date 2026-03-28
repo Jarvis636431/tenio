@@ -22,23 +22,14 @@ function formatNumericValue(value: unknown) {
   return Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(2);
 }
 
-export function ProjectTrendChart({
-  data,
-  seriesNames,
-  unit,
-}: ProjectTrendChartProps) {
+export function ProjectTrendChart({ data, seriesNames, unit }: ProjectTrendChartProps) {
   if (!data || data.length === 0) return null;
 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} />
-        <XAxis
-          dataKey="date"
-          tick={{ fontSize: 12 }}
-          tickLine={false}
-          axisLine={false}
-        />
+        <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
         <YAxis
           tick={{ fontSize: 12 }}
           tickLine={false}

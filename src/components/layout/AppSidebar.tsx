@@ -59,9 +59,7 @@ export function AppSidebar() {
   return (
     <aside className="h-full w-14 border-r border-cyan-900/40 bg-[#04142d]/85 backdrop-blur-sm">
       <div className="flex h-full flex-col items-center py-4">
-        <div
-          className="mb-6 flex items-center justify-center"
-        >
+        <div className="mb-6 flex items-center justify-center">
           <img src="/logo.svg" alt="天友" className="h-8 w-8" />
         </div>
 

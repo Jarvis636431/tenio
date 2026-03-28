@@ -34,12 +34,7 @@ function createRequestId() {
 
 function getSupportedAudioMimeType() {
   if (typeof MediaRecorder === "undefined") return "";
-  const candidates = [
-    "audio/webm;codecs=opus",
-    "audio/webm",
-    "audio/ogg;codecs=opus",
-    "audio/ogg",
-  ];
+  const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/ogg"];
   for (const mimeType of candidates) {
     if (MediaRecorder.isTypeSupported(mimeType)) {
       return mimeType;
@@ -183,9 +178,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
         mediaRecorderRef.current.stop();
       }
       if (recordingStreamRef.current) {
-        recordingStreamRef.current
-          .getTracks()
-          .forEach((track) => track.stop());
+        recordingStreamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
   }, []);
@@ -235,9 +228,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
 
   const extractContent = (payload: unknown) => {
     const obj =
-      typeof payload === "object" && payload !== null
-        ? (payload as Record<string, unknown>)
-        : null;
+      typeof payload === "object" && payload !== null ? (payload as Record<string, unknown>) : null;
     if (!obj) return null;
 
     if (obj.type === "refetch") {
@@ -289,9 +280,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       if (!Array.isArray(interrupts) || interrupts.length === 0) return null;
       const last = interrupts[interrupts.length - 1];
       if (typeof last === "string") {
-        const match = last.match(
-          /Interrupt\\(value='([\\s\\S]*?)', id='.*?'\\)/,
-        );
+        const match = last.match(/Interrupt\\(value='([\\s\\S]*?)', id='.*?'\\)/);
         if (match?.[1]) {
           return match[1].replace(/\\\\n/g, "\n");
         }
@@ -319,9 +308,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       return null;
     };
 
-    const routed =
-      extractFromRoute("knowledge_query") ??
-      extractFromRoute("project_info_query");
+    const routed = extractFromRoute("knowledge_query") ?? extractFromRoute("project_info_query");
     if (routed) return routed;
 
     const interrupt = extractInterrupt();
@@ -330,10 +317,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     return null;
   };
 
-  const streamSseResponse = async (
-    response: Response,
-    onContent: (content: string) => void,
-  ) => {
+  const streamSseResponse = async (response: Response, onContent: (content: string) => void) => {
     if (!response.ok || !response.body) {
       throw new Error(`AI 请求失败 (${response.status})`);
     }
@@ -409,9 +393,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       });
       await streamSseResponse(response, (content) => {
         setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === aiMessageId ? { ...msg, content } : msg,
-          ),
+          prev.map((msg) => (msg.id === aiMessageId ? { ...msg, content } : msg)),
         );
       });
     } catch (error) {
@@ -433,14 +415,8 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       getProjectHeadcountCurve(projectId, token),
     ]);
     setCoreGraph(projectId, coreGraph);
-    queryClient.setQueryData(
-      ["overview", "cost-curve", projectId],
-      costCurve,
-    );
-    queryClient.setQueryData(
-      ["overview", "headcount-curve", projectId],
-      headcountCurve,
-    );
+    queryClient.setQueryData(["overview", "cost-curve", projectId], costCurve);
+    queryClient.setQueryData(["overview", "headcount-curve", projectId], headcountCurve);
   };
 
   const sendMessage = async (messageText: string) => {
@@ -485,8 +461,8 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     ]);
 
     try {
-    const response = await fetch(AI_SSE_URL, {
-      method: "POST",
+      const response = await fetch(AI_SSE_URL, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "text/event-stream",
@@ -504,9 +480,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
 
       await streamSseResponse(response, (content) => {
         setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === aiMessageId ? { ...msg, content } : msg,
-          ),
+          prev.map((msg) => (msg.id === aiMessageId ? { ...msg, content } : msg)),
         );
       });
     } catch (error) {
@@ -561,9 +535,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
 
       const statusCode = response.headers.get("X-Api-Status-Code") ?? "";
       if (!response.ok || statusCode !== "20000000") {
-        logSilentError(
-          `语音识别失败：${statusCode || response.status.toString()}`,
-        );
+        logSilentError(`语音识别失败：${statusCode || response.status.toString()}`);
         return;
       }
 
@@ -594,9 +566,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
       recordingStreamRef.current = stream;
       const mimeType = getSupportedAudioMimeType();
       const mediaRecorder =
-        mimeType === ""
-          ? new MediaRecorder(stream)
-          : new MediaRecorder(stream, { mimeType });
+        mimeType === "" ? new MediaRecorder(stream) : new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       recordingChunksRef.current = [];
 

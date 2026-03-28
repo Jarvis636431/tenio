@@ -58,10 +58,7 @@ const addUnits = (date: Date, units: number, scale: TimelineScale) => {
 };
 
 const monthDiff = (start: Date, end: Date) => {
-  return (
-    (end.getFullYear() - start.getFullYear()) * 12 +
-    (end.getMonth() - start.getMonth())
-  );
+  return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
 };
 
 const getWeekStart = (date: Date) => {
@@ -73,11 +70,7 @@ const getWeekStart = (date: Date) => {
   return weekStart;
 };
 
-const calculateTotalUnits = (
-  startAnchor: Date,
-  maxTime: number,
-  scale: TimelineScale,
-) => {
+const calculateTotalUnits = (startAnchor: Date, maxTime: number, scale: TimelineScale) => {
   if (scale === "month") {
     const endDate = alignDateToScaleStart(new Date(maxTime), "month");
     const diff = monthDiff(startAnchor, endDate);
@@ -93,11 +86,7 @@ const calculateTotalUnits = (
   return Math.max(1, Math.ceil(diff / step) + 1);
 };
 
-const calculateStartOffset = (
-  start: Date,
-  startAnchor: Date,
-  scale: TimelineScale,
-) => {
+const calculateStartOffset = (start: Date, startAnchor: Date, scale: TimelineScale) => {
   if (scale === "month") {
     const alignedStart = alignDateToScaleStart(start, "month");
     return Math.max(0, monthDiff(startAnchor, alignedStart));
@@ -240,8 +229,7 @@ const formatWorkerCount = (count: unknown): string => {
   return String(Math.round(value));
 };
 
-const isLagTask = (taskName?: string) =>
-  (taskName ?? "").trim().toLowerCase().startsWith("lag");
+const isLagTask = (taskName?: string) => (taskName ?? "").trim().toLowerCase().startsWith("lag");
 
 const parseDate = (dateStr: string): Date => {
   if (!dateStr) {
@@ -266,9 +254,7 @@ const parseDate = (dateStr: string): Date => {
       const day = parseInt(parts[2], 10);
       const date = new Date(year, month, day);
       if (timePart) {
-        const [hours, minutes] = timePart
-          .split(":")
-          .map((v) => parseInt(v, 10));
+        const [hours, minutes] = timePart.split(":").map((v) => parseInt(v, 10));
         if (!Number.isNaN(hours)) {
           date.setHours(hours);
         }
@@ -281,9 +267,7 @@ const parseDate = (dateStr: string): Date => {
   }
 
   // 解析相对格式 "第X天 08:00" 或 "第X天08:00"
-  const relativeMatch = trimmed.match(
-    /第\s*(\d+)\s*天\s*([0-9]{1,2})(?::([0-9]{2}))?/,
-  );
+  const relativeMatch = trimmed.match(/第\s*(\d+)\s*天\s*([0-9]{1,2})(?::([0-9]{2}))?/);
   if (relativeMatch) {
     const day = parseInt(relativeMatch[1], 10);
     const hours = relativeMatch[2] ? parseInt(relativeMatch[2], 10) : 0;
@@ -328,11 +312,7 @@ const normalizeToMidday = (date: Date) => {
   return normalized;
 };
 
-const isTaskActiveOnDate = (
-  current: Date,
-  startRaw: string,
-  endRaw: string,
-) => {
+const isTaskActiveOnDate = (current: Date, startRaw: string, endRaw: string) => {
   const currentDay = normalizeToMidday(current).getTime();
   const startDay = normalizeToMidday(parseDate(startRaw)).getTime();
   const endDay = normalizeToMidday(parseDate(endRaw)).getTime();
@@ -354,10 +334,7 @@ export function GanttChart({
   const [viewportHeight, setViewportHeight] = useState(ROW_HEIGHT * 12);
   const timelineScale = scale;
   const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
-  const filteredData = useMemo(
-    () => data.filter((task) => !isLagTask(task.task)),
-    [data],
-  );
+  const filteredData = useMemo(() => data.filter((task) => !isLagTask(task.task)), [data]);
 
   const { timelineData, totalUnits, headers, startAnchor } = useMemo(() => {
     const baseline = getBaselineDate();
@@ -385,28 +362,20 @@ export function GanttChart({
     const totalUnits = calculateTotalUnits(startAnchor, maxTime, timelineScale);
     const headers = generateHeaders(startAnchor, totalUnits, timelineScale);
 
-    const timelineData: TimelineRow[] = parsedItems.map(
-      ({ item, start, end }) => {
-        const startDate = start ?? baseline;
-        const endDate = end ?? startDate;
-        const startOffset = calculateStartOffset(
-          startDate,
-          startAnchor,
-          timelineScale,
-        );
-        const spanUnits = calculateSpanUnits(startDate, endDate, timelineScale);
+    const timelineData: TimelineRow[] = parsedItems.map(({ item, start, end }) => {
+      const startDate = start ?? baseline;
+      const endDate = end ?? startDate;
+      const startOffset = calculateStartOffset(startDate, startAnchor, timelineScale);
+      const spanUnits = calculateSpanUnits(startDate, endDate, timelineScale);
 
-        return {
-          ...item,
-          startOffset,
-          spanUnits,
-          barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
-          color: item.criticalPath
-            ? "hsl(210, 70%, 55%)"
-            : "hsl(210, 6%, 70%)",
-        };
-      },
-    );
+      return {
+        ...item,
+        startOffset,
+        spanUnits,
+        barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
+        color: item.criticalPath ? "hsl(210, 70%, 55%)" : "hsl(210, 6%, 70%)",
+      };
+    });
 
     return {
       timelineData,
@@ -481,10 +450,7 @@ export function GanttChart({
     const currentOffset = calculateStartOffset(currentDate, startAnchor, timelineScale);
     const targetLeft = Math.max(
       0,
-      Math.min(
-        maxScrollLeft,
-        currentOffset * columnWidth - chartContent.clientWidth * 0.35,
-      ),
+      Math.min(maxScrollLeft, currentOffset * columnWidth - chartContent.clientWidth * 0.35),
     );
 
     const activeCriticalRowIndex = timelineData.findIndex((task) => {
@@ -596,14 +562,8 @@ export function GanttChart({
             </div>
 
             {/* 右侧整体滚动区域（虚拟滚动） */}
-            <div
-              ref={chartContentRef}
-              className="flex-1 overflow-auto flex flex-col"
-            >
-              <div
-                style={{ minWidth: `${totalUnits * columnWidth}px` }}
-                className="flex-1"
-              >
+            <div ref={chartContentRef} className="flex-1 overflow-auto flex flex-col">
+              <div style={{ minWidth: `${totalUnits * columnWidth}px` }} className="flex-1">
                 {/* 时间轴表头 */}
                 <div className="bg-[#04142d] border-b border-cyan-900/40 sticky top-0 z-30">
                   <div
@@ -616,16 +576,12 @@ export function GanttChart({
                       <div
                         key={header.key}
                         className={`border-r border-border/50 flex flex-col items-center justify-center text-[9px] p-0 ${
-                          header.isWeekend
-                            ? "bg-[#0a234a]/70 text-cyan-300/70"
-                            : "text-cyan-200"
+                          header.isWeekend ? "bg-[#0a234a]/70 text-cyan-300/70" : "text-cyan-200"
                         }`}
                       >
                         <div className="font-medium">{header.primary}</div>
                         {header.secondary && (
-                          <div className="text-[7px] text-cyan-300/60">
-                            {header.secondary}
-                          </div>
+                          <div className="text-[7px] text-cyan-300/60">{header.secondary}</div>
                         )}
                       </div>
                     ))}
@@ -633,10 +589,7 @@ export function GanttChart({
                 </div>
 
                 {/* 甘特图内容 */}
-                <div
-                  className="flex-1 relative"
-                  style={{ height: totalRows * ROW_HEIGHT }}
-                >
+                <div className="flex-1 relative" style={{ height: totalRows * ROW_HEIGHT }}>
                   {/* 网格背景使用渐变，避免为每行渲染大量时间单元格 */}
                   <div
                     className="absolute inset-0 pointer-events-none"
@@ -677,7 +630,6 @@ export function GanttChart({
           </div>
         </div>
       </div>
-
     </div>
   );
 }

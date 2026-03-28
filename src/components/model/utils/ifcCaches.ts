@@ -1,5 +1,5 @@
-import { IFCPRODUCT } from 'web-ifc';
-import type { IFCLoader } from 'web-ifc-three/IFCLoader';
+import { IFCPRODUCT } from "web-ifc";
+import type { IFCLoader } from "web-ifc-three/IFCLoader";
 
 type Ref<T> = { current: T };
 
@@ -24,34 +24,35 @@ export async function buildIdCaches({
   productIndexReadyRef,
   expressIdIndexMapRef,
 }: BuildIdCachesParams) {
-  if (productIdsRef.current && globalIdMapRef.current && globalIdMapModelIdRef.current === modelID) {
+  if (
+    productIdsRef.current &&
+    globalIdMapRef.current &&
+    globalIdMapModelIdRef.current === modelID
+  ) {
     return;
   }
 
-  const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(
-    modelID,
-    IFCPRODUCT,
-    true
-  );
+  const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(modelID, IFCPRODUCT, true);
   let allProductIds: number[] = Array.isArray(rawIds)
     ? (rawIds as number[])
     : Array.from(rawIds as Iterable<number>);
 
-  console.log('[ModelViewer] 产品总数:', allProductIds.length);
+  console.log("[ModelViewer] 产品总数:", allProductIds.length);
 
   if (!allProductIds.length) {
     try {
-      const spatial = await ifcLoader.ifcManager.getSpatialStructure(
-        modelID,
-        true
-      );
+      const spatial = await ifcLoader.ifcManager.getSpatialStructure(modelID, true);
       const idsSet = new Set<number>();
-      const collect = (node: { expressID?: number; items?: { expressID?: number }[]; children?: unknown[] }) => {
+      const collect = (node: {
+        expressID?: number;
+        items?: { expressID?: number }[];
+        children?: unknown[];
+      }) => {
         if (!node) return;
-        if (typeof node.expressID === 'number') idsSet.add(node.expressID);
+        if (typeof node.expressID === "number") idsSet.add(node.expressID);
         if (Array.isArray(node.items)) {
           for (const it of node.items) {
-            if (typeof it?.expressID === 'number') idsSet.add(it.expressID);
+            if (typeof it?.expressID === "number") idsSet.add(it.expressID);
           }
         }
         if (Array.isArray(node.children)) {
@@ -60,9 +61,9 @@ export async function buildIdCaches({
       };
       collect(spatial);
       allProductIds = Array.from(idsSet);
-      console.log('[ModelViewer] 通过空间结构获取产品总数:', allProductIds.length);
+      console.log("[ModelViewer] 通过空间结构获取产品总数:", allProductIds.length);
     } catch (se) {
-      console.warn('[ModelViewer] 通过空间结构收集ID失败:', se);
+      console.warn("[ModelViewer] 通过空间结构收集ID失败:", se);
     }
   }
 
@@ -76,7 +77,7 @@ export async function buildIdCaches({
     const props: { GlobalId?: { value?: string } } = await ifcLoader.ifcManager.getItemProperties(
       modelID,
       expressID,
-      false
+      false,
     );
     const gid = props?.GlobalId?.value as string | undefined;
     if (gid) {
@@ -88,13 +89,13 @@ export async function buildIdCaches({
   globalIdMapRef.current = globalIdToExpressId;
   globalIdMapModelIdRef.current = modelID;
   productIndexReadyRef.current = true;
-  console.log('[ModelViewer] 已映射GlobalId数量:', globalIdToExpressId.size);
+  console.log("[ModelViewer] 已映射GlobalId数量:", globalIdToExpressId.size);
 
   if (ifcLoader.ifcManager.subsets?.items) {
     ifcLoader.ifcManager.subsets.items.generateGeometryIndexMap(modelID);
     expressIdIndexMapRef.current = ifcLoader.ifcManager.subsets.items.map[modelID]?.map ?? null;
     if (!expressIdIndexMapRef.current) {
-      console.warn('[ModelViewer] ExpressId 索引映射不可用');
+      console.warn("[ModelViewer] ExpressId 索引映射不可用");
     }
   }
 }
@@ -103,28 +104,25 @@ export async function buildGlobalIdMap(
   ifcLoader: IFCLoader,
   modelID: number,
 ): Promise<Map<string, number>> {
-  const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(
-    modelID,
-    IFCPRODUCT,
-    true,
-  );
+  const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(modelID, IFCPRODUCT, true);
   let allProductIds: number[] = Array.isArray(rawIds)
     ? (rawIds as number[])
     : Array.from(rawIds as Iterable<number>);
 
   if (!allProductIds.length) {
     try {
-      const spatial = await ifcLoader.ifcManager.getSpatialStructure(
-        modelID,
-        true,
-      );
+      const spatial = await ifcLoader.ifcManager.getSpatialStructure(modelID, true);
       const idsSet = new Set<number>();
-      const collect = (node: { expressID?: number; items?: { expressID?: number }[]; children?: unknown[] }) => {
+      const collect = (node: {
+        expressID?: number;
+        items?: { expressID?: number }[];
+        children?: unknown[];
+      }) => {
         if (!node) return;
-        if (typeof node.expressID === 'number') idsSet.add(node.expressID);
+        if (typeof node.expressID === "number") idsSet.add(node.expressID);
         if (Array.isArray(node.items)) {
           for (const it of node.items) {
-            if (typeof it?.expressID === 'number') idsSet.add(it.expressID);
+            if (typeof it?.expressID === "number") idsSet.add(it.expressID);
           }
         }
         if (Array.isArray(node.children)) {
@@ -134,7 +132,7 @@ export async function buildGlobalIdMap(
       collect(spatial);
       allProductIds = Array.from(idsSet);
     } catch (se) {
-      console.warn('[ModelViewer] 通过空间结构收集ID失败:', se);
+      console.warn("[ModelViewer] 通过空间结构收集ID失败:", se);
     }
   }
 
@@ -158,28 +156,25 @@ export async function buildTagMap(
   ifcLoader: IFCLoader,
   modelID: number,
 ): Promise<Record<string, string[]>> {
-  const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(
-    modelID,
-    IFCPRODUCT,
-    true,
-  );
+  const rawIds = await ifcLoader.ifcManager.getAllItemsOfType(modelID, IFCPRODUCT, true);
   let allProductIds: number[] = Array.isArray(rawIds)
     ? (rawIds as number[])
     : Array.from(rawIds as Iterable<number>);
 
   if (!allProductIds.length) {
     try {
-      const spatial = await ifcLoader.ifcManager.getSpatialStructure(
-        modelID,
-        true,
-      );
+      const spatial = await ifcLoader.ifcManager.getSpatialStructure(modelID, true);
       const idsSet = new Set<number>();
-      const collect = (node: { expressID?: number; items?: { expressID?: number }[]; children?: unknown[] }) => {
+      const collect = (node: {
+        expressID?: number;
+        items?: { expressID?: number }[];
+        children?: unknown[];
+      }) => {
         if (!node) return;
-        if (typeof node.expressID === 'number') idsSet.add(node.expressID);
+        if (typeof node.expressID === "number") idsSet.add(node.expressID);
         if (Array.isArray(node.items)) {
           for (const it of node.items) {
-            if (typeof it?.expressID === 'number') idsSet.add(it.expressID);
+            if (typeof it?.expressID === "number") idsSet.add(it.expressID);
           }
         }
         if (Array.isArray(node.children)) {
@@ -189,7 +184,7 @@ export async function buildTagMap(
       collect(spatial);
       allProductIds = Array.from(idsSet);
     } catch (se) {
-      console.warn('[ModelViewer] 通过空间结构收集ID失败:', se);
+      console.warn("[ModelViewer] 通过空间结构收集ID失败:", se);
     }
   }
 
@@ -199,7 +194,7 @@ export async function buildTagMap(
       await ifcLoader.ifcManager.getItemProperties(modelID, expressID, false);
     const gid = props?.GlobalId?.value as string | undefined;
     const rawTag =
-      typeof props?.Tag === 'string'
+      typeof props?.Tag === "string"
         ? props.Tag
         : (props?.Tag as { value?: string } | undefined)?.value;
     const tag = rawTag?.trim();

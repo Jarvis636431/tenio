@@ -25,10 +25,7 @@ type MaterialOverrides = Omit<THREE.MeshStandardMaterialParameters, "color"> & {
   color?: string | number;
 };
 
-async function loadModelBuffer(
-  src: string,
-  signal?: AbortSignal,
-): Promise<ArrayBuffer> {
+async function loadModelBuffer(src: string, signal?: AbortSignal): Promise<ArrayBuffer> {
   if (modelBufferCache.has(src)) {
     return modelBufferCache.get(src)!.slice(0);
   }
@@ -86,9 +83,7 @@ function cloneGlobalIdMap(globalIdMap: Map<string, number>) {
 }
 
 function cloneTagMap(tagMap: Record<string, string[]>) {
-  return Object.fromEntries(
-    Object.entries(tagMap).map(([key, values]) => [key, [...values]]),
-  );
+  return Object.fromEntries(Object.entries(tagMap).map(([key, values]) => [key, [...values]]));
 }
 
 interface ModelViewerProps {
@@ -144,15 +139,9 @@ export function ModelViewer({
   const rootGroupRef = useRef<THREE.Group | null>(null);
   const modelsSignatureRef = useRef<string | null>(null);
   const highlightMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
-  const highlightGroupMaterialsRef = useRef<
-    Map<string, THREE.MeshStandardMaterial>
-  >(new Map());
-  const highlightSubsetsRef = useRef<
-    Map<string, THREE.Mesh & { renderOrder: number }>
-  >(new Map());
-  const highlightSubsetRef = useRef<
-    (THREE.Mesh & { renderOrder: number }) | null
-  >(null);
+  const highlightGroupMaterialsRef = useRef<Map<string, THREE.MeshStandardMaterial>>(new Map());
+  const highlightSubsetsRef = useRef<Map<string, THREE.Mesh & { renderOrder: number }>>(new Map());
+  const highlightSubsetRef = useRef<(THREE.Mesh & { renderOrder: number }) | null>(null);
 
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
@@ -162,10 +151,7 @@ export function ModelViewer({
   });
 
   const normalizedModels = useMemo(() => models, [models]);
-  const mergeTagMaps = (
-    base?: Record<string, string[]>,
-    override?: Record<string, string[]>,
-  ) => {
+  const mergeTagMaps = (base?: Record<string, string[]>, override?: Record<string, string[]>) => {
     if (!base && !override) return undefined;
     if (!base) return override;
     if (!override) return base;
@@ -217,13 +203,8 @@ export function ModelViewer({
         roughness: highlightMaterial?.roughness ?? 0.6,
         ...highlightMaterial,
       });
-    } else if (
-      highlightMaterialRef.current.color.getStyle() !== nextColor
-    ) {
-      highlightMaterialRef.current.color = resolveColor(
-        highlightMaterial?.color,
-        highlightColor,
-      );
+    } else if (highlightMaterialRef.current.color.getStyle() !== nextColor) {
+      highlightMaterialRef.current.color = resolveColor(highlightMaterial?.color, highlightColor);
     }
 
     return highlightMaterialRef.current;
@@ -243,10 +224,7 @@ export function ModelViewer({
 
       const expressToMaterial = new Map<number, THREE.Material>();
       const modelInput = normalizedModels.find((item) => item.key === modelKey);
-      const mergedTagMap = mergeTagMaps(
-        tagMapsRef.current.get(modelKey),
-        modelInput?.tagMap,
-      );
+      const mergedTagMap = mergeTagMaps(tagMapsRef.current.get(modelKey), modelInput?.tagMap);
       let tagHit = 0;
       let tagMiss = 0;
       console.debug("[ModelViewer] highlight pass", {
@@ -317,10 +295,7 @@ export function ModelViewer({
           let material = highlightGroupMaterialsRef.current.get(group.customID);
           if (!material) {
             material = new THREE.MeshStandardMaterial({
-              color: resolveColor(
-                highlightGroupMaterial?.color ?? group.color,
-                group.color,
-              ),
+              color: resolveColor(highlightGroupMaterial?.color ?? group.color, group.color),
               transparent: highlightGroupMaterial?.transparent ?? true,
               opacity: highlightGroupMaterial?.opacity ?? group.opacity ?? 0.8,
               depthWrite: highlightGroupMaterial?.depthWrite ?? true,
@@ -418,10 +393,7 @@ export function ModelViewer({
           let material = highlightGroupMaterialsRef.current.get(group.customID);
           if (!material) {
             material = new THREE.MeshStandardMaterial({
-              color: resolveColor(
-                highlightGroupMaterial?.color ?? group.color,
-                group.color,
-              ),
+              color: resolveColor(highlightGroupMaterial?.color ?? group.color, group.color),
               transparent: highlightGroupMaterial?.transparent ?? true,
               opacity: highlightGroupMaterial?.opacity ?? group.opacity ?? 0.8,
               depthWrite: highlightGroupMaterial?.depthWrite ?? true,
@@ -701,10 +673,7 @@ export function ModelViewer({
         const buffers = await Promise.all(
           normalizedModelsRef.current.map(async (item) => {
             console.log("[ModelViewer] fetching model:", item.src);
-            return loadModelBuffer(
-              item.src,
-              abortControllerRef.current?.signal,
-            );
+            return loadModelBuffer(item.src, abortControllerRef.current?.signal);
           }),
         );
 
@@ -765,10 +734,7 @@ export function ModelViewer({
             rootGroupRef.current?.add(model);
 
             const meshes: THREE.Mesh[] = [];
-            const originalMaterials = new Map<
-              string,
-              THREE.Material | THREE.Material[]
-            >();
+            const originalMaterials = new Map<string, THREE.Material | THREE.Material[]>();
             model.traverse((child: THREE.Object3D) => {
               if (child instanceof THREE.Mesh) {
                 meshes.push(child);
@@ -844,19 +810,13 @@ export function ModelViewer({
 
   return (
     <div className={cn("relative w-full h-full bg-[#03122e]", className)}>
-      <div
-        ref={containerRef}
-        className="w-full h-full"
-        style={{ minHeight: "400px" }}
-      />
+      <div ref={containerRef} className="w-full h-full" style={{ minHeight: "400px" }} />
 
       {loadingState.isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
           <div className="text-center w-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-sm text-gray-600 mb-2">
-              {loadingState.message || "加载模型中..."}
-            </p>
+            <p className="text-sm text-gray-600 mb-2">{loadingState.message || "加载模型中..."}</p>
             <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"

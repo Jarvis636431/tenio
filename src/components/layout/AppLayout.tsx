@@ -14,15 +14,11 @@ function LayoutContent({ children }: LayoutProps) {
 
       <Chat state={chatPanel} />
 
-      <main className="flex-1 overflow-hidden bg-transparent px-3 pt-2 pb-3">
-        {children}
-      </main>
+      <main className="flex-1 overflow-hidden bg-transparent px-3 pt-2 pb-3">{children}</main>
     </div>
   );
 }
 
-export function AppLayout({
-  children
-}: LayoutProps) {
+export function AppLayout({ children }: LayoutProps) {
   return <LayoutContent>{children}</LayoutContent>;
 }

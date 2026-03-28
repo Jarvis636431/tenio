@@ -10,9 +10,7 @@ const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const DEFAULT_PROJECT_ROUTE = "/project/project_001";
 
-const TITLE_RULES: Array<{ prefix: string; title: string }> = [
-  { prefix: "/login", title: "登录" },
-];
+const TITLE_RULES: Array<{ prefix: string; title: string }> = [{ prefix: "/login", title: "登录" }];
 
 export function AppRoutes() {
   const auth = useAuth();
@@ -21,31 +19,18 @@ export function AppRoutes() {
 
   useEffect(() => {
     const { pathname } = location;
-    const matched = TITLE_RULES.find((rule) =>
-      pathname.startsWith(rule.prefix),
-    );
+    const matched = TITLE_RULES.find((rule) => pathname.startsWith(rule.prefix));
     document.title = matched?.title ?? APP_DEFAULT_TITLE;
   }, [location]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">加载中...</div>
-    );
+    return <div className="flex items-center justify-center h-screen">加载中...</div>;
   }
 
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center h-screen">
-          加载中...
-        </div>
-      }
-    >
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">加载中...</div>}>
       <Routes>
-        <Route
-          path="/login"
-          element={user ? <Navigate to="/" replace /> : <Login />}
-        />
+        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
         <Route
           path="/"
           element={

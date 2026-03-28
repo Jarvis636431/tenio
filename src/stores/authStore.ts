@@ -1,6 +1,10 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { getCurrentUser, login as loginRequest, register as registerRequest } from '@/services/user-service';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import {
+  getCurrentUser,
+  login as loginRequest,
+  register as registerRequest,
+} from "@/services/user-service";
 
 interface User {
   id: string;
@@ -12,7 +16,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  
+
   // Actions
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
@@ -33,7 +37,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await loginRequest({ username, password });
           const accessToken = response.access_token;
-          
+
           let profile: User;
           try {
             const remoteProfile = await getCurrentUser(accessToken);
@@ -43,17 +47,17 @@ export const useAuthStore = create<AuthState>()(
               role: remoteProfile.role,
             };
           } catch (error) {
-            console.error('Failed to fetch user profile after login:', error);
+            console.error("Failed to fetch user profile after login:", error);
             profile = {
-              id: 'unknown',
+              id: "unknown",
               username,
             };
           }
 
-          set({ 
-            user: profile, 
-            token: accessToken, 
-            isLoading: false 
+          set({
+            user: profile,
+            token: accessToken,
+            isLoading: false,
           });
         } catch (error) {
           set({ isLoading: false });
@@ -74,10 +78,10 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        set({ 
-          user: null, 
-          token: null, 
-          isLoading: false 
+        set({
+          user: null,
+          token: null,
+          isLoading: false,
         });
       },
 
@@ -87,7 +91,7 @@ export const useAuthStore = create<AuthState>()(
 
       initializeAuth: async () => {
         const { token } = get();
-        
+
         if (!token) {
           set({ isLoading: false });
           return;
@@ -100,28 +104,28 @@ export const useAuthStore = create<AuthState>()(
             username: profile.username,
             role: profile.role,
           };
-          
-          set({ 
-            user: normalizedUser, 
-            isLoading: false 
+
+          set({
+            user: normalizedUser,
+            isLoading: false,
           });
         } catch (error) {
-          console.error('Failed to fetch current user profile:', error);
+          console.error("Failed to fetch current user profile:", error);
           // Token 无效，清除状态
-          set({ 
-            user: null, 
-            token: null, 
-            isLoading: false 
+          set({
+            user: null,
+            token: null,
+            isLoading: false,
           });
         }
       },
     }),
     {
-      name: 'auth-storage',
-      partialize: (state) => ({ 
+      name: "auth-storage",
+      partialize: (state) => ({
         token: state.token,
-        user: state.user 
+        user: state.user,
       }),
-    }
-  )
+    },
+  ),
 );

@@ -117,6 +117,7 @@ VITE_AMAP_SECURITY_CODE=your_amap_security_code
 ### Type Definitions
 
 Domain types are in `src/types/domain/`:
+
 - `schedulepro.ts` - Core graph, cost/headcount curves, auth types
 - `project.ts` - Project list, process info types
 - `ai.ts` - Agent init/resume types

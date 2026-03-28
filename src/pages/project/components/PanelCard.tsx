@@ -36,9 +36,7 @@ export function PanelCard({
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent className={cn("flex-1 min-h-0 p-0", contentClassName)}>
-        {children}
-      </CardContent>
+      <CardContent className={cn("flex-1 min-h-0 p-0", contentClassName)}>{children}</CardContent>
     </Card>
   );
 }

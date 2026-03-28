@@ -6,19 +6,11 @@ type AuthState = {
   isLoading: boolean;
 };
 
-export function ProtectedRoute({
-  children,
-  auth,
-}: {
-  children: ReactNode;
-  auth: AuthState;
-}) {
+export function ProtectedRoute({ children, auth }: { children: ReactNode; auth: AuthState }) {
   const { user, isLoading } = auth;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">加载中...</div>
-    );
+    return <div className="flex items-center justify-center h-screen">加载中...</div>;
   }
 
   if (!user) {

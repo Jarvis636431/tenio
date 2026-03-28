@@ -25,8 +25,8 @@ REST API 规范优化任务已成功完成！已完成三个模块的优化：
 
 实现了完全符合 REST 规范的任务管理 API，包含 9 个端点：
 
-| 资源路径                                                | HTTP 方法       | 操作             | 状态码                            |
-| ------------------------------------------------------- | --------------- | ---------------- | --------------------------------- |
+| 资源路径                                              | HTTP 方法       | 操作             | 状态码                            |
+| ----------------------------------------------------- | --------------- | ---------------- | --------------------------------- |
 | `/api/v1/tasks/{task_id}`                             | GET             | 获取任务详情     | 200 OK                            |
 | `/api/v1/tasks/{task_id}/status`                      | GET             | 查询任务状态     | 200 OK                            |
 | `/api/v1/tasks/{task_id}/total-worktime`              | GET             | 获取总工期       | 200 OK                            |
@@ -43,8 +43,8 @@ REST API 规范优化任务已成功完成！已完成三个模块的优化：
 
 实现了完全符合 REST 规范的认证管理 API，包含 4 个端点：
 
-| 资源路径                  | HTTP 方法 | 操作         | 状态码      |
-| ------------------------- | --------- | ------------ | ----------- |
+| 资源路径                | HTTP 方法 | 操作         | 状态码      |
+| ----------------------- | --------- | ------------ | ----------- |
 | `/api/v1/auth/status`   | GET       | 获取认证状态 | 200 OK      |
 | `/api/v1/auth/register` | POST      | 用户注册     | 201 Created |
 | `/api/v1/auth/login`    | POST      | 用户登录     | 200 OK      |
@@ -56,8 +56,8 @@ REST API 规范优化任务已成功完成！已完成三个模块的优化：
 
 实现了完全符合 REST 规范的项目管理 API，包含 18 个端点：
 
-| 资源路径                                                       | HTTP 方法 | 操作           | 状态码       |
-| -------------------------------------------------------------- | --------- | -------------- | ------------ |
+| 资源路径                                                     | HTTP 方法 | 操作           | 状态码       |
+| ------------------------------------------------------------ | --------- | -------------- | ------------ |
 | `/api/v1/projects`                                           | GET       | 获取项目列表   | 200 OK       |
 | `/api/v1/projects`                                           | POST      | 创建项目       | 202 Accepted |
 | `/api/v1/projects/trades`                                    | GET       | 获取工种列表   | 200 OK       |
@@ -152,8 +152,8 @@ REST API 规范优化任务已成功完成！已完成三个模块的优化：
 
 ### 8. API 文档优化
 
-| 资源路径                                                | HTTP 方法       | 操作             | 状态码                            |
-| ------------------------------------------------------- | --------------- | ---------------- | --------------------------------- |
+| 资源路径                                              | HTTP 方法       | 操作             | 状态码                            |
+| ----------------------------------------------------- | --------------- | ---------------- | --------------------------------- |
 | `/api/v1/tasks/{task_id}`                             | GET             | 获取任务详情     | 200 OK                            |
 | `/api/v1/tasks/{task_id}/status`                      | GET             | 查询任务状态     | 200 OK                            |
 | `/api/v1/tasks/{task_id}/total-worktime`              | GET             | 获取总工期       | 200 OK                            |
@@ -200,20 +200,20 @@ REST API 规范优化任务已成功完成！已完成三个模块的优化：
 
 ### 旧 API 与新 API 对应关系表
 
-| 序号 | 旧 API 路径                                 | HTTP 方法  | 新 API 路径                                                            | 对应关系说明                                    |
-| ---- | ------------------------------------------- | ---------- | ---------------------------------------------------------------------- | ----------------------------------------------- |
+| 序号 | 旧 API 路径                               | HTTP 方法  | 新 API 路径                                                          | 对应关系说明                                  |
+| ---- | ----------------------------------------- | ---------- | -------------------------------------------------------------------- | --------------------------------------------- |
 | 1    | `/api/tasks/compress`                     | POST       | `/api/v1/tasks/{task_id}/compressions`                               | 全局压缩任务，路径参数 `task_id` 改为资源层级 |
 | 2    | `/api/tasks/local-compress`               | POST       | `/api/v1/tasks/{task_id}/local-compressions`                         | 局部压缩任务，路径参数 `task_id` 改为资源层级 |
 | 3    | `/api/tasks/special-events`               | POST       | `/api/v1/tasks/{task_id}/special-events`                             | 特殊事件，路径参数 `task_id` 改为资源层级     |
-| 4    | `/api/tasks/{task_id}/adjust-project`     | POST       | `/api/v1/tasks/{task_id}/adjustments`                                | 项目调整，资源名统一为 adjustments              |
-| 5    | `/api/tasks/{task_id}/result`             | GET        | `/api/v1/tasks/{task_id}`                                            | 任务结果，合并到任务详情资源                    |
-| 6    | `/api/tasks/{task_id}/status`             | GET        | `/api/v1/tasks/{task_id}/status`                                     | 任务状态，保持不变                              |
-| 7    | `/api/tasks/{task_id}/tasks`              | GET        | `/api/v1/tasks/{task_id}/work-processes`                             | 工序列表，资源名改为 work-processes             |
-| 8    | `/api/tasks/{task_id}/tasks/by-name`      | GET        | `/api/v1/tasks/{task_id}/work-processes?name=xxx`                    | 按名称查询，改为查询参数筛选                    |
-| 9    | `/api/tasks/{task_id}/tasks/date-range`   | GET        | `/api/v1/tasks/{task_id}/work-processes?start_date=xxx&end_date=xxx` | 按日期范围查询，改为查询参数筛选                |
-| 10   | `/api/tasks/{task_id}/tasks/{process_id}` | GET        | `/api/v1/tasks/{task_id}/work-processes/{process_id}`                | 工序详情，保持资源层级结构                      |
-| 11   | `/api/tasks/{task_id}/total-worktime`     | GET        | `/api/v1/tasks/{task_id}/total-worktime`                             | 总工期，保持不变                                |
-| 12   | `/api/tasks/{task_id}/special-events`     | GET/DELETE | `/api/v1/tasks/{task_id}/special-events`                             | 特殊事件，保持不变                              |
+| 4    | `/api/tasks/{task_id}/adjust-project`     | POST       | `/api/v1/tasks/{task_id}/adjustments`                                | 项目调整，资源名统一为 adjustments            |
+| 5    | `/api/tasks/{task_id}/result`             | GET        | `/api/v1/tasks/{task_id}`                                            | 任务结果，合并到任务详情资源                  |
+| 6    | `/api/tasks/{task_id}/status`             | GET        | `/api/v1/tasks/{task_id}/status`                                     | 任务状态，保持不变                            |
+| 7    | `/api/tasks/{task_id}/tasks`              | GET        | `/api/v1/tasks/{task_id}/work-processes`                             | 工序列表，资源名改为 work-processes           |
+| 8    | `/api/tasks/{task_id}/tasks/by-name`      | GET        | `/api/v1/tasks/{task_id}/work-processes?name=xxx`                    | 按名称查询，改为查询参数筛选                  |
+| 9    | `/api/tasks/{task_id}/tasks/date-range`   | GET        | `/api/v1/tasks/{task_id}/work-processes?start_date=xxx&end_date=xxx` | 按日期范围查询，改为查询参数筛选              |
+| 10   | `/api/tasks/{task_id}/tasks/{process_id}` | GET        | `/api/v1/tasks/{task_id}/work-processes/{process_id}`                | 工序详情，保持资源层级结构                    |
+| 11   | `/api/tasks/{task_id}/total-worktime`     | GET        | `/api/v1/tasks/{task_id}/total-worktime`                             | 总工期，保持不变                              |
+| 12   | `/api/tasks/{task_id}/special-events`     | GET/DELETE | `/api/v1/tasks/{task_id}/special-events`                             | 特殊事件，保持不变                            |
 
 ### 为什么新 API 数量少三个？
 
@@ -221,11 +221,11 @@ REST API 规范优化任务已成功完成！已完成三个模块的优化：
 
 1. **任务结果合并** - 旧 API `/api/tasks/{task_id}/result` 被合并到 `/api/v1/tasks/{task_id}` 中，作为任务详情的一部分，避免了单独的端点
 2. **查询接口优化** - 旧 API 的两个查询接口：
-
    - `/api/tasks/{task_id}/tasks/by-name`（按名称查询）
    - `/api/tasks/{task_id}/tasks/date-range`（按日期查询）
 
    被合并到 `/api/v1/tasks/{task_id}/work-processes` 接口，通过查询参数实现筛选功能，避免了单独的端点
+
 3. **资源层级优化** - 所有任务相关的操作都嵌套在 `/api/v1/tasks/{task_id}/` 路径下，形成了清晰的资源层次关系，逻辑更加统一
 
 ### 旧 API 与新 API 功能对比
@@ -248,9 +248,9 @@ REST API 规范优化任务已成功完成！已完成三个模块的优化：
 
 ### 查询参数说明
 
-| 参数名         | 位置 | 类型   | 说明                       | 示例                                     | 适用接口                                                |
-| -------------- | ---- | ------ | -------------------------- | ---------------------------------------- | ------------------------------------------------------- |
-| `task_id`    | 路径 | string | 任务 ID（通常为项目 ID）   | `123e4567-e89b-12d3-a456-426614174000` | 所有任务相关接口                                        |
+| 参数名       | 位置 | 类型   | 说明                       | 示例                                   | 适用接口                                              |
+| ------------ | ---- | ------ | -------------------------- | -------------------------------------- | ----------------------------------------------------- |
+| `task_id`    | 路径 | string | 任务 ID（通常为项目 ID）   | `123e4567-e89b-12d3-a456-426614174000` | 所有任务相关接口                                      |
 | `process_id` | 路径 | string | 工序 ID                    | `abc123-def456`                        | `/api/v1/tasks/{task_id}/work-processes/{process_id}` |
 | `name`       | 查询 | string | 工序名称筛选               | `?name=基础工程`                       | `/api/v1/tasks/{task_id}/work-processes`              |
 | `start_date` | 查询 | string | 开始日期筛选（YYYY-MM-DD） | `?start_date=2023-01-01`               | `/api/v1/tasks/{task_id}/work-processes`              |
@@ -369,24 +369,23 @@ REST API 规范优化任务已成功完成！已完成三个模块的优化：
 #### 从旧 API 迁移到新 API 的步骤
 
 1. **检查是否使用认证**
-
    - 如果认证启用，确保使用正确的 token
    - 如果认证禁用，无需特殊处理
-2. **更新 URL 路径**
 
+2. **更新 URL 路径**
    - 将 `/api/tasks/` 前缀替换为 `/api/v1/tasks/`
    - 将路径中的参数调整到正确位置
-3. **调整请求体**
 
+3. **调整请求体**
    - 对于压缩、局部压缩、添加特殊事件等接口
    - 移除请求体中的 `task_id` 字段
    - 将 `task_id` 移到 URL 路径中
-4. **更新查询接口**
 
+4. **更新查询接口**
    - 将 `/by-name` 和 `/date-range` 端点合并
    - 使用查询参数 `?name=xxx` 或 `?start_date=xxx&end_date=xxx`
-5. **解析新的响应格式**
 
+5. **解析新的响应格式**
    - 从 `response.data` 中获取业务数据
    - 检查 `response.status` 判断操作结果
    - 利用 `response.message` 获取用户友好的消息
@@ -432,8 +431,8 @@ message = result["message"]
 
 ### 旧 API 与新 API 对应关系表
 
-| 序号 | 旧 API 路径            | HTTP 方法 | 新 API 路径               | 对应关系说明           |
-| ---- | ---------------------- | --------- | ------------------------- | ---------------------- |
+| 序号 | 旧 API 路径          | HTTP 方法 | 新 API 路径             | 对应关系说明           |
+| ---- | -------------------- | --------- | ----------------------- | ---------------------- |
 | 1    | `/api/auth/status`   | GET       | `/api/v1/auth/status`   | 获取认证状态，保持不变 |
 | 2    | `/api/auth/register` | POST      | `/api/v1/auth/register` | 用户注册，保持不变     |
 | 3    | `/api/auth/login`    | POST      | `/api/v1/auth/login`    | 用户登录，保持不变     |
@@ -452,8 +451,8 @@ message = result["message"]
 
 ### 旧 API 与新 API 对应关系表
 
-| 序号 | 旧 API 路径                                          | HTTP 方法 | 新 API 路径                                                    | 对应关系说明                        |
-| ---- | ---------------------------------------------------- | --------- | -------------------------------------------------------------- | ----------------------------------- |
+| 序号 | 旧 API 路径                                        | HTTP 方法 | 新 API 路径                                                  | 对应关系说明                        |
+| ---- | -------------------------------------------------- | --------- | ------------------------------------------------------------ | ----------------------------------- |
 | 1    | `/api/projects/`                                   | POST      | `/api/v1/projects`                                           | 创建项目，前缀更新为 v1             |
 | 2    | `/api/projects/`                                   | GET       | `/api/v1/projects`                                           | 获取项目列表，前缀更新为 v1         |
 | 3    | `/api/projects/trades`                             | GET       | `/api/v1/projects/trades`                                    | 获取工种，前缀更新为 v1             |
@@ -567,12 +566,12 @@ message = result["message"]
 
 ### API 统计
 
-| 模块           | 旧 API 数量  | 新 API 数量  | 说明                       |
-| -------------- | ------------ | ------------ | -------------------------- |
-| Tasks          | 12           | 9            | 优化整合，减少了 3 个端点  |
-| Auth           | 4            | 4            | 保持数量不变，响应格式统一 |
-| Projects       | 19           | 18           | 优化整合，减少了 1 个端点  |
-| **总计** | **35** | **31** | **共减少 4 个端点**  |
+| 模块     | 旧 API 数量 | 新 API 数量 | 说明                       |
+| -------- | ----------- | ----------- | -------------------------- |
+| Tasks    | 12          | 9           | 优化整合，减少了 3 个端点  |
+| Auth     | 4           | 4           | 保持数量不变，响应格式统一 |
+| Projects | 19          | 18          | 优化整合，减少了 1 个端点  |
+| **总计** | **35**      | **31**      | **共减少 4 个端点**        |
 
 ### 未来建议
 

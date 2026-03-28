@@ -48,11 +48,7 @@ export function ProjectSlider({
             onClick={onTogglePlay}
             aria-label={isPlaying ? "暂停播放" : "开始播放"}
           >
-            {isPlaying ? (
-              <Pause className="h-3.5 w-3.5" />
-            ) : (
-              <Play className="h-3.5 w-3.5" />
-            )}
+            {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
           </button>
           <button
             type="button"
@@ -68,9 +64,7 @@ export function ProjectSlider({
               key={rate}
               type="button"
               className={`ml-1 inline-flex h-7 min-w-9 items-center justify-center rounded-md px-2 text-[11px] font-medium transition ${
-                playbackRate === rate
-                  ? "text-cyan-100"
-                  : "text-cyan-300/70 hover:text-cyan-200"
+                playbackRate === rate ? "text-cyan-100" : "text-cyan-300/70 hover:text-cyan-200"
               }`}
               onClick={() => onChangeRate(rate as 1 | 2 | 4)}
             >

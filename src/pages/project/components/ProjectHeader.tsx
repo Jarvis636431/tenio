@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import {
-  CalendarDays,
-  Clock3,
-  CloudRain,
-  Download,
-  Thermometer,
-  Users,
-} from "lucide-react";
+import { CalendarDays, Clock3, CloudRain, Download, Thermometer, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProjectHeaderProps {
@@ -58,9 +51,7 @@ export function ProjectHeader({
   }, [now]);
 
   return (
-    <div
-      className={`flex h-9 items-center justify-between rounded-md text-[#d8ebff] ${className}`}
-    >
+    <div className={`flex h-9 items-center justify-between rounded-md text-[#d8ebff] ${className}`}>
       <div className="flex min-w-0 items-center gap-3 text-xs">
         <span className="inline-flex items-center gap-1.5 text-[#9cc7ff]">
           <CalendarDays className="h-3 w-3" />
@@ -90,9 +81,7 @@ export function ProjectHeader({
           <>
             <span className="text-[#1c4d86]/80">|</span>
             <span className="truncate text-[#d8ebff]">{title}</span>
-            {titleExtra && (
-              <span className="truncate text-[#9cc7ff]">{titleExtra}</span>
-            )}
+            {titleExtra && <span className="truncate text-[#9cc7ff]">{titleExtra}</span>}
           </>
         )}
       </div>

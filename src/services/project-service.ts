@@ -23,13 +23,10 @@ export async function getProcessInfo(
   return requestJson<ProcessInfoResponse>(url, { token });
 }
 
-export async function getProjectList(
-  token?: string,
-): Promise<ProjectListResponse> {
-  return requestApiData<ProjectListResponse>(
-    `${PROJECT_SERVICE_BASE_URL}/api/v1/projects`,
-    { token },
-  );
+export async function getProjectList(token?: string): Promise<ProjectListResponse> {
+  return requestApiData<ProjectListResponse>(`${PROJECT_SERVICE_BASE_URL}/api/v1/projects`, {
+    token,
+  });
 }
 
 export async function getProjectByCode(

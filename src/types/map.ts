@@ -35,17 +35,10 @@ export type AMapNamespace = {
   ToolBar: new () => unknown;
   Marker: new (options: { position: [number, number] }) => MarkerInstance;
   Geocoder: new (options?: { city?: string }) => GeocoderInstance;
-  DistrictSearch?: new (options: {
-    level: string;
-    subdistrict: number;
-    extensions: string;
-  }) => {
+  DistrictSearch?: new (options: { level: string; subdistrict: number; extensions: string }) => {
     search: (
       keyword: string,
-      callback: (
-        status: string,
-        result: { districtList?: DistrictNode[] },
-      ) => void,
+      callback: (status: string, result: { districtList?: DistrictNode[] }) => void,
     ) => void;
   };
 };
