@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AI_SSE_URL, VOLC_SPEECH } from "@/config";
+import { API_BASE, VOLC_SPEECH } from "@/config";
 import { useAuth } from "@/hooks/useAuth";
 import { useProject } from "@/hooks/useProject";
 import { useParams } from "react-router-dom";
@@ -71,6 +71,8 @@ function logSilentError(message: string, error?: unknown) {
 type ChatPanelOptions = {
   projectId?: string;
 };
+
+const AI_SSE_PATH = "/api/agent/chat/sse";
 
 export function useChatPanel(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
@@ -430,12 +432,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     setMessages((prev) => [...prev, userMessage]);
     setIsThinking(true);
 
-    if (!AI_SSE_URL) {
-      logSilentError("未配置 AI SSE 地址");
-      setIsThinking(false);
-      return;
-    }
-
     // 生成或复用 thread_id
     if (!threadIdRef.current) {
       threadIdRef.current = `thread-${createMessageId()}`;
@@ -461,7 +457,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     ]);
 
     try {
-      const response = await fetch(AI_SSE_URL, {
+      const response = await fetch(`${API_BASE.aiService}${AI_SSE_PATH}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -6,7 +6,7 @@ import type {
   ProjectByCodeResponse,
 } from "@/types/domain/project";
 
-const PROJECT_SERVICE_BASE_URL = API_BASE.projectService;
+const BACKEND_BASE_URL = API_BASE.backend;
 
 // ----------- Types -----------
 // Types are now imported from @/types/domain/project
@@ -16,7 +16,7 @@ export async function getProcessInfo(
   token?: string,
   options?: { workProcessName?: string },
 ): Promise<ProcessInfoResponse> {
-  const url = buildUrl(PROJECT_SERVICE_BASE_URL, "/process_info", {
+  const url = buildUrl(BACKEND_BASE_URL, "/process_info", {
     project_id: projectId,
     work_process_name: options?.workProcessName ?? "",
   });
@@ -24,7 +24,7 @@ export async function getProcessInfo(
 }
 
 export async function getProjectList(token?: string): Promise<ProjectListResponse> {
-  return requestApiData<ProjectListResponse>(`${PROJECT_SERVICE_BASE_URL}/api/v1/projects`, {
+  return requestApiData<ProjectListResponse>(`${BACKEND_BASE_URL}/api/v1/projects`, {
     token,
   });
 }
@@ -34,7 +34,7 @@ export async function getProjectByCode(
   token?: string,
 ): Promise<ProjectByCodeResponse> {
   return requestApiData<ProjectByCodeResponse>(
-    `${PROJECT_SERVICE_BASE_URL}/api/v1/projects/by-code/${projectCode}`,
+    `${BACKEND_BASE_URL}/api/v1/projects/by-code/${projectCode}`,
     { token },
   );
 }

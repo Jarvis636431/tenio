@@ -16,8 +16,8 @@ import type {
   SelectSolutionResponse,
 } from "@/types/domain/schedulepro";
 
-const BASE_URL = API_BASE.projectService;
-const API_V1 = `${BASE_URL}/api/v1`;
+const BACKEND_BASE_URL = API_BASE.backend;
+const API_V1 = `${BACKEND_BASE_URL}/api/v1`;
 
 type LegacyCostCurveResponse = {
   project_id: string;

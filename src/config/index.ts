@@ -9,9 +9,7 @@ const apiBaseUrl = trimTrailingSlash(env.VITE_API_BASE_URL);
 const aiServiceUrl = trimTrailingSlash(env.VITE_AI_SERVICE_URL) ?? "http://127.0.0.1:8123";
 
 export const API_BASE = {
-  userService: trimTrailingSlash(env.VITE_USER_SERVICE_URL) ?? apiBaseUrl ?? "http://localhost:8001",
-  projectService:
-    trimTrailingSlash(env.VITE_PROJECT_SERVICE_URL) ?? apiBaseUrl ?? "http://localhost:8002",
+  backend: apiBaseUrl ?? "http://localhost:8000",
   aiService: aiServiceUrl,
 };
 
@@ -19,8 +17,6 @@ export const AMAP = {
   key: env.VITE_AMAP_KEY ?? "",
   securityCode: env.VITE_AMAP_SECURITY_CODE ?? "",
 };
-
-export const AI_SSE_URL = env.VITE_AI_SSE_URL ?? `${aiServiceUrl}/api/agent/chat/sse`;
 
 export const RESOURCE_BASE_URL =
   trimTrailingSlash(env.VITE_RESOURCE_BASE_URL) ?? "https://apmoss.emio.cn/public/resources";
