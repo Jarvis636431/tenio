@@ -36,11 +36,14 @@ pnpm build:dev
 # Run ESLint
 pnpm lint
 
+# Run tests
+pnpm test
+
 # Preview production build
 pnpm preview
 ```
 
-Note: This project has no test suite configured.
+Tests are configured with Vitest. Test files live under the top-level `tests/` directory.
 
 ## Project Architecture
 
@@ -85,18 +88,32 @@ src/
 
 5. **Component Highlighting**: Model highlighting uses Express IDs from the core graph. The `processHighlights` in `useProjectHighlight` hook maps dates to component IDs for timeline-based visualization.
 
+6. **AI Chat Flow**:
+   - `src/components/layout/AppLayout.tsx` mounts a persistent chat panel in the center column
+   - `src/components/ai/hooks/useChatPanel.ts` manages message state, SSE streaming, interrupt resume, voice input, and cross-project thread switching
+   - `src/services/ai-service.ts` currently wraps `initAgent()` and interrupt resume; the primary chat SSE request is still sent directly from `useChatPanel`
+   - Project overview initializes the agent once per `project_id + base_date` combination
+
 ### Environment Variables
 
 Required in `.env` or `.env.local`:
 
 ```bash
-VITE_USER_SERVICE_URL=http://localhost:8000
-VITE_PROJECT_SERVICE_URL=http://localhost:8000
-VITE_AI_SSE_URL=https://chat.zrzz.site/api/agent/chat/sse
-VITE_POI_SERVICE_URL=https://chat.zrzz.site
+VITE_API_BASE_URL=http://localhost:8000
+VITE_AI_SERVICE_URL=http://127.0.0.1:8123
+VITE_RESOURCE_BASE_URL=https://apmoss.emio.cn/public/resources
 VITE_AMAP_KEY=your_amap_key
 VITE_AMAP_SECURITY_CODE=your_amap_security_code
+VITE_VOLC_APP_ID=your_volc_app_id
+VITE_VOLC_ACCESS_TOKEN=your_volc_access_token
+VITE_VOLC_SECRET_KEY=your_volc_secret_key
 ```
+
+Notes:
+
+- `src/config/index.ts` is the single source of truth for runtime config
+- Volc speech recognition in the current frontend flow requires `VITE_VOLC_APP_ID` and `VITE_VOLC_ACCESS_TOKEN`
+- `VITE_VOLC_SECRET_KEY` exists in config but is not currently consumed by the browser-side recognition request
 
 ### Route Structure
 
@@ -109,8 +126,10 @@ VITE_AMAP_SECURITY_CODE=your_amap_security_code
 - `src/config/index.ts` - All environment-based configuration
 - `src/services/http.ts` - HTTP request wrapper with auth headers
 - `src/services/schedulepro-service.ts` - Main project API calls (core graph, curves)
+- `src/services/ai-service.ts` - Agent init and interrupt-resume API calls
 - `src/hooks/useProjectCoreGraph.ts` - Project ID resolution and core graph loading
 - `src/stores/projectStore.ts` - Project state management
+- `src/components/ai/hooks/useChatPanel.ts` - AI panel state, SSE parsing, voice input, project-aware thread handling
 - `src/components/model/ModelViewer.tsx` - 3D IFC model viewer with caching
 - `src/pages/project/Overview.tsx` - Main dashboard page aggregating all features
 
@@ -126,3 +145,14 @@ Domain types are in `src/types/domain/`:
 ### ESLint Configuration
 
 ESLint is configured in `eslint.config.js` with TypeScript, React Hooks, and React Refresh rules. Unused vars rule is disabled (`@typescript-eslint/no-unused-vars: off`).
+
+### Test Layout
+
+All test files are centralized under `tests/` rather than colocated beside source files.
+
+- `tests/services` - service and API wrapper tests
+- `tests/hooks` - hook tests
+- `tests/components` - UI/component tests
+- `tests/stores` - Zustand store tests
+- `tests/utils` - pure utility tests
+- `tests/integration` - broader integration tests
