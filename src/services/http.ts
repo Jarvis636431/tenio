@@ -32,26 +32,22 @@ async function parseResponse<T>(response: Response): Promise<T> {
     return response.json() as Promise<T>;
   }
 
-  try {
-    const data = await response.json();
-    if (data?.message) {
-      throw new Error(data.message);
-    }
-    if (data?.error?.message) {
-      throw new Error(data.error.message);
-    }
-    if (data?.detail) {
-      throw new Error(
-        Array.isArray(data.detail)
-          ? data.detail
-              .map((item: { msg?: string }) => item?.msg)
-              .filter(Boolean)
-              .join("; ")
-          : data.detail,
-      );
-    }
-  } catch {
-    throw new Error(`请求失败 (${response.status})`);
+  const data = await response.json().catch(() => null);
+  if (data?.message) {
+    throw new Error(data.message);
+  }
+  if (data?.error?.message) {
+    throw new Error(data.error.message);
+  }
+  if (data?.detail) {
+    throw new Error(
+      Array.isArray(data.detail)
+        ? data.detail
+            .map((item: { msg?: string }) => item?.msg)
+            .filter(Boolean)
+            .join("; ")
+        : data.detail,
+    );
   }
 
   throw new Error(`请求失败 (${response.status})`);
