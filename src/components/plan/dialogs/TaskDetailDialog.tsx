@@ -11,29 +11,6 @@ import { ModelViewer } from "@/components/model/ModelViewer";
 import type { PlanTask } from "@/types/domain/plan";
 import { RESOURCE_BASE_URL } from "@/config";
 
-// 验收数据接口
-interface AcceptanceData {
-  工序序号: string;
-  验收阶段: string;
-  步骤1: string;
-  步骤2: string;
-  步骤3: string;
-  步骤4: string;
-  步骤1状态: string;
-  步骤2状态: string;
-  步骤3状态: string;
-  步骤4状态: string;
-  拍摄要求1: string;
-  拍摄要求2: string;
-  拍摄要求3: string;
-  现场照片1: string;
-  现场照片2: string;
-  现场照片3: string;
-  人像照片: string;
-  验收状态: string;
-  验收备注: string;
-}
-
 interface ProcessMediaRow {
   name: string;
   structureImages: string[];
@@ -66,8 +43,8 @@ export function TaskDetailDialog({
   const [activeTab, setActiveTab] = useState("drawings");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [orderInfo, setOrderInfo] = useState<OrderInfoData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [_isLoading, setIsLoading] = useState(false);
+  const [_error, setError] = useState<Error | null>(null);
   const [mediaRows, setMediaRows] = useState<ProcessMediaRow[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
   const { token } = useAuth();

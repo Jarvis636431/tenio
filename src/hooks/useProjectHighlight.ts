@@ -47,7 +47,7 @@ export function useProjectHighlight(projectId?: string) {
   const tagMap = useMemo(() => ({}) as Record<string, string[]>, []);
 
   const resolveExpressIds = useMemo(() => {
-    return (expressIds: string[] = [], tagIds: string[] = []) => {
+    return (expressIds: string[] = [], _tagIds: string[] = []) => {
       const resolved = new Set<string>();
       expressIds.forEach((id) => {
         if (id) resolved.add(id);

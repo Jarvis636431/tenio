@@ -185,7 +185,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     };
   }, []);
 
-  const appendAIMessage = (content: string) => {
+  const _appendAIMessage = (content: string) => {
     setMessages((prev) => [
       ...prev,
       {
