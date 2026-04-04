@@ -39,6 +39,8 @@ export function AppSidebar() {
           <button
             type="button"
             onClick={handleProjectNavigate}
+            aria-label="进入当前项目"
+            title="进入当前项目"
             className={`mx-auto flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
               isProjectQuickLinkActive
                 ? "bg-cyan-900/40 text-cyan-200"
