@@ -13,31 +13,34 @@ export function AutoProjectRoute() {
   const { currentProject, projects, addProject, setCurrentProject, isLoading } = useProject();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isBootstrappingRef = useRef(false);
+  const hasAttemptedRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    if (!token) {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!token || hasAttemptedRef.current || isBootstrappingRef.current) {
       return;
     }
 
-    let isMounted = true;
-
     const run = async () => {
-      if (isBootstrappingRef.current) {
-        return;
-      }
-
+      hasAttemptedRef.current = true;
       const shouldAutoCreate = consumeAutoCreateProjectAfterLoginFlag();
 
       if (shouldAutoCreate) {
         try {
           isBootstrappingRef.current = true;
           const project = await createProjectWithDefaultSolution(token);
-          if (!isMounted) return;
+          if (!isMountedRef.current) return;
           addProject(project);
           setCurrentProject(project);
           navigate(`/project/${project.id}`, { replace: true });
         } catch (error) {
-          if (!isMounted) return;
+          if (!isMountedRef.current) return;
           setErrorMessage(error instanceof Error ? error.message : "自动创建项目失败");
         } finally {
           isBootstrappingRef.current = false;
@@ -46,6 +49,7 @@ export function AutoProjectRoute() {
       }
 
       if (isLoading) {
+        hasAttemptedRef.current = false;
         return;
       }
 
@@ -58,12 +62,12 @@ export function AutoProjectRoute() {
       try {
         isBootstrappingRef.current = true;
         const project = await createProjectWithDefaultSolution(token);
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         addProject(project);
         setCurrentProject(project);
         navigate(`/project/${project.id}`, { replace: true });
       } catch (error) {
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         setErrorMessage(error instanceof Error ? error.message : "自动创建项目失败");
       } finally {
         isBootstrappingRef.current = false;
@@ -71,10 +75,6 @@ export function AutoProjectRoute() {
     };
 
     void run();
-
-    return () => {
-      isMounted = false;
-    };
   }, [token, isLoading, currentProject, projects, addProject, setCurrentProject, navigate]);
 
   if (!token) {
