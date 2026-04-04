@@ -33,14 +33,13 @@ import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
 import {
   getProjectCostCurve,
   getProjectHeadcountCurve,
-  createJiuanProject,
-  selectSolution,
 } from "@/services/schedulepro-service";
 import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import type { PlanTask } from "@/types/domain/plan";
 import type { DailyProcessItem } from "@/pages/project/hooks/useDailyProcesses";
+import { createProjectWithDefaultSolution } from "@/services/project-bootstrap";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,25 +74,11 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
   const handleResetProject = async () => {
     if (!token) return;
-    const randomName = `项目_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     try {
-      const response = await createJiuanProject({ project_name: randomName }, token);
-      console.log("重置项目成功:", response);
-
-      const newProject = {
-        id: response.project_id,
-        code: response.project_id,
-        name: response.project_name,
-        status: response.status,
-      };
+      const newProject = await createProjectWithDefaultSolution(token);
       addProject(newProject);
       setCurrentProject(newProject);
-
-      // 调用选择方案接口，solution_id 为 4
-      const solutionResponse = await selectSolution(response.project_id, { solution_id: 4 }, token);
-      console.log("选择方案成功:", solutionResponse);
-
-      navigate(`/project/${response.project_id}`);
+      navigate(`/project/${newProject.id}`);
     } catch (error) {
       console.error("重置项目失败:", error);
     }
@@ -195,9 +180,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     if (!requestedProjectRef && !resolvedProjectId) {
       return currentProject?.name || "项目详情";
     }
-    const matchedProject =
-      projects.find((project) => project.id === resolvedProjectId) ||
-      projects.find((project) => project.code === requestedProjectRef);
+    const matchedProject = projects.find((project) => project.id === resolvedProjectId);
     return matchedProject?.name || currentProject?.name || "项目详情";
   }, [requestedProjectRef, resolvedProjectId, projects, currentProject]);
 

@@ -8,7 +8,6 @@ import {
   getProjectCostCurve,
   getProjectHeadcountCurve,
 } from "@/services/schedulepro-service";
-import { getProjectByCode } from "@/services/project-service";
 import { resumeAgentStream } from "@/services/ai-service";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -77,7 +76,7 @@ const AI_SSE_PATH = "/api/agent/chat/sse";
 export function useChatPanel(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
   const { token } = useAuth();
-  const { currentProject, projects, setCoreGraph, setCurrentProject, addProject } = useProject();
+  const { currentProject, projects, setCoreGraph } = useProject();
   const queryClient = useQueryClient();
   const defaultWelcomeMessage: ChatMessage = useMemo(
     () => ({
@@ -118,31 +117,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     if (!projectRef) return "";
     const directMatch = projects.find((project) => project.id === projectRef);
     if (directMatch) return directMatch.id;
-
-    const codeMatch = projects.find((project) => project.code === projectRef);
-    if (codeMatch) {
-      if (currentProject?.id !== codeMatch.id) {
-        setCurrentProject(codeMatch);
-      }
-      return codeMatch.id;
-    }
-
-    try {
-      const response = await getProjectByCode(projectRef, token || undefined);
-      const resolvedProject = {
-        id: response.project_id,
-        code: response.project_code ?? projectRef,
-        name: response.project_name ?? projectRef,
-        description: response.description,
-        status: response.status,
-        createdAt: response.created_at,
-      };
-      addProject(resolvedProject);
-      setCurrentProject(resolvedProject);
-      return response.project_id;
-    } catch {
-      return projectRef;
-    }
+    return projectRef;
   };
 
   useEffect(() => {

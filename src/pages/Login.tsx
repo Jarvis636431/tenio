@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { markAutoCreateProjectAfterLogin } from "@/services/project-bootstrap";
 import loginImage from "@/assets/login-tech-construction.jpg";
 
 type AuthTab = "login" | "register";
@@ -33,6 +34,7 @@ export default function Login() {
     }
     try {
       await login(loginUsername, loginPassword);
+      markAutoCreateProjectAfterLogin();
       toast({
         title: "登录成功",
         description: "欢迎回来！",
@@ -69,6 +71,7 @@ export default function Login() {
 
     try {
       await register(registerUsername, registerPassword);
+      markAutoCreateProjectAfterLogin();
       toast({
         title: "注册成功",
         description: "已自动登录，欢迎使用！",

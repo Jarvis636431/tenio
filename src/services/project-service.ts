@@ -1,10 +1,6 @@
 import { requestJson, buildUrl, requestApiData } from "@/services/http";
 import { API_BASE } from "@/config";
-import type {
-  ProcessInfoResponse,
-  ProjectListResponse,
-  ProjectByCodeResponse,
-} from "@/types/domain/project";
+import type { ProcessInfoResponse, ProjectListResponse } from "@/types/domain/project";
 
 const BACKEND_BASE_URL = API_BASE.backend;
 
@@ -27,14 +23,4 @@ export async function getProjectList(token?: string): Promise<ProjectListRespons
   return requestApiData<ProjectListResponse>(`${BACKEND_BASE_URL}/api/v1/projects`, {
     token,
   });
-}
-
-export async function getProjectByCode(
-  projectCode: string,
-  token?: string,
-): Promise<ProjectByCodeResponse> {
-  return requestApiData<ProjectByCodeResponse>(
-    `${BACKEND_BASE_URL}/api/v1/projects/by-code/${projectCode}`,
-    { token },
-  );
 }
