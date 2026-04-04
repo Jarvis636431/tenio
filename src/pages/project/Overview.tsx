@@ -775,7 +775,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
                         models={[
                           {
                             key: "default",
-                            src: "https://apmoss.emio.cn/public/models/0202.ifc",
+                            src: "https://apmoss.emio.cn/public/models/0426.ifc",
                             tagMap,
                           },
                         ]}
