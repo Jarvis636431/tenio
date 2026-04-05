@@ -46,34 +46,16 @@ export function useProjectHighlight(projectId?: string) {
 
   const tagMap = useMemo(() => ({}) as Record<string, string[]>, []);
 
-  const resolveExpressIds = useMemo(() => {
-    return (expressIds: string[] = [], _tagIds: string[] = []) => {
-      const resolved = new Set<string>();
-      expressIds.forEach((id) => {
-        if (id) resolved.add(id);
-      });
-      return Array.from(resolved);
-    };
+  const resolveHighlightIds = useCallback((expressIds: string[] = [], tagIds: string[] = []) => {
+    const resolved = new Set<string>();
+    expressIds.forEach((id) => {
+      if (id) resolved.add(id);
+    });
+    tagIds.forEach((tagId) => {
+      if (tagId) resolved.add(tagId);
+    });
+    return Array.from(resolved);
   }, []);
-
-  const resolveHighlightIds = useMemo(() => {
-    return (expressIds: string[] = [], tagIds: string[] = []) => {
-      const resolved = new Set<string>();
-      expressIds.forEach((id) => {
-        if (id) resolved.add(id);
-      });
-      tagIds.forEach((tagId) => {
-        if (tagId) resolved.add(tagId);
-      });
-      return Array.from(resolved);
-    };
-  }, []);
-
-  const allResolvedIds = useMemo(() => {
-    return processHighlights.flatMap((task) =>
-      resolveHighlightIds(task.expressIds ?? [], task.tagIds ?? []),
-    );
-  }, [processHighlights, resolveHighlightIds]);
 
   const getIdsByDate = useMemo(() => {
     return (date: Date) => {
@@ -81,10 +63,7 @@ export function useProjectHighlight(projectId?: string) {
       target.setHours(12, 0, 0, 0);
       const completedSet = new Set<string>();
       const inProgressSet = new Set<string>();
-      const upcomingSet = new Set<string>();
       const blockedSet = new Set<string>();
-      let withTags = 0;
-      let withExpress = 0;
 
       processHighlights.forEach((task) => {
         if (!task.start || !task.end) return;
@@ -94,24 +73,17 @@ export function useProjectHighlight(projectId?: string) {
         end.setHours(12, 0, 0, 0);
 
         const resolvedIds = resolveHighlightIds(task.expressIds, task.tagIds);
-        if (task.tagIds?.length) withTags += 1;
-        if (task.expressIds?.length) withExpress += 1;
         if (!task.calc) {
-          // Once we reach the start of a non-calc task, block these ids permanently for later dates.
           if (target >= start) {
             resolvedIds.forEach((id) => blockedSet.add(id));
           }
           return;
         }
-        if (target < start) {
-          resolvedIds.forEach((id) => {
-            if (!blockedSet.has(id)) upcomingSet.add(id);
-          });
-        } else if (target > end) {
+        if (target > end) {
           resolvedIds.forEach((id) => {
             if (!blockedSet.has(id)) completedSet.add(id);
           });
-        } else {
+        } else if (target >= start) {
           resolvedIds.forEach((id) => {
             if (!blockedSet.has(id)) inProgressSet.add(id);
           });
@@ -122,46 +94,12 @@ export function useProjectHighlight(projectId?: string) {
         blockedSet.forEach((id) => {
           completedSet.delete(id);
           inProgressSet.delete(id);
-          upcomingSet.delete(id);
-        });
-      }
-
-      if (processHighlights.length > 0) {
-        const targetId = "25XjhlxiHEqAJW4TuCxEyF";
-        const sample = processHighlights[0];
-        console.debug("[highlight] idsByDate summary", {
-          date: target.toISOString(),
-          completed: completedSet.size,
-          inProgress: inProgressSet.size,
-          upcoming: upcomingSet.size,
-          targetIdStatus: {
-            completed: completedSet.has(targetId),
-            inProgress: inProgressSet.has(targetId),
-            upcoming: upcomingSet.has(targetId),
-          },
-          sample: sample
-            ? {
-                id: sample.id,
-                name: sample.name,
-                calc: sample.calc,
-                expressIds: sample.expressIds?.length ?? 0,
-                tagIds: sample.tagIds?.length ?? 0,
-              }
-            : null,
         });
       }
 
       return {
         completedIds: Array.from(completedSet),
         inProgressIds: Array.from(inProgressSet),
-        upcomingIds: Array.from(upcomingSet),
-        debug: {
-          withTags,
-          withExpress,
-          completed: completedSet.size,
-          inProgress: inProgressSet.size,
-          upcoming: upcomingSet.size,
-        },
       };
     };
   }, [processHighlights, resolveHighlightIds]);
@@ -169,9 +107,6 @@ export function useProjectHighlight(projectId?: string) {
   return {
     tagMap,
     processHighlights,
-    resolveExpressIds,
-    resolveHighlightIds,
-    allResolvedIds,
     getIdsByDate,
   };
 }
