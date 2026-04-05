@@ -11,8 +11,10 @@ import type { HighlightGroup } from "./hooks/useHighlight";
 import { useResize } from "./hooks/useResize";
 
 const MODEL_RESPONSE_CACHE_NAME = "tenio-ifc-model-cache-v1";
+const MAX_MODEL_FETCH_ATTEMPTS = 3;
 const modelBufferCache = new Map<string, ArrayBuffer>();
 const inflightModelRequests = new Map<string, Promise<ArrayBuffer>>();
+const modelFetchFailureCounts = new Map<string, number>();
 const modelMetadataCache = new Map<
   string,
   {
@@ -28,6 +30,11 @@ type MaterialOverrides = Omit<THREE.MeshStandardMaterialParameters, "color"> & {
 async function loadModelBuffer(src: string, signal?: AbortSignal): Promise<ArrayBuffer> {
   if (modelBufferCache.has(src)) {
     return modelBufferCache.get(src)!.slice(0);
+  }
+
+  const failureCount = modelFetchFailureCounts.get(src) ?? 0;
+  if (failureCount >= MAX_MODEL_FETCH_ATTEMPTS) {
+    throw new Error(`模型文件请求失败次数已达上限 (${MAX_MODEL_FETCH_ATTEMPTS})`);
   }
 
   const inflight = inflightModelRequests.get(src);
@@ -66,6 +73,7 @@ async function loadModelBuffer(src: string, signal?: AbortSignal): Promise<Array
 
     const buffer = await response.arrayBuffer();
     modelBufferCache.set(src, buffer);
+    modelFetchFailureCounts.delete(src);
     return buffer;
   })();
 
@@ -73,6 +81,11 @@ async function loadModelBuffer(src: string, signal?: AbortSignal): Promise<Array
 
   try {
     return (await request).slice(0);
+  } catch (error) {
+    if (!(error instanceof Error && error.name === "AbortError")) {
+      modelFetchFailureCounts.set(src, failureCount + 1);
+    }
+    throw error;
   } finally {
     inflightModelRequests.delete(src);
   }

@@ -1,7 +1,7 @@
 import { createJiuanProject, selectSolution } from "@/services/schedulepro-service";
 import type { Project } from "@/types/domain/project";
 
-export const DEFAULT_SOLUTION_ID = 4;
+export const DEFAULT_SOLUTION_ID = 0;
 export const AUTO_CREATE_PROJECT_SESSION_KEY = "auto-create-project-after-login";
 
 function createRandomProjectName() {
