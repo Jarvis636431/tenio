@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProjectExport } from "@/pages/project/hooks/useProjectExport";
 import { usePlanTasks } from "@/pages/project/hooks/usePlanTasks";
 import { useDailyProcesses } from "@/pages/project/hooks/useDailyProcesses";
+import { useOverviewTimeline } from "@/pages/project/hooks/useOverviewTimeline";
 import { useTimelineHighlight } from "@/pages/project/hooks/useTimelineHighlight";
 import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
 import { OverviewHeaderActions } from "@/pages/project/components/OverviewHeaderActions";
@@ -67,9 +68,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   };
 
   const { tagMap, processHighlights, getIdsByDate } = useProjectHighlight(resolvedProjectId);
-  const [currentDay, setCurrentDay] = useState(1);
-  const [playbackRate, setPlaybackRate] = useState<1 | 2 | 4>(1);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isResizingModel, setIsResizingModel] = useState(false);
   const [modelPanelRatio, setModelPanelRatio] = useState(0.45);
   const [panelVisibility, setPanelVisibility] = useState<PanelVisibility>({
@@ -94,6 +92,19 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   );
 
   const planTasks = usePlanTasks(coreGraph);
+  const {
+    currentDay,
+    setCurrentDay,
+    playbackRate,
+    setPlaybackRate,
+    isPlaying,
+    setIsPlaying,
+    timeRange,
+    selectedTimelineDate,
+    selectedTimelineDateLabel,
+    timelineProgress,
+    reportPeriod,
+  } = useOverviewTimeline(processHighlights);
 
   const headcountCurveQuery = useQuery({
     queryKey: ["overview", "headcount-curve", resolvedProjectId],
@@ -204,59 +215,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     );
   }, [coreGraph]);
 
-  // 计算项目时间范围 - 处理相对时间
-  const timeRange = useMemo(() => {
-    if (!processHighlights.length) return null;
-    const starts = processHighlights.map((t) => t.start).filter(Boolean) as Date[];
-    const ends = processHighlights.map((t) => t.end).filter(Boolean) as Date[];
-    if (!starts.length || !ends.length) return null;
-    const minStart = new Date(Math.min(...starts.map((d) => d.getTime())));
-    const maxEnd = new Date(Math.max(...ends.map((d) => d.getTime())));
-    const totalDays = Math.max(
-      1,
-      Math.ceil((maxEnd.getTime() - minStart.getTime()) / (1000 * 60 * 60 * 24)) + 1,
-    );
-    return { startDay: 1, endDay: totalDays, totalDays, baseDate: minStart };
-  }, [processHighlights]);
-
-  const selectedTimelineDate = useMemo(() => {
-    if (!timeRange) return null;
-    const selected = new Date(timeRange.baseDate);
-    selected.setDate(timeRange.baseDate.getDate() + currentDay - 1);
-    selected.setHours(12, 0, 0, 0);
-    return selected;
-  }, [currentDay, timeRange]);
-
-  const selectedTimelineDateLabel = useMemo(() => {
-    if (!selectedTimelineDate) return "";
-    const y = selectedTimelineDate.getFullYear();
-    const m = String(selectedTimelineDate.getMonth() + 1).padStart(2, "0");
-    const d = String(selectedTimelineDate.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }, [selectedTimelineDate]);
-
-  const reportPeriod = useMemo(() => {
-    if (!selectedTimelineDate) return { start: "", end: "" };
-    const weekStart = new Date(selectedTimelineDate);
-    const day = weekStart.getDay();
-    const diffToMonday = day === 0 ? 6 : day - 1;
-    weekStart.setDate(weekStart.getDate() - diffToMonday);
-    weekStart.setHours(0, 0, 0, 0);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    const fmt = (d: Date) =>
-      `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(
-        d.getDate(),
-      ).padStart(2, "0")}`;
-    return { start: fmt(weekStart), end: fmt(weekEnd), startDate: weekStart, endDate: weekEnd };
-  }, [selectedTimelineDate]);
-
-  const timelineProgress = useMemo(() => {
-    if (!timeRange) return 0;
-    const span = Math.max(1, timeRange.endDay - timeRange.startDay);
-    return Math.round(((currentDay - timeRange.startDay) / span) * 100);
-  }, [currentDay, timeRange]);
-
   const { completedIds, inProgressIds } = useTimelineHighlight(selectedTimelineDate, getIdsByDate);
   const dailyProcesses = useDailyProcesses(processHighlights, planTasks, selectedTimelineDate);
   const dailyTaskNames = useMemo(() => {
@@ -340,13 +298,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
   };
 
-  // 初始化当前天数为项目开始天数
-  useEffect(() => {
-    if (timeRange && currentDay === 1) {
-      setCurrentDay(timeRange.startDay);
-    }
-  }, [currentDay, timeRange]);
-
   useEffect(() => {
     if (!resolvedProjectId || !token || !agentBaseDate) return;
     const key = `${resolvedProjectId}:${agentBaseDate}`;
@@ -362,28 +313,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       agentInitKeyRef.current = null;
     });
   }, [resolvedProjectId, token, agentBaseDate]);
-
-  useEffect(() => {
-    if (!isPlaying || !timeRange) return;
-
-    const intervalByRate: Record<1 | 2 | 4, number> = {
-      1: 1000,
-      2: 500,
-      4: 250,
-    };
-
-    const timer = window.setInterval(() => {
-      setCurrentDay((prev) => {
-        if (prev >= timeRange.endDay) {
-          setIsPlaying(false);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, intervalByRate[playbackRate]);
-
-    return () => window.clearInterval(timer);
-  }, [isPlaying, playbackRate, timeRange]);
 
   useEffect(() => {
     if (!isResizingModel) return;
