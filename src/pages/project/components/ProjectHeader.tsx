@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { CalendarDays, Clock3, CloudRain, Thermometer, Users } from "lucide-react";
-import { useWeather } from "@/pages/project/hooks/useWeather";
-import { useTime } from "@/pages/project/hooks/useTime";
+import { useWeather } from "@/hooks/useWeather";
+import { useTime } from "@/hooks/useTime";
 
 interface ProjectHeaderProps {
   title?: string;
