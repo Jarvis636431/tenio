@@ -14,16 +14,12 @@ export interface PlanTask {
   prerequisiteProcess: string;
   quantity: number;
   quantityUnit: string;
-  overtime: string;
   duration: string;
   actualWorkDays: number;
   constructionMethod: string;
-  directDependency: string;
-  remarks: string;
   selectedConstructionMethod: string;
   materialCost: number;
   laborCost: number;
-  floor: number;
   extra?: ScheduleRow;
 
   // 兼容性别名 (GanttChart 组件使用)
