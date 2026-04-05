@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { CalendarDays, Clock3, CloudRain, Download, Thermometer, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CalendarDays, Clock3, CloudRain, Thermometer, Users } from "lucide-react";
 import { useWeather } from "@/pages/project/hooks/useWeather";
 import { useTime } from "@/pages/project/hooks/useTime";
 
@@ -10,7 +9,6 @@ interface ProjectHeaderProps {
   className?: string;
   titleExtra?: ReactNode;
   onsiteCount?: number;
-  onExportReport?: () => void;
 }
 
 export function ProjectHeader({
@@ -19,7 +17,6 @@ export function ProjectHeader({
   className = "",
   titleExtra,
   onsiteCount,
-  onExportReport,
 }: ProjectHeaderProps) {
   const liveWeather = useWeather();
   const { dateText, timeText } = useTime();
@@ -60,22 +57,7 @@ export function ProjectHeader({
         )}
       </div>
 
-      {actions ? (
-        <div className="flex items-center gap-2">{actions}</div>
-      ) : (
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            onClick={onExportReport}
-            className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-3 text-[#cfe6ff] hover:bg-[#12417c]"
-            disabled={!onExportReport}
-          >
-            <Download className="mr-1.5 h-4 w-4" />
-            报告导出
-          </Button>
-        </div>
-      )}
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
   );
 }

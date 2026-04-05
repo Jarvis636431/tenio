@@ -16,9 +16,16 @@ interface ProjectTrendChartProps {
 
 const CHART_COLORS = ["#2563eb", "#16a34a", "#db2777", "#ea580c", "#8b5cf6", "#0891b2"];
 
+function formatUnknownLabel(value: unknown) {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return "";
+}
+
 function formatNumericValue(value: unknown) {
   const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return String(value ?? "");
+  if (!Number.isFinite(numeric)) return formatUnknownLabel(value);
   return Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(2);
 }
 
@@ -34,7 +41,10 @@ export function ProjectTrendChart({ data, seriesNames, unit }: ProjectTrendChart
           tick={{ fontSize: 12 }}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(value) => (unit ? `${value}${unit}` : `${value}`)}
+          tickFormatter={(value) => {
+            const label = formatUnknownLabel(value);
+            return unit ? `${label}${unit}` : label;
+          }}
         />
         <Tooltip
           cursor={{ stroke: "#22d3ee", strokeOpacity: 0.35, strokeWidth: 1 }}
@@ -47,10 +57,10 @@ export function ProjectTrendChart({ data, seriesNames, unit }: ProjectTrendChart
           labelStyle={{ color: "#67e8f9", fontSize: 12, marginBottom: 6 }}
           itemStyle={{ color: "#dbeafe", fontSize: 12 }}
           formatter={(value: unknown, name: unknown) => {
-            const seriesName = String(name ?? "");
+            const seriesName = formatUnknownLabel(name);
             return [`${formatNumericValue(value)}${unit ? unit : ""}`, seriesName];
           }}
-          labelFormatter={(label: unknown) => `日期：${String(label ?? "")}`}
+          labelFormatter={(label: unknown) => `日期：${formatUnknownLabel(label)}`}
         />
         {seriesNames.map((name, index) => (
           <Line

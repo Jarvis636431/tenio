@@ -67,6 +67,13 @@ function logSilentError(message: string, error?: unknown) {
   console.warn(`[AI语音] ${message}`);
 }
 
+function stringifyUnknown(value: unknown) {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return "";
+}
+
 type ChatPanelOptions = {
   projectId?: string;
 };
@@ -184,15 +191,20 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     const lines: string[] = [];
     if (verifyType === "adjust_project") {
       lines.push("类型：项目工期调整验证");
-      if (payload.target_date) lines.push(`目标日期：${payload.target_date}`);
-      if (payload.finish_date) lines.push(`完成日期：${payload.finish_date}`);
+      const targetDate = stringifyUnknown(payload.target_date);
+      const finishDate = stringifyUnknown(payload.finish_date);
+      if (targetDate) lines.push(`目标日期：${targetDate}`);
+      if (finishDate) lines.push(`完成日期：${finishDate}`);
     } else if (verifyType === "adjust_task") {
       lines.push("类型：任务工期调整验证");
-      if (payload.task_name) lines.push(`任务名称：${payload.task_name}`);
-      if (payload.finish_date) lines.push(`完成日期：${payload.finish_date}`);
+      const taskName = stringifyUnknown(payload.task_name);
+      const finishDate = stringifyUnknown(payload.finish_date);
+      if (taskName) lines.push(`任务名称：${taskName}`);
+      if (finishDate) lines.push(`完成日期：${finishDate}`);
     } else if (verifyType === "unexpected_event") {
       lines.push("类型：突发事件验证");
-      if (payload.intent) lines.push(`意图：${payload.intent}`);
+      const intent = stringifyUnknown(payload.intent);
+      if (intent) lines.push(`意图：${intent}`);
       if (payload.affected_task_ids) {
         lines.push(`受影响任务：${JSON.stringify(payload.affected_task_ids)}`);
       }
