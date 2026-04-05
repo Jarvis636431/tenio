@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { CalendarDays, Clock3, CloudRain, Download, Thermometer, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useWeather } from "@/pages/project/hooks/useWeather";
+import { useTime } from "@/pages/project/hooks/useTime";
 
 interface ProjectHeaderProps {
   title?: string;
   actions?: ReactNode;
   className?: string;
   titleExtra?: ReactNode;
-  weatherText?: string;
-  temperatureText?: string;
   onsiteCount?: number;
   onExportReport?: () => void;
 }
@@ -18,37 +18,11 @@ export function ProjectHeader({
   actions,
   className = "",
   titleExtra,
-  weatherText = "天气 --",
-  temperatureText = "--°C",
   onsiteCount,
   onExportReport,
 }: ProjectHeaderProps) {
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const timeText = useMemo(
-    () =>
-      now.toLocaleTimeString("zh-CN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-    [now],
-  );
-
-  const dateText = useMemo(() => {
-    const weekday = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][
-      now.getDay()
-    ];
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
-    const d = String(now.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}  ${weekday}`;
-  }, [now]);
+  const liveWeather = useWeather();
+  const { dateText, timeText } = useTime();
 
   return (
     <div className={`flex h-9 items-center justify-between rounded-md text-[#d8ebff] ${className}`}>
@@ -65,11 +39,11 @@ export function ProjectHeader({
         <span className="text-[#1c4d86]/80">|</span>
         <span className="inline-flex items-center gap-1.5 text-[#ff9f43]">
           <Thermometer className="h-3 w-3" />
-          {temperatureText}
+          {liveWeather.temperatureText}
         </span>
         <span className="inline-flex items-center gap-1.5 text-[#9cc7ff]">
           <CloudRain className="h-3 w-3" />
-          {weatherText}
+          {liveWeather.weatherText}
         </span>
         {typeof onsiteCount === "number" && (
           <span className="inline-flex items-center gap-1.5 font-medium text-[#32d296]">
