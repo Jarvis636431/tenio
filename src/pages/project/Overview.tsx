@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useMemo, useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ChartLine, ListTodo, Network, Users } from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
@@ -8,6 +8,7 @@ import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectExport } from "@/pages/project/hooks/useProjectExport";
+import { useOverviewActions } from "@/pages/project/hooks/useOverviewActions";
 import { usePlanTasks } from "@/pages/project/hooks/usePlanTasks";
 import { useDailyProcesses } from "@/pages/project/hooks/useDailyProcesses";
 import { useOverviewMetrics } from "@/pages/project/hooks/useOverviewMetrics";
@@ -27,11 +28,7 @@ import {
   getProjectCostCurve,
   getProjectHeadcountCurve,
 } from "@/services/schedulepro-service";
-import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { PlanTask } from "@/types/domain/plan";
-import type { DailyProcessItem } from "@/pages/project/hooks/useDailyProcesses";
-import { createProjectWithDefaultSolution } from "@/services/project-bootstrap";
 
 interface OverviewProps {
   projectId?: string;
@@ -48,25 +45,12 @@ type PanelVisibility = {
 
 export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const { id: paramProjectId } = useParams();
-  const navigate = useNavigate();
   const { currentProject, projects, addProject, setCurrentProject } = useProject();
   const requestedProjectRef = propsProjectId || paramProjectId || currentProject?.id || "";
   const { projectId: resolvedProjectId, coreGraph } = useProjectCoreGraph({
     projectId: requestedProjectRef,
   });
   const { token } = useAuth();
-
-  const handleResetProject = async () => {
-    if (!token) return;
-    try {
-      const newProject = await createProjectWithDefaultSolution(token);
-      addProject(newProject);
-      setCurrentProject(newProject);
-      navigate(`/project/${newProject.id}`);
-    } catch (error) {
-      console.error("重置项目失败:", error);
-    }
-  };
 
   const { tagMap, processHighlights, getIdsByDate } = useProjectHighlight(resolvedProjectId);
   const [isResizingModel, setIsResizingModel] = useState(false);
@@ -78,8 +62,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     network: true,
     model: true,
   });
-  const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
-  const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<PlanTask | null>(null);
   const fixedHighlightIds = useMemo(
     () => [
       "2j0dIGQjb7IBS38pr73$QB",
@@ -112,6 +94,21 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     projects,
     currentProject,
     coreGraph,
+  });
+  const {
+    isTaskDetailDialogOpen,
+    setIsTaskDetailDialogOpen,
+    selectedTaskForDetail,
+    handleResetProject,
+    handleTaskDetail,
+    handleDailyProcessClick,
+  } = useOverviewActions({
+    resolvedProjectId,
+    token: token || undefined,
+    timeRange,
+    planTasks,
+    addProject,
+    setCurrentProject,
   });
 
   const headcountCurveQuery = useQuery({
@@ -237,13 +234,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     progressStatus: timelineProgress < 33 ? "超前" : timelineProgress > 80 ? "滞后" : "符合计划",
     remark: "",
   });
-  const agentBaseDate = useMemo(() => {
-    if (!timeRange?.baseDate) return "";
-    const y = timeRange.baseDate.getFullYear();
-    const m = String(timeRange.baseDate.getMonth() + 1).padStart(2, "0");
-    const d = String(timeRange.baseDate.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }, [timeRange]);
   const showTrendPanels = panelVisibility.headcount || panelVisibility.cost;
   const showPlanPanels = panelVisibility.gantt || panelVisibility.network;
   const showModelPanel = panelVisibility.model;
@@ -251,7 +241,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const trendVisibleCount = Number(panelVisibility.headcount) + Number(panelVisibility.cost);
   const planVisibleCount = Number(panelVisibility.gantt) + Number(panelVisibility.network);
   const leftColumnRef = useRef<HTMLDivElement | null>(null);
-  const agentInitKeyRef = useRef<string | null>(null);
   const visiblePanelCount = useMemo(
     () => Object.values(panelVisibility).filter(Boolean).length,
     [panelVisibility],
@@ -259,22 +248,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const handleTogglePanel = (panel: keyof PanelVisibility) => {
     setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
   };
-
-  useEffect(() => {
-    if (!resolvedProjectId || !token || !agentBaseDate) return;
-    const key = `${resolvedProjectId}:${agentBaseDate}`;
-    if (agentInitKeyRef.current === key) return;
-    agentInitKeyRef.current = key;
-
-    void initAgent({
-      project_id: resolvedProjectId,
-      base_date: agentBaseDate,
-      solution_id: 4,
-      access_token: token,
-    }).catch(() => {
-      agentInitKeyRef.current = null;
-    });
-  }, [resolvedProjectId, token, agentBaseDate]);
 
   useEffect(() => {
     if (!isResizingModel) return;
@@ -307,19 +280,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isResizingModel]);
-
-  const handleTaskDetail = (task: PlanTask) => {
-    setSelectedTaskForDetail(task);
-    setIsTaskDetailDialogOpen(true);
-  };
-
-  const handleDailyProcessClick = (item: DailyProcessItem) => {
-    const matchedTask =
-      planTasks.find((task) => task.id === item.id) ??
-      planTasks.find((task) => task.task === item.name);
-    if (!matchedTask) return;
-    handleTaskDetail(matchedTask);
-  };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 bg-gradient-to-b from-[#020a1d] to-[#041332] px-1 pt-0 pb-1 text-slate-100">
