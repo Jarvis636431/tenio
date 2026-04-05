@@ -2,17 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useMemo, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Check,
-  ChartLine,
-  Download,
-  ListTodo,
-  Network,
-  Boxes,
-  SlidersHorizontal,
-  Users,
-  RotateCcw,
-} from "lucide-react";
+import { ChartLine, ListTodo, Network, Users } from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
@@ -22,6 +12,7 @@ import { usePlanTasks } from "@/pages/project/hooks/usePlanTasks";
 import { useDailyProcesses } from "@/pages/project/hooks/useDailyProcesses";
 import { useTimelineHighlight } from "@/pages/project/hooks/useTimelineHighlight";
 import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
+import { OverviewHeaderActions } from "@/pages/project/components/OverviewHeaderActions";
 import { PanelCard } from "@/pages/project/components/PanelCard";
 import { ProjectSlider } from "@/pages/project/components/ProjectSlider";
 import { DailyCard } from "@/pages/project/components/DailyCard";
@@ -36,18 +27,9 @@ import {
 } from "@/services/schedulepro-service";
 import { initAgent } from "@/services/ai-service";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import type { PlanTask } from "@/types/domain/plan";
 import type { DailyProcessItem } from "@/pages/project/hooks/useDailyProcesses";
 import { createProjectWithDefaultSolution } from "@/services/project-bootstrap";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface OverviewProps {
   projectId?: string;
@@ -354,6 +336,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     () => Object.values(panelVisibility).filter(Boolean).length,
     [panelVisibility],
   );
+  const handleTogglePanel = (panel: keyof PanelVisibility) => {
+    setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
+  };
 
   // 初始化当前天数为项目开始天数
   useEffect(() => {
@@ -453,139 +438,16 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
           titleExtra={totalDurationLabel ? `总工期：${totalDurationLabel}` : undefined}
           onsiteCount={onsiteCount}
           actions={
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-2 text-[#cfe6ff] hover:bg-[#12417c]"
-                onClick={() => {
-                  void handleResetProject();
-                }}
-              >
-                <RotateCcw className="mr-1.5 h-4 w-4" />
-                重置项目
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-2 text-[#cfe6ff] hover:bg-[#12417c]"
-                  >
-                    <SlidersHorizontal className="mr-1.5 h-4 w-4" />
-                    视图 {visiblePanelCount}/5
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-44 border-cyan-900/60 bg-[#03112a] text-cyan-100"
-                >
-                  <DropdownMenuLabel className="text-cyan-200">显示面板</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-cyan-900/60" />
-                  <DropdownMenuItem
-                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setPanelVisibility((prev) => ({ ...prev, headcount: !prev.headcount }));
-                    }}
-                  >
-                    <Users className="mr-2 h-4 w-4 text-cyan-300" />
-                    <span className="flex-1">劳动力曲线</span>
-                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
-                      {panelVisibility.headcount && <Check className="h-3 w-3 text-cyan-200" />}
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setPanelVisibility((prev) => ({ ...prev, cost: !prev.cost }));
-                    }}
-                  >
-                    <ChartLine className="mr-2 h-4 w-4 text-emerald-300" />
-                    <span className="flex-1">资金曲线</span>
-                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
-                      {panelVisibility.cost && <Check className="h-3 w-3 text-cyan-200" />}
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setPanelVisibility((prev) => ({ ...prev, gantt: !prev.gantt }));
-                    }}
-                  >
-                    <ListTodo className="mr-2 h-4 w-4 text-amber-300" />
-                    <span className="flex-1">甘特图</span>
-                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
-                      {panelVisibility.gantt && <Check className="h-3 w-3 text-cyan-200" />}
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setPanelVisibility((prev) => ({ ...prev, network: !prev.network }));
-                    }}
-                  >
-                    <Network className="mr-2 h-4 w-4 text-violet-300" />
-                    <span className="flex-1">网络图</span>
-                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
-                      {panelVisibility.network && <Check className="h-3 w-3 text-cyan-200" />}
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setPanelVisibility((prev) => ({ ...prev, model: !prev.model }));
-                    }}
-                  >
-                    <Boxes className="mr-2 h-4 w-4 text-cyan-300" />
-                    <span className="flex-1">模型区</span>
-                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
-                      {panelVisibility.model && <Check className="h-3 w-3 text-cyan-200" />}
-                    </span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-3 text-[#cfe6ff] hover:bg-[#12417c]"
-                  >
-                    <Download className="mr-1.5 h-4 w-4" />
-                    报告导出
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-[var(--radix-dropdown-menu-trigger-width)] border-cyan-900/60 bg-[#03112a] text-cyan-100"
-                >
-                  <DropdownMenuItem
-                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleExportWeeklyDOC();
-                    }}
-                  >
-                    导出周报
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="focus:bg-[#0a2a5c] focus:text-cyan-100"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleExportDailyDOC();
-                    }}
-                  >
-                    导出日报
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <OverviewHeaderActions
+              panelVisibility={panelVisibility}
+              visiblePanelCount={visiblePanelCount}
+              onResetProject={() => {
+                void handleResetProject();
+              }}
+              onTogglePanel={handleTogglePanel}
+              onExportWeekly={handleExportWeeklyDOC}
+              onExportDaily={handleExportDailyDOC}
+            />
           }
         />
       </div>
