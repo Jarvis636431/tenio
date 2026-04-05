@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import * as THREE from "three";
 import { IFCLoader } from "web-ifc-three/IFCLoader";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { LoadingState } from "@/types/domain/worker";
 import { buildGlobalIdMap, buildTagMap } from "./utils/ifcCaches";
 import { setupCameraAndControls } from "./utils/cameraControls";
@@ -586,7 +586,7 @@ export function ModelViewer({
     modelsSignatureRef.current = null;
     if (ifcLoaderRef.current?.ifcManager) {
       try {
-        ifcLoaderRef.current.ifcManager.dispose();
+        void ifcLoaderRef.current.ifcManager.dispose();
       } catch (error) {
         console.warn("[ModelViewer] 卸载IFC实例时出错:", error);
       }
@@ -706,7 +706,7 @@ export function ModelViewer({
             }));
 
             const ifcLoader = new IFCLoader();
-            ifcLoader.ifcManager.setWasmPath("/wasm/");
+            void ifcLoader.ifcManager.setWasmPath("/wasm/");
             ifcLoaderRef.current = ifcLoader;
             const model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
               modelID: number;
@@ -788,7 +788,7 @@ export function ModelViewer({
           error: null,
         });
 
-        applyMultiHighlight();
+        void applyMultiHighlight();
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           isInitializingRef.current = false;
@@ -805,7 +805,7 @@ export function ModelViewer({
       }
     };
 
-    initViewer();
+    void initViewer();
 
     return () => {
       cleanup();
@@ -821,7 +821,7 @@ export function ModelViewer({
   ]);
 
   useEffect(() => {
-    applyMultiHighlight();
+    void applyMultiHighlight();
   }, [applyMultiHighlight]);
 
   return (

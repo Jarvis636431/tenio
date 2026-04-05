@@ -594,7 +594,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
 
   const handleInputEnter = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleSendMessage();
+      void handleSendMessage();
     }
   };
 

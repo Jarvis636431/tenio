@@ -16,7 +16,7 @@ export function useAuth() {
       return;
     }
     authInitialized = true;
-    initializeAuth();
+    void initializeAuth();
   }, [initializeAuth]);
 
   return {

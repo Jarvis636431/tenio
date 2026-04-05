@@ -125,7 +125,12 @@ export default function Login() {
 
             <CardContent className="py-[20px]">
               {activeTab === "login" ? (
-                <form onSubmit={handleLogin} className="space-y-4">
+                <form
+                  onSubmit={(e) => {
+                    void handleLogin(e);
+                  }}
+                  className="space-y-4"
+                >
                   <div className="space-y-2">
                     <Label htmlFor="login-username">账号</Label>
                     <Input
@@ -152,7 +157,12 @@ export default function Login() {
                   </Button>
                 </form>
               ) : (
-                <form onSubmit={handleRegister} className="space-y-4">
+                <form
+                  onSubmit={(e) => {
+                    void handleRegister(e);
+                  }}
+                  className="space-y-4"
+                >
                   <div className="space-y-2">
                     <Label htmlFor="register-username">账号</Label>
                     <Input

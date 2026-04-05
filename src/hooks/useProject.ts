@@ -55,7 +55,7 @@ export function useProject() {
       }
     };
 
-    fetchProjects();
+    void fetchProjects();
 
     return () => {
       active = false;

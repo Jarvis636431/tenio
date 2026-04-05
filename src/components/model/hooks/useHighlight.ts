@@ -58,7 +58,7 @@ export function useHighlight({
       highlightRetryTimeoutRef.current = window.setTimeout(() => {
         highlightRetryTimeoutRef.current = null;
         if (modelRef.current && applyHighlightRef.current) {
-          applyHighlightRef.current(modelRef.current, nextAttempt);
+          void applyHighlightRef.current(modelRef.current, nextAttempt);
         }
       }, highlightRetryDelay);
     },

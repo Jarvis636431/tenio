@@ -458,7 +458,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
                 type="button"
                 size="sm"
                 className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-2 text-[#cfe6ff] hover:bg-[#12417c]"
-                onClick={handleResetProject}
+                onClick={() => {
+                  void handleResetProject();
+                }}
               >
                 <RotateCcw className="mr-1.5 h-4 w-4" />
                 重置项目

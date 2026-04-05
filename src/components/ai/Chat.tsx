@@ -217,7 +217,7 @@ export function Chat({ state, className }: ChatProps) {
                 ...prev,
                 [messageId]: "yes",
               }));
-              resumeInterrupt("是", true);
+              void resumeInterrupt("是", true);
             }}
             disabled={isThinking || interruptDecisions[messageId] !== undefined}
           >
@@ -232,7 +232,7 @@ export function Chat({ state, className }: ChatProps) {
                 ...prev,
                 [messageId]: "no",
               }));
-              resumeInterrupt("否", false);
+              void resumeInterrupt("否", false);
             }}
             disabled={isThinking || interruptDecisions[messageId] !== undefined}
           >
@@ -407,7 +407,9 @@ export function Chat({ state, className }: ChatProps) {
                     key={item.label}
                     type="button"
                     variant="ghost"
-                    onClick={() => sendQuickMessage(item.label)}
+                    onClick={() => {
+                      void sendQuickMessage(item.label);
+                    }}
                     className="h-7 w-auto justify-start gap-1 rounded-full border border-cyan-900/60 bg-[#03112a] px-2 text-cyan-200 hover:bg-[#0a2a5c]"
                   >
                     <Icon className="h-2.5 w-2.5 text-cyan-300" />
@@ -438,7 +440,9 @@ export function Chat({ state, className }: ChatProps) {
                   <Paperclip className="h-4 w-4" />
                 </Button>
                 <Button
-                  onClick={toggleRecording}
+                  onClick={() => {
+                    toggleRecording();
+                  }}
                   size="icon"
                   variant="ghost"
                   disabled={isRecognizing && !isRecording}
@@ -453,7 +457,9 @@ export function Chat({ state, className }: ChatProps) {
                 </Button>
               </div>
               <Button
-                onClick={handleSendMessage}
+                onClick={() => {
+                  void handleSendMessage();
+                }}
                 size="icon"
                 disabled={!inputMessage.trim()}
                 className="h-10 w-10 rounded-xl bg-[#1d4e89] text-[#cfe8ff] hover:bg-[#286ab8] disabled:bg-slate-700/40 disabled:text-slate-400"
