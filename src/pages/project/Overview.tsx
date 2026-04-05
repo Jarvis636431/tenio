@@ -13,7 +13,6 @@ import { usePlanTasks } from "@/pages/project/hooks/usePlanTasks";
 import { useDailyProcesses } from "@/pages/project/hooks/useDailyProcesses";
 import { useOverviewMetrics } from "@/pages/project/hooks/useOverviewMetrics";
 import { useOverviewTimeline } from "@/pages/project/hooks/useOverviewTimeline";
-import { useTimelineHighlight } from "@/pages/project/hooks/useTimelineHighlight";
 import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
 import { OverviewHeaderActions } from "@/pages/project/components/OverviewHeaderActions";
 import { PanelCard } from "@/pages/project/components/PanelCard";
@@ -174,7 +173,16 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     };
   }, [costCurveQuery.data]);
 
-  const { completedIds, inProgressIds } = useTimelineHighlight(selectedTimelineDate, getIdsByDate);
+  const { completedIds, inProgressIds } = useMemo(() => {
+    if (!selectedTimelineDate) {
+      return { completedIds: [], inProgressIds: [] };
+    }
+    const result = getIdsByDate(selectedTimelineDate);
+    return {
+      completedIds: result.completedIds,
+      inProgressIds: result.inProgressIds,
+    };
+  }, [getIdsByDate, selectedTimelineDate]);
   const dailyProcesses = useDailyProcesses(processHighlights, planTasks, selectedTimelineDate);
   const dailyTaskNames = useMemo(() => {
     return [...dailyProcesses]
