@@ -11,7 +11,7 @@ import type { HighlightGroup } from "./hooks/useHighlight";
 import { useResize } from "./hooks/useResize";
 
 const MODEL_RESPONSE_CACHE_NAME = "tenio-ifc-model-cache-v1";
-const MAX_MODEL_FETCH_ATTEMPTS = 3;
+const MAX_MODEL_FETCH_ATTEMPTS = 1;
 const modelBufferCache = new Map<string, ArrayBuffer>();
 const inflightModelRequests = new Map<string, Promise<ArrayBuffer>>();
 const modelFetchFailureCounts = new Map<string, number>();
@@ -151,10 +151,12 @@ export function ModelViewer({
   const globalIdMapsRef = useRef<Map<string, Map<string, number>>>(new Map());
   const rootGroupRef = useRef<THREE.Group | null>(null);
   const modelsSignatureRef = useRef<string | null>(null);
+  const failedModelsSignatureRef = useRef<string | null>(null);
   const highlightMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
   const highlightGroupMaterialsRef = useRef<Map<string, THREE.MeshStandardMaterial>>(new Map());
   const highlightSubsetsRef = useRef<Map<string, THREE.Mesh & { renderOrder: number }>>(new Map());
   const highlightSubsetRef = useRef<(THREE.Mesh & { renderOrder: number }) | null>(null);
+  const applyMultiHighlightRef = useRef<() => void>(() => undefined);
 
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
@@ -532,6 +534,10 @@ export function ModelViewer({
     resolveColor,
   ]);
 
+  useEffect(() => {
+    applyMultiHighlightRef.current = applyMultiHighlight;
+  }, [applyMultiHighlight]);
+
   const disposeModel = useCallback((model: THREE.Object3D) => {
     model.traverse((child) => {
       if (child instanceof THREE.Mesh) {
@@ -622,6 +628,10 @@ export function ModelViewer({
       return;
     }
 
+    if (failedModelsSignatureRef.current === modelsSignature) {
+      return;
+    }
+
     if (isInitializedRef.current || isInitializingRef.current) {
       cleanup();
     }
@@ -693,7 +703,6 @@ export function ModelViewer({
 
         const buffers = await Promise.all(
           normalizedModelsRef.current.map(async (item) => {
-            console.log("[ModelViewer] fetching model:", item.src);
             return loadModelBuffer(item.src, abortControllerRef.current?.signal);
           }),
         );
@@ -793,6 +802,7 @@ export function ModelViewer({
         isInitializedRef.current = true;
         isInitializingRef.current = false;
         modelsSignatureRef.current = modelsSignature;
+        failedModelsSignatureRef.current = null;
 
         setLoadingState({
           isLoading: false,
@@ -801,7 +811,7 @@ export function ModelViewer({
           error: null,
         });
 
-        void applyMultiHighlight();
+        void applyMultiHighlightRef.current();
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           isInitializingRef.current = false;
@@ -814,6 +824,7 @@ export function ModelViewer({
           message: "",
           error: err instanceof Error ? err.message : "初始化失败",
         });
+        failedModelsSignatureRef.current = modelsSignature;
         isInitializingRef.current = false;
       }
     };
@@ -824,7 +835,6 @@ export function ModelViewer({
       cleanup();
     };
   }, [
-    applyMultiHighlight,
     baseMaterialOverrides,
     cleanup,
     modelsSignature,

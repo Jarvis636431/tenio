@@ -72,6 +72,23 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     ],
     [],
   );
+  const overviewModels = useMemo(
+    () => [
+      {
+        key: "default",
+        src: "https://apmoss.emio.cn/public/models/0426.ifc",
+        tagMap,
+      },
+    ],
+    [tagMap],
+  );
+  const overviewBaseMaterialOverrides = useMemo(
+    () => ({
+      transparent: true,
+      opacity: 0,
+    }),
+    [],
+  );
 
   const planTasks = usePlanTasks(coreGraph);
   const {
@@ -183,6 +200,29 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       inProgressIds: result.inProgressIds,
     };
   }, [getIdsByDate, selectedTimelineDate]);
+  const overviewHighlightColorGroups = useMemo(
+    () => [
+      {
+        ids: completedIds,
+        color: "#22c55e",
+        opacity: 0.18,
+        customID: "completed",
+      },
+      {
+        ids: inProgressIds,
+        color: "#f59e0b",
+        opacity: 1,
+        customID: "inProgress",
+      },
+      {
+        ids: fixedHighlightIds,
+        color: "#000000",
+        opacity: 0.05,
+        customID: "fixed",
+      },
+    ],
+    [completedIds, fixedHighlightIds, inProgressIds],
+  );
   const dailyProcesses = useDailyProcesses(processHighlights, planTasks, selectedTimelineDate);
   const dailyTaskNames = useMemo(() => {
     return [...dailyProcesses]
@@ -495,34 +535,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
                   <div className="flex h-full min-h-0 flex-col gap-2">
                     <div className="relative min-h-0 flex-1 w-full">
                       <ModelViewer
-                        models={[
-                          {
-                            key: "default",
-                            src: "https://apmoss.emio.cn/public/models/0426.ifc",
-                            tagMap,
-                          },
-                        ]}
-                        baseMaterialOverrides={{ transparent: true, opacity: 0 }}
-                        highlightColorGroups={[
-                          {
-                            ids: completedIds,
-                            color: "#22c55e",
-                            opacity: 0.18,
-                            customID: "completed",
-                          },
-                          {
-                            ids: inProgressIds,
-                            color: "#f59e0b",
-                            opacity: 1,
-                            customID: "inProgress",
-                          },
-                          {
-                            ids: fixedHighlightIds,
-                            color: "#000000",
-                            opacity: 0.05,
-                            customID: "fixed",
-                          },
-                        ]}
+                        models={overviewModels}
+                        baseMaterialOverrides={overviewBaseMaterialOverrides}
+                        highlightColorGroups={overviewHighlightColorGroups}
                         className="h-full"
                       />
                     </div>

@@ -137,6 +137,15 @@ export function TaskDetailDialog({
     const matched = mediaRows.find((row) => row.name === taskName);
     return matched?.video ? resolveResourceUrl(matched.video) : "";
   }, [mediaRows, task?.task, workProcessName]);
+  const detailModels = useMemo(
+    () => [
+      {
+        key: "default",
+        src: "https://apmoss.emio.cn/public/models/0426.ifc",
+      },
+    ],
+    [],
+  );
   const workDescription = orderInfo?.["工单内容"];
   const safetyNote = orderInfo?.["安全交底"];
   const technicalNote = orderInfo?.["技术验收标准"];
@@ -202,12 +211,7 @@ export function TaskDetailDialog({
 
           <TabsContent value="3d" className="mt-4 flex-1">
             <ModelViewer
-              models={[
-                {
-                  key: "default",
-                  src: "https://apmoss.emio.cn/public/models/0426.ifc",
-                },
-              ]}
+              models={detailModels}
               highlightGlobalIds={highlightedComponentIds}
               highlightTagIds={highlightedTagIds}
               className="h-full"
