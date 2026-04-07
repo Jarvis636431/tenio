@@ -69,8 +69,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     handleTaskDetail,
   } = useOverviewActions({
     resolvedProjectId,
-    timeRange,
-    planTasks,
     addProject,
     setCurrentProject,
   });
