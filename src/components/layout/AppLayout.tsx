@@ -12,7 +12,7 @@ function LayoutContent({ children }: LayoutProps) {
 
       <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[280px_minmax(0,1fr)]">
         <AppSidebar />
-        <main className="min-h-0 overflow-hidden px-5 py-4">{children}</main>
+        <main className="min-h-0 overflow-x-hidden overflow-y-auto px-5 py-4">{children}</main>
       </div>
     </div>
   );

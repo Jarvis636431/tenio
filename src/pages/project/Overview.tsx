@@ -197,7 +197,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   });
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 bg-transparent px-0 pt-0 pb-0 text-slate-100">
+    <div className="flex min-h-full flex-col gap-3 bg-transparent px-0 pt-0 pb-0 text-slate-100">
       <div className="shrink-0 rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] px-4 py-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -260,12 +260,13 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       )}
 
       {activeTab === "overview" && (
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <div className="grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
             <PanelCard
               title="劳动力曲线"
               icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
               titleClassName="text-cyan-200"
+              className="min-h-[320px]"
             >
               {headcountCurveQuery.isLoading ? (
                 <Skeleton className="h-full w-full" />
@@ -292,6 +293,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
               title="资金曲线"
               icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
               titleClassName="text-emerald-300"
+              className="min-h-[320px]"
             >
               {costCurveQuery.isLoading ? (
                 <Skeleton className="h-full w-full" />
@@ -315,11 +317,12 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
             </PanelCard>
           </div>
 
-          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
+          <div className="grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
             <PanelCard
               title="甘特图"
               icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
               titleClassName="text-amber-300"
+              className="min-h-[520px]"
             >
               {planTasks.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-cyan-300/70">
@@ -341,6 +344,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
               title="网络图"
               icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
               titleClassName="text-violet-300"
+              className="min-h-[520px]"
             >
               {planTasks.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-cyan-300/70">
@@ -361,11 +365,12 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       )}
 
       {activeTab === "schedule" && (
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="min-h-[640px]">
           <PanelCard
             title="甘特图"
             icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
             titleClassName="text-amber-300"
+            className="min-h-[640px]"
           >
             {planTasks.length === 0 ? (
               <div className="flex h-full items-center justify-center text-cyan-300/70">
@@ -386,11 +391,12 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       )}
 
       {activeTab === "network" && (
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="min-h-[640px]">
           <PanelCard
             title="网络图"
             icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
             titleClassName="text-violet-300"
+            className="min-h-[640px]"
           >
             {planTasks.length === 0 ? (
               <div className="flex h-full items-center justify-center text-cyan-300/70">
@@ -410,11 +416,12 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       )}
 
       {activeTab === "resources" && (
-        <div className="grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-hidden">
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
           <PanelCard
             title="劳动力曲线"
             icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
             titleClassName="text-cyan-200"
+            className="min-h-[360px]"
           >
             {headcountCurveQuery.isLoading ? (
               <Skeleton className="h-full w-full" />
@@ -441,6 +448,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
             title="资金曲线"
             icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
             titleClassName="text-emerald-300"
+            className="min-h-[360px]"
           >
             {costCurveQuery.isLoading ? (
               <Skeleton className="h-full w-full" />
