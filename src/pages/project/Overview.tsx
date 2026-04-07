@@ -14,7 +14,6 @@ import { useOverviewTimeline } from "@/pages/project/hooks/useOverviewTimeline";
 import { OverviewHeaderActions } from "@/pages/project/components/OverviewHeaderActions";
 import { PanelCard } from "@/pages/project/components/PanelCard";
 import { ProjectSlider } from "@/pages/project/components/ProjectSlider";
-import { DailyCard } from "@/pages/project/components/DailyCard";
 import { ProjectTrendChart } from "@/pages/project/components/ProjectTrendChart";
 import { ProjectTabBar } from "@/pages/project/components/ProjectTabBar";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
@@ -81,7 +80,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     selectedTaskForDetail,
     handleResetProject,
     handleTaskDetail,
-    handleDailyProcessClick,
   } = useOverviewActions({
     resolvedProjectId,
     timeRange,
@@ -289,176 +287,164 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       )}
 
       {activeTab === "overview" && (
-        <div className="grid min-h-0 flex-1 grid-cols-10 gap-2 overflow-hidden">
-          <div className="col-span-7 min-w-0 flex min-h-0 flex-col gap-2 overflow-hidden">
-            {showTrendPanels && (
-              <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
-                {panelVisibility.headcount && (
-                  <PanelCard
-                    title="劳动力曲线"
-                    icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
-                    titleClassName="text-cyan-200"
-                  >
-                    {headcountCurveQuery.isLoading ? (
-                      <Skeleton className="h-full w-full" />
-                    ) : headcountCurveQuery.isError ? (
-                      <div className="flex h-full items-center justify-center text-sm text-destructive">
-                        无法获取人员数据
-                      </div>
-                    ) : headcountChartData.length > 0 ? (
-                      <div className="h-full w-full">
-                        <ProjectTrendChart
-                          data={headcountChartData}
-                          seriesNames={["劳动力人数"]}
-                          unit="人"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-cyan-300/70">
-                        暂无人员数据
-                      </div>
-                    )}
-                  </PanelCard>
-                )}
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+          {showTrendPanels && (
+            <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
+              {panelVisibility.headcount && (
+                <PanelCard
+                  title="劳动力曲线"
+                  icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
+                  titleClassName="text-cyan-200"
+                >
+                  {headcountCurveQuery.isLoading ? (
+                    <Skeleton className="h-full w-full" />
+                  ) : headcountCurveQuery.isError ? (
+                    <div className="flex h-full items-center justify-center text-sm text-destructive">
+                      无法获取人员数据
+                    </div>
+                  ) : headcountChartData.length > 0 ? (
+                    <div className="h-full w-full">
+                      <ProjectTrendChart
+                        data={headcountChartData}
+                        seriesNames={["劳动力人数"]}
+                        unit="人"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-cyan-300/70">
+                      暂无人员数据
+                    </div>
+                  )}
+                </PanelCard>
+              )}
 
-                {panelVisibility.cost && (
-                  <PanelCard
-                    title="资金曲线"
-                    icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
-                    titleClassName="text-emerald-300"
-                  >
-                    {costCurveQuery.isLoading ? (
-                      <Skeleton className="h-full w-full" />
-                    ) : costCurveQuery.isError ? (
-                      <div className="flex h-full items-center justify-center text-sm text-destructive">
-                        无法获取成本数据
-                      </div>
-                    ) : costCurveChart.points.length > 0 ? (
-                      <div className="h-full w-full">
-                        <ProjectTrendChart
-                          data={costCurveChart.points}
-                          seriesNames={["总成本"]}
-                          unit={costCurveChart.unit}
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-cyan-300/70">
-                        暂无成本数据
-                      </div>
-                    )}
-                  </PanelCard>
-                )}
-              </div>
-            )}
+              {panelVisibility.cost && (
+                <PanelCard
+                  title="资金曲线"
+                  icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
+                  titleClassName="text-emerald-300"
+                >
+                  {costCurveQuery.isLoading ? (
+                    <Skeleton className="h-full w-full" />
+                  ) : costCurveQuery.isError ? (
+                    <div className="flex h-full items-center justify-center text-sm text-destructive">
+                      无法获取成本数据
+                    </div>
+                  ) : costCurveChart.points.length > 0 ? (
+                    <div className="h-full w-full">
+                      <ProjectTrendChart
+                        data={costCurveChart.points}
+                        seriesNames={["总成本"]}
+                        unit={costCurveChart.unit}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-cyan-300/70">
+                      暂无成本数据
+                    </div>
+                  )}
+                </PanelCard>
+              )}
+            </div>
+          )}
 
-            {showPlanPanels && (
-              <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
-                {panelVisibility.gantt && (
-                  <PanelCard
-                    title="甘特图"
-                    icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
-                    titleClassName="text-amber-300"
-                  >
-                    {planTasks.length === 0 ? (
-                      <div className="flex h-full items-center justify-center text-cyan-300/70">
-                        当前项目暂无施工任务数据
-                      </div>
-                    ) : (
-                      <div className="h-full min-h-0 overflow-hidden">
-                        <GanttChart
-                          data={planTasks}
-                          onTaskDetail={handleTaskDetail}
-                          scale="day"
-                          currentDate={selectedTimelineDate}
-                        />
-                      </div>
-                    )}
-                  </PanelCard>
-                )}
+          {showPlanPanels && (
+            <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
+              {panelVisibility.gantt && (
+                <PanelCard
+                  title="甘特图"
+                  icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
+                  titleClassName="text-amber-300"
+                >
+                  {planTasks.length === 0 ? (
+                    <div className="flex h-full items-center justify-center text-cyan-300/70">
+                      当前项目暂无施工任务数据
+                    </div>
+                  ) : (
+                    <div className="h-full min-h-0 overflow-hidden">
+                      <GanttChart
+                        data={planTasks}
+                        onTaskDetail={handleTaskDetail}
+                        scale="day"
+                        currentDate={selectedTimelineDate}
+                      />
+                    </div>
+                  )}
+                </PanelCard>
+              )}
 
-                {panelVisibility.network && (
-                  <PanelCard
-                    title="网络图"
-                    icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
-                    titleClassName="text-violet-300"
-                  >
-                    {planTasks.length === 0 ? (
-                      <div className="flex h-full items-center justify-center text-cyan-300/70">
-                        当前项目暂无施工任务数据
-                      </div>
-                    ) : (
-                      <div className="h-full min-h-0 overflow-hidden">
-                        <NetworkDiagram
-                          tasks={planTasks}
-                          onNodeClick={handleTaskDetail}
-                          currentDate={selectedTimelineDate}
-                        />
-                      </div>
-                    )}
-                  </PanelCard>
-                )}
-              </div>
-            )}
-          </div>
-
-          <DailyCard items={dailyProcesses} onItemClick={handleDailyProcessClick} />
+              {panelVisibility.network && (
+                <PanelCard
+                  title="网络图"
+                  icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
+                  titleClassName="text-violet-300"
+                >
+                  {planTasks.length === 0 ? (
+                    <div className="flex h-full items-center justify-center text-cyan-300/70">
+                      当前项目暂无施工任务数据
+                    </div>
+                  ) : (
+                    <div className="h-full min-h-0 overflow-hidden">
+                      <NetworkDiagram
+                        tasks={planTasks}
+                        onNodeClick={handleTaskDetail}
+                        currentDate={selectedTimelineDate}
+                      />
+                    </div>
+                  )}
+                </PanelCard>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       {activeTab === "schedule" && (
-        <div className="grid min-h-0 flex-1 grid-cols-10 gap-2 overflow-hidden">
-          <div className="col-span-7 min-w-0">
-            <PanelCard
-              title="甘特图"
-              icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
-              titleClassName="text-amber-300"
-            >
-              {planTasks.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-cyan-300/70">
-                  当前项目暂无施工任务数据
-                </div>
-              ) : (
-                <div className="h-full min-h-0 overflow-hidden">
-                  <GanttChart
-                    data={planTasks}
-                    onTaskDetail={handleTaskDetail}
-                    scale="day"
-                    currentDate={selectedTimelineDate}
-                  />
-                </div>
-              )}
-            </PanelCard>
-          </div>
-
-          <DailyCard items={dailyProcesses} onItemClick={handleDailyProcessClick} />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <PanelCard
+            title="甘特图"
+            icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
+            titleClassName="text-amber-300"
+          >
+            {planTasks.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-cyan-300/70">
+                当前项目暂无施工任务数据
+              </div>
+            ) : (
+              <div className="h-full min-h-0 overflow-hidden">
+                <GanttChart
+                  data={planTasks}
+                  onTaskDetail={handleTaskDetail}
+                  scale="day"
+                  currentDate={selectedTimelineDate}
+                />
+              </div>
+            )}
+          </PanelCard>
         </div>
       )}
 
       {activeTab === "network" && (
-        <div className="grid min-h-0 flex-1 grid-cols-10 gap-2 overflow-hidden">
-          <div className="col-span-7 min-w-0">
-            <PanelCard
-              title="网络图"
-              icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
-              titleClassName="text-violet-300"
-            >
-              {planTasks.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-cyan-300/70">
-                  当前项目暂无施工任务数据
-                </div>
-              ) : (
-                <div className="h-full min-h-0 overflow-hidden">
-                  <NetworkDiagram
-                    tasks={planTasks}
-                    onNodeClick={handleTaskDetail}
-                    currentDate={selectedTimelineDate}
-                  />
-                </div>
-              )}
-            </PanelCard>
-          </div>
-
-          <DailyCard items={dailyProcesses} onItemClick={handleDailyProcessClick} />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <PanelCard
+            title="网络图"
+            icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
+            titleClassName="text-violet-300"
+          >
+            {planTasks.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-cyan-300/70">
+                当前项目暂无施工任务数据
+              </div>
+            ) : (
+              <div className="h-full min-h-0 overflow-hidden">
+                <NetworkDiagram
+                  tasks={planTasks}
+                  onNodeClick={handleTaskDetail}
+                  currentDate={selectedTimelineDate}
+                />
+              </div>
+            )}
+          </PanelCard>
         </div>
       )}
 
