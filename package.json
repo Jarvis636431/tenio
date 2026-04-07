@@ -22,7 +22,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@amap/amap-jsapi-loader": "^1.0.1",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-collapsible": "^1.1.0",
