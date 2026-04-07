@@ -27,13 +27,6 @@ interface OverviewProps {
   projectName?: string;
 }
 
-type PanelVisibility = {
-  headcount: boolean;
-  cost: boolean;
-  gantt: boolean;
-  network: boolean;
-};
-
 type OverviewTab = "overview" | "schedule" | "network" | "resources";
 
 export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
@@ -46,12 +39,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
   const { processHighlights } = useProjectHighlight(resolvedProjectId);
   const [activeTab, setActiveTab] = useState<OverviewTab>("overview");
-  const [panelVisibility, setPanelVisibility] = useState<PanelVisibility>({
-    headcount: true,
-    cost: true,
-    gantt: true,
-    network: true,
-  });
 
   const planTasks = usePlanTasks(coreGraph);
   const {
@@ -210,15 +197,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     progressStatus: timelineProgress < 33 ? "超前" : timelineProgress > 80 ? "滞后" : "符合计划",
     remark: "",
   });
-  const showTrendPanels = panelVisibility.headcount || panelVisibility.cost;
-  const showPlanPanels = panelVisibility.gantt || panelVisibility.network;
-  const visiblePanelCount = useMemo(
-    () => Object.values(panelVisibility).filter(Boolean).length,
-    [panelVisibility],
-  );
-  const handleTogglePanel = (panel: keyof PanelVisibility) => {
-    setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
-  };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 bg-transparent px-0 pt-0 pb-0 text-slate-100">
@@ -239,12 +217,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
           </div>
 
           <OverviewHeaderActions
-            panelVisibility={panelVisibility}
-            visiblePanelCount={visiblePanelCount}
             onResetProject={() => {
               void handleResetProject();
             }}
-            onTogglePanel={handleTogglePanel}
             onExportWeekly={handleExportWeeklyDOC}
             onExportDaily={handleExportDailyDOC}
           />
@@ -288,114 +263,102 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
       {activeTab === "overview" && (
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-          {showTrendPanels && (
-            <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
-              {panelVisibility.headcount && (
-                <PanelCard
-                  title="劳动力曲线"
-                  icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
-                  titleClassName="text-cyan-200"
-                >
-                  {headcountCurveQuery.isLoading ? (
-                    <Skeleton className="h-full w-full" />
-                  ) : headcountCurveQuery.isError ? (
-                    <div className="flex h-full items-center justify-center text-sm text-destructive">
-                      无法获取人员数据
-                    </div>
-                  ) : headcountChartData.length > 0 ? (
-                    <div className="h-full w-full">
-                      <ProjectTrendChart
-                        data={headcountChartData}
-                        seriesNames={["劳动力人数"]}
-                        unit="人"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-cyan-300/70">
-                      暂无人员数据
-                    </div>
-                  )}
-                </PanelCard>
+          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
+            <PanelCard
+              title="劳动力曲线"
+              icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
+              titleClassName="text-cyan-200"
+            >
+              {headcountCurveQuery.isLoading ? (
+                <Skeleton className="h-full w-full" />
+              ) : headcountCurveQuery.isError ? (
+                <div className="flex h-full items-center justify-center text-sm text-destructive">
+                  无法获取人员数据
+                </div>
+              ) : headcountChartData.length > 0 ? (
+                <div className="h-full w-full">
+                  <ProjectTrendChart
+                    data={headcountChartData}
+                    seriesNames={["劳动力人数"]}
+                    unit="人"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center text-cyan-300/70">
+                  暂无人员数据
+                </div>
               )}
+            </PanelCard>
 
-              {panelVisibility.cost && (
-                <PanelCard
-                  title="资金曲线"
-                  icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
-                  titleClassName="text-emerald-300"
-                >
-                  {costCurveQuery.isLoading ? (
-                    <Skeleton className="h-full w-full" />
-                  ) : costCurveQuery.isError ? (
-                    <div className="flex h-full items-center justify-center text-sm text-destructive">
-                      无法获取成本数据
-                    </div>
-                  ) : costCurveChart.points.length > 0 ? (
-                    <div className="h-full w-full">
-                      <ProjectTrendChart
-                        data={costCurveChart.points}
-                        seriesNames={["总成本"]}
-                        unit={costCurveChart.unit}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-cyan-300/70">
-                      暂无成本数据
-                    </div>
-                  )}
-                </PanelCard>
+            <PanelCard
+              title="资金曲线"
+              icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
+              titleClassName="text-emerald-300"
+            >
+              {costCurveQuery.isLoading ? (
+                <Skeleton className="h-full w-full" />
+              ) : costCurveQuery.isError ? (
+                <div className="flex h-full items-center justify-center text-sm text-destructive">
+                  无法获取成本数据
+                </div>
+              ) : costCurveChart.points.length > 0 ? (
+                <div className="h-full w-full">
+                  <ProjectTrendChart
+                    data={costCurveChart.points}
+                    seriesNames={["总成本"]}
+                    unit={costCurveChart.unit}
+                  />
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center text-cyan-300/70">
+                  暂无成本数据
+                </div>
               )}
-            </div>
-          )}
+            </PanelCard>
+          </div>
 
-          {showPlanPanels && (
-            <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
-              {panelVisibility.gantt && (
-                <PanelCard
-                  title="甘特图"
-                  icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
-                  titleClassName="text-amber-300"
-                >
-                  {planTasks.length === 0 ? (
-                    <div className="flex h-full items-center justify-center text-cyan-300/70">
-                      当前项目暂无施工任务数据
-                    </div>
-                  ) : (
-                    <div className="h-full min-h-0 overflow-hidden">
-                      <GanttChart
-                        data={planTasks}
-                        onTaskDetail={handleTaskDetail}
-                        scale="day"
-                        currentDate={selectedTimelineDate}
-                      />
-                    </div>
-                  )}
-                </PanelCard>
+          <div className="grid min-h-0 min-w-0 grid-cols-1 gap-2 lg:grid-cols-2">
+            <PanelCard
+              title="甘特图"
+              icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
+              titleClassName="text-amber-300"
+            >
+              {planTasks.length === 0 ? (
+                <div className="flex h-full items-center justify-center text-cyan-300/70">
+                  当前项目暂无施工任务数据
+                </div>
+              ) : (
+                <div className="h-full min-h-0 overflow-hidden">
+                  <GanttChart
+                    data={planTasks}
+                    onTaskDetail={handleTaskDetail}
+                    scale="day"
+                    currentDate={selectedTimelineDate}
+                  />
+                </div>
               )}
+            </PanelCard>
 
-              {panelVisibility.network && (
-                <PanelCard
-                  title="网络图"
-                  icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
-                  titleClassName="text-violet-300"
-                >
-                  {planTasks.length === 0 ? (
-                    <div className="flex h-full items-center justify-center text-cyan-300/70">
-                      当前项目暂无施工任务数据
-                    </div>
-                  ) : (
-                    <div className="h-full min-h-0 overflow-hidden">
-                      <NetworkDiagram
-                        tasks={planTasks}
-                        onNodeClick={handleTaskDetail}
-                        currentDate={selectedTimelineDate}
-                      />
-                    </div>
-                  )}
-                </PanelCard>
+            <PanelCard
+              title="网络图"
+              icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
+              titleClassName="text-violet-300"
+            >
+              {planTasks.length === 0 ? (
+                <div className="flex h-full items-center justify-center text-cyan-300/70">
+                  当前项目暂无施工任务数据
+                </div>
+              ) : (
+                <div className="h-full min-h-0 overflow-hidden">
+                  <NetworkDiagram
+                    tasks={planTasks}
+                    onNodeClick={handleTaskDetail}
+                    currentDate={selectedTimelineDate}
+                  />
+                </div>
               )}
-            </div>
-          )}
+            </PanelCard>
+          </div>
         </div>
       )}
 
@@ -450,61 +413,57 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
       {activeTab === "resources" && (
         <div className="grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-hidden">
-          {panelVisibility.headcount && (
-            <PanelCard
-              title="劳动力曲线"
-              icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
-              titleClassName="text-cyan-200"
-            >
-              {headcountCurveQuery.isLoading ? (
-                <Skeleton className="h-full w-full" />
-              ) : headcountCurveQuery.isError ? (
-                <div className="flex h-full items-center justify-center text-sm text-destructive">
-                  无法获取人员数据
-                </div>
-              ) : headcountChartData.length > 0 ? (
-                <div className="h-full w-full">
-                  <ProjectTrendChart
-                    data={headcountChartData}
-                    seriesNames={["劳动力人数"]}
-                    unit="人"
-                  />
-                </div>
-              ) : (
-                <div className="flex h-full items-center justify-center text-cyan-300/70">
-                  暂无人员数据
-                </div>
-              )}
-            </PanelCard>
-          )}
+          <PanelCard
+            title="劳动力曲线"
+            icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
+            titleClassName="text-cyan-200"
+          >
+            {headcountCurveQuery.isLoading ? (
+              <Skeleton className="h-full w-full" />
+            ) : headcountCurveQuery.isError ? (
+              <div className="flex h-full items-center justify-center text-sm text-destructive">
+                无法获取人员数据
+              </div>
+            ) : headcountChartData.length > 0 ? (
+              <div className="h-full w-full">
+                <ProjectTrendChart
+                  data={headcountChartData}
+                  seriesNames={["劳动力人数"]}
+                  unit="人"
+                />
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center text-cyan-300/70">
+                暂无人员数据
+              </div>
+            )}
+          </PanelCard>
 
-          {panelVisibility.cost && (
-            <PanelCard
-              title="资金曲线"
-              icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
-              titleClassName="text-emerald-300"
-            >
-              {costCurveQuery.isLoading ? (
-                <Skeleton className="h-full w-full" />
-              ) : costCurveQuery.isError ? (
-                <div className="flex h-full items-center justify-center text-sm text-destructive">
-                  无法获取成本数据
-                </div>
-              ) : costCurveChart.points.length > 0 ? (
-                <div className="h-full w-full">
-                  <ProjectTrendChart
-                    data={costCurveChart.points}
-                    seriesNames={["总成本"]}
-                    unit={costCurveChart.unit}
-                  />
-                </div>
-              ) : (
-                <div className="flex h-full items-center justify-center text-cyan-300/70">
-                  暂无成本数据
-                </div>
-              )}
-            </PanelCard>
-          )}
+          <PanelCard
+            title="资金曲线"
+            icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
+            titleClassName="text-emerald-300"
+          >
+            {costCurveQuery.isLoading ? (
+              <Skeleton className="h-full w-full" />
+            ) : costCurveQuery.isError ? (
+              <div className="flex h-full items-center justify-center text-sm text-destructive">
+                无法获取成本数据
+              </div>
+            ) : costCurveChart.points.length > 0 ? (
+              <div className="h-full w-full">
+                <ProjectTrendChart
+                  data={costCurveChart.points}
+                  seriesNames={["总成本"]}
+                  unit={costCurveChart.unit}
+                />
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center text-cyan-300/70">
+                暂无成本数据
+              </div>
+            )}
+          </PanelCard>
         </div>
       )}
 

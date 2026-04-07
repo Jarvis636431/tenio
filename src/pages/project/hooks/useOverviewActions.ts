@@ -5,7 +5,6 @@ import {
   createProjectWithDefaultSolution,
   DEFAULT_SOLUTION_ID,
 } from "@/services/project-bootstrap";
-import type { DailyProcessItem } from "@/pages/project/hooks/useDailyProcesses";
 import type { PlanTask } from "@/types/domain/plan";
 import type { Project } from "@/types/domain/project";
 
@@ -27,7 +26,6 @@ interface UseOverviewActionsResult {
   selectedTaskForDetail: PlanTask | null;
   handleResetProject: () => Promise<void>;
   handleTaskDetail: (task: PlanTask) => void;
-  handleDailyProcessClick: (item: DailyProcessItem) => void;
 }
 
 export function useOverviewActions({
@@ -56,14 +54,6 @@ export function useOverviewActions({
   const handleTaskDetail = (task: PlanTask) => {
     setSelectedTaskForDetail(task);
     setIsTaskDetailDialogOpen(true);
-  };
-
-  const handleDailyProcessClick = (item: DailyProcessItem) => {
-    const matchedTask =
-      planTasks.find((task) => task.id === item.id) ??
-      planTasks.find((task) => task.task === item.name);
-    if (!matchedTask) return;
-    handleTaskDetail(matchedTask);
   };
 
   const agentBaseDate = useMemo(() => {
@@ -95,6 +85,5 @@ export function useOverviewActions({
     selectedTaskForDetail,
     handleResetProject,
     handleTaskDetail,
-    handleDailyProcessClick,
   };
 }

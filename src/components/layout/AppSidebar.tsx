@@ -1,13 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Boxes,
-  Building2,
-  ChartLine,
-  ListTodo,
-  MessageSquareMore,
-  Network,
-  Users,
-} from "lucide-react";
+import { Building2, ChartLine, ListTodo, Network, Users } from "lucide-react";
 import { useProjectStore } from "@/stores/projectStore";
 
 export function AppSidebar() {
@@ -35,11 +27,9 @@ export function AppSidebar() {
       active: isProjectQuickLinkActive,
       action: handleProjectNavigate,
     },
-    { label: "模型联动", icon: Boxes },
     { label: "进度计划", icon: ListTodo },
     { label: "网络分析", icon: Network },
     { label: "资源配置", icon: Users },
-    { label: "AI 协同", icon: MessageSquareMore },
   ];
 
   return (
