@@ -1,4 +1,11 @@
-type ProjectTabKey = "overview" | "schedule" | "network" | "resources";
+type ProjectTabKey =
+  | "overview"
+  | "schedule"
+  | "network"
+  | "resources"
+  | "uploads"
+  | "organization"
+  | "rotation";
 
 interface ProjectTabBarProps {
   activeTab: ProjectTabKey;
@@ -10,6 +17,9 @@ const TABS: Array<{ key: ProjectTabKey; label: string }> = [
   { key: "schedule", label: "进度计划" },
   { key: "network", label: "网络分析" },
   { key: "resources", label: "资源配置" },
+  { key: "uploads", label: "文件上传" },
+  { key: "organization", label: "施工组织设计" },
+  { key: "rotation", label: "人员轮转" },
 ];
 
 export function ProjectTabBar({ activeTab, onChange }: ProjectTabBarProps) {
