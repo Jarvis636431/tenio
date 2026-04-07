@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useProjectStore } from "@/stores/projectStore";
- 
+
 let hasInitializedProjects = false;
 
 /**

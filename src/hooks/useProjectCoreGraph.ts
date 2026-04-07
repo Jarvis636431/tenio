@@ -35,14 +35,7 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
 
     setProjectId(projectRef);
     setIsResolvingProjectId(false);
-  }, [
-    projectRef,
-    projects,
-    currentProject?.id,
-    setCurrentProject,
-    paramProjectId,
-    navigate,
-  ]);
+  }, [projectRef, projects, currentProject?.id, setCurrentProject, paramProjectId, navigate]);
 
   useEffect(() => {
     if (!projectId || isResolvingProjectId) {

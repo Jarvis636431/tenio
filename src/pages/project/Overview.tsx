@@ -21,10 +21,7 @@ import { ModelViewer } from "@/components/model/ModelViewer";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
-import {
-  getProjectCostCurve,
-  getProjectHeadcountCurve,
-} from "@/services/schedulepro-service";
+import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface OverviewProps {

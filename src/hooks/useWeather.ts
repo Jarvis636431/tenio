@@ -86,9 +86,12 @@ export function useWeather() {
     };
 
     void fetchWeather();
-    const timer = window.setInterval(() => {
-      void fetchWeather();
-    }, 30 * 60 * 1000);
+    const timer = window.setInterval(
+      () => {
+        void fetchWeather();
+      },
+      30 * 60 * 1000,
+    );
 
     return () => {
       cancelled = true;
