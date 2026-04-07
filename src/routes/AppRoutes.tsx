@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
-import { ResolvedProjectRoute } from "@/routes/ResolvedProjectRoute";
 import { AutoProjectRoute } from "@/routes/AutoProjectRoute";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Overview } from "@/pages/project/Overview";
 import { APP_DEFAULT_TITLE } from "@/config";
 
 // Lazy loaded pages
@@ -21,7 +22,14 @@ export function AppRoutes() {
     <Suspense fallback={<div className="flex items-center justify-center h-screen">加载中...</div>}>
       <Routes>
         <Route path="/" element={<AutoProjectRoute />} />
-        <Route path="/project/:id" element={<ResolvedProjectRoute />} />
+        <Route
+          path="/project/:id"
+          element={
+            <AppLayout>
+              <Overview />
+            </AppLayout>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
