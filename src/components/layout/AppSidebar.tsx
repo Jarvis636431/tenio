@@ -45,9 +45,6 @@ export function AppSidebar() {
   return (
     <aside className="flex h-full min-h-0 flex-col border-r border-cyan-500/15 bg-[rgba(2,12,27,0.58)] px-3 py-4 backdrop-blur-xl">
       <div className="rounded-none border border-cyan-400/20 bg-[rgba(4,18,37,0.86)] p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-300/55">
-          Current Project
-        </div>
         <div className="mt-2 text-base font-semibold text-white">
           {currentProject?.name ?? "未选择项目"}
         </div>
@@ -55,16 +52,12 @@ export function AppSidebar() {
         <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
           <span>工作区状态</span>
           <span className="rounded-none border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 font-semibold text-emerald-300">
-            ONLINE
+            运行中
           </span>
         </div>
       </div>
 
-      <div className="mt-5 px-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-        Workspace
-      </div>
-
-      <div className="mt-2 flex flex-col gap-1">
+      <div className="mt-5 flex flex-col gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (

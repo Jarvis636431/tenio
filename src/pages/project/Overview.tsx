@@ -227,10 +227,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       <div className="shrink-0 rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] px-4 py-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-300/55">
-              Project Overview
-            </div>
-            <div className="mt-1 flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-lg font-semibold text-white">{currentProjectName}</h1>
               {totalDurationLabel && (
                 <span className="text-sm text-slate-400">总工期：{totalDurationLabel}</span>

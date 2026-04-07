@@ -14,20 +14,20 @@ const TABS: Array<{ key: ProjectTabKey; label: string }> = [
 
 export function ProjectTabBar({ activeTab, onChange }: ProjectTabBarProps) {
   return (
-    <div className="shrink-0 border border-cyan-400/15 bg-[rgba(4,18,37,0.72)] px-3">
-      <div className="flex items-center gap-1 overflow-x-auto">
+    <div className="shrink-0 border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] px-4">
+      <div className="flex items-center gap-2 overflow-x-auto">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => onChange(tab.key)}
-            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${
+            className={`group relative shrink-0 border-b px-1 py-3 text-sm transition ${
               activeTab === tab.key
-                ? "border-cyan-300 text-cyan-200"
-                : "border-transparent text-slate-400 hover:text-slate-100"
+                ? "border-cyan-300 text-slate-50"
+                : "border-transparent text-slate-400 hover:border-cyan-400/30 hover:text-cyan-100"
             }`}
           >
-            {tab.label}
+            <span className="block font-medium">{tab.label}</span>
           </button>
         ))}
       </div>

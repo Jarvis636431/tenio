@@ -24,14 +24,22 @@ export function PanelCard({
   return (
     <Card
       className={cn(
-        "flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-cyan-900/40 bg-[#071a39]/75",
+        "flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-none border-cyan-400/15 bg-[rgba(4,18,37,0.82)] shadow-[0_0_0_1px_rgba(10,35,64,0.15)]",
         className,
       )}
     >
       <CardHeader
-        className={cn("p-2 pb-1 border-b border-cyan-900/50 bg-[#04142d]/80", headerClassName)}
+        className={cn(
+          "border-b border-cyan-400/12 bg-[rgba(2,12,27,0.74)] px-3 py-2",
+          headerClassName,
+        )}
       >
-        <CardTitle className={cn("text-xs font-medium flex items-center gap-1.5", titleClassName)}>
+        <CardTitle
+          className={cn(
+            "flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em]",
+            titleClassName,
+          )}
+        >
           {icon}
           {title}
         </CardTitle>

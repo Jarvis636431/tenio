@@ -42,12 +42,15 @@ export function OverviewHeaderActions({
   onExportWeekly,
   onExportDaily,
 }: OverviewHeaderActionsProps) {
+  const actionButtonClassName =
+    "h-9 rounded-none border border-cyan-400/20 bg-[rgba(4,18,37,0.86)] px-3 text-cyan-100 transition hover:border-cyan-300/35 hover:bg-[rgba(8,34,67,0.92)]";
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Button
         type="button"
         size="sm"
-        className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-2 text-[#cfe6ff] hover:bg-[#12417c]"
+        className={actionButtonClassName}
         onClick={onResetProject}
       >
         <RotateCcw className="mr-1.5 h-4 w-4" />
@@ -59,7 +62,7 @@ export function OverviewHeaderActions({
           <Button
             type="button"
             size="sm"
-            className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-2 text-[#cfe6ff] hover:bg-[#12417c]"
+            className={actionButtonClassName}
           >
             <SlidersHorizontal className="mr-1.5 h-4 w-4" />
             视图 {visiblePanelCount}/4
@@ -67,12 +70,14 @@ export function OverviewHeaderActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="w-44 border-cyan-900/60 bg-[#03112a] text-cyan-100"
+          className="w-44 rounded-none border-cyan-500/20 bg-[#03112a] text-cyan-100"
         >
-          <DropdownMenuLabel className="text-cyan-200">显示面板</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-300/65">
+            显示面板
+          </DropdownMenuLabel>
           <DropdownMenuSeparator className="bg-cyan-900/60" />
           <DropdownMenuItem
-            className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+            className="rounded-none focus:bg-[#0a2a5c] focus:text-cyan-100"
             onSelect={(e) => {
               e.preventDefault();
               onTogglePanel("headcount");
@@ -85,7 +90,7 @@ export function OverviewHeaderActions({
             </span>
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+            className="rounded-none focus:bg-[#0a2a5c] focus:text-cyan-100"
             onSelect={(e) => {
               e.preventDefault();
               onTogglePanel("cost");
@@ -98,7 +103,7 @@ export function OverviewHeaderActions({
             </span>
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+            className="rounded-none focus:bg-[#0a2a5c] focus:text-cyan-100"
             onSelect={(e) => {
               e.preventDefault();
               onTogglePanel("gantt");
@@ -111,7 +116,7 @@ export function OverviewHeaderActions({
             </span>
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+            className="rounded-none focus:bg-[#0a2a5c] focus:text-cyan-100"
             onSelect={(e) => {
               e.preventDefault();
               onTogglePanel("network");
@@ -131,7 +136,7 @@ export function OverviewHeaderActions({
           <Button
             type="button"
             size="sm"
-            className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-3 text-[#cfe6ff] hover:bg-[#12417c]"
+            className={actionButtonClassName}
           >
             <Download className="mr-1.5 h-4 w-4" />
             报告导出
@@ -139,10 +144,10 @@ export function OverviewHeaderActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="w-[var(--radix-dropdown-menu-trigger-width)] border-cyan-900/60 bg-[#03112a] text-cyan-100"
+          className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-none border-cyan-500/20 bg-[#03112a] text-cyan-100"
         >
           <DropdownMenuItem
-            className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+            className="rounded-none focus:bg-[#0a2a5c] focus:text-cyan-100"
             onSelect={(e) => {
               e.preventDefault();
               onExportWeekly();
@@ -151,7 +156,7 @@ export function OverviewHeaderActions({
             导出周报
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="focus:bg-[#0a2a5c] focus:text-cyan-100"
+            className="rounded-none focus:bg-[#0a2a5c] focus:text-cyan-100"
             onSelect={(e) => {
               e.preventDefault();
               onExportDaily();
