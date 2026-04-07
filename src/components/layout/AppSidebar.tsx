@@ -1,11 +1,20 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Building2 } from "lucide-react";
+import {
+  Boxes,
+  Building2,
+  ChartLine,
+  ListTodo,
+  MessageSquareMore,
+  Network,
+  Users,
+} from "lucide-react";
 import { useProjectStore } from "@/stores/projectStore";
 
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentProject = useProjectStore((state) => state.currentProject);
+  const projects = useProjectStore((state) => state.projects);
 
   const handleProjectNavigate = () => {
     if (currentProject?.id) {
@@ -15,29 +24,78 @@ export function AppSidebar() {
     navigate("/", { replace: true });
   };
 
-  const isProjectQuickLinkActive = Boolean(currentProject?.id && location.pathname === `/project/${currentProject.id}`);
+  const isProjectQuickLinkActive = Boolean(
+    currentProject?.id && location.pathname === `/project/${currentProject.id}`,
+  );
+
+  const navItems = [
+    {
+      label: "项目总览",
+      icon: Building2,
+      active: isProjectQuickLinkActive,
+      action: handleProjectNavigate,
+    },
+    { label: "模型联动", icon: Boxes },
+    { label: "进度计划", icon: ListTodo },
+    { label: "网络分析", icon: Network },
+    { label: "资源配置", icon: Users },
+    { label: "AI 协同", icon: MessageSquareMore },
+  ];
 
   return (
-    <aside className="h-full w-14 border-r border-cyan-900/40 bg-[#04142d]/85 backdrop-blur-sm">
-      <div className="flex h-full flex-col items-center py-4">
-        <div className="mb-6 flex items-center justify-center">
-          <img src="/logo.svg" alt="天友" className="h-8 w-8" />
+    <aside className="flex h-full min-h-0 flex-col border-r border-cyan-500/15 bg-[rgba(2,12,27,0.58)] px-3 py-4 backdrop-blur-xl">
+      <div className="rounded-none border border-cyan-400/20 bg-[rgba(4,18,37,0.86)] p-4">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-300/55">
+          Current Project
         </div>
+        <div className="mt-2 text-base font-semibold text-white">
+          {currentProject?.name ?? "未选择项目"}
+        </div>
+        <div className="mt-1 text-xs text-slate-400">当前已加载 {projects.length} 个项目</div>
+        <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
+          <span>工作区状态</span>
+          <span className="rounded-none border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 font-semibold text-emerald-300">
+            ONLINE
+          </span>
+        </div>
+      </div>
 
-        <div className="mt-1 flex w-full flex-col items-center gap-2">
-          <button
-            type="button"
-            onClick={handleProjectNavigate}
-            aria-label="进入当前项目"
-            title="进入当前项目"
-            className={`mx-auto flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
-              isProjectQuickLinkActive
-                ? "bg-cyan-900/40 text-cyan-200"
-                : "text-cyan-200 hover:bg-cyan-900/40"
-            }`}
-          >
-            <Building2 className="h-4 w-4 text-cyan-200" />
-          </button>
+      <div className="mt-5 px-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+        Workspace
+      </div>
+
+      <div className="mt-2 flex flex-col gap-1">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.action}
+              className={`flex items-center gap-3 rounded-none border px-3 py-2.5 text-left text-sm transition ${
+                item.active
+                  ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
+                  : "border-transparent bg-transparent text-slate-400 hover:border-cyan-400/15 hover:bg-cyan-400/5 hover:text-slate-100"
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-auto rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.72)] p-4">
+        <div className="flex items-center gap-2 text-[11px] font-semibold text-cyan-300">
+          <ChartLine className="h-4 w-4" />
+          项目状态
+        </div>
+        <div className="mt-3 h-1.5 bg-white/5">
+          <div className="h-full w-[78%] bg-gradient-to-r from-cyan-400 to-blue-500" />
+        </div>
+        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400">
+          <span>计划执行度</span>
+          <span className="font-semibold text-cyan-200">78%</span>
         </div>
       </div>
     </aside>

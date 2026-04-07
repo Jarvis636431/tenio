@@ -12,7 +12,6 @@ import { usePlanTasks } from "@/pages/project/hooks/usePlanTasks";
 import { useDailyProcesses } from "@/pages/project/hooks/useDailyProcesses";
 import { useOverviewMetrics } from "@/pages/project/hooks/useOverviewMetrics";
 import { useOverviewTimeline } from "@/pages/project/hooks/useOverviewTimeline";
-import { ProjectHeader } from "@/pages/project/components/ProjectHeader";
 import { OverviewHeaderActions } from "@/pages/project/components/OverviewHeaderActions";
 import { PanelCard } from "@/pages/project/components/PanelCard";
 import { ProjectSlider } from "@/pages/project/components/ProjectSlider";
@@ -327,25 +326,37 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   }, [isResizingModel]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 bg-gradient-to-b from-[#020a1d] to-[#041332] px-1 pt-0 pb-1 text-slate-100">
-      <div className="shrink-0">
-        <ProjectHeader
-          title={currentProjectName}
-          titleExtra={totalDurationLabel ? `总工期：${totalDurationLabel}` : undefined}
-          onsiteCount={onsiteCount}
-          actions={
-            <OverviewHeaderActions
-              panelVisibility={panelVisibility}
-              visiblePanelCount={visiblePanelCount}
-              onResetProject={() => {
-                void handleResetProject();
-              }}
-              onTogglePanel={handleTogglePanel}
-              onExportWeekly={handleExportWeeklyDOC}
-              onExportDaily={handleExportDailyDOC}
-            />
-          }
-        />
+    <div className="flex h-full min-h-0 flex-col gap-3 bg-transparent px-0 pt-0 pb-0 text-slate-100">
+      <div className="shrink-0 rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] px-4 py-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-300/55">
+              Project Overview
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <h1 className="text-lg font-semibold text-white">{currentProjectName}</h1>
+              {totalDurationLabel && (
+                <span className="text-sm text-slate-400">总工期：{totalDurationLabel}</span>
+              )}
+              {typeof onsiteCount === "number" && (
+                <span className="rounded-none border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
+                  {onsiteCount} 人在场
+                </span>
+              )}
+            </div>
+          </div>
+
+          <OverviewHeaderActions
+            panelVisibility={panelVisibility}
+            visiblePanelCount={visiblePanelCount}
+            onResetProject={() => {
+              void handleResetProject();
+            }}
+            onTogglePanel={handleTogglePanel}
+            onExportWeekly={handleExportWeeklyDOC}
+            onExportDaily={handleExportDailyDOC}
+          />
+        </div>
       </div>
 
       {timeRange && (
