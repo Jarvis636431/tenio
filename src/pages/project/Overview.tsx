@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { ChartLine, ListTodo, Network, Users } from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
