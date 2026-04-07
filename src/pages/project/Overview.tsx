@@ -212,6 +212,8 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     progressStatus: timelineProgress < 33 ? "超前" : timelineProgress > 80 ? "滞后" : "符合计划",
     remark: "",
   });
+  const showTrendPanels = panelVisibility.headcount || panelVisibility.cost;
+  const showPlanPanels = panelVisibility.gantt || panelVisibility.network;
   const visiblePanelCount = useMemo(
     () => Object.values(panelVisibility).filter(Boolean).length,
     [panelVisibility],
