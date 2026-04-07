@@ -15,7 +15,6 @@ type TimeRange = {
 
 interface UseOverviewActionsOptions {
   resolvedProjectId: string;
-  token?: string;
   timeRange: TimeRange | null;
   planTasks: PlanTask[];
   addProject: (project: Project) => void;
@@ -33,7 +32,6 @@ interface UseOverviewActionsResult {
 
 export function useOverviewActions({
   resolvedProjectId,
-  token,
   timeRange,
   planTasks,
   addProject,
@@ -45,9 +43,8 @@ export function useOverviewActions({
   const agentInitKeyRef = useRef<string | null>(null);
 
   const handleResetProject = async () => {
-    if (!token) return;
     try {
-      const newProject = await createProjectWithDefaultSolution(token);
+      const newProject = await createProjectWithDefaultSolution();
       addProject(newProject);
       setCurrentProject(newProject);
       navigate(`/project/${newProject.id}`);
@@ -78,7 +75,7 @@ export function useOverviewActions({
   }, [timeRange]);
 
   useEffect(() => {
-    if (!resolvedProjectId || !token || !agentBaseDate) return;
+    if (!resolvedProjectId || !agentBaseDate) return;
     const key = `${resolvedProjectId}:${agentBaseDate}`;
     if (agentInitKeyRef.current === key) return;
     agentInitKeyRef.current = key;
@@ -87,11 +84,10 @@ export function useOverviewActions({
       project_id: resolvedProjectId,
       base_date: agentBaseDate,
       solution_id: DEFAULT_SOLUTION_ID,
-      access_token: token,
     }).catch(() => {
       agentInitKeyRef.current = null;
     });
-  }, [resolvedProjectId, token, agentBaseDate]);
+  }, [resolvedProjectId, agentBaseDate]);
 
   return {
     isTaskDetailDialogOpen,

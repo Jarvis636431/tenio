@@ -1,19 +1,14 @@
 import { lazy, Suspense, useEffect } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { ProtectedRoute } from "@/routes/ProtectedRoute";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { ResolvedProjectRoute } from "@/routes/ResolvedProjectRoute";
 import { AutoProjectRoute } from "@/routes/AutoProjectRoute";
 import { APP_DEFAULT_TITLE } from "@/config";
 
 // Lazy loaded pages
-const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const TITLE_RULES: Array<{ prefix: string; title: string }> = [{ prefix: "/login", title: "登录" }];
+const TITLE_RULES: Array<{ prefix: string; title: string }> = [];
 
 export function AppRoutes() {
-  const auth = useAuth();
-  const { user, isLoading } = auth;
   const location = useLocation();
 
   useEffect(() => {
@@ -22,30 +17,11 @@ export function AppRoutes() {
     document.title = matched?.title ?? APP_DEFAULT_TITLE;
   }, [location]);
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">加载中...</div>;
-  }
-
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-screen">加载中...</div>}>
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute auth={auth}>
-              <AutoProjectRoute />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/project/:id"
-          element={
-            <ProtectedRoute auth={auth}>
-              <ResolvedProjectRoute />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/" element={<AutoProjectRoute />} />
+        <Route path="/project/:id" element={<ResolvedProjectRoute />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

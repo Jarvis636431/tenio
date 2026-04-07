@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { useProject } from "@/hooks/useProject";
 import { getProjectCoreGraph } from "@/services/schedulepro-service";
 
@@ -11,7 +10,6 @@ type UseProjectCoreGraphOptions = {
 export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
   const { id: paramProjectId } = useParams();
   const navigate = useNavigate();
-  const { token } = useAuth();
   const { currentProject, projects, coreGraphByProjectId, setCoreGraph, setCurrentProject } =
     useProject();
   const projectRef = options.projectId || paramProjectId || currentProject?.id || "";
@@ -47,12 +45,12 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
   ]);
 
   useEffect(() => {
-    if (!projectId || !token || isResolvingProjectId) {
+    if (!projectId || isResolvingProjectId) {
       return;
     }
 
     let isMounted = true;
-    getProjectCoreGraph(projectId, token)
+    getProjectCoreGraph(projectId)
       .then((response) => {
         if (!isMounted) return;
         setCoreGraph(projectId, response);
@@ -64,7 +62,7 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
     return () => {
       isMounted = false;
     };
-  }, [projectId, token, isResolvingProjectId, setCoreGraph]);
+  }, [projectId, isResolvingProjectId, setCoreGraph]);
 
   const coreGraph = useMemo(
     () => (projectId ? coreGraphByProjectId[projectId] : undefined),
@@ -74,7 +72,7 @@ export function useProjectCoreGraph(options: UseProjectCoreGraphOptions = {}) {
   return {
     projectId,
     coreGraph,
-    isLoading: isResolvingProjectId || Boolean(projectId && token && !coreGraph),
+    isLoading: isResolvingProjectId || Boolean(projectId && !coreGraph),
     isResolvingProjectId,
   };
 }

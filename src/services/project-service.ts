@@ -9,18 +9,15 @@ const BACKEND_BASE_URL = API_BASE.backend;
 
 export async function getProcessInfo(
   projectId: string,
-  token?: string,
   options?: { workProcessName?: string },
 ): Promise<ProcessInfoResponse> {
   const url = buildUrl(BACKEND_BASE_URL, "/process_info", {
     project_id: projectId,
     work_process_name: options?.workProcessName ?? "",
   });
-  return requestJson<ProcessInfoResponse>(url, { token });
+  return requestJson<ProcessInfoResponse>(url);
 }
 
-export async function getProjectList(token?: string): Promise<ProjectListResponse> {
-  return requestApiData<ProjectListResponse>(`${BACKEND_BASE_URL}/api/v1/projects`, {
-    token,
-  });
+export async function getProjectList(): Promise<ProjectListResponse> {
+  return requestApiData<ProjectListResponse>(`${BACKEND_BASE_URL}/api/v1/projects`);
 }

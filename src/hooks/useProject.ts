@@ -1,9 +1,8 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useProjectStore } from "@/stores/projectStore";
-import { useAuth } from "@/hooks/useAuth";
-
-let lastInitializedToken: string | null = null;
+ 
+let hasInitializedProjects = false;
 
 /**
  * 兼容原有 ProjectContext 的 hook
@@ -11,7 +10,6 @@ let lastInitializedToken: string | null = null;
  */
 export function useProject() {
   const { id } = useParams();
-  const { token } = useAuth();
 
   const {
     currentProject,
@@ -26,27 +24,21 @@ export function useProject() {
     setLoading,
   } = useProjectStore();
 
-  // 初始化：当 token 或 user 变化时刷新项目列表
+  // 初始化：首次加载时刷新项目列表
   useEffect(() => {
     let active = true;
 
     const fetchProjects = async () => {
-      if (!token) {
-        lastInitializedToken = null;
-        useProjectStore.getState().reset();
+      if (hasInitializedProjects) {
         return;
       }
-
-      if (lastInitializedToken === token) {
-        return;
-      }
-      lastInitializedToken = token;
+      hasInitializedProjects = true;
 
       setLoading(true);
       try {
-        await refreshProjects(token);
+        await refreshProjects();
       } catch (error) {
-        lastInitializedToken = null;
+        hasInitializedProjects = false;
         throw error;
       } finally {
         if (active) {
@@ -60,7 +52,7 @@ export function useProject() {
     return () => {
       active = false;
     };
-  }, [token, refreshProjects, setLoading]);
+  }, [refreshProjects, setLoading]);
 
   // 路由同步：当 URL 中的项目 ID 变化时，自动切换当前项目
   useEffect(() => {
@@ -72,11 +64,8 @@ export function useProject() {
     }
   }, [id, projects, currentProject, setCurrentProject]);
 
-  // 包装 refreshProjects 以自动传入 token 和 userId
   const wrappedRefreshProjects = async () => {
-    if (token) {
-      await refreshProjects(token);
-    }
+    await refreshProjects();
   };
 
   return {

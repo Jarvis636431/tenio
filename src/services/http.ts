@@ -1,8 +1,5 @@
-import { TOKEN_STORAGE_KEY } from "@/services/user-service";
-
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-  token?: string;
   headers?: HeadersInit;
   body?: BodyInit | null;
 };
@@ -14,15 +11,6 @@ export type ApiResponse<T> = {
   timestamp?: string;
   code?: number | string;
 };
-
-function getAuthHeaders(token?: string) {
-  const resolvedToken = token ?? localStorage.getItem(TOKEN_STORAGE_KEY);
-  return resolvedToken
-    ? {
-        Authorization: `Bearer ${resolvedToken}`,
-      }
-    : {};
-}
 
 async function parseResponse<T>(response: Response): Promise<T> {
   if (response.ok) {
@@ -60,7 +48,6 @@ export async function requestJson<T>(
   const response = await fetch(input, {
     method: options.method ?? (options.body ? "POST" : undefined),
     headers: {
-      ...getAuthHeaders(options.token),
       ...options.headers,
     },
     body: options.body ?? undefined,

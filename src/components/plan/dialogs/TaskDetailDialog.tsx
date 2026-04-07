@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, Loader2, ShieldAlert } from "lucide-react";
 import { getProcessInfo } from "@/services/project-service";
 import type { OrderInfoData } from "@/types/domain/project";
-import { useAuth } from "@/hooks/useAuth";
 import { useProject } from "@/hooks/useProject";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import type { PlanTask } from "@/types/domain/plan";
@@ -47,7 +46,6 @@ export function TaskDetailDialog({
   const [_error, setError] = useState<Error | null>(null);
   const [mediaRows, setMediaRows] = useState<ProcessMediaRow[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
-  const { token } = useAuth();
   const { coreGraphByProjectId } = useProject();
   const coreGraph = projectId ? coreGraphByProjectId[projectId] : undefined;
 
@@ -61,7 +59,7 @@ export function TaskDetailDialog({
     setError(null);
     setOrderInfo(null);
 
-    getProcessInfo(projectId, token || undefined, { workProcessName })
+    getProcessInfo(projectId, { workProcessName })
       .then((data) => {
         if (cancelled) return;
         setOrderInfo(data.order_info ?? null);
@@ -77,7 +75,7 @@ export function TaskDetailDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, projectId, workProcessName, token]);
+  }, [open, projectId, workProcessName]);
 
   useEffect(() => {
     if (!open) return;

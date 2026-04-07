@@ -2,7 +2,7 @@ export interface AgentInitPayload {
   project_id: string;
   base_date: string;
   solution_id: number;
-  access_token: string;
+  access_token?: string;
   base_url?: string;
 }
 

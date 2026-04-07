@@ -6,7 +6,6 @@ import { ChartLine, ListTodo, Network, Users } from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
-import { useAuth } from "@/hooks/useAuth";
 import { useProjectExport } from "@/pages/project/hooks/useProjectExport";
 import { useOverviewActions } from "@/pages/project/hooks/useOverviewActions";
 import { usePlanTasks } from "@/pages/project/hooks/usePlanTasks";
@@ -49,7 +48,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const { projectId: resolvedProjectId, coreGraph } = useProjectCoreGraph({
     projectId: requestedProjectRef,
   });
-  const { token } = useAuth();
 
   const { tagMap, processHighlights, getIdsByDate } = useProjectHighlight(resolvedProjectId);
   const [isResizingModel, setIsResizingModel] = useState(false);
@@ -120,7 +118,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     handleDailyProcessClick,
   } = useOverviewActions({
     resolvedProjectId,
-    token: token || undefined,
     timeRange,
     planTasks,
     addProject,
@@ -133,9 +130,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       if (!resolvedProjectId) {
         throw new Error("缺少项目 ID");
       }
-      return getProjectHeadcountCurve(resolvedProjectId, token || undefined);
+      return getProjectHeadcountCurve(resolvedProjectId);
     },
-    enabled: Boolean(resolvedProjectId && token),
+    enabled: Boolean(resolvedProjectId),
     refetchOnWindowFocus: false,
   });
 
@@ -145,9 +142,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       if (!resolvedProjectId) {
         throw new Error("缺少项目 ID");
       }
-      return getProjectCostCurve(resolvedProjectId, token || undefined);
+      return getProjectCostCurve(resolvedProjectId);
     },
-    enabled: Boolean(resolvedProjectId && token),
+    enabled: Boolean(resolvedProjectId),
     refetchOnWindowFocus: false,
   });
 

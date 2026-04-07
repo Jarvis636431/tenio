@@ -1,30 +1,3 @@
-export interface AuthRegisterPayload {
-  username: string;
-  email: string;
-  password: string;
-  full_name?: string;
-}
-
-export interface AuthLoginPayload {
-  username: string;
-  password: string;
-}
-
-export interface AuthTokenResponse {
-  access_token: string;
-  token_type: string;
-  user_id: string;
-  username: string;
-}
-
-export interface AuthMeResponse {
-  user_id: string;
-  username: string;
-  email: string;
-  full_name?: string;
-  is_active: boolean;
-}
-
 export interface CreateJiuanProjectPayload {
   project_name: string;
 }

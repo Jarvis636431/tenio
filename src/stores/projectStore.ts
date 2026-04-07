@@ -17,7 +17,7 @@ interface ProjectState {
   addProject: (project: Project) => void;
   updateProject: (project: Project) => void;
   setCoreGraph: (projectId: string, data: CoreGraphResponse) => void;
-  refreshProjects: (token: string) => Promise<void>;
+  refreshProjects: () => Promise<void>;
   setLoading: (loading: boolean) => void;
   reset: () => void;
 }
@@ -104,16 +104,11 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       // Refresh projects from server
-      refreshProjects: async (token: string) => {
-        if (!token) {
-          set({ projects: [], currentProject: null });
-          return;
-        }
-
+      refreshProjects: async () => {
         set({ isLoading: true });
 
         try {
-          const response = await getProjectList(token);
+          const response = await getProjectList();
           const projectList: Project[] = response.map((item) => ({
             id: item.project_id,
             name: item.project_name,

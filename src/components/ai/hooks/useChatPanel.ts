@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { API_BASE, VOLC_SPEECH } from "@/config";
-import { useAuth } from "@/hooks/useAuth";
 import { useProject } from "@/hooks/useProject";
 import { useParams } from "react-router-dom";
 import {
@@ -82,7 +81,6 @@ const AI_SSE_PATH = "/api/agent/chat/sse";
 
 export function useChatPanel(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
-  const { token } = useAuth();
   const { currentProject, projects, setCoreGraph } = useProject();
   const queryClient = useQueryClient();
   const defaultWelcomeMessage: ChatMessage = useMemo(
@@ -222,7 +220,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
 
     if (obj.type === "refetch") {
       const projectRef = options.projectId || routeProjectId || currentProject?.id || "";
-      if (projectRef && token) {
+      if (projectRef) {
         void (async () => {
           const projectId = await resolveProjectId(projectRef);
           if (projectId) {
@@ -397,11 +395,10 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   };
 
   const refreshCoreGraph = async (projectId: string) => {
-    if (!token) return;
     const [coreGraph, costCurve, headcountCurve] = await Promise.all([
-      getProjectCoreGraph(projectId, token),
-      getProjectCostCurve(projectId, token),
-      getProjectHeadcountCurve(projectId, token),
+      getProjectCoreGraph(projectId),
+      getProjectCostCurve(projectId),
+      getProjectHeadcountCurve(projectId),
     ]);
     setCoreGraph(projectId, coreGraph);
     queryClient.setQueryData(["overview", "cost-curve", projectId], costCurve);
