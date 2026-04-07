@@ -5,8 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, Loader2, ShieldAlert } from "lucide-react";
 import { getProcessInfo } from "@/services/project-service";
 import type { OrderInfoData } from "@/types/domain/project";
-import { useProject } from "@/hooks/useProject";
-import { ModelViewer } from "@/components/model/ModelViewer";
 import type { PlanTask } from "@/types/domain/plan";
 import { RESOURCE_BASE_URL } from "@/config";
 
@@ -46,8 +44,6 @@ export function TaskDetailDialog({
   const [_error, setError] = useState<Error | null>(null);
   const [mediaRows, setMediaRows] = useState<ProcessMediaRow[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
-  const { coreGraphByProjectId } = useProject();
-  const coreGraph = projectId ? coreGraphByProjectId[projectId] : undefined;
 
   useEffect(() => {
     if (!open || !projectId || !workProcessName) {
@@ -135,39 +131,9 @@ export function TaskDetailDialog({
     const matched = mediaRows.find((row) => row.name === taskName);
     return matched?.video ? resolveResourceUrl(matched.video) : "";
   }, [mediaRows, task?.task, workProcessName]);
-  const detailModels = useMemo(
-    () => [
-      {
-        key: "default",
-        src: "https://apmoss.emio.cn/public/models/0426.ifc",
-      },
-    ],
-    [],
-  );
   const workDescription = orderInfo?.["工单内容"];
   const safetyNote = orderInfo?.["安全交底"];
   const technicalNote = orderInfo?.["技术验收标准"];
-  const highlightedComponentIds = useMemo(() => {
-    if (!coreGraph?.work_processes?.length) return [] as string[];
-    const taskId = task?.id;
-    const taskName = task?.task ?? workProcessName ?? "";
-    const match =
-      coreGraph.work_processes.find((wp) => wp.id === taskId) ??
-      coreGraph.work_processes.find((wp) => (wp.name ?? wp.code ?? "") === taskName);
-    const expressIds = match?.express_ids ?? [];
-    return expressIds.map((id) => String(id));
-  }, [coreGraph, task?.id, task?.task, workProcessName]);
-
-  const highlightedTagIds = useMemo(() => {
-    if (!coreGraph?.work_processes?.length) return [] as string[];
-    const taskId = task?.id;
-    const taskName = task?.task ?? workProcessName ?? "";
-    const match =
-      coreGraph.work_processes.find((wp) => wp.id === taskId) ??
-      coreGraph.work_processes.find((wp) => (wp.name ?? wp.code ?? "") === taskName);
-    const tagIds = match?.tag ?? [];
-    return tagIds.map((id) => String(id));
-  }, [coreGraph, task?.id, task?.task, workProcessName]);
 
   if (!task) {
     return (
@@ -198,23 +164,13 @@ export function TaskDetailDialog({
           onValueChange={setActiveTab}
           className="w-full h-[calc(90vh-120px)] flex flex-col"
         >
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="3d">三维模型</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="drawings">图纸</TabsTrigger>
             <TabsTrigger value="details">节点大样</TabsTrigger>
             <TabsTrigger value="disclaimer">交底文件</TabsTrigger>
             <TabsTrigger value="tutorial">施工教程</TabsTrigger>
             <TabsTrigger value="acceptance">验收</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="3d" className="mt-4 flex-1">
-            <ModelViewer
-              models={detailModels}
-              highlightGlobalIds={highlightedComponentIds}
-              highlightTagIds={highlightedTagIds}
-              className="h-full"
-            />
-          </TabsContent>
 
           <TabsContent value="drawings" className="mt-4 flex-1">
             {mediaLoading ? (

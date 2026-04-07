@@ -4,7 +4,6 @@ import {
   Download,
   ListTodo,
   Network,
-  Boxes,
   SlidersHorizontal,
   Users,
   RotateCcw,
@@ -24,7 +23,6 @@ type PanelVisibility = {
   cost: boolean;
   gantt: boolean;
   network: boolean;
-  model: boolean;
 };
 
 interface OverviewHeaderActionsProps {
@@ -64,7 +62,7 @@ export function OverviewHeaderActions({
             className="h-8 border border-[#2f5e94] bg-[#0a2f5f] px-2 text-[#cfe6ff] hover:bg-[#12417c]"
           >
             <SlidersHorizontal className="mr-1.5 h-4 w-4" />
-            视图 {visiblePanelCount}/5
+            视图 {visiblePanelCount}/4
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -123,19 +121,6 @@ export function OverviewHeaderActions({
             <span className="flex-1">网络图</span>
             <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
               {panelVisibility.network && <Check className="h-3 w-3 text-cyan-200" />}
-            </span>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="focus:bg-[#0a2a5c] focus:text-cyan-100"
-            onSelect={(e) => {
-              e.preventDefault();
-              onTogglePanel("model");
-            }}
-          >
-            <Boxes className="mr-2 h-4 w-4 text-cyan-300" />
-            <span className="flex-1">模型区</span>
-            <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-cyan-700/70">
-              {panelVisibility.model && <Check className="h-3 w-3 text-cyan-200" />}
             </span>
           </DropdownMenuItem>
         </DropdownMenuContent>
