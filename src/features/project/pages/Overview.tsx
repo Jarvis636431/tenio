@@ -3,7 +3,7 @@ import { useProject } from "../hooks/useProject";
 import { formatDate, formatIsoDate } from "@/lib/date";
 import { useProjectExport } from "../hooks/useProjectExport";
 import { useOverviewActions } from "../hooks/useOverviewActions";
-import { useOverviewData } from "../hooks/useOverviewData";
+import { useProjectData } from "../hooks/useProjectData";
 import { useProjectCharts } from "../hooks/useProjectCharts";
 import { OverviewHeaderActions } from "../components/OverviewHeaderActions";
 import { sortBySeqNo } from "@/lib/array";
@@ -55,7 +55,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     reportPeriod,
     dailyTaskNames,
     weeklyTaskNames,
-  } = useOverviewData({ projectId: propsProjectId });
+  } = useProjectData({ projectId: propsProjectId });
 
   // 弹窗和重置操作
   const {

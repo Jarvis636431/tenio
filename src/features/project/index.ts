@@ -5,6 +5,6 @@ export { Overview } from "./pages/Overview";
 
 export { useProject } from "./hooks/useProject";
 export { useProjectCharts } from "./hooks/useProjectCharts";
-export { useOverviewData } from "./hooks/useOverviewData";
+export { useProjectData } from "./hooks/useProjectData";
 
 export type { Project } from "./types";

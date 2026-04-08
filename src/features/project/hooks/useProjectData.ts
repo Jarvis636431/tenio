@@ -7,7 +7,7 @@ import { getProjectCoreGraph } from "../services/schedulepro-service";
 import type { PlanTask } from "@/types/domain/plan";
 import type { CoreGraphResponse, CoreGraphWorkProcess } from "@/types/domain/schedulepro";
 
-interface UseOverviewDataOptions {
+interface UseProjectDataOptions {
   projectId?: string;
 }
 
@@ -52,7 +52,7 @@ function resolvePlannedRange(wp: NonNullable<CoreGraphResponse["work_processes"]
   };
 }
 
-export function useOverviewData({ projectId: propsProjectId }: UseOverviewDataOptions = {}) {
+export function useProjectData({ projectId: propsProjectId }: UseProjectDataOptions = {}) {
   const { id: paramProjectId } = useParams();
   const navigate = useNavigate();
   const { currentProject, projects, coreGraphByProjectId, setCoreGraph, setCurrentProject } =
