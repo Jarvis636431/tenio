@@ -5,6 +5,7 @@ import { ChartLine, FileText, FileUp, ListTodo, Network, Repeat, Users } from "l
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
+import { formatDate, formatIsoDate } from "@/lib/date";
 import { useProjectExport } from "@/pages/project/hooks/useProjectExport";
 import { useOverviewActions } from "@/pages/project/hooks/useOverviewActions";
 import { usePlanTasks } from "@/pages/project/hooks/usePlanTasks";
@@ -166,11 +167,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       .map((item) => item.name);
   }, [dailyProcesses]);
   const dailyDateText = useMemo(() => {
-    if (!selectedTimelineDate) return "";
-    const y = selectedTimelineDate.getFullYear();
-    const m = String(selectedTimelineDate.getMonth() + 1).padStart(2, "0");
-    const d = String(selectedTimelineDate.getDate()).padStart(2, "0");
-    return `${y}/${m}/${d}`;
+    return formatDate(selectedTimelineDate, "yyyy/mm/dd");
   }, [selectedTimelineDate]);
   const weeklyTaskNames = useMemo(() => {
     const { startDate, endDate } = reportPeriod;
@@ -213,16 +210,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     remark: "",
   });
 
-  const formatDateTime = (value?: string) => {
-    if (!value) return "-";
-    if (value.length >= 16) {
-      return value.slice(0, 16).replace("T", " ");
-    }
-    if (value.length >= 10) {
-      return value.slice(0, 10);
-    }
-    return value;
-  };
+  const formatDateTime = (value?: string) => formatIsoDate(value, true);
 
   return (
     <div className="flex min-h-full flex-col gap-3 bg-transparent px-0 pt-0 pb-0 text-slate-100">

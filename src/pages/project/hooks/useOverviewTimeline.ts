@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { formatDate, getWeekRange } from "@/lib/date";
 
 type ProcessHighlight = {
   start?: Date | null;
@@ -61,27 +62,18 @@ export function useOverviewTimeline(
   }, [currentDay, timeRange]);
 
   const selectedTimelineDateLabel = useMemo(() => {
-    if (!selectedTimelineDate) return "";
-    const y = selectedTimelineDate.getFullYear();
-    const m = String(selectedTimelineDate.getMonth() + 1).padStart(2, "0");
-    const d = String(selectedTimelineDate.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
+    return formatDate(selectedTimelineDate, "yyyy-mm-dd");
   }, [selectedTimelineDate]);
 
   const reportPeriod = useMemo(() => {
     if (!selectedTimelineDate) return { start: "", end: "" };
-    const weekStart = new Date(selectedTimelineDate);
-    const day = weekStart.getDay();
-    const diffToMonday = day === 0 ? 6 : day - 1;
-    weekStart.setDate(weekStart.getDate() - diffToMonday);
-    weekStart.setHours(0, 0, 0, 0);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    const fmt = (date: Date) =>
-      `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(
-        date.getDate(),
-      ).padStart(2, "0")}`;
-    return { start: fmt(weekStart), end: fmt(weekEnd), startDate: weekStart, endDate: weekEnd };
+    const { monday, sunday } = getWeekRange(selectedTimelineDate);
+    return {
+      start: formatDate(monday, "yyyy/mm/dd"),
+      end: formatDate(sunday, "yyyy/mm/dd"),
+      startDate: monday,
+      endDate: sunday,
+    };
   }, [selectedTimelineDate]);
 
   const timelineProgress = useMemo(() => {
