@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { ChatPanelState } from "@/components/ai/hooks/useChatPanel";
+import type { ChatState } from "../";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -48,7 +48,7 @@ function formatDateString(value?: string) {
 }
 
 interface ChatProps {
-  state: ChatPanelState;
+  state: ChatState;
   className?: string;
 }
 
@@ -243,7 +243,7 @@ export function Chat({ state, className }: ChatProps) {
     );
   };
 
-  const renderMessageContent = (message: ChatPanelState["messages"][number]) => {
+  const renderMessageContent = (message: ChatState["messages"][number]) => {
     const content = message.content ?? "";
     if (content.startsWith(UNEXPECTED_EVENT_PREFIX)) {
       const raw = content.slice(UNEXPECTED_EVENT_PREFIX.length);

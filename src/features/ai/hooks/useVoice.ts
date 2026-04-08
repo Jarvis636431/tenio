@@ -62,7 +62,7 @@ export interface VoiceRecorderResult {
   clearRecognizedText: () => void;
 }
 
-export function useVoiceRecorder(): VoiceRecorderResult {
+export function useVoice(): VoiceRecorderResult {
   const [isRecording, setIsRecording] = useState(false);
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [recognizedText, setRecognizedText] = useState<string | null>(null);

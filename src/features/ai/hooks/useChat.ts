@@ -10,9 +10,9 @@ import {
   chatWithAgentStream,
   resumeAgentStream,
   extractChatMessageContent,
-} from "@/services/ai-service";
+} from "../services/ai-service";
 import { useQueryClient } from "@tanstack/react-query";
-import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useVoice } from "./useVoice";
 
 export interface ChatMessage {
   id: string;
@@ -40,7 +40,7 @@ type ChatPanelOptions = {
   projectId?: string;
 };
 
-export function useChatPanel(options: ChatPanelOptions = {}) {
+export function useChat(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
   const { currentProject, projects, setCoreGraph } = useProject();
   const queryClient = useQueryClient();
@@ -74,7 +74,7 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     actions: { toggleRecording },
     recognizedText,
     clearRecognizedText,
-  } = useVoiceRecorder();
+  } = useVoice();
 
   const activeProjectKey = useMemo(
     () => options.projectId || routeProjectId || currentProject?.id || "__default__",
@@ -321,4 +321,4 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
   };
 }
 
-export type ChatPanelState = ReturnType<typeof useChatPanel>;
+export type ChatState = ReturnType<typeof useChat>;
