@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ChartLine, FileText, FileUp, ListTodo, Network, Repeat, Users } from "lucide-react";
 import { useProjectCoreGraph } from "@/hooks/useProjectCoreGraph";
 import { useProjectHighlight } from "@/hooks/useProjectHighlight";
 import { useProject } from "@/hooks/useProject";
@@ -13,7 +12,6 @@ import { useDailyProcesses } from "@/pages/project/hooks/useDailyProcesses";
 import { useOverviewMetrics } from "@/pages/project/hooks/useOverviewMetrics";
 import { useOverviewTimeline } from "@/pages/project/hooks/useOverviewTimeline";
 import { OverviewHeaderActions } from "@/pages/project/components/OverviewHeaderActions";
-import { PanelCard } from "@/pages/project/components/PanelCard";
 import { ProjectSlider } from "@/pages/project/components/ProjectSlider";
 import { ProjectTrendChart } from "@/pages/project/components/ProjectTrendChart";
 import { ProjectTabBar } from "@/pages/project/components/ProjectTabBar";
@@ -276,15 +274,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       )}
 
       {activeTab === "overview" && (
-        <PanelCard
-          title="工序计划总览"
-          icon={<ListTodo className="h-3.5 w-3.5 text-cyan-300" />}
-          titleClassName="text-cyan-200"
-          className="min-h-[520px]"
-          contentClassName="overflow-auto"
-        >
+        <div className="min-h-[520px] overflow-auto rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)]">
           {processTableRows.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-cyan-300/70">
+            <div className="flex h-full min-h-[520px] items-center justify-center text-cyan-300/70">
               当前项目暂无工序数据
             </div>
           ) : (
@@ -322,68 +314,45 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
               ))}
             </div>
           )}
-        </PanelCard>
+        </div>
       )}
 
       {activeTab === "schedule" && (
-        <div className="min-h-[640px]">
-          <PanelCard
-            title="甘特图"
-            icon={<ListTodo className="h-3.5 w-3.5 text-amber-400" />}
-            titleClassName="text-amber-300"
-            className="min-h-[640px]"
-          >
-            {planTasks.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-cyan-300/70">
-                当前项目暂无施工任务数据
-              </div>
-            ) : (
-              <div className="h-full min-h-0 overflow-hidden">
-                <GanttChart
-                  data={planTasks}
-                  onTaskDetail={handleTaskDetail}
-                  scale="day"
-                  currentDate={selectedTimelineDate}
-                />
-              </div>
-            )}
-          </PanelCard>
+        <div className="min-h-[640px] overflow-hidden rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)]">
+          {planTasks.length === 0 ? (
+            <div className="flex h-full min-h-[640px] items-center justify-center text-cyan-300/70">
+              当前项目暂无施工任务数据
+            </div>
+          ) : (
+            <GanttChart
+              data={planTasks}
+              onTaskDetail={handleTaskDetail}
+              scale="day"
+              currentDate={selectedTimelineDate}
+            />
+          )}
         </div>
       )}
 
       {activeTab === "network" && (
-        <div className="min-h-[640px]">
-          <PanelCard
-            title="网络图"
-            icon={<Network className="h-3.5 w-3.5 text-violet-400" />}
-            titleClassName="text-violet-300"
-            className="min-h-[640px]"
-          >
-            {planTasks.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-cyan-300/70">
-                当前项目暂无施工任务数据
-              </div>
-            ) : (
-              <div className="h-full min-h-0 overflow-hidden">
-                <NetworkDiagram
-                  tasks={planTasks}
-                  onNodeClick={handleTaskDetail}
-                  currentDate={selectedTimelineDate}
-                />
-              </div>
-            )}
-          </PanelCard>
+        <div className="min-h-[640px] overflow-hidden rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)]">
+          {planTasks.length === 0 ? (
+            <div className="flex h-full min-h-[640px] items-center justify-center text-cyan-300/70">
+              当前项目暂无施工任务数据
+            </div>
+          ) : (
+            <NetworkDiagram
+              tasks={planTasks}
+              onNodeClick={handleTaskDetail}
+              currentDate={selectedTimelineDate}
+            />
+          )}
         </div>
       )}
 
       {activeTab === "resources" && (
         <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
-          <PanelCard
-            title="劳动力曲线"
-            icon={<Users className="h-3.5 w-3.5 text-cyan-300" />}
-            titleClassName="text-cyan-200"
-            className="min-h-[360px]"
-          >
+          <div className="min-h-[360px] overflow-hidden rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] p-4">
             {headcountCurveQuery.isLoading ? (
               <Skeleton className="h-full w-full" />
             ) : headcountCurveQuery.isError ? (
@@ -403,14 +372,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
                 暂无人员数据
               </div>
             )}
-          </PanelCard>
+          </div>
 
-          <PanelCard
-            title="资金曲线"
-            icon={<ChartLine className="h-3.5 w-3.5 text-emerald-400" />}
-            titleClassName="text-emerald-300"
-            className="min-h-[360px]"
-          >
+          <div className="min-h-[360px] overflow-hidden rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] p-4">
             {costCurveQuery.isLoading ? (
               <Skeleton className="h-full w-full" />
             ) : costCurveQuery.isError ? (
@@ -430,50 +394,14 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
                 暂无成本数据
               </div>
             )}
-          </PanelCard>
+          </div>
         </div>
       )}
 
-      {activeTab === "uploads" && (
-        <PanelCard
-          title="文件上传"
-          icon={<FileUp className="h-3.5 w-3.5 text-cyan-300" />}
-          titleClassName="text-cyan-200"
-          className="min-h-[360px]"
-        >
-          <div className="flex h-full flex-col justify-center gap-3 px-6 py-8 text-sm text-slate-300">
-            <p>当前版本暂未接入上传接口。</p>
-            <p>这里后续可以承接 IFC、进度表、工程量清单等项目文件上传。</p>
-          </div>
-        </PanelCard>
-      )}
-
-      {activeTab === "organization" && (
-        <PanelCard
-          title="施工组织设计"
-          icon={<FileText className="h-3.5 w-3.5 text-cyan-300" />}
-          titleClassName="text-cyan-200"
-          className="min-h-[360px]"
-        >
-          <div className="flex h-full flex-col justify-center gap-3 px-6 py-8 text-sm text-slate-300">
-            <p>当前版本暂未接入施工组织设计内容。</p>
-            <p>这里后续可以展示施工方案、节点安排、工艺说明和执行要求。</p>
-          </div>
-        </PanelCard>
-      )}
-
-      {activeTab === "rotation" && (
-        <PanelCard
-          title="人员轮转"
-          icon={<Repeat className="h-3.5 w-3.5 text-cyan-300" />}
-          titleClassName="text-cyan-200"
-          className="min-h-[360px]"
-        >
-          <div className="flex h-full flex-col justify-center gap-3 px-6 py-8 text-sm text-slate-300">
-            <p>当前版本暂未接入人员轮转数据。</p>
-            <p>这里后续可以展示班组轮换、进出场安排和关键岗位排班。</p>
-          </div>
-        </PanelCard>
+      {(activeTab === "uploads" || activeTab === "organization" || activeTab === "rotation") && (
+        <div className="min-h-[360px] rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] px-6 py-8 text-sm text-slate-300">
+          <p>当前版本暂未接入此功能。</p>
+        </div>
       )}
 
       <TaskDetailDialog
