@@ -14,8 +14,6 @@ A.PM 智能管理平台 - 智慧工地/项目管理前端，以"单项目单页�
 - **Routing**: React Router v6
 - **State Management**: Zustand (persist middleware)
 - **Data Fetching**: React Query (TanStack Query)
-- **3D/Models**: Three.js + web-ifc/web-ifc-three for IFC model parsing
-- **Charts**: Recharts
 - **Package Manager**: pnpm (10.14.0)
 
 ## Commands
@@ -36,62 +34,66 @@ pnpm build:dev
 # Run ESLint
 pnpm lint
 
-# Run tests
+# Run all tests
 pnpm test
+
+# Run a single test file
+pnpm test tests/services/http.test.ts
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Type checking
+pnpm typecheck
 
 # Preview production build
 pnpm preview
 ```
 
-Tests are configured with Vitest. Test files live under the top-level `tests/` directory.
-
 ## Project Architecture
 
-### Directory Structure
+### Feature-Based Directory Structure
 
 ```
 src/
-  components/     # React components
-    ui/          # shadcn/ui primitive components (Button, Dialog, etc.)
-    ai/          # AI Chat components
-    layout/      # App layout components (AppLayout, AppSidebar)
-    model/       # 3D IFC model viewer (ModelViewer, hooks, utils)
-    plan/        # Planning components (GanttChart, NetworkDiagram)
-  config/         # Runtime configuration (API endpoints, env vars)
-  constants/      # Application constants
-  hooks/          # Custom React hooks
-  lib/            # Utility functions (cn, etc.)
-  mocks/          # MSW (Mock Service Worker) setup
-  pages/          # Route-level pages
-    project/      # Project dashboard (Overview, components)
-  routes/         # React Router configuration
-  services/       # API service functions
-  stores/         # Zustand stores (auth, project)
-  types/domain/   # TypeScript domain types
+  components/          # Shared UI components
+    ui/               # shadcn/ui primitives (Button, Dialog, etc.)
+    layout/           # App layout components
+    chart/            # Chart components (GanttChart, NetworkDiagram)
+  features/            # Feature modules
+    ai/               # AI Chat feature
+      components/     # Chat, ChatInput, ChatHeader, ChatMessage
+      hooks/          # useChat, useVoice
+      services/       # ai-service
+      types.ts
+    project/          # Project management feature
+      components/     # Overview, ProjectSlider, etc.
+      hooks/          # useProject, useProjectCoreGraph, useProjectHighlight
+      services/       # project-service, schedulepro-service
+      types.ts        # Project types
+  hooks/              # Global shared hooks (useTime, useWeather)
+  lib/                # Utility functions (date, array, task)
+  routes/             # React Router configuration
+  stores/             # Zustand stores (projectStore)
+  services/           # Core infrastructure (http.ts)
+  types/domain/       # Shared domain types (schedulepro, plan)
 ```
 
 ### Key Architecture Patterns
 
-1. **Project Resolution**: Projects can be referenced by either `id` (UUID) or `code`. The `useProjectCoreGraph` hook handles resolution from URL params, local state, or API lookup. URL format: `/project/:id` where `:id` can be either UUID or project code.
+1. **Feature Module Organization**: Each feature in `src/features/` is self-contained with its own components, hooks, services, and types. Import from feature index files: `import { useProject } from "@/features/project";`
 
-2. **API Service Layer**: HTTP requests use a custom wrapper around `fetch` in `src/services/http.ts`. Services expose functions that accept an optional `token` parameter and return typed promises. API base URLs are configured in `src/config/index.ts` via environment variables.
+2. **Project Resolution**: Projects can be referenced by either `id` (UUID) or `code`. The `useProjectCoreGraph` hook handles resolution from URL params, local state, or API lookup. URL format: `/project/:id` where `:id` can be either UUID or project code.
 
-3. **State Management**:
-   - **Auth**: Zustand store in `src/stores/authStore.ts`, persists token and user info
+3. **API Service Layer**: HTTP requests use a custom wrapper around `fetch` in `src/services/http.ts`. Feature-specific services are in `features/{feature}/services/`. API base URLs are configured in `src/config/index.ts` via environment variables.
+
+4. **State Management**:
    - **Project**: Zustand store in `src/stores/projectStore.ts`, manages current project, project list, and core graph data per project
    - **Server State**: React Query for server-cached data (cost curves, headcount curves)
 
-4. **Model Viewer (IFC)**: The `ModelViewer` component loads IFC files via web-ifc-three. It has a multi-level caching system:
-   - Memory cache (`modelBufferCache` Map) for ArrayBuffers
-   - Browser Cache API (`tenio-ifc-model-cache-v1`) for persistent storage
-   - Metadata cache for `globalIdMap` and `tagMap`
-
-5. **Component Highlighting**: Model highlighting uses Express IDs from the core graph. The `processHighlights` in `useProjectHighlight` hook maps dates to component IDs for timeline-based visualization.
-
-6. **AI Chat Flow**:
+5. **AI Chat Flow**:
    - `src/components/layout/AppLayout.tsx` mounts a persistent chat panel in the center column
-   - `src/components/ai/hooks/useChatPanel.ts` manages message state, SSE streaming, interrupt resume, voice input, and cross-project thread switching
-   - `src/services/ai-service.ts` currently wraps `initAgent()` and interrupt resume; the primary chat SSE request is still sent directly from `useChatPanel`
+   - `src/features/ai/hooks/useChat.ts` manages message state, SSE streaming, interrupt resume, voice input, and cross-project thread switching
    - Project overview initializes the agent once per `project_id + base_date` combination
 
 ### Environment Variables
@@ -112,8 +114,7 @@ VITE_VOLC_SECRET_KEY=your_volc_secret_key
 Notes:
 
 - `src/config/index.ts` is the single source of truth for runtime config
-- Volc speech recognition in the current frontend flow requires `VITE_VOLC_APP_ID` and `VITE_VOLC_ACCESS_TOKEN`
-- `VITE_VOLC_SECRET_KEY` exists in config but is not currently consumed by the browser-side recognition request
+- Volc speech recognition requires `VITE_VOLC_APP_ID` and `VITE_VOLC_ACCESS_TOKEN`
 
 ### Route Structure
 
@@ -125,26 +126,20 @@ Notes:
 
 - `src/config/index.ts` - All environment-based configuration
 - `src/services/http.ts` - HTTP request wrapper with auth headers
-- `src/services/schedulepro-service.ts` - Main project API calls (core graph, curves)
-- `src/services/ai-service.ts` - Agent init and interrupt-resume API calls
-- `src/hooks/useProjectCoreGraph.ts` - Project ID resolution and core graph loading
+- `src/features/project/services/schedulepro-service.ts` - Main project API calls (core graph, curves)
+- `src/features/ai/services/ai-service.ts` - Agent init and interrupt-resume API calls
+- `src/features/project/hooks/useProjectCoreGraph.ts` - Project ID resolution and core graph loading
 - `src/stores/projectStore.ts` - Project state management
-- `src/components/ai/hooks/useChatPanel.ts` - AI panel state, SSE parsing, voice input, project-aware thread handling
-- `src/components/model/ModelViewer.tsx` - 3D IFC model viewer with caching
-- `src/pages/project/Overview.tsx` - Main dashboard page aggregating all features
+- `src/features/ai/hooks/useChat.ts` - AI panel state, SSE parsing, voice input
+- `src/features/project/components/Overview.tsx` - Main dashboard page
 
-### Type Definitions
+### Utility Libraries
 
-Domain types are in `src/types/domain/`:
+Shared utilities in `src/lib/`:
 
-- `schedulepro.ts` - Core graph, cost/headcount curves, auth types
-- `project.ts` - Project list, process info types
-- `ai.ts` - Agent init/resume types
-- `plan.ts` - Gantt chart task types
-
-### ESLint Configuration
-
-ESLint is configured in `eslint.config.js` with TypeScript, React Hooks, and React Refresh rules. Unused vars rule is disabled (`@typescript-eslint/no-unused-vars: off`).
+- `date.ts` - Date parsing, formatting, normalization functions
+- `array.ts` - Array utilities (sortBySeqNo, groupBy)
+- `task.ts` - Task utilities (isLagTask, formatDurationDays)
 
 ### Test Layout
 
