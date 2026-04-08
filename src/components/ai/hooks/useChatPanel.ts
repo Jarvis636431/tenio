@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { API_BASE, VOLC_SPEECH } from "@/config";
+import { VOLC_SPEECH } from "@/config";
 import { useProject } from "@/hooks/useProject";
 import { useParams } from "react-router-dom";
 import {
@@ -7,7 +7,11 @@ import {
   getProjectCostCurve,
   getProjectHeadcountCurve,
 } from "@/services/schedulepro-service";
-import { resumeAgentStream } from "@/services/ai-service";
+import {
+  chatWithAgentStream,
+  resumeAgentStream,
+  extractChatMessageContent,
+} from "@/services/ai-service";
 import { useQueryClient } from "@tanstack/react-query";
 
 export interface ChatMessage {
@@ -16,8 +20,6 @@ export interface ChatMessage {
   sender: "user" | "ai";
   timestamp: Date;
 }
-
-const UNEXPECTED_EVENT_PREFIX = "__unexpected_event__:";
 
 function createMessageId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -66,18 +68,9 @@ function logSilentError(message: string, error?: unknown) {
   console.warn(`[AI语音] ${message}`);
 }
 
-function stringifyUnknown(value: unknown) {
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-  return "";
-}
-
 type ChatPanelOptions = {
   projectId?: string;
 };
-
-const AI_SSE_PATH = "/api/agent/chat/sse";
 
 export function useChatPanel(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
@@ -165,42 +158,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     };
   }, []);
 
-  const buildVerifyMessage = (data: unknown) => {
-    if (!data || typeof data !== "object") {
-      return "";
-    }
-    const payload = data as Record<string, unknown>;
-    const verifyType = (payload.verify_type as string) ?? "unknown";
-    if (verifyType === "unexpected_event") {
-      return `${UNEXPECTED_EVENT_PREFIX}${JSON.stringify(payload)}`;
-    }
-    const lines: string[] = [];
-    if (verifyType === "adjust_project") {
-      lines.push("类型：项目工期调整验证");
-      const targetDate = stringifyUnknown(payload.target_date);
-      const finishDate = stringifyUnknown(payload.finish_date);
-      if (targetDate) lines.push(`目标日期：${targetDate}`);
-      if (finishDate) lines.push(`完成日期：${finishDate}`);
-    } else if (verifyType === "adjust_task") {
-      lines.push("类型：任务工期调整验证");
-      const taskName = stringifyUnknown(payload.task_name);
-      const finishDate = stringifyUnknown(payload.finish_date);
-      if (taskName) lines.push(`任务名称：${taskName}`);
-      if (finishDate) lines.push(`完成日期：${finishDate}`);
-    } else if (verifyType === "unexpected_event") {
-      lines.push("类型：突发事件验证");
-      const intent = stringifyUnknown(payload.intent);
-      if (intent) lines.push(`意图：${intent}`);
-      if (payload.affected_task_ids) {
-        lines.push(`受影响任务：${JSON.stringify(payload.affected_task_ids)}`);
-      }
-    } else {
-      lines.push(`类型：${verifyType}`);
-      lines.push(`数据：${JSON.stringify(payload)}`);
-    }
-    return lines.join("\n");
-  };
-
   const refreshCoreGraph = async (projectId: string) => {
     const [coreGraph, costCurve, headcountCurve] = await Promise.all([
       getProjectCoreGraph(projectId),
@@ -210,142 +167,6 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     setCoreGraph(projectId, coreGraph);
     queryClient.setQueryData(["overview", "cost-curve", projectId], costCurve);
     queryClient.setQueryData(["overview", "headcount-curve", projectId], headcountCurve);
-  };
-
-  const extractContent = (payload: unknown) => {
-    const obj =
-      typeof payload === "object" && payload !== null ? (payload as Record<string, unknown>) : null;
-    if (!obj) return null;
-
-    if (obj.type === "refetch") {
-      const projectRef = options.projectId || routeProjectId || currentProject?.id || "";
-      if (projectRef) {
-        void (async () => {
-          const projectId = await resolveProjectId(projectRef);
-          if (projectId) {
-            await refreshCoreGraph(projectId);
-          }
-        })();
-      }
-      return null;
-    }
-
-    if (obj.type === "verify") {
-      return buildVerifyMessage(obj.data);
-    }
-
-    if (obj.type === "update") {
-      if (typeof obj.message === "string") return obj.message;
-      if (typeof obj.data === "string") return obj.data;
-      if (obj.data && typeof obj.data === "object") {
-        const dataObj = obj.data as Record<string, unknown>;
-        const routeObj =
-          (dataObj.project_info_query as
-            | { messages?: Array<{ content?: string; type?: string }> }
-            | undefined) ??
-          (dataObj.knowledge_query as
-            | { messages?: Array<{ content?: string; type?: string }> }
-            | undefined);
-        const messages = routeObj?.messages ?? [];
-        for (let i = messages.length - 1; i >= 0; i -= 1) {
-          const msg = messages[i];
-          if (msg?.type === "tool" || msg?.type === "system") continue;
-          if (msg?.content) return msg.content;
-        }
-      }
-      return null;
-    }
-
-    if (obj.type === "interrupt") {
-      if (typeof obj.message === "string") return obj.message;
-      if (typeof obj.data === "string") return obj.data;
-    }
-
-    const extractInterrupt = () => {
-      const interrupts = obj.__interrupt__;
-      if (!Array.isArray(interrupts) || interrupts.length === 0) return null;
-      const last = interrupts[interrupts.length - 1];
-      if (typeof last === "string") {
-        const match = last.match(/Interrupt\\(value='([\\s\\S]*?)', id='.*?'\\)/);
-        if (match?.[1]) {
-          return match[1].replace(/\\\\n/g, "\n");
-        }
-        return last.replace(/\\\\n/g, "\n");
-      }
-      if (typeof last === "object" && last !== null) {
-        const value = (last as { value?: string }).value;
-        if (value) {
-          return value.replace(/\\\\n/g, "\n");
-        }
-      }
-      return null;
-    };
-
-    const extractFromRoute = (routeKey: string) => {
-      const routeObj = obj[routeKey] as
-        | { messages?: Array<{ content?: string; type?: string }> }
-        | undefined;
-      const messages = routeObj?.messages ?? [];
-      for (let i = messages.length - 1; i >= 0; i -= 1) {
-        const msg = messages[i];
-        if (msg?.type === "tool") continue;
-        if (msg?.content) return msg.content;
-      }
-      return null;
-    };
-
-    const routed = extractFromRoute("knowledge_query") ?? extractFromRoute("project_info_query");
-    if (routed) return routed;
-
-    const interrupt = extractInterrupt();
-    if (interrupt) return interrupt;
-
-    return null;
-  };
-
-  const streamSseResponse = async (response: Response, onContent: (content: string) => void) => {
-    if (!response.ok || !response.body) {
-      throw new Error(`AI 请求失败 (${response.status})`);
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      const parts = buffer.split("\n\n");
-      buffer = parts.pop() ?? "";
-
-      for (const part of parts) {
-        const lines = part
-          .split("\n")
-          .map((line) => line.trim())
-          .filter(Boolean);
-
-        for (const line of lines) {
-          if (!line.startsWith("data:")) continue;
-          const data = line.replace(/^data:\s*/, "");
-          if (data === "[DONE]") {
-            setIsThinking(false);
-            return;
-          }
-          try {
-            const payload = JSON.parse(data) as unknown;
-            const content = extractContent(payload);
-            if (content && content.length >= lastContentRef.current.length) {
-              lastContentRef.current = content;
-              onContent(content);
-            }
-          } catch {
-            // ignore parse errors
-          }
-        }
-      }
-    }
   };
 
   const resumeInterrupt = async (message: string, approved: boolean) => {
@@ -372,23 +193,42 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     setIsThinking(true);
 
     try {
-      const response = await resumeAgentStream({
-        message,
-        approved,
-        thread_id: threadIdRef.current,
-      });
-      await streamSseResponse(response, (content) => {
-        setMessages((prev) =>
-          prev.map((msg) => (msg.id === aiMessageId ? { ...msg, content } : msg)),
-        );
-      });
+      await resumeAgentStream(
+        {
+          message,
+          approved,
+          thread_id: threadIdRef.current,
+        },
+        {
+          signal: abortRef.current.signal,
+          onMessage: (payload) => {
+            const { content } = extractChatMessageContent(payload);
+            if (content && content.length >= lastContentRef.current.length) {
+              lastContentRef.current = content;
+              setMessages((prev) =>
+                prev.map((msg) => (msg.id === aiMessageId ? { ...msg, content } : msg)),
+              );
+            }
+          },
+          onDone: () => {
+            setIsThinking(false);
+          },
+          onError: (error) => {
+            if (error.name === "AbortError") {
+              return;
+            }
+            logSilentError("AI 服务连接失败", error);
+            setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
+            setIsThinking(false);
+          },
+        },
+      );
     } catch (error) {
       if ((error as Error).name === "AbortError") {
         return;
       }
       logSilentError("AI 服务连接失败", error);
       setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
-    } finally {
       setIsThinking(false);
     }
   };
@@ -427,35 +267,57 @@ export function useChatPanel(options: ChatPanelOptions = {}) {
     ]);
 
     try {
-      const response = await fetch(`${API_BASE.aiService}${AI_SSE_PATH}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "text/event-stream",
-        },
-        body: JSON.stringify({
+      await chatWithAgentStream(
+        {
           message: messageText,
           thread_id: threadIdRef.current,
-        }),
-        signal: abortRef.current.signal,
-      });
+        },
+        {
+          signal: abortRef.current.signal,
+          onMessage: (payload) => {
+            const { content, shouldRefetch } = extractChatMessageContent(payload);
 
-      if (!response.ok || !response.body) {
-        throw new Error(`AI 请求失败 (${response.status})`);
-      }
+            // 处理 refetch 事件
+            if (shouldRefetch) {
+              const projectRef = options.projectId || routeProjectId || currentProject?.id || "";
+              if (projectRef) {
+                void (async () => {
+                  const projectId = await resolveProjectId(projectRef);
+                  if (projectId) {
+                    await refreshCoreGraph(projectId);
+                  }
+                })();
+              }
+              return;
+            }
 
-      await streamSseResponse(response, (content) => {
-        setMessages((prev) =>
-          prev.map((msg) => (msg.id === aiMessageId ? { ...msg, content } : msg)),
-        );
-      });
+            // 更新消息内容
+            if (content && content.length >= lastContentRef.current.length) {
+              lastContentRef.current = content;
+              setMessages((prev) =>
+                prev.map((msg) => (msg.id === aiMessageId ? { ...msg, content } : msg)),
+              );
+            }
+          },
+          onDone: () => {
+            setIsThinking(false);
+          },
+          onError: (error) => {
+            if (error.name === "AbortError") {
+              return;
+            }
+            logSilentError("AI 服务连接失败", error);
+            setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
+            setIsThinking(false);
+          },
+        },
+      );
     } catch (error) {
       if ((error as Error).name === "AbortError") {
         return;
       }
       logSilentError("AI 服务连接失败", error);
       setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
-    } finally {
       setIsThinking(false);
     }
   };

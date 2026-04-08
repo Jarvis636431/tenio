@@ -21,3 +21,10 @@ export interface AgentResumeResponse {
   message?: string;
   [key: string]: unknown;
 }
+
+export interface AgentChatPayload {
+  message: string;
+  thread_id: string | null;
+}
+
+export type AgentChatMessageHandler = (content: string, payload: unknown) => void;
