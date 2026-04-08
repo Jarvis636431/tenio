@@ -1,11 +1,8 @@
 import { requestJson, buildUrl, requestApiData } from "@/services/http";
 import { API_BASE } from "@/config";
-import type { ProcessInfoResponse, ProjectListResponse } from "@/types/domain/project";
+import type { ProcessInfoResponse, ProjectListResponse } from "../types";
 
 const BACKEND_BASE_URL = API_BASE.backend;
-
-// ----------- Types -----------
-// Types are now imported from @/types/domain/project
 
 export async function getProcessInfo(
   projectId: string,

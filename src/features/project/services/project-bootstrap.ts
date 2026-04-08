@@ -1,5 +1,5 @@
-import { createJiuanProject, selectSolution } from "@/services/schedulepro-service";
-import type { Project } from "@/types/domain/project";
+import { createJiuanProject, selectSolution } from "./schedulepro-service";
+import type { Project } from "../types";
 
 export const DEFAULT_SOLUTION_ID = 0;
 
