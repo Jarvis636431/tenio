@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { AutoProjectRoute } from "@/routes/AutoProjectRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Overview } from "@/pages/project/Overview";
+import { Overview } from "@/features/project/components/Overview";
 import { APP_DEFAULT_TITLE } from "@/config";
 
 // Lazy loaded pages

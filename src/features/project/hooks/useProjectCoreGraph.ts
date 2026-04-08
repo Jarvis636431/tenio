@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useProject } from "@/hooks/useProject";
-import { getProjectCoreGraph } from "@/services/schedulepro-service";
+import { useProject } from "./useProject";
+import { getProjectCoreGraph } from "../services/schedulepro-service";
 
 type UseProjectCoreGraphOptions = {
   projectId?: string;

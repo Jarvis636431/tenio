@@ -3,8 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Loader2, ShieldAlert } from "lucide-react";
-import { getProcessInfo } from "@/services/project-service";
-import type { OrderInfoData } from "@/types/domain/project";
+import { getProcessInfo } from "@/features/project/services/project-service";
+import type { OrderInfoData } from "@/features/project/types";
 import type { PlanTask } from "@/types/domain/plan";
 import { RESOURCE_BASE_URL } from "@/config";
 

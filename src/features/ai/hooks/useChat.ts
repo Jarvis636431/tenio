@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useProject } from "@/hooks/useProject";
+import { useProject } from "@/features/project/hooks/useProject";
 import { useParams } from "react-router-dom";
 import {
   getProjectCoreGraph,
   getProjectCostCurve,
   getProjectHeadcountCurve,
-} from "@/services/schedulepro-service";
+} from "@/features/project/services/schedulepro-service";
 import {
   chatWithAgentStream,
   resumeAgentStream,

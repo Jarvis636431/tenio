@@ -23,23 +23,14 @@ export function OverviewHeaderActions({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button
-        type="button"
-        size="sm"
-        className={actionButtonClassName}
-        onClick={onResetProject}
-      >
+      <Button type="button" size="sm" className={actionButtonClassName} onClick={onResetProject}>
         <RotateCcw className="mr-1.5 h-4 w-4" />
         重置项目
       </Button>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            size="sm"
-            className={actionButtonClassName}
-          >
+          <Button type="button" size="sm" className={actionButtonClassName}>
             <Download className="mr-1.5 h-4 w-4" />
             报告导出
           </Button>

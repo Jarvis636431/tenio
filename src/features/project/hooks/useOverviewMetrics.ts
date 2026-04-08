@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Project } from "@/types/domain/project";
+import type { Project } from "../types";
 import type { CoreGraphResponse } from "@/types/domain/schedulepro";
 
 interface UseOverviewMetricsOptions {

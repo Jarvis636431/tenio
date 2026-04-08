@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getProjectList } from "@/services/project-service";
-import type { Project } from "@/types/domain/project";
+import { getProjectList } from "@/features/project/services/project-service";
+import type { Project } from "@/features/project/types";
 import type { CoreGraphResponse } from "@/types/domain/schedulepro";
 
 interface ProjectState {

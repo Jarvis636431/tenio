@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { useProject } from "@/hooks/useProject";
+import { useProject } from "./useProject";
 import { toDate } from "@/lib/date";
 import type { CoreGraphWorkProcess } from "@/types/domain/schedulepro";
 
