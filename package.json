@@ -22,7 +22,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-collapsible": "^1.1.0",
     "@radix-ui/react-dialog": "^1.1.2",
@@ -49,7 +48,6 @@
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.53.0",
     "react-markdown": "^9.0.1",
     "react-router-dom": "^6.26.2",
     "recharts": "^2.12.7",
@@ -57,10 +55,6 @@
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
-    "three": "0.149.0",
-    "web-ifc": "^0.0.53",
-    "web-ifc-three": "0.0.125",
-    "zod": "^3.23.8",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
@@ -69,7 +63,6 @@
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@types/three": "^0.182.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.20",
     "baseline-browser-mapping": "^2.10.16",
