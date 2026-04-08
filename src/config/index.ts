@@ -13,11 +13,6 @@ export const API_BASE = {
   aiService: aiServiceUrl,
 };
 
-export const AMAP = {
-  key: env.VITE_AMAP_KEY ?? "",
-  securityCode: env.VITE_AMAP_SECURITY_CODE ?? "",
-};
-
 export const RESOURCE_BASE_URL =
   trimTrailingSlash(env.VITE_RESOURCE_BASE_URL) ?? "https://apmoss.emio.cn/public/resources";
 

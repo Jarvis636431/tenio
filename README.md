@@ -52,8 +52,6 @@ pnpm preview
 VITE_API_BASE_URL=http://localhost:8000
 VITE_AI_SERVICE_URL=http://127.0.0.1:8123
 VITE_RESOURCE_BASE_URL=https://apmoss.emio.cn/public/resources
-VITE_AMAP_KEY=your_amap_key
-VITE_AMAP_SECURITY_CODE=your_amap_security_code
 VITE_VOLC_APP_ID=your_volc_app_id
 VITE_VOLC_ACCESS_TOKEN=your_volc_access_token
 VITE_VOLC_SECRET_KEY=your_volc_secret_key
