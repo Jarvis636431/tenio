@@ -146,13 +146,8 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const processTableRows = useMemo(() => sortBySeqNo(planTasks), [planTasks]);
 
   const dailyProcesses = useDailyProcesses(processHighlights, planTasks, selectedTimelineDate);
-  const dailyTaskNames = useMemo(
-    () => sortBySeqNo(dailyProcesses).map((item) => item.name),
-    [dailyProcesses],
-  );
-  const dailyDateText = useMemo(() => {
-    return formatDate(selectedTimelineDate, "yyyy/mm/dd");
-  }, [selectedTimelineDate]);
+  const dailyTaskNames = sortBySeqNo(dailyProcesses).map((item) => item.name);
+  const dailyDateText = formatDate(selectedTimelineDate, "yyyy/mm/dd");
   const weeklyTaskNames = useMemo(() => {
     const { startDate, endDate } = reportPeriod;
     if (!startDate || !endDate) return [];
@@ -166,13 +161,13 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       }),
     ).map((task) => task.task);
   }, [planTasks, reportPeriod]);
-  const plannedWorkerCount = useMemo(() => {
+  const plannedWorkerCount = (() => {
     if (!headcountCurveQuery.data?.dates?.length || !selectedTimelineDateLabel) return undefined;
     const { dates, headcounts } = headcountCurveQuery.data;
     const index = dates.findIndex((date) => date.slice(0, 10) === selectedTimelineDateLabel);
     if (index < 0) return undefined;
     return headcounts[index];
-  }, [headcountCurveQuery.data, selectedTimelineDateLabel]);
+  })();
   const { handleExportWeeklyDOC, handleExportDailyDOC } = useProjectExport(coreGraph, {
     projectName: currentProjectName,
     projectLocation: currentProject?.description ?? "",
