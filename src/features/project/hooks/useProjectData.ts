@@ -1,0 +1,390 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useProject } from "./useProject";
+import { formatDate, getWeekRange, toDate } from "@/lib/date";
+import { sortBySeqNo } from "@/lib/array";
+import { getProjectCoreGraph } from "../services/schedulepro-service";
+import type { PlanTask } from "@/types/domain/plan";
+import type { CoreGraphResponse, CoreGraphWorkProcess } from "@/types/domain/schedulepro";
+
+interface UseOverviewDataOptions {
+  projectId?: string;
+}
+
+interface ProcessHighlight {
+  id: string;
+  name: string;
+  start: Date | null;
+  end: Date | null;
+}
+
+interface TimeRange {
+  startDay: number;
+  endDay: number;
+  totalDays: number;
+  baseDate: Date;
+}
+
+interface DailyProcessItem {
+  id: string;
+  name: string;
+  seqNo?: string | number;
+}
+
+function resolvePlannedRange(wp: NonNullable<CoreGraphResponse["work_processes"]>[number]) {
+  const exec = wp.execution_state;
+  if (!exec) return { start: "", end: "" };
+  const start = exec.planned_start_datetime ?? "";
+  const end = exec.planned_end_datetime ?? "";
+  if (start && end) return { start, end };
+  const intervals = exec.planned_intervals ?? [];
+  if (intervals.length === 0) return { start, end };
+  const starts = intervals
+    .map((item) => new Date(item.start_datetime).getTime())
+    .filter((value) => !Number.isNaN(value));
+  const ends = intervals
+    .map((item) => new Date(item.end_datetime).getTime())
+    .filter((value) => !Number.isNaN(value));
+  if (!starts.length || !ends.length) return { start, end };
+  return {
+    start: new Date(Math.min(...starts)).toISOString(),
+    end: new Date(Math.max(...ends)).toISOString(),
+  };
+}
+
+export function useOverviewData({ projectId: propsProjectId }: UseOverviewDataOptions = {}) {
+  const { id: paramProjectId } = useParams();
+  const navigate = useNavigate();
+  const { currentProject, projects, coreGraphByProjectId, setCoreGraph, setCurrentProject } =
+    useProject();
+
+  // ===== useProjectCoreGraph 逻辑 =====
+  const projectRef = propsProjectId || paramProjectId || currentProject?.id || "";
+  const [resolvedProjectId, setResolvedProjectId] = useState("");
+  const [isResolvingProjectId, setIsResolvingProjectId] = useState(Boolean(projectRef));
+
+  useEffect(() => {
+    if (!projectRef) {
+      setResolvedProjectId("");
+      setIsResolvingProjectId(false);
+      return;
+    }
+
+    const directMatch = projects.find((project) => project.id === projectRef);
+    if (directMatch) {
+      setResolvedProjectId(directMatch.id);
+      setIsResolvingProjectId(false);
+      if (paramProjectId && paramProjectId !== directMatch.id) {
+        navigate(`/project/${directMatch.id}`, { replace: true });
+      }
+      return;
+    }
+
+    setResolvedProjectId(projectRef);
+    setIsResolvingProjectId(false);
+  }, [projectRef, projects, currentProject?.id, setCurrentProject, paramProjectId, navigate]);
+
+  useEffect(() => {
+    if (!resolvedProjectId || isResolvingProjectId) {
+      return;
+    }
+
+    let isMounted = true;
+    getProjectCoreGraph(resolvedProjectId)
+      .then((response) => {
+        if (!isMounted) return;
+        setCoreGraph(resolvedProjectId, response);
+      })
+      .catch(() => {
+        // 页面自行处理错误提示
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [resolvedProjectId, isResolvingProjectId, setCoreGraph]);
+
+  const coreGraph = useMemo(
+    () => (resolvedProjectId ? coreGraphByProjectId[resolvedProjectId] : undefined),
+    [coreGraphByProjectId, resolvedProjectId],
+  );
+
+  const isLoadingGraph = isResolvingProjectId || Boolean(resolvedProjectId && !coreGraph);
+
+  // ===== usePlanTasks 逻辑 =====
+  const planTasks = useMemo<PlanTask[]>(() => {
+    if (!coreGraph?.work_processes?.length) return [];
+
+    const depsByTarget = new Map<string, string[]>();
+    coreGraph.dependencies?.forEach((dep) => {
+      const toId = dep.to_work_process_id ?? dep.successor_id;
+      const fromId = dep.from_work_process_id ?? dep.predecessor_id;
+      if (!toId || !fromId) return;
+      const list = depsByTarget.get(toId) ?? [];
+      list.push(fromId);
+      depsByTarget.set(toId, list);
+    });
+
+    return coreGraph.work_processes.map((wp) => {
+      const exec = wp.execution_state;
+      const { start, end } = resolvePlannedRange(wp);
+      const workerCount = wp.team_size ?? wp.suggested_team_count ?? 0;
+      const jobType = wp.trade?.name ?? "";
+      return {
+        id: wp.id,
+        seqNo: wp.seq_no,
+        task: wp.name || wp.code || "未命名工序",
+        workerCount,
+        jobType,
+        totalCost: (wp.labor_cost ?? 0) + (wp.material_cost ?? 0) + (wp.device_rental_cost ?? 0),
+        startTime: start,
+        endTime: end,
+        constructionSituation: exec?.status ?? "",
+        prerequisiteProcess: (depsByTarget.get(wp.id) ?? []).join(", "),
+        quantity: wp.quantity ?? 0,
+        quantityUnit: wp.unit ?? "",
+        duration: wp.duration_days ? `${wp.duration_days}天` : "",
+        actualWorkDays: wp.duration_days ?? 0,
+        constructionMethod: wp.selected_method?.name ?? "",
+        selectedConstructionMethod: wp.selected_method?.name ?? "",
+        materialCost: wp.material_cost ?? 0,
+        laborCost: wp.labor_cost ?? 0,
+        criticalPath: exec?.critical_path ?? false,
+        worker: jobType,
+        count: workerCount,
+        startDate: start,
+        endDate: end,
+      } as PlanTask;
+    });
+  }, [coreGraph]);
+
+  // ===== useProjectHighlight 逻辑 =====
+  const processHighlights = useMemo<ProcessHighlight[]>(() => {
+    const workProcesses = coreGraph?.work_processes ?? [];
+    return workProcesses.map((wp: CoreGraphWorkProcess) => {
+      const exec = wp.execution_state;
+      let start: Date | null = null;
+      let end: Date | null = null;
+
+      if (exec) {
+        start = toDate(exec.planned_start_datetime);
+        end = toDate(exec.planned_end_datetime);
+
+        if ((!start || !end) && exec.planned_intervals?.length) {
+          const intervals = exec.planned_intervals;
+          const starts = intervals.map((i) => toDate(i.start_datetime)).filter(Boolean) as Date[];
+          const ends = intervals.map((i) => toDate(i.end_datetime)).filter(Boolean) as Date[];
+          if (starts.length && ends.length) {
+            start = new Date(Math.min(...starts.map((d) => d.getTime())));
+            end = new Date(Math.max(...ends.map((d) => d.getTime())));
+          }
+        }
+      }
+
+      return {
+        id: wp.id,
+        name: wp.name || wp.code || "未命名工序",
+        start,
+        end,
+      };
+    });
+  }, [coreGraph]);
+
+  // ===== useOverviewTimeline 逻辑 =====
+  const [currentDay, setCurrentDay] = useState(1);
+  const [playbackRate, setPlaybackRate] = useState<1 | 2 | 4>(1);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const timeRange = useMemo<TimeRange | null>(() => {
+    if (!processHighlights.length) return null;
+    const starts = processHighlights.map((t) => t.start).filter(Boolean) as Date[];
+    const ends = processHighlights.map((t) => t.end).filter(Boolean) as Date[];
+    if (!starts.length || !ends.length) return null;
+    const minStart = new Date(Math.min(...starts.map((d) => d.getTime())));
+    const maxEnd = new Date(Math.max(...ends.map((d) => d.getTime())));
+    const totalDays = Math.max(
+      1,
+      Math.ceil((maxEnd.getTime() - minStart.getTime()) / (1000 * 60 * 60 * 24)) + 1,
+    );
+    return { startDay: 1, endDay: totalDays, totalDays, baseDate: minStart };
+  }, [processHighlights]);
+
+  const selectedTimelineDate = useMemo<Date | null>(() => {
+    if (!timeRange) return null;
+    const selected = new Date(timeRange.baseDate);
+    selected.setDate(timeRange.baseDate.getDate() + currentDay - 1);
+    selected.setHours(12, 0, 0, 0);
+    return selected;
+  }, [currentDay, timeRange]);
+
+  const selectedTimelineDateLabel = useMemo(() => {
+    return formatDate(selectedTimelineDate, "yyyy-mm-dd");
+  }, [selectedTimelineDate]);
+
+  const reportPeriod = useMemo(() => {
+    if (!selectedTimelineDate)
+      return { start: "", end: "", startDate: undefined, endDate: undefined };
+    const { monday, sunday } = getWeekRange(selectedTimelineDate);
+    return {
+      start: formatDate(monday, "yyyy/mm/dd"),
+      end: formatDate(sunday, "yyyy/mm/dd"),
+      startDate: monday,
+      endDate: sunday,
+    };
+  }, [selectedTimelineDate]);
+
+  const timelineProgress = useMemo(() => {
+    if (!timeRange) return 0;
+    const span = Math.max(1, timeRange.endDay - timeRange.startDay);
+    return Math.round(((currentDay - timeRange.startDay) / span) * 100);
+  }, [currentDay, timeRange]);
+
+  useEffect(() => {
+    if (timeRange && currentDay === 1) {
+      setCurrentDay(timeRange.startDay);
+    }
+  }, [currentDay, timeRange]);
+
+  useEffect(() => {
+    if (!isPlaying || !timeRange) return;
+
+    const intervalByRate: Record<1 | 2 | 4, number> = {
+      1: 1000,
+      2: 500,
+      4: 250,
+    };
+
+    const timer = window.setInterval(() => {
+      setCurrentDay((prev) => {
+        if (prev >= timeRange.endDay) {
+          setIsPlaying(false);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, intervalByRate[playbackRate]);
+
+    return () => window.clearInterval(timer);
+  }, [isPlaying, playbackRate, timeRange]);
+
+  // ===== useDailyProcesses 逻辑 =====
+  const dailyProcesses = useMemo<DailyProcessItem[]>(() => {
+    if (!selectedTimelineDate) return [];
+
+    const globalSeqMap = new Map<string, string | number>();
+    planTasks.forEach((task, index) => {
+      globalSeqMap.set(task.id, task.seqNo ?? index + 1);
+    });
+
+    return processHighlights
+      .filter((item) => {
+        if (!item.start || !item.end) return false;
+        const start = new Date(item.start);
+        const end = new Date(item.end);
+        start.setHours(12, 0, 0, 0);
+        end.setHours(12, 0, 0, 0);
+        return selectedTimelineDate >= start && selectedTimelineDate <= end;
+      })
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        seqNo: globalSeqMap.get(item.id),
+      }));
+  }, [planTasks, processHighlights, selectedTimelineDate]);
+
+  // ===== 计算导出所需数据 =====
+  const dailyTaskNames = useMemo(
+    () => sortBySeqNo(dailyProcesses).map((item) => item.name),
+    [dailyProcesses],
+  );
+
+  const weeklyTaskNames = useMemo(() => {
+    const { startDate, endDate } = reportPeriod;
+    if (!startDate || !endDate) return [];
+    return sortBySeqNo(
+      planTasks.filter((task) => {
+        if (!task.startTime || !task.endTime) return false;
+        const start = new Date(task.startTime);
+        const end = new Date(task.endTime);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
+        return end >= startDate && start <= endDate;
+      }),
+    ).map((task) => task.task);
+  }, [planTasks, reportPeriod]);
+
+  // ===== useOverviewMetrics 逻辑 =====
+  const currentProjectName = useMemo(() => {
+    if (!projectRef && !resolvedProjectId) {
+      return currentProject?.name || "项目详情";
+    }
+    const matchedProject = projects.find((project) => project.id === resolvedProjectId);
+    return matchedProject?.name || currentProject?.name || "项目详情";
+  }, [projectRef, resolvedProjectId, projects, currentProject]);
+
+  const totalDurationLabel = useMemo(() => {
+    if (!coreGraph?.work_processes.length) return "";
+    const times = coreGraph.work_processes
+      .map((wp) => ({
+        start: wp.execution_state?.planned_start_datetime,
+        end: wp.execution_state?.planned_end_datetime,
+      }))
+      .filter((t): t is { start: string; end: string } => Boolean(t.start && t.end));
+    if (!times.length) return "";
+    const starts = times.map((t) => new Date(t.start).getTime()).filter((v) => !Number.isNaN(v));
+    const ends = times.map((t) => new Date(t.end).getTime()).filter((v) => !Number.isNaN(v));
+    if (!starts.length || !ends.length) return "";
+    const minStart = Math.min(...starts);
+    const maxEnd = Math.max(...ends);
+    const totalDays = Math.max(1, Math.ceil((maxEnd - minStart) / (1000 * 60 * 60 * 24)) + 1);
+    return `${totalDays}天`;
+  }, [coreGraph]);
+
+  const onsiteCount = useMemo(() => {
+    if (!coreGraph?.work_processes.length) return undefined;
+    const now = Date.now();
+    const activeWorkProcesses = coreGraph.work_processes.filter((wp) => {
+      const start = wp.execution_state?.planned_start_datetime
+        ? new Date(wp.execution_state.planned_start_datetime).getTime()
+        : NaN;
+      const end = wp.execution_state?.planned_end_datetime
+        ? new Date(wp.execution_state.planned_end_datetime).getTime()
+        : NaN;
+      if (Number.isNaN(start) || Number.isNaN(end)) return false;
+      return now >= start && now <= end;
+    });
+    if (!activeWorkProcesses.length) return 0;
+    return activeWorkProcesses.reduce(
+      (sum, wp) => sum + (wp.team_size ?? wp.suggested_team_count ?? 0),
+      0,
+    );
+  }, [coreGraph]);
+
+  return {
+    // 项目数据
+    resolvedProjectId,
+    coreGraph,
+    isLoadingGraph,
+    planTasks,
+    // 项目基本信息
+    currentProjectName,
+    totalDurationLabel,
+    onsiteCount,
+    // 时间轴数据
+    currentDay,
+    setCurrentDay,
+    playbackRate,
+    setPlaybackRate,
+    isPlaying,
+    setIsPlaying,
+    timeRange,
+    selectedTimelineDate,
+    selectedTimelineDateLabel,
+    timelineProgress,
+    reportPeriod,
+    // 工序数据
+    processHighlights,
+    dailyProcesses,
+    dailyTaskNames,
+    weeklyTaskNames,
+  };
+}

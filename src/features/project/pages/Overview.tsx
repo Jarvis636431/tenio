@@ -1,12 +1,8 @@
-import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useProjectCoreGraph } from "../hooks/useProjectCoreGraph";
+import { useState } from "react";
 import { useProject } from "../hooks/useProject";
 import { formatDate, formatIsoDate } from "@/lib/date";
 import { useProjectExport } from "../hooks/useProjectExport";
 import { useOverviewActions } from "../hooks/useOverviewActions";
-import { usePlanTasks } from "../hooks/usePlanTasks";
-import { useOverviewMetrics } from "../hooks/useOverviewMetrics";
 import { useOverviewData } from "../hooks/useOverviewData";
 import { useProjectCharts } from "../hooks/useProjectCharts";
 import { OverviewHeaderActions } from "../components/OverviewHeaderActions";
@@ -34,18 +30,18 @@ type OverviewTab =
   | "rotation";
 
 export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
-  const { id: paramProjectId } = useParams();
-  const { currentProject, projects, addProject, setCurrentProject } = useProject();
-  const requestedProjectRef = propsProjectId || paramProjectId || currentProject?.id || "";
-  const { projectId: resolvedProjectId, coreGraph } = useProjectCoreGraph({
-    projectId: requestedProjectRef,
-  });
-
+  const { currentProject, addProject, setCurrentProject } = useProject();
   const [activeTab, setActiveTab] = useState<OverviewTab>("overview");
-  const planTasks = usePlanTasks(coreGraph);
 
-  // 时间轴和工序数据
+  // 所有项目数据和时间轴数据
   const {
+    resolvedProjectId,
+    coreGraph,
+    isLoadingGraph,
+    planTasks,
+    currentProjectName,
+    totalDurationLabel,
+    onsiteCount,
     currentDay,
     setCurrentDay,
     playbackRate,
@@ -59,16 +55,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     reportPeriod,
     dailyTaskNames,
     weeklyTaskNames,
-  } = useOverviewData({ projectId: resolvedProjectId, planTasks });
-
-  // 项目基本信息
-  const { currentProjectName, totalDurationLabel, onsiteCount } = useOverviewMetrics({
-    requestedProjectRef,
-    resolvedProjectId,
-    projects,
-    currentProject,
-    coreGraph,
-  });
+  } = useOverviewData({ projectId: propsProjectId });
 
   // 弹窗和重置操作
   const {
@@ -91,8 +78,8 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const costCurveChart = costQuery.chartData;
   const plannedWorkerCount = getHeadcountByDate(selectedTimelineDateLabel);
 
-  // 工序列表
-  const processTableRows = useMemo(() => sortBySeqNo(planTasks), [planTasks]);
+  // 工序列表（按序号排序用于表格展示）
+  const processTableRows = sortBySeqNo(planTasks);
 
   // 导出功能
   const dailyDateText = formatDate(selectedTimelineDate, "yyyy/mm/dd");
@@ -179,7 +166,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         <div className="min-h-[520px] overflow-auto rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)]">
           {processTableRows.length === 0 ? (
             <div className="flex h-full min-h-[520px] items-center justify-center text-cyan-300/70">
-              当前项目暂无工序数据
+              {isLoadingGraph ? "加载中..." : "当前项目暂无工序数据"}
             </div>
           ) : (
             <div className="min-w-[840px]">
@@ -223,7 +210,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         <div className="min-h-[640px] overflow-hidden rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)]">
           {planTasks.length === 0 ? (
             <div className="flex h-full min-h-[640px] items-center justify-center text-cyan-300/70">
-              当前项目暂无施工任务数据
+              {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
             </div>
           ) : (
             <GanttChart
@@ -240,7 +227,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         <div className="min-h-[640px] overflow-hidden rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)]">
           {planTasks.length === 0 ? (
             <div className="flex h-full min-h-[640px] items-center justify-center text-cyan-300/70">
-              当前项目暂无施工任务数据
+              {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
             </div>
           ) : (
             <NetworkDiagram
