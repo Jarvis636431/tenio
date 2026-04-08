@@ -16,9 +16,9 @@ import { sortBySeqNo } from "@/lib/array";
 import { ProjectSlider } from "@/pages/project/components/ProjectSlider";
 import { ProjectTrendChart } from "@/pages/project/components/ProjectTrendChart";
 import { ProjectTabBar } from "@/pages/project/components/ProjectTabBar";
-import { GanttChart } from "@/components/plan/gantt/GanttChart";
-import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
-import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
+import { GanttChart } from "@/components/chart/GanttChart";
+import { NetworkDiagram } from "@/components/chart/NetworkDiagram";
+import { TaskDetailDialog } from "@/components/chart/TaskDetailDialog";
 import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
 import { Skeleton } from "@/components/ui/skeleton";
 
