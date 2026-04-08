@@ -21,6 +21,9 @@ export const AMAP = {
 export const RESOURCE_BASE_URL =
   trimTrailingSlash(env.VITE_RESOURCE_BASE_URL) ?? "https://apmoss.emio.cn/public/resources";
 
+export const DEFAULT_IFC_MODEL_URL =
+  env.VITE_DEFAULT_IFC_MODEL_URL ?? "https://apmoss.emio.cn/public/models/0408.ifc";
+
 export const VOLC_SPEECH = {
   apiUrl: "https://openspeech.bytedance.com/api/v3/auc/bigmodel/recognize/flash",
   resourceId: "volc.bigasr.auc_turbo",

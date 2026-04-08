@@ -8,7 +8,7 @@ import type { OrderInfoData } from "@/types/domain/project";
 import { useProject } from "@/hooks/useProject";
 import { ModelViewer } from "@/components/model/ModelViewer";
 import type { PlanTask } from "@/types/domain/plan";
-import { RESOURCE_BASE_URL } from "@/config";
+import { DEFAULT_IFC_MODEL_URL, RESOURCE_BASE_URL } from "@/config";
 
 interface ProcessMediaRow {
   name: string;
@@ -139,7 +139,7 @@ export function TaskDetailDialog({
     () => [
       {
         key: "default",
-        src: "https://apmoss.emio.cn/public/models/0426.ifc",
+        src: DEFAULT_IFC_MODEL_URL,
       },
     ],
     [],

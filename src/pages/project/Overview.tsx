@@ -22,10 +22,8 @@ import { ModelViewer } from "@/components/model/ModelViewer";
 import { GanttChart } from "@/components/plan/gantt/GanttChart";
 import { NetworkDiagram } from "@/components/plan/network/NetworkDiagram";
 import { TaskDetailDialog } from "@/components/plan/dialogs/TaskDetailDialog";
-import {
-  getProjectCostCurve,
-  getProjectHeadcountCurve,
-} from "@/services/schedulepro-service";
+import { DEFAULT_IFC_MODEL_URL } from "@/config";
+import { getProjectCostCurve, getProjectHeadcountCurve } from "@/services/schedulepro-service";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface OverviewProps {
@@ -74,7 +72,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     () => [
       {
         key: "default",
-        src: "https://apmoss.emio.cn/public/models/0426.ifc",
+        src: DEFAULT_IFC_MODEL_URL,
         tagMap,
       },
     ],
