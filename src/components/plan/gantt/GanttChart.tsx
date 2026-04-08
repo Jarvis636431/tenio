@@ -1,5 +1,7 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { parseDate, normalizeToMidday } from "@/lib/date";
+import { formatWorkerCount, isLagTask } from "@/lib/task";
 import type { PlanTask, TimelineScale } from "@/types/domain/plan";
 
 interface GanttChartProps {
@@ -9,8 +11,13 @@ interface GanttChartProps {
   currentDate?: Date | null;
 }
 
-const BASELINE_DATE = new Date(2025, 0, 1); // 2025-10-01
 const MS_IN_HOUR = 1000 * 60 * 60;
+
+const getBaselineDate = () => {
+  const baseline = new Date(2025, 0, 1);
+  baseline.setHours(0, 0, 0, 0);
+  return baseline;
+};
 const MS_IN_DAY = MS_IN_HOUR * 24;
 const MS_IN_WEEK = MS_IN_DAY * 7;
 
@@ -217,105 +224,13 @@ const getWorkerBadgeClass = (worker: string): string => {
   );
 };
 
-const getBaselineDate = () => {
-  const baseline = new Date(BASELINE_DATE.getTime());
-  baseline.setHours(0, 0, 0, 0);
-  return baseline;
-};
-
-const formatWorkerCount = (count: unknown): string => {
-  const value = Number(count);
-  if (!Number.isFinite(value)) return "0";
-  return String(Math.round(value));
-};
-
-const isLagTask = (taskName?: string) => (taskName ?? "").trim().toLowerCase().startsWith("lag");
-
-const parseDate = (dateStr: string): Date => {
-  if (!dateStr) {
-    return getBaselineDate();
-  }
-
-  const trimmed = dateStr.trim();
-
-  // 解析 ISO / 标准日期
-  const isoDate = new Date(trimmed);
-  if (!Number.isNaN(isoDate.getTime())) {
-    return isoDate;
-  }
-
-  // 解析 "2025/09/01" 或 "2025/09/01 08:00" 格式的日期
-  if (trimmed.includes("/")) {
-    const [datePart, timePart] = trimmed.split(/\s+/);
-    const parts = datePart.split("/");
-    if (parts.length === 3) {
-      const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const day = parseInt(parts[2], 10);
-      const date = new Date(year, month, day);
-      if (timePart) {
-        const [hours, minutes] = timePart.split(":").map((v) => parseInt(v, 10));
-        if (!Number.isNaN(hours)) {
-          date.setHours(hours);
-        }
-        if (!Number.isNaN(minutes)) {
-          date.setMinutes(minutes);
-        }
-      }
-      return date;
-    }
-  }
-
-  // 解析相对格式 "第X天 08:00" 或 "第X天08:00"
-  const relativeMatch = trimmed.match(/第\s*(\d+)\s*天\s*([0-9]{1,2})(?::([0-9]{2}))?/);
-  if (relativeMatch) {
-    const day = parseInt(relativeMatch[1], 10);
-    const hours = relativeMatch[2] ? parseInt(relativeMatch[2], 10) : 0;
-    const minutes = relativeMatch[3] ? parseInt(relativeMatch[3], 10) : 0;
-    const base = getBaselineDate();
-    if (!Number.isNaN(day) && day > 0) {
-      base.setDate(base.getDate() + day - 1);
-    }
-    base.setHours(hours || 0, minutes || 0, 0, 0);
-    return base;
-  }
-
-  const relativeMatchNoTime = trimmed.match(/第\s*(\d+)\s*天/);
-  if (relativeMatchNoTime) {
-    const day = parseInt(relativeMatchNoTime[1], 10);
-    const base = getBaselineDate();
-    if (!Number.isNaN(day) && day > 0) {
-      base.setDate(base.getDate() + day - 1);
-    }
-    base.setHours(0, 0, 0, 0);
-    return base;
-  }
-
-  // 兼容旧的 "8月1日" 格式
-  const match = trimmed.match(/(\d+)月(\d+)日/);
-  if (match) {
-    const month = parseInt(match[1], 10) - 1;
-    const day = parseInt(match[2], 10);
-    const base = getBaselineDate();
-    base.setMonth(month, day);
-    base.setHours(0, 0, 0, 0);
-    return base;
-  }
-
-  // 如果无法解析，返回基准日期避免 NaN
-  return getBaselineDate();
-};
-
-const normalizeToMidday = (date: Date) => {
-  const normalized = new Date(date);
-  normalized.setHours(12, 0, 0, 0);
-  return normalized;
-};
-
 const isTaskActiveOnDate = (current: Date, startRaw: string, endRaw: string) => {
+  const startDate = parseDate(startRaw);
+  const endDate = parseDate(endRaw);
+  if (!startDate || !endDate) return false;
   const currentDay = normalizeToMidday(current).getTime();
-  const startDay = normalizeToMidday(parseDate(startRaw)).getTime();
-  const endDay = normalizeToMidday(parseDate(endRaw)).getTime();
+  const startDay = normalizeToMidday(startDate).getTime();
+  const endDay = normalizeToMidday(endDate).getTime();
   return currentDay >= startDay && currentDay <= endDay;
 };
 

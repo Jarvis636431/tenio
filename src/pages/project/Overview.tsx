@@ -12,6 +12,7 @@ import { useDailyProcesses } from "@/pages/project/hooks/useDailyProcesses";
 import { useOverviewMetrics } from "@/pages/project/hooks/useOverviewMetrics";
 import { useOverviewTimeline } from "@/pages/project/hooks/useOverviewTimeline";
 import { OverviewHeaderActions } from "@/pages/project/components/OverviewHeaderActions";
+import { sortBySeqNo } from "@/lib/array";
 import { ProjectSlider } from "@/pages/project/components/ProjectSlider";
 import { ProjectTrendChart } from "@/pages/project/components/ProjectTrendChart";
 import { ProjectTabBar } from "@/pages/project/components/ProjectTabBar";
@@ -142,50 +143,28 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     };
   }, [costCurveQuery.data]);
 
-  const processTableRows = useMemo(() => {
-    return [...planTasks].sort((a, b) => {
-      const aSeq =
-        typeof a.seqNo === "number" ? a.seqNo : Number(a.seqNo ?? Number.MAX_SAFE_INTEGER);
-      const bSeq =
-        typeof b.seqNo === "number" ? b.seqNo : Number(b.seqNo ?? Number.MAX_SAFE_INTEGER);
-      return aSeq - bSeq;
-    });
-  }, [planTasks]);
+  const processTableRows = useMemo(() => sortBySeqNo(planTasks), [planTasks]);
 
   const dailyProcesses = useDailyProcesses(processHighlights, planTasks, selectedTimelineDate);
-  const dailyTaskNames = useMemo(() => {
-    return [...dailyProcesses]
-      .sort((a, b) => {
-        const aSeq =
-          typeof a.seqNo === "number" ? a.seqNo : Number(a.seqNo ?? Number.MAX_SAFE_INTEGER);
-        const bSeq =
-          typeof b.seqNo === "number" ? b.seqNo : Number(b.seqNo ?? Number.MAX_SAFE_INTEGER);
-        return aSeq - bSeq;
-      })
-      .map((item) => item.name);
-  }, [dailyProcesses]);
+  const dailyTaskNames = useMemo(
+    () => sortBySeqNo(dailyProcesses).map((item) => item.name),
+    [dailyProcesses],
+  );
   const dailyDateText = useMemo(() => {
     return formatDate(selectedTimelineDate, "yyyy/mm/dd");
   }, [selectedTimelineDate]);
   const weeklyTaskNames = useMemo(() => {
     const { startDate, endDate } = reportPeriod;
     if (!startDate || !endDate) return [];
-    return planTasks
-      .filter((task) => {
+    return sortBySeqNo(
+      planTasks.filter((task) => {
         if (!task.startTime || !task.endTime) return false;
         const start = new Date(task.startTime);
         const end = new Date(task.endTime);
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
         return end >= startDate && start <= endDate;
-      })
-      .sort((a, b) => {
-        const aSeq =
-          typeof a.seqNo === "number" ? a.seqNo : Number(a.seqNo ?? Number.MAX_SAFE_INTEGER);
-        const bSeq =
-          typeof b.seqNo === "number" ? b.seqNo : Number(b.seqNo ?? Number.MAX_SAFE_INTEGER);
-        return aSeq - bSeq;
-      })
-      .map((task) => task.task);
+      }),
+    ).map((task) => task.task);
   }, [planTasks, reportPeriod]);
   const plannedWorkerCount = useMemo(() => {
     if (!headcountCurveQuery.data?.dates?.length || !selectedTimelineDateLabel) return undefined;

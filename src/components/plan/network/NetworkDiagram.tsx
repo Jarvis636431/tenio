@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import dagre from "dagre";
+import { toDate, formatDateString, normalizeToMidday } from "@/lib/date";
+import { isLagTask, formatDurationDays } from "@/lib/task";
 import type { PlanTask } from "@/types/domain/plan";
 
 interface NetworkDiagramProps {
@@ -51,10 +53,6 @@ function parseDependencyIds(value: string): string[] {
     .filter((id) => id.length > 0);
 }
 
-function isLagTask(taskName?: string): boolean {
-  return (taskName ?? "").trim().toLowerCase().startsWith("lag");
-}
-
 /* ── 节点尺寸常量（匹配 HTML 样式） ── */
 const MIN_NODE_W = 280;
 const NODE_H = 130;
@@ -87,35 +85,6 @@ function calcNodeWidth(title: string): number {
   return Math.max(MIN_NODE_W, Math.ceil(nodeW));
 }
 
-function toDate(value?: string): Date | null {
-  if (!value) return null;
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function normalizeToMidday(date: Date): Date {
-  const normalized = new Date(date);
-  normalized.setHours(12, 0, 0, 0);
-  return normalized;
-}
-
-function formatDate(value: Date | null): string {
-  if (!value) return "-";
-  return value.toISOString().slice(0, 10);
-}
-
-function formatDateString(value: string): string {
-  if (!value) return "-";
-  // Prefer raw date part to avoid timezone display or shifts.
-  if (value.length >= 10) {
-    const datePart = value.slice(0, 10);
-    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
-      return datePart;
-    }
-  }
-  return formatDate(toDate(value));
-}
-
 function getTaskStatus(start: string, end: string, current: Date | null): TaskStatus {
   const startDate = toDate(start);
   const endDate = toDate(end);
@@ -126,19 +95,6 @@ function getTaskStatus(start: string, end: string, current: Date | null): TaskSt
   if (currentTime < startTime) return "not_started";
   if (currentTime > endTime) return "completed";
   return "in_progress";
-}
-
-function formatDurationDays(value?: string | number): string {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value.toFixed(1);
-  }
-  if (typeof value === "string") {
-    const numeric = Number(value.replace(/[^\d.-]/g, ""));
-    if (Number.isFinite(numeric)) {
-      return numeric.toFixed(1);
-    }
-  }
-  return "";
 }
 
 /* ── 单个节点块 ── */

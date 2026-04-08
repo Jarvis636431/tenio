@@ -1,29 +1,24 @@
 import { useCallback, useMemo } from "react";
 import { useProject } from "@/hooks/useProject";
+import { toDate } from "@/lib/date";
 import type { CoreGraphWorkProcess } from "@/types/domain/schedulepro";
 
 export function useProjectHighlight(projectId?: string) {
   const { coreGraphByProjectId } = useProject();
   const coreGraph = projectId ? coreGraphByProjectId[projectId] : undefined;
 
-  const parseDate = (value?: string | null) => {
-    if (!value) return null;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-  };
-
   const resolvePlannedRange = useCallback((wp: CoreGraphWorkProcess) => {
     const exec = wp.execution_state;
     if (!exec) return { start: null, end: null };
-    const directStart = parseDate(exec.planned_start_datetime);
-    const directEnd = parseDate(exec.planned_end_datetime);
+    const directStart = toDate(exec.planned_start_datetime);
+    const directEnd = toDate(exec.planned_end_datetime);
     if (directStart && directEnd) {
       return { start: directStart, end: directEnd };
     }
     const intervals = exec.planned_intervals ?? [];
     if (intervals.length === 0) return { start: directStart, end: directEnd };
-    const starts = intervals.map((i) => parseDate(i.start_datetime)).filter(Boolean) as Date[];
-    const ends = intervals.map((i) => parseDate(i.end_datetime)).filter(Boolean) as Date[];
+    const starts = intervals.map((i) => toDate(i.start_datetime)).filter(Boolean) as Date[];
+    const ends = intervals.map((i) => toDate(i.end_datetime)).filter(Boolean) as Date[];
     if (!starts.length || !ends.length) return { start: directStart, end: directEnd };
     return {
       start: new Date(Math.min(...starts.map((d) => d.getTime()))),

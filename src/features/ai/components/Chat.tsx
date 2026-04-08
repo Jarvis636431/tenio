@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import type { ChatState } from "../";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { formatDateString } from "@/lib/date";
 
 const UNEXPECTED_EVENT_PREFIX = "__unexpected_event__:";
 
@@ -35,17 +36,6 @@ type UnexpectedEventPayload = {
     current_duration?: number;
   }>;
 };
-
-function formatDateString(value?: string) {
-  if (!value) return "-";
-  if (value.length >= 10) {
-    const datePart = value.slice(0, 10);
-    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
-      return datePart;
-    }
-  }
-  return value;
-}
 
 interface ChatProps {
   state: ChatState;
