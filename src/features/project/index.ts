@@ -5,6 +5,7 @@ export { Overview } from "./pages/Overview";
 
 export { useProject } from "./hooks/useProject";
 export { useProjectCoreGraph } from "./hooks/useProjectCoreGraph";
-export { useProjectHighlight } from "./hooks/useProjectHighlight";
+export { useProjectCharts } from "./hooks/useProjectCharts";
+export { useOverviewData } from "./hooks/useOverviewData";
 
 export type { Project } from "./types";

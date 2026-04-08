@@ -1,16 +1,14 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { useProjectCoreGraph } from "../hooks/useProjectCoreGraph";
-import { useProjectHighlight } from "../hooks/useProjectHighlight";
 import { useProject } from "../hooks/useProject";
 import { formatDate, formatIsoDate } from "@/lib/date";
 import { useProjectExport } from "../hooks/useProjectExport";
 import { useOverviewActions } from "../hooks/useOverviewActions";
 import { usePlanTasks } from "../hooks/usePlanTasks";
-import { useDailyProcesses } from "../hooks/useDailyProcesses";
 import { useOverviewMetrics } from "../hooks/useOverviewMetrics";
-import { useOverviewTimeline } from "../hooks/useOverviewTimeline";
+import { useOverviewData } from "../hooks/useOverviewData";
+import { useProjectCharts } from "../hooks/useProjectCharts";
 import { OverviewHeaderActions } from "../components/OverviewHeaderActions";
 import { sortBySeqNo } from "@/lib/array";
 import { ProjectSlider } from "../components/ProjectSlider";
@@ -19,7 +17,6 @@ import { ProjectTabBar } from "../components/ProjectTabBar";
 import { GanttChart } from "@/components/chart/GanttChart";
 import { NetworkDiagram } from "@/components/chart/NetworkDiagram";
 import { TaskDetailDialog } from "@/components/chart/TaskDetailDialog";
-import { getProjectCostCurve, getProjectHeadcountCurve } from "../services/schedulepro-service";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface OverviewProps {
@@ -44,10 +41,10 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     projectId: requestedProjectRef,
   });
 
-  const { processHighlights } = useProjectHighlight(resolvedProjectId);
   const [activeTab, setActiveTab] = useState<OverviewTab>("overview");
-
   const planTasks = usePlanTasks(coreGraph);
+
+  // 时间轴和工序数据
   const {
     currentDay,
     setCurrentDay,
@@ -60,7 +57,11 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     selectedTimelineDateLabel,
     timelineProgress,
     reportPeriod,
-  } = useOverviewTimeline(processHighlights);
+    dailyTaskNames,
+    weeklyTaskNames,
+  } = useOverviewData({ projectId: resolvedProjectId, planTasks });
+
+  // 项目基本信息
   const { currentProjectName, totalDurationLabel, onsiteCount } = useOverviewMetrics({
     requestedProjectRef,
     resolvedProjectId,
@@ -68,6 +69,8 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     currentProject,
     coreGraph,
   });
+
+  // 弹窗和重置操作
   const {
     isTaskDetailDialogOpen,
     setIsTaskDetailDialogOpen,
@@ -75,99 +78,24 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     handleResetProject,
     handleTaskDetail,
   } = useOverviewActions({
-    resolvedProjectId,
     addProject,
     setCurrentProject,
   });
 
-  const headcountCurveQuery = useQuery({
-    queryKey: ["overview", "headcount-curve", resolvedProjectId],
-    queryFn: async () => {
-      if (!resolvedProjectId) {
-        throw new Error("缺少项目 ID");
-      }
-      return getProjectHeadcountCurve(resolvedProjectId);
-    },
-    enabled: Boolean(resolvedProjectId),
-    refetchOnWindowFocus: false,
+  // 图表数据
+  const { headcountQuery, costQuery, getHeadcountByDate } = useProjectCharts({
+    projectId: resolvedProjectId,
   });
 
-  const costCurveQuery = useQuery({
-    queryKey: ["overview", "cost-curve", resolvedProjectId],
-    queryFn: async () => {
-      if (!resolvedProjectId) {
-        throw new Error("缺少项目 ID");
-      }
-      return getProjectCostCurve(resolvedProjectId);
-    },
-    enabled: Boolean(resolvedProjectId),
-    refetchOnWindowFocus: false,
-  });
+  const headcountChartData = headcountQuery.chartData;
+  const costCurveChart = costQuery.chartData;
+  const plannedWorkerCount = getHeadcountByDate(selectedTimelineDateLabel);
 
-  const headcountChartData = useMemo(() => {
-    const dates = headcountCurveQuery.data?.dates ?? [];
-    const headcounts = headcountCurveQuery.data?.headcounts ?? [];
-    const length = Math.min(dates.length, headcounts.length);
-    return Array.from({ length }, (_, index) => ({
-      date: dates[index],
-      劳动力人数: headcounts[index],
-    }));
-  }, [headcountCurveQuery.data]);
-
-  const costCurveChart = useMemo(() => {
-    const dates = costCurveQuery.data?.dates ?? [];
-    const totalCosts = costCurveQuery.data?.total_costs ?? [];
-    const numericCosts = totalCosts
-      .map((value) => Number(value))
-      .filter((value) => Number.isFinite(value));
-    const maxAbsCost = numericCosts.length
-      ? Math.max(...numericCosts.map((value) => Math.abs(value)))
-      : 0;
-    const unitMeta =
-      maxAbsCost >= 1e8
-        ? { divisor: 1e8, unit: "亿" }
-        : maxAbsCost >= 1e4
-          ? { divisor: 1e4, unit: "万" }
-          : { divisor: 1, unit: "元" };
-    const length = Math.min(dates.length, totalCosts.length);
-    return {
-      unit: unitMeta.unit,
-      points: Array.from({ length }, (_, index) => {
-        const rawCost = Number(totalCosts[index]);
-        const normalized = Number.isFinite(rawCost) ? rawCost / unitMeta.divisor : 0;
-        return {
-          date: dates[index],
-          总成本: Number(normalized.toFixed(2)),
-        };
-      }),
-    };
-  }, [costCurveQuery.data]);
-
+  // 工序列表
   const processTableRows = useMemo(() => sortBySeqNo(planTasks), [planTasks]);
 
-  const dailyProcesses = useDailyProcesses(processHighlights, planTasks, selectedTimelineDate);
-  const dailyTaskNames = sortBySeqNo(dailyProcesses).map((item) => item.name);
+  // 导出功能
   const dailyDateText = formatDate(selectedTimelineDate, "yyyy/mm/dd");
-  const weeklyTaskNames = useMemo(() => {
-    const { startDate, endDate } = reportPeriod;
-    if (!startDate || !endDate) return [];
-    return sortBySeqNo(
-      planTasks.filter((task) => {
-        if (!task.startTime || !task.endTime) return false;
-        const start = new Date(task.startTime);
-        const end = new Date(task.endTime);
-        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
-        return end >= startDate && start <= endDate;
-      }),
-    ).map((task) => task.task);
-  }, [planTasks, reportPeriod]);
-  const plannedWorkerCount = (() => {
-    if (!headcountCurveQuery.data?.dates?.length || !selectedTimelineDateLabel) return undefined;
-    const { dates, headcounts } = headcountCurveQuery.data;
-    const index = dates.findIndex((date) => date.slice(0, 10) === selectedTimelineDateLabel);
-    if (index < 0) return undefined;
-    return headcounts[index];
-  })();
   const { handleExportWeeklyDOC, handleExportDailyDOC } = useProjectExport(coreGraph, {
     projectName: currentProjectName,
     projectLocation: currentProject?.description ?? "",
@@ -327,9 +255,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       {activeTab === "resources" && (
         <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
           <div className="min-h-[360px] overflow-hidden rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] p-4">
-            {headcountCurveQuery.isLoading ? (
+            {headcountQuery.isLoading ? (
               <Skeleton className="h-full w-full" />
-            ) : headcountCurveQuery.isError ? (
+            ) : headcountQuery.isError ? (
               <div className="flex h-full items-center justify-center text-sm text-destructive">
                 无法获取人员数据
               </div>
@@ -349,9 +277,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
           </div>
 
           <div className="min-h-[360px] overflow-hidden rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] p-4">
-            {costCurveQuery.isLoading ? (
+            {costQuery.isLoading ? (
               <Skeleton className="h-full w-full" />
-            ) : costCurveQuery.isError ? (
+            ) : costQuery.isError ? (
               <div className="flex h-full items-center justify-center text-sm text-destructive">
                 无法获取成本数据
               </div>

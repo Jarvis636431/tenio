@@ -5,7 +5,6 @@ import type { PlanTask } from "@/types/domain/plan";
 import type { Project } from "@/types/domain/project";
 
 interface UseOverviewActionsOptions {
-  resolvedProjectId: string;
   addProject: (project: Project) => void;
   setCurrentProject: (project: Project | null) => void;
 }
@@ -19,7 +18,6 @@ interface UseOverviewActionsResult {
 }
 
 export function useOverviewActions({
-  resolvedProjectId,
   addProject,
   setCurrentProject,
 }: UseOverviewActionsOptions): UseOverviewActionsResult {
