@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useProject } from "@/features/project/hooks/useProject";
 import { useParams } from "react-router-dom";
 import {
+  projectQueryKeys,
+  useProject,
   getProjectCoreGraph,
   getProjectCostCurve,
   getProjectHeadcountCurve,
-} from "@/features/project/services/project-api";
+} from "@/features/project";
 import {
   chatWithAgentStream,
   resumeAgentStream,
@@ -13,7 +14,6 @@ import {
 } from "../services/ai-service";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVoice } from "./useVoice";
-import { projectQueryKeys } from "@/features/project/queryKeys";
 
 export interface ChatMessage {
   id: string;

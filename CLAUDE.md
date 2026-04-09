@@ -52,6 +52,9 @@ pnpm preview
 
 ## Project Architecture
 
+Primary repo rules live in [.rules/feature-architecture.md](.rules/feature-architecture.md).
+Feature-architecture skill entry lives in [.codex/skills/feature-architecture-rules/SKILL.md](.codex/skills/feature-architecture-rules/SKILL.md).
+
 ### Feature-Based Directory Structure
 
 ```
@@ -65,36 +68,43 @@ src/
       components/     # Chat, ChatInput, ChatHeader, ChatMessage
       hooks/          # useChat, useVoice
       services/       # ai-service
-      types.ts
+      types/
+        index.ts
+      index.ts
     project/          # Project management feature
-      components/     # Overview, ProjectSlider, etc.
-      hooks/          # useProject, useProjectCoreGraph, useProjectHighlight
-      services/       # project-service, schedulepro-service
-      types.ts        # Project types
+      components/     # Project UI pieces, tabs, local widgets
+      pages/          # Overview page
+      hooks/          # useProject, useProjectData, useProjectCharts
+      services/       # project-api, project-bootstrap, uploads-api
+      types/
+        index.ts      # Project types
+        uploads.ts    # Upload feature types
+      queryKeys.ts
+      index.ts
   hooks/              # Global shared hooks (useTime, useWeather)
   lib/                # Utility functions (date, array, task)
   routes/             # React Router configuration
-  stores/             # Zustand stores (projectStore)
+  stores/             # Zustand stores (client state only)
   services/           # Core infrastructure (http.ts)
   types/domain/       # Shared domain types (schedulepro, plan)
 ```
 
 ### Key Architecture Patterns
 
-1. **Feature Module Organization**: Each feature in `src/features/` is self-contained with its own components, hooks, services, and types. Import from feature index files: `import { useProject } from "@/features/project";`
+1. **Feature Module Organization**: Each feature in `src/features/` is self-contained with its own `components`, `hooks`, `services`, `types`, and optional `pages`/`queryKeys`. Cross-feature imports should go through feature index files: `import { useProject } from "@/features/project";`
 
-2. **Project Resolution**: Projects can be referenced by either `id` (UUID) or `code`. The `useProjectCoreGraph` hook handles resolution from URL params, local state, or API lookup. URL format: `/project/:id` where `:id` can be either UUID or project code.
+2. **Project Resolution**: Project pages resolve the active project from the route param or selected project state. URL format: `/project/:id`.
 
 3. **API Service Layer**: HTTP requests use a custom wrapper around `fetch` in `src/services/http.ts`. Feature-specific services are in `features/{feature}/services/`. API base URLs are configured in `src/config/index.ts` via environment variables.
 
 4. **State Management**:
-   - **Project**: Zustand store in `src/stores/projectStore.ts`, manages current project, project list, and core graph data per project
-   - **Server State**: React Query for server-cached data (cost curves, headcount curves)
+   - **Client State**: Zustand store in `src/stores/projectStore.ts` stores client-owned UI state such as `currentProjectId`
+   - **Server State**: React Query owns project list, core graph, and chart data
 
 5. **AI Chat Flow**:
    - `src/components/layout/AppLayout.tsx` mounts a persistent chat panel in the center column
    - `src/features/ai/hooks/useChat.ts` manages message state, SSE streaming, interrupt resume, voice input, and cross-project thread switching
-   - Project overview initializes the agent once per `project_id + base_date` combination
+   - Feature cross-imports should use `@/features/project` public exports, not deep imports
 
 ### Environment Variables
 
@@ -124,12 +134,14 @@ Notes:
 
 - `src/config/index.ts` - All environment-based configuration
 - `src/services/http.ts` - HTTP request wrapper with auth headers
-- `src/features/project/services/schedulepro-service.ts` - Main project API calls (core graph, curves)
+- `src/features/project/services/project-api.ts` - Main project API calls (core graph, curves)
+- `src/features/project/services/project-bootstrap.ts` - Project creation and bootstrap flow
 - `src/features/ai/services/ai-service.ts` - Agent init and interrupt-resume API calls
-- `src/features/project/hooks/useProjectCoreGraph.ts` - Project ID resolution and core graph loading
-- `src/stores/projectStore.ts` - Project state management
+- `src/features/project/hooks/useProjectData.ts` - Project overview data derivation and graph query binding
+- `src/features/project/hooks/useProject.ts` - Selected project state + project list query adapter
+- `src/stores/projectStore.ts` - Client-side project selection state
 - `src/features/ai/hooks/useChat.ts` - AI panel state, SSE parsing, voice input
-- `src/features/project/components/Overview.tsx` - Main dashboard page
+- `src/features/project/pages/Overview.tsx` - Main dashboard page
 
 ### Utility Libraries
 

@@ -30,7 +30,7 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/consistent-type-imports": [
@@ -47,6 +47,35 @@ export default tseslint.config(
       "@typescript-eslint/require-await": "off",
       "@typescript-eslint/no-unnecessary-type-assertion": "off",
       "@typescript-eslint/no-redundant-type-constituents": "off",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/features/*/components/*", "@/features/*/hooks/*", "@/features/*/services/*", "@/features/*/types/*", "@/features/*/pages/*"],
+              message:
+                "Do not import a feature's internal modules from outside that feature. Use the feature barrel or a documented public entry.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/features/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/features/*/components/*", "@/features/*/hooks/*", "@/features/*/services/*", "@/features/*/types/*", "@/features/*/pages/*"],
+              message:
+                "Do not deep-import another feature's internals. Import from that feature's barrel or public entry.",
+            },
+          ],
+        },
+      ],
     },
   },
   {
