@@ -1,8 +1,10 @@
-type RequestOptions = {
+interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   headers?: HeadersInit;
   body?: BodyInit | null;
-};
+  /** 是否自动解包 ApiResponse 包装层，默认为 true */
+  unwrap?: boolean;
+}
 
 export type ApiResponse<T> = {
   data: T;
@@ -41,7 +43,27 @@ async function parseResponse<T>(response: Response): Promise<T> {
   throw new Error(`请求失败 (${response.status})`);
 }
 
-export async function requestJson<T>(
+function isApiResponseEnvelope<T>(payload: unknown): payload is ApiResponse<T> {
+  if (!payload || typeof payload !== "object") return false;
+  const record = payload as Record<string, unknown>;
+  if (!("data" in record)) return false;
+  return "message" in record || "status" in record || "timestamp" in record || "code" in record;
+}
+
+function unwrapApiResponseData<T>(payload: T | ApiResponse<T>): T {
+  if (isApiResponseEnvelope<T>(payload)) {
+    return payload.data;
+  }
+  return payload as T;
+}
+
+/**
+ * 发送 HTTP 请求并解析响应
+ * @param input - 请求 URL
+ * @param options - 请求选项
+ * @returns 响应数据（默认自动解包 ApiResponse）
+ */
+export async function request<T>(
   input: RequestInfo | URL,
   options: RequestOptions = {},
 ): Promise<T> {
@@ -53,29 +75,15 @@ export async function requestJson<T>(
     body: options.body ?? undefined,
   });
 
-  return parseResponse<T>(response);
-}
+  const data = await parseResponse<T | ApiResponse<T>>(response);
 
-function isApiResponseEnvelope<T>(payload: unknown): payload is ApiResponse<T> {
-  if (!payload || typeof payload !== "object") return false;
-  const record = payload as Record<string, unknown>;
-  if (!("data" in record)) return false;
-  return "message" in record || "status" in record || "timestamp" in record || "code" in record;
-}
-
-export function unwrapApiResponseData<T>(payload: T | ApiResponse<T>): T {
-  if (isApiResponseEnvelope<T>(payload)) {
-    return payload.data;
+  // 默认自动解包 ApiResponse 包装层
+  const shouldUnwrap = options.unwrap !== false;
+  if (shouldUnwrap) {
+    return unwrapApiResponseData(data);
   }
-  return payload as T;
-}
 
-export async function requestApiData<T>(
-  input: RequestInfo | URL,
-  options: RequestOptions = {},
-): Promise<T> {
-  const payload = await requestJson<T | ApiResponse<T>>(input, options);
-  return unwrapApiResponseData(payload);
+  return data as T;
 }
 
 export function buildUrl(base: string, path: string, params?: Record<string, string>) {

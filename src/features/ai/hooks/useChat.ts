@@ -5,7 +5,7 @@ import {
   getProjectCoreGraph,
   getProjectCostCurve,
   getProjectHeadcountCurve,
-} from "@/features/project/services/schedulepro-service";
+} from "@/features/project/services/project-api";
 import {
   chatWithAgentStream,
   resumeAgentStream,

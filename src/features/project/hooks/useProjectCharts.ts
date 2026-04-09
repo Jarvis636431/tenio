@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getProjectCostCurve, getProjectHeadcountCurve } from "../services/schedulepro-service";
+import { getProjectCostCurve, getProjectHeadcountCurve } from "../services/project-api";
 
 interface UseProjectChartsOptions {
   projectId: string | null | undefined;

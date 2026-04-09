@@ -1,5 +1,5 @@
 import { API_BASE } from "@/config";
-import { requestJson, requestSse, type SseRequestOptions } from "@/services/http";
+import { request, requestSse, type SseRequestOptions } from "@/services/http";
 import type {
   AgentInitPayload,
   AgentInitResponse,
@@ -13,12 +13,13 @@ const AI_BASE_URL = API_BASE.aiService;
  * 初始化 AI Agent
  */
 export async function initAgent(payload: AgentInitPayload): Promise<AgentInitResponse> {
-  return requestJson<AgentInitResponse>(`${AI_BASE_URL}/api/agent/init`, {
+  return request<AgentInitResponse>(`${AI_BASE_URL}/api/agent/init`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
+    unwrap: false,
   });
 }
 

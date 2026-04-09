@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useProject } from "./useProject";
 import { formatDate, getWeekRange, toDate } from "@/lib/date";
 import { sortBySeqNo } from "@/lib/array";
-import { getProjectCoreGraph } from "../services/schedulepro-service";
+import { getProjectCoreGraph } from "../services/project-api";
 import type { PlanTask } from "@/types/domain/plan";
 import type { CoreGraphResponse, CoreGraphWorkProcess } from "@/types/domain/schedulepro";
 
