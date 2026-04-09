@@ -8,6 +8,7 @@ import { sortBySeqNo } from "@/lib/array";
 import { ProjectSlider } from "../components/ProjectSlider";
 import { ProjectTrendChart } from "../components/ProjectTrendChart";
 import { ProjectTabBar } from "../components/ProjectTabBar";
+import { UploadsTab } from "../components/UploadsTab";
 import { GanttChart } from "@/components/chart/GanttChart";
 import { NetworkDiagram } from "@/components/chart/NetworkDiagram";
 import { TaskDetailDialog } from "@/components/chart/TaskDetailDialog";
@@ -313,7 +314,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         </div>
       )}
 
-      {(activeTab === "uploads" || activeTab === "organization" || activeTab === "rotation") && (
+      {activeTab === "uploads" && <UploadsTab projectId={resolvedProjectId} />}
+
+      {(activeTab === "organization" || activeTab === "rotation") && (
         <div className="min-h-[360px] rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] px-6 py-8 text-sm text-slate-300">
           <p>当前版本暂未接入此功能。</p>
         </div>
