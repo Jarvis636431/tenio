@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProject } from "./useProject";
 import { formatDate, getWeekRange, toDate } from "@/lib/date";
@@ -6,6 +7,7 @@ import { sortBySeqNo } from "@/lib/array";
 import { getProjectCoreGraph } from "../services/project-api";
 import type { PlanTask } from "@/types/domain/plan";
 import type { CoreGraphResponse, CoreGraphWorkProcess } from "@/types/domain/schedulepro";
+import { projectQueryKeys } from "../queryKeys";
 
 interface UseProjectDataOptions {
   projectId?: string;
@@ -55,8 +57,7 @@ function resolvePlannedRange(wp: NonNullable<CoreGraphResponse["work_processes"]
 export function useProjectData({ projectId: propsProjectId }: UseProjectDataOptions = {}) {
   const { id: paramProjectId } = useParams();
   const navigate = useNavigate();
-  const { currentProject, projects, coreGraphByProjectId, setCoreGraph, setCurrentProject } =
-    useProject();
+  const { currentProject, projects } = useProject();
 
   // ===== useProjectCoreGraph 逻辑 =====
   const projectRef = propsProjectId || paramProjectId || currentProject?.id || "";
@@ -82,34 +83,24 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
 
     setResolvedProjectId(projectRef);
     setIsResolvingProjectId(false);
-  }, [projectRef, projects, currentProject?.id, setCurrentProject, paramProjectId, navigate]);
+  }, [projectRef, projects, currentProject?.id, paramProjectId, navigate]);
 
-  useEffect(() => {
-    if (!resolvedProjectId || isResolvingProjectId) {
-      return;
-    }
+  const coreGraphQuery = useQuery({
+    queryKey: resolvedProjectId
+      ? projectQueryKeys.coreGraph(resolvedProjectId)
+      : ["project", "core-graph", "empty"],
+    queryFn: async () => {
+      if (!resolvedProjectId) {
+        throw new Error("缺少项目 ID");
+      }
+      return getProjectCoreGraph(resolvedProjectId);
+    },
+    enabled: Boolean(resolvedProjectId) && !isResolvingProjectId,
+    refetchOnWindowFocus: false,
+  });
 
-    let isMounted = true;
-    getProjectCoreGraph(resolvedProjectId)
-      .then((response) => {
-        if (!isMounted) return;
-        setCoreGraph(resolvedProjectId, response);
-      })
-      .catch(() => {
-        // 页面自行处理错误提示
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [resolvedProjectId, isResolvingProjectId, setCoreGraph]);
-
-  const coreGraph = useMemo(
-    () => (resolvedProjectId ? coreGraphByProjectId[resolvedProjectId] : undefined),
-    [coreGraphByProjectId, resolvedProjectId],
-  );
-
-  const isLoadingGraph = isResolvingProjectId || Boolean(resolvedProjectId && !coreGraph);
+  const coreGraph = coreGraphQuery.data;
+  const isLoadingGraph = isResolvingProjectId || coreGraphQuery.isLoading;
 
   // ===== usePlanTasks 逻辑 =====
   const planTasks = useMemo<PlanTask[]>(() => {

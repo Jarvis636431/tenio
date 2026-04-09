@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProject } from "@/features/project/hooks/useProject";
-import { createProjectWithDefaultSolution } from "@/features/project/services/project-api";
+import { createProjectWithDefaultSolution } from "@/features/project/services/project-bootstrap";
 
 export function AutoProjectRoute() {
   const navigate = useNavigate();

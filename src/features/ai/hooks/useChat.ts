@@ -13,6 +13,7 @@ import {
 } from "../services/ai-service";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVoice } from "./useVoice";
+import { projectQueryKeys } from "@/features/project/queryKeys";
 
 export interface ChatMessage {
   id: string;
@@ -42,7 +43,7 @@ type ChatPanelOptions = {
 
 export function useChat(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
-  const { currentProject, projects, setCoreGraph } = useProject();
+  const { currentProject, projects } = useProject();
   const queryClient = useQueryClient();
   const defaultWelcomeMessage: ChatMessage = useMemo(
     () => ({
@@ -136,9 +137,9 @@ export function useChat(options: ChatPanelOptions = {}) {
       getProjectCostCurve(projectId),
       getProjectHeadcountCurve(projectId),
     ]);
-    setCoreGraph(projectId, coreGraph);
-    queryClient.setQueryData(["overview", "cost-curve", projectId], costCurve);
-    queryClient.setQueryData(["overview", "headcount-curve", projectId], headcountCurve);
+    queryClient.setQueryData(projectQueryKeys.coreGraph(projectId), coreGraph);
+    queryClient.setQueryData(projectQueryKeys.costCurve(projectId), costCurve);
+    queryClient.setQueryData(projectQueryKeys.headcountCurve(projectId), headcountCurve);
   };
 
   const resumeInterrupt = async (message: string, approved: boolean) => {

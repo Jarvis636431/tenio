@@ -1,8 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { useProjectStore } from "@/stores/projectStore";
+import { getProjectList } from "../services/project-api";
+import type { Project, ProjectListItem, ProjectListResponse } from "../types";
+import { projectQueryKeys } from "../queryKeys";
 
-let hasInitializedProjects = false;
+function mapProjectList(response: ProjectListResponse): Project[] {
+  return response.map((item) => ({
+    id: item.project_id,
+    name: item.project_name,
+    description: item.description,
+    status: item.status,
+    createdAt: item.created_at,
+  }));
+}
 
 /**
  * 兼容原有 ProjectContext 的 hook
@@ -10,73 +22,83 @@ let hasInitializedProjects = false;
  */
 export function useProject() {
   const { id } = useParams();
+  const queryClient = useQueryClient();
+  const { currentProjectId, setCurrentProjectId } = useProjectStore();
 
-  const {
-    currentProject,
-    projects,
-    isLoading,
-    coreGraphByProjectId,
-    setCurrentProject,
-    addProject,
-    updateProject,
-    setCoreGraph,
-    refreshProjects,
-    setLoading,
-  } = useProjectStore();
+  const projectsQuery = useQuery({
+    queryKey: projectQueryKeys.list,
+    queryFn: getProjectList,
+    refetchOnWindowFocus: false,
+  });
 
-  // 初始化：首次加载时刷新项目列表
-  useEffect(() => {
-    let active = true;
-
-    const fetchProjects = async () => {
-      if (hasInitializedProjects) {
-        return;
-      }
-      hasInitializedProjects = true;
-
-      setLoading(true);
-      try {
-        await refreshProjects();
-      } catch (error) {
-        hasInitializedProjects = false;
-        throw error;
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void fetchProjects();
-
-    return () => {
-      active = false;
-    };
-  }, [refreshProjects, setLoading]);
+  const projects = useMemo(() => mapProjectList(projectsQuery.data ?? []), [projectsQuery.data]);
+  const currentProject = useMemo(
+    () => projects.find((project) => project.id === currentProjectId) ?? null,
+    [projects, currentProjectId],
+  );
 
   // 路由同步：当 URL 中的项目 ID 变化时，自动切换当前项目
   useEffect(() => {
     if (id && projects.length > 0) {
       const project = projects.find((p) => p.id === id);
-      if (project && project.id !== currentProject?.id) {
-        setCurrentProject(project);
+      if (project && project.id !== currentProjectId) {
+        setCurrentProjectId(project.id);
       }
     }
-  }, [id, projects, currentProject, setCurrentProject]);
+  }, [id, projects, currentProjectId, setCurrentProjectId]);
 
   const wrappedRefreshProjects = async () => {
-    await refreshProjects();
+    await projectsQuery.refetch();
+  };
+
+  const setCurrentProject = (project: Project | null) => {
+    setCurrentProjectId(project?.id ?? null);
+  };
+
+  const addProject = (project: Project) => {
+    queryClient.setQueryData<ProjectListResponse>(projectQueryKeys.list, (previous = []) => {
+      const nextItem: ProjectListItem = {
+        project_id: project.id,
+        project_name: project.name,
+        description: project.description,
+        status: project.status ?? "",
+        created_at: project.createdAt ?? new Date().toISOString(),
+      };
+      const existing = previous.find((item) => item.project_id === project.id);
+      if (existing) {
+        return previous.map((item) =>
+          item.project_id === project.id ? { ...item, ...nextItem } : item,
+        );
+      }
+      return [...previous, nextItem];
+    });
+  };
+
+  const updateProject = (updatedProject: Project) => {
+    queryClient.setQueryData<ProjectListResponse>(projectQueryKeys.list, (previous = []) =>
+      previous.map((item) =>
+        item.project_id === updatedProject.id
+          ? {
+              ...item,
+              project_name: updatedProject.name,
+              description: updatedProject.description,
+              status: updatedProject.status ?? item.status,
+              created_at: updatedProject.createdAt ?? item.created_at,
+            }
+          : item,
+      ),
+    );
   };
 
   return {
     currentProject,
+    currentProjectId,
     setCurrentProject,
+    setCurrentProjectId,
     projects,
     addProject,
     updateProject,
     refreshProjects: wrappedRefreshProjects,
-    isLoading,
-    coreGraphByProjectId,
-    setCoreGraph,
+    isLoading: projectsQuery.isLoading,
   };
 }

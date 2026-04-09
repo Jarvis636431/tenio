@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getProjectCostCurve, getProjectHeadcountCurve } from "../services/project-api";
+import { projectQueryKeys } from "../queryKeys";
 
 interface UseProjectChartsOptions {
   projectId: string | null | undefined;
@@ -8,7 +9,9 @@ interface UseProjectChartsOptions {
 
 export function useProjectCharts({ projectId }: UseProjectChartsOptions) {
   const headcountQuery = useQuery({
-    queryKey: ["overview", "headcount-curve", projectId],
+    queryKey: projectId
+      ? projectQueryKeys.headcountCurve(projectId)
+      : ["overview", "headcount-curve", "empty"],
     queryFn: async () => {
       if (!projectId) {
         throw new Error("缺少项目 ID");
@@ -20,7 +23,9 @@ export function useProjectCharts({ projectId }: UseProjectChartsOptions) {
   });
 
   const costQuery = useQuery({
-    queryKey: ["overview", "cost-curve", projectId],
+    queryKey: projectId
+      ? projectQueryKeys.costCurve(projectId)
+      : ["overview", "cost-curve", "empty"],
     queryFn: async () => {
       if (!projectId) {
         throw new Error("缺少项目 ID");
