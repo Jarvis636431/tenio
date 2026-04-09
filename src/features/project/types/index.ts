@@ -78,7 +78,7 @@ export interface ProcessInfoData {
 
 export interface OrderInfoData {
   工单内容?: string;
-  详细信息?: string[] | string; // 兼容 string[] 和 string
+  详细信息?: string[] | string;
   节点大样图?: string[] | string;
   设计交底?: string;
   安全交底?: string;
