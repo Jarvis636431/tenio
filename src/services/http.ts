@@ -2,6 +2,7 @@ interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   headers?: HeadersInit;
   body?: BodyInit | null;
+  token?: string;
   /** 是否自动解包 ApiResponse 包装层，默认为 true */
   unwrap?: boolean;
 }
@@ -50,11 +51,39 @@ function isApiResponseEnvelope<T>(payload: unknown): payload is ApiResponse<T> {
   return "message" in record || "status" in record || "timestamp" in record || "code" in record;
 }
 
-function unwrapApiResponseData<T>(payload: T | ApiResponse<T>): T {
+export function unwrapApiResponseData<T>(payload: T | ApiResponse<T>): T {
   if (isApiResponseEnvelope<T>(payload)) {
     return payload.data;
   }
   return payload as T;
+}
+
+function buildRequestHeaders(options: RequestOptions): HeadersInit {
+  return {
+    ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+    ...options.headers,
+  };
+}
+
+export async function requestJson<T>(
+  input: RequestInfo | URL,
+  options: RequestOptions = {},
+): Promise<T> {
+  const response = await fetch(input, {
+    method: options.method ?? (options.body ? "POST" : undefined),
+    headers: buildRequestHeaders(options),
+    body: options.body ?? undefined,
+  });
+
+  return parseResponse<T>(response);
+}
+
+export async function requestApiData<T>(
+  input: RequestInfo | URL,
+  options: RequestOptions = {},
+): Promise<T> {
+  const payload = await requestJson<T | ApiResponse<T>>(input, options);
+  return unwrapApiResponseData(payload);
 }
 
 /**
@@ -67,23 +96,11 @@ export async function request<T>(
   input: RequestInfo | URL,
   options: RequestOptions = {},
 ): Promise<T> {
-  const response = await fetch(input, {
-    method: options.method ?? (options.body ? "POST" : undefined),
-    headers: {
-      ...options.headers,
-    },
-    body: options.body ?? undefined,
-  });
-
-  const data = await parseResponse<T | ApiResponse<T>>(response);
-
-  // 默认自动解包 ApiResponse 包装层
-  const shouldUnwrap = options.unwrap !== false;
-  if (shouldUnwrap) {
-    return unwrapApiResponseData(data);
+  if (options.unwrap === false) {
+    return requestJson<T>(input, options);
   }
 
-  return data as T;
+  return requestApiData<T>(input, options);
 }
 
 export function buildUrl(base: string, path: string, params?: Record<string, string>) {
