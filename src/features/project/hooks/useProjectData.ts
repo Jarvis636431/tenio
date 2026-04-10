@@ -350,15 +350,6 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
     );
   }, [coreGraph]);
 
-  // ===== 弹窗状态 =====
-  const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
-  const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<PlanTask | null>(null);
-
-  const handleTaskDetail = (task: PlanTask) => {
-    setSelectedTaskForDetail(task);
-    setIsTaskDetailDialogOpen(true);
-  };
-
   return {
     // 项目数据
     resolvedProjectId,
@@ -386,10 +377,5 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
     dailyProcesses,
     dailyTaskNames,
     weeklyTaskNames,
-    // 弹窗状态
-    isTaskDetailDialogOpen,
-    setIsTaskDetailDialogOpen,
-    selectedTaskForDetail,
-    handleTaskDetail,
   };
 }
