@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cn, formatFileSize } from "@/lib/utils";
+import { cn, formatFileSize, createMessageId } from "@/lib/utils";
 
 describe("utils", () => {
   describe("cn", () => {
@@ -40,6 +40,34 @@ describe("utils", () => {
 
     it("formats GB", () => {
       expect(formatFileSize(1073741824)).toBe("1 GB");
+    });
+  });
+
+  describe("createMessageId", () => {
+    it("returns a non-empty string", () => {
+      const id = createMessageId();
+      expect(typeof id).toBe("string");
+      expect(id.length).toBeGreaterThan(0);
+    });
+
+    it("returns unique ids on multiple calls", () => {
+      const ids = new Set([createMessageId(), createMessageId(), createMessageId()]);
+      expect(ids.size).toBe(3);
+    });
+
+    it("has expected format when crypto.randomUUID is unavailable", () => {
+      // Mock crypto.randomUUID as undefined to test fallback
+      const originalCrypto = globalThis.crypto;
+      // @ts-expect-error - intentionally removing crypto for test
+      delete globalThis.crypto;
+
+      const id = createMessageId();
+
+      // Restore crypto
+      globalThis.crypto = originalCrypto;
+
+      // Should contain a dash separator
+      expect(id).toMatch(/^\d+-[a-z0-9]+$/);
     });
   });
 });

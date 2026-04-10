@@ -1,12 +1,6 @@
 import { useRef, useState, useCallback } from "react";
 import { VOLC_SPEECH } from "@/config";
-
-function createMessageId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
+import { createMessageId } from "@/lib/utils";
 
 function getSupportedAudioMimeType() {
   if (typeof MediaRecorder === "undefined") return "";

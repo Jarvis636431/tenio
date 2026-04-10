@@ -14,19 +14,13 @@ import {
 } from "../services/ai-service";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVoice } from "./useVoice";
+import { createMessageId } from "@/lib/utils";
 
 export interface ChatMessage {
   id: string;
   content: string;
   sender: "user" | "ai";
   timestamp: Date;
-}
-
-function createMessageId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function logSilentError(message: string, error?: unknown) {
