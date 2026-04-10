@@ -15,20 +15,13 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useVoice } from "./useVoice";
 import { createMessageId } from "@/lib/utils";
+import { logSilentError } from "@/lib/log";
 
 export interface ChatMessage {
   id: string;
   content: string;
   sender: "user" | "ai";
   timestamp: Date;
-}
-
-function logSilentError(message: string, error?: unknown) {
-  if (error) {
-    console.warn(`[AI语音] ${message}`, error);
-    return;
-  }
-  console.warn(`[AI语音] ${message}`);
 }
 
 type ChatPanelOptions = {
@@ -205,7 +198,7 @@ export function useChat(options: ChatPanelOptions = {}) {
             if (error.name === "AbortError") {
               return;
             }
-            logSilentError("AI 服务连接失败", error);
+            logSilentError("[AI]", "AI 服务连接失败", error);
             setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
             setIsThinking(false);
           },
@@ -215,7 +208,7 @@ export function useChat(options: ChatPanelOptions = {}) {
       if ((error as Error).name === "AbortError") {
         return;
       }
-      logSilentError("AI 服务连接失败", error);
+      logSilentError("[AI]", "AI 服务连接失败", error);
       setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
       setIsThinking(false);
     }
@@ -301,7 +294,7 @@ export function useChat(options: ChatPanelOptions = {}) {
             if (error.name === "AbortError") {
               return;
             }
-            logSilentError("AI 服务连接失败", error);
+            logSilentError("[AI]", "AI 服务连接失败", error);
             setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
             setIsThinking(false);
           },
@@ -311,7 +304,7 @@ export function useChat(options: ChatPanelOptions = {}) {
       if ((error as Error).name === "AbortError") {
         return;
       }
-      logSilentError("AI 服务连接失败", error);
+      logSilentError("[AI]", "AI 服务连接失败", error);
       setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
       setIsThinking(false);
     }

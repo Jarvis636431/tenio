@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import { VOLC_SPEECH } from "@/config";
 import { createMessageId } from "@/lib/utils";
+import { logSilentError } from "@/lib/log";
 
 function getSupportedAudioMimeType() {
   if (typeof MediaRecorder === "undefined") return "";
@@ -35,14 +36,6 @@ function blobToBase64(blob: Blob): Promise<string> {
     reader.onerror = () => reject(reader.error ?? new Error("读取音频失败"));
     reader.readAsDataURL(blob);
   });
-}
-
-function logSilentError(message: string, error?: unknown) {
-  if (error) {
-    console.warn(`[AI语音] ${message}`, error);
-    return;
-  }
-  console.warn(`[AI语音] ${message}`);
 }
 
 export interface VoiceRecorderState {
@@ -86,7 +79,7 @@ export function useVoice(): VoiceRecorderResult {
    */
   const transcribeAudio = useCallback(async (audioBlob: Blob) => {
     if (!VOLC_SPEECH.appId || !VOLC_SPEECH.accessToken) {
-      logSilentError("未配置火山语音识别信息");
+      logSilentError("[AI语音]", "未配置火山语音识别信息");
       return;
     }
 
@@ -118,7 +111,7 @@ export function useVoice(): VoiceRecorderResult {
 
       const statusCode = response.headers.get("X-Api-Status-Code") ?? "";
       if (!response.ok || statusCode !== "20000000") {
-        logSilentError(`语音识别失败：${statusCode || response.status.toString()}`);
+        logSilentError("[AI语音]", `语音识别失败：${statusCode || response.status.toString()}`);
         return;
       }
 
@@ -127,13 +120,13 @@ export function useVoice(): VoiceRecorderResult {
       };
       const text = payload?.result?.text?.trim() ?? "";
       if (!text) {
-        logSilentError("语音识别未返回文本");
+        logSilentError("[AI语音]", "语音识别未返回文本");
         return;
       }
 
       setRecognizedText(text);
     } catch (error) {
-      logSilentError("语音识别失败", error);
+      logSilentError("[AI语音]", "语音识别失败", error);
     } finally {
       setIsRecognizing(false);
     }
@@ -145,7 +138,7 @@ export function useVoice(): VoiceRecorderResult {
    */
   const startRecording = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
-      logSilentError("当前浏览器不支持录音功能");
+      logSilentError("[AI语音]", "当前浏览器不支持录音功能");
       return;
     }
     try {
@@ -164,7 +157,7 @@ export function useVoice(): VoiceRecorderResult {
       };
 
       mediaRecorder.onerror = () => {
-        logSilentError("录音失败，请检查麦克风权限");
+        logSilentError("[AI语音]", "录音失败，请检查麦克风权限");
         setIsRecording(false);
         stream.getTracks().forEach((track) => track.stop());
         recordingStreamRef.current = null;
@@ -179,7 +172,7 @@ export function useVoice(): VoiceRecorderResult {
         stream.getTracks().forEach((track) => track.stop());
         recordingStreamRef.current = null;
         if (audioBlob.size === 0) {
-          logSilentError("录音内容为空");
+          logSilentError("[AI语音]", "录音内容为空");
           return;
         }
         void transcribeAudio(audioBlob);
@@ -188,7 +181,7 @@ export function useVoice(): VoiceRecorderResult {
       mediaRecorder.start();
       setIsRecording(true);
     } catch (error) {
-      logSilentError("无法访问麦克风，请检查权限设置", error);
+      logSilentError("[AI语音]", "无法访问麦克风，请检查权限设置", error);
     }
   }, [transcribeAudio]);
 
