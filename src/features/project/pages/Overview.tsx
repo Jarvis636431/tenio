@@ -1,17 +1,16 @@
 import { useState } from "react";
 import { useProject } from "../hooks/useProject";
 import { formatDate, formatIsoDate } from "@/lib/date";
+import { sortBySeqNo } from "@/lib/array";
 import { useProjectExport } from "../hooks/useProjectExport";
 import { useProjectData } from "../hooks/useProjectData";
 import { useProjectCharts } from "../hooks/useProjectCharts";
-import { sortBySeqNo } from "@/lib/array";
 import { ProjectSlider } from "../components/ProjectSlider";
 import { ProjectTrendChart } from "../components/ProjectTrendChart";
 import { ProjectTabBar } from "../components/ProjectTabBar";
 import { UploadsTab } from "../components/UploadsTab";
 import { GanttChart } from "@/components/chart/GanttChart";
 import { NetworkDiagram } from "@/components/chart/NetworkDiagram";
-import { TaskDetailDialog } from "@/components/chart/TaskDetailDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,19 +27,18 @@ interface OverviewProps {
 }
 
 type OverviewTab =
-  | "overview"
-  | "schedule"
-  | "network"
-  | "resources"
   | "uploads"
   | "organization"
-  | "rotation";
+  | "schedule"
+  | "overview"
+  | "network"
+  | "rotation"
+  | "resources";
 
 export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const { currentProject } = useProject();
-  const [activeTab, setActiveTab] = useState<OverviewTab>("overview");
+  const [activeTab, setActiveTab] = useState<OverviewTab>("uploads");
 
-  // 所有项目数据和时间轴数据
   const {
     resolvedProjectId,
     coreGraph,
@@ -62,13 +60,8 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     reportPeriod,
     dailyTaskNames,
     weeklyTaskNames,
-    isTaskDetailDialogOpen,
-    setIsTaskDetailDialogOpen,
-    selectedTaskForDetail,
-    handleTaskDetail,
   } = useProjectData({ projectId: propsProjectId });
 
-  // 图表数据
   const { headcountQuery, costQuery, getHeadcountByDate } = useProjectCharts({
     projectId: resolvedProjectId,
   });
@@ -77,10 +70,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const costCurveChart = costQuery.chartData;
   const plannedWorkerCount = getHeadcountByDate(selectedTimelineDateLabel);
 
-  // 工序列表（按序号排序用于表格展示）
-  const processTableRows = sortBySeqNo(planTasks);
-
-  // 导出功能
   const dailyDateText = formatDate(selectedTimelineDate, "yyyy/mm/dd");
   const { handleExportWeeklyDOC, handleExportDailyDOC } = useProjectExport(coreGraph, {
     projectName: currentProjectName,
@@ -96,6 +85,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     remark: "",
   });
 
+  const processTableRows = sortBySeqNo(planTasks);
   const formatDateTime = (value?: string) => formatIsoDate(value, true);
 
   return (
@@ -189,6 +179,26 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         />
       )}
 
+      {activeTab === "uploads" && <UploadsTab projectId={resolvedProjectId} />}
+
+      {activeTab === "organization" && (
+        <div className="min-h-[360px] rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] px-6 py-8 text-sm text-slate-300">
+          <p>当前版本暂未接入此功能。</p>
+        </div>
+      )}
+
+      {activeTab === "schedule" && (
+        <div className="min-h-[640px] overflow-hidden rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)]">
+          {planTasks.length === 0 ? (
+            <div className="flex h-full min-h-[640px] items-center justify-center text-cyan-300/70">
+              {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
+            </div>
+          ) : (
+            <GanttChart data={planTasks} scale="day" currentDate={selectedTimelineDate} />
+          )}
+        </div>
+      )}
+
       {activeTab === "overview" && (
         <div className="min-h-[520px] overflow-auto rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)]">
           {processTableRows.length === 0 ? (
@@ -205,10 +215,8 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
                 <span>关键线路</span>
               </div>
               {processTableRows.map((task) => (
-                <button
+                <div
                   key={task.id}
-                  type="button"
-                  onClick={() => handleTaskDetail(task)}
                   className="grid w-full grid-cols-[96px_minmax(220px,1fr)_180px_180px_120px] items-center border-b border-cyan-400/10 px-4 py-3 text-left text-sm text-slate-200 transition hover:bg-[rgba(8,34,67,0.72)]"
                 >
                   <span className="text-cyan-300/70">{task.seqNo ?? "-"}</span>
@@ -226,26 +234,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
                       {task.criticalPath ? "是" : "否"}
                     </span>
                   </span>
-                </button>
+                </div>
               ))}
             </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === "schedule" && (
-        <div className="min-h-[640px] overflow-hidden rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)]">
-          {planTasks.length === 0 ? (
-            <div className="flex h-full min-h-[640px] items-center justify-center text-cyan-300/70">
-              {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
-            </div>
-          ) : (
-            <GanttChart
-              data={planTasks}
-              onTaskDetail={handleTaskDetail}
-              scale="day"
-              currentDate={selectedTimelineDate}
-            />
           )}
         </div>
       )}
@@ -257,12 +248,14 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
               {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
             </div>
           ) : (
-            <NetworkDiagram
-              tasks={planTasks}
-              onNodeClick={handleTaskDetail}
-              currentDate={selectedTimelineDate}
-            />
+            <NetworkDiagram tasks={planTasks} currentDate={selectedTimelineDate} />
           )}
+        </div>
+      )}
+
+      {activeTab === "rotation" && (
+        <div className="min-h-[360px] rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] px-6 py-8 text-sm text-slate-300">
+          <p>当前版本暂未接入此功能。</p>
         </div>
       )}
 
@@ -313,22 +306,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
           </div>
         </div>
       )}
-
-      {activeTab === "uploads" && <UploadsTab projectId={resolvedProjectId} />}
-
-      {(activeTab === "organization" || activeTab === "rotation") && (
-        <div className="min-h-[360px] rounded-none border border-cyan-400/15 bg-[rgba(4,18,37,0.82)] px-6 py-8 text-sm text-slate-300">
-          <p>当前版本暂未接入此功能。</p>
-        </div>
-      )}
-
-      <TaskDetailDialog
-        open={isTaskDetailDialogOpen}
-        onOpenChange={setIsTaskDetailDialogOpen}
-        task={selectedTaskForDetail}
-        projectId={resolvedProjectId || currentProject?.id || undefined}
-        workProcessName={selectedTaskForDetail?.task}
-      />
     </div>
   );
 }
