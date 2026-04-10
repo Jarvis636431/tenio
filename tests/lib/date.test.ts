@@ -4,7 +4,6 @@ import {
   formatDateTime,
   formatIsoDate,
   getCurrentDate,
-  getWeekRange,
   parseDate,
   toDate,
   normalizeToMidday,
@@ -79,22 +78,6 @@ describe("date utilities", () => {
     it("returns formatted current date", () => {
       const result = getCurrentDate();
       expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    });
-  });
-
-  describe("getWeekRange", () => {
-    it("returns monday and sunday for given date", () => {
-      const wednesday = new Date(2025, 0, 15);
-      const { monday, sunday } = getWeekRange(wednesday);
-      expect(monday.getDay()).toBe(1);
-      expect(sunday.getDay()).toBe(0);
-    });
-
-    it("handles Sunday as end of week", () => {
-      const sunday = new Date(2025, 0, 19);
-      const { monday, sunday: sun } = getWeekRange(sunday);
-      expect(monday.getDay()).toBe(1);
-      expect(sun.getDay()).toBe(0);
     });
   });
 

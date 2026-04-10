@@ -75,14 +75,6 @@ export function useProjectCharts({ projectId }: UseProjectChartsOptions) {
     };
   }, [costQuery.data]);
 
-  const getHeadcountByDate = (dateLabel: string | undefined) => {
-    if (!headcountQuery.data?.dates?.length || !dateLabel) return undefined;
-    const { dates, headcounts } = headcountQuery.data;
-    const index = dates.findIndex((date) => date.slice(0, 10) === dateLabel);
-    if (index < 0) return undefined;
-    return headcounts[index];
-  };
-
   return {
     headcountQuery: {
       ...headcountQuery,
@@ -92,6 +84,5 @@ export function useProjectCharts({ projectId }: UseProjectChartsOptions) {
       ...costQuery,
       chartData: costCurveChart,
     },
-    getHeadcountByDate,
   };
 }

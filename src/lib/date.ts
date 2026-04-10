@@ -93,27 +93,6 @@ export function getCurrentDate(format: DateFormat = "yyyy-mm-dd"): string {
 }
 
 /**
- * 获取一周的起始日期（周一）和结束日期（周日）
- * @param date - 参考日期（可选，默认为当前日期）
- * @returns 包含周一和周日日期的对象
- */
-export function getWeekRange(date?: Date): { monday: Date; sunday: Date } {
-  const target = date ? new Date(date) : new Date();
-  target.setHours(0, 0, 0, 0);
-
-  const day = target.getDay();
-  const diffToMonday = day === 0 ? 6 : day - 1;
-
-  const monday = new Date(target);
-  monday.setDate(target.getDate() - diffToMonday);
-
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-
-  return { monday, sunday };
-}
-
-/**
  * 解析多种格式的日期字符串为 Date 对象
  * 支持格式：
  * - ISO 日期字符串

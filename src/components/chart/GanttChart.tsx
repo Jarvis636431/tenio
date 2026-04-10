@@ -1,6 +1,6 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { parseDate, normalizeToMidday } from "@/lib/date";
+import { parseDate } from "@/lib/date";
 import { formatWorkerCount, isLagTask } from "@/lib/task";
 import type { PlanTask, TimelineScale } from "@/types/domain/plan";
 
@@ -8,7 +8,6 @@ interface GanttChartProps {
   data: PlanTask[];
   onTaskDetail?: (task: PlanTask) => void;
   scale?: TimelineScale;
-  currentDate?: Date | null;
 }
 
 const MS_IN_HOUR = 1000 * 60 * 60;
@@ -224,22 +223,7 @@ const getWorkerBadgeClass = (worker: string): string => {
   );
 };
 
-const isTaskActiveOnDate = (current: Date, startRaw: string, endRaw: string) => {
-  const startDate = parseDate(startRaw);
-  const endDate = parseDate(endRaw);
-  if (!startDate || !endDate) return false;
-  const currentDay = normalizeToMidday(current).getTime();
-  const startDay = normalizeToMidday(startDate).getTime();
-  const endDay = normalizeToMidday(endDate).getTime();
-  return currentDay >= startDay && currentDay <= endDay;
-};
-
-export function GanttChart({
-  data,
-  onTaskDetail,
-  scale = "day",
-  currentDate = null,
-}: GanttChartProps) {
+export function GanttChart({ data, onTaskDetail, scale = "day" }: GanttChartProps) {
   const taskListRef = useRef<HTMLDivElement>(null);
   const chartContentRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -251,7 +235,7 @@ export function GanttChart({
   const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
   const filteredData = useMemo(() => data.filter((task) => !isLagTask(task.task)), [data]);
 
-  const { timelineData, totalUnits, headers, startAnchor } = useMemo(() => {
+  const { timelineData, totalUnits, headers } = useMemo(() => {
     const baseline = getBaselineDate();
     const parsedItems = filteredData.map((item) => {
       const start = item.startDate ? parseDate(item.startDate) : null;
@@ -296,7 +280,6 @@ export function GanttChart({
       timelineData,
       totalUnits,
       headers,
-      startAnchor,
     };
   }, [filteredData, timelineScale]);
 
@@ -360,62 +343,6 @@ export function GanttChart({
       chartContent.removeEventListener("scroll", handleChartScroll);
     };
   }, [filteredData]); // 数据变化时重新建立同步并重置滚动位置
-
-  useEffect(() => {
-    const chartContent = chartContentRef.current;
-    if (!chartContent || !currentDate || totalUnits <= 0) return;
-
-    const totalContentWidth = totalUnits * columnWidth;
-    const maxScrollLeft = Math.max(0, totalContentWidth - chartContent.clientWidth);
-    const currentOffset = calculateStartOffset(currentDate, startAnchor, timelineScale);
-    const targetLeft = Math.max(
-      0,
-      Math.min(maxScrollLeft, currentOffset * columnWidth - chartContent.clientWidth * 0.35),
-    );
-
-    const activeCriticalRowIndex = timelineData.findIndex((task) => {
-      if (!task.criticalPath) return false;
-      return isTaskActiveOnDate(
-        currentDate,
-        task.startDate ?? task.startTime ?? "",
-        task.endDate ?? task.endTime ?? "",
-      );
-    });
-    const activeRowIndex = timelineData.findIndex((task) => {
-      return isTaskActiveOnDate(
-        currentDate,
-        task.startDate ?? task.startTime ?? "",
-        task.endDate ?? task.endTime ?? "",
-      );
-    });
-    const rowIndex =
-      activeCriticalRowIndex >= 0
-        ? activeCriticalRowIndex
-        : activeRowIndex >= 0
-          ? activeRowIndex
-          : 0;
-    const totalContentHeight = totalRows * ROW_HEIGHT;
-    const maxScrollTop = Math.max(0, totalContentHeight - chartContent.clientHeight);
-    const targetTop = Math.max(
-      0,
-      Math.min(maxScrollTop, rowIndex * ROW_HEIGHT - chartContent.clientHeight * 0.35),
-    );
-
-    chartContent.scrollTo({
-      left: targetLeft,
-      top: targetTop,
-      behavior: "smooth",
-    });
-  }, [
-    currentDate,
-    startAnchor,
-    timelineScale,
-    totalUnits,
-    columnWidth,
-    timelineData,
-    totalRows,
-    ROW_HEIGHT,
-  ]);
 
   // 生成日期标头
 

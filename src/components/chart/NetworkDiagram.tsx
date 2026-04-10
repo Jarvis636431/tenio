@@ -1,13 +1,12 @@
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import dagre from "dagre";
-import { toDate, formatDateString, normalizeToMidday } from "@/lib/date";
+import { formatDateString } from "@/lib/date";
 import { isLagTask, formatDurationDays } from "@/lib/task";
 import type { PlanTask } from "@/types/domain/plan";
 
 interface NetworkDiagramProps {
   tasks: PlanTask[];
   onNodeClick?: (task: PlanTask) => void;
-  currentDate?: Date | null;
 }
 
 type Node = {
@@ -30,8 +29,6 @@ type Edge = {
   to: string;
   points: Array<{ x: number; y: number }>;
 };
-
-type TaskStatus = "not_started" | "in_progress" | "completed";
 
 const NODE_THEME = {
   critical: {
@@ -62,11 +59,6 @@ const DOT_R = 7;
 const CAPSULE_INSET_X = 14;
 const CAPSULE_H = 52;
 const CAPSULE_PAD_X = 50; // 胶囊内文字左右 padding
-const STATUS_COLORS: Record<TaskStatus, { capsule: string; dot: string }> = {
-  not_started: { capsule: "#d1d5db", dot: "#ffffff" },
-  in_progress: { capsule: "#fdeeb3", dot: "#fdeeb3" },
-  completed: { capsule: "#C8E5B3", dot: "#C8E5B3" },
-};
 
 /** 估算文字像素宽度（中文≈fontSize，其他≈fontSize*0.55） */
 function estimateTextWidth(text: string, fontSize: number): number {
@@ -85,36 +77,16 @@ function calcNodeWidth(title: string): number {
   return Math.max(MIN_NODE_W, Math.ceil(nodeW));
 }
 
-function getTaskStatus(start: string, end: string, current: Date | null): TaskStatus {
-  const startDate = toDate(start);
-  const endDate = toDate(end);
-  if (!current || !startDate || !endDate) return "not_started";
-  const currentTime = normalizeToMidday(current).getTime();
-  const startTime = normalizeToMidday(startDate).getTime();
-  const endTime = normalizeToMidday(endDate).getTime();
-  if (currentTime < startTime) return "not_started";
-  if (currentTime > endTime) return "completed";
-  return "in_progress";
-}
-
 /* ── 单个节点块 ── */
-function NodeBlock({
-  node,
-  onNodeClick,
-  status,
-}: {
-  node: Node;
-  onNodeClick?: (task: PlanTask) => void;
-  status: TaskStatus;
-}) {
+function NodeBlock({ node, onNodeClick }: { node: Node; onNodeClick?: (task: PlanTask) => void }) {
   const { x, y, w, h, critical, task, displayId, title, start, end } = node;
   const durationValue =
     task.duration !== ""
       ? formatDurationDays(task.duration)
       : formatDurationDays(task.actualWorkDays);
   const durationText = durationValue ? `${durationValue}天` : "";
-  const statusColor = STATUS_COLORS[status];
   const theme = critical ? NODE_THEME.critical : NODE_THEME.normal;
+  const dotColor = "#ffffff";
 
   const capsuleY = y + h / 2 - CAPSULE_H / 2 + 4;
   const capsuleW = w - CAPSULE_INSET_X * 2;
@@ -228,7 +200,7 @@ function NodeBlock({
         cx={x}
         cy={y + h / 2}
         r={DOT_R}
-        fill={statusColor.dot}
+        fill={dotColor}
         stroke={theme.border}
         strokeWidth="1.5"
       />
@@ -236,7 +208,7 @@ function NodeBlock({
         cx={x + w}
         cy={y + h / 2}
         r={DOT_R}
-        fill={statusColor.dot}
+        fill={dotColor}
         stroke={theme.border}
         strokeWidth="1.5"
       />
@@ -276,7 +248,7 @@ function NodeBlock({
   );
 }
 
-export function NetworkDiagram({ tasks, onNodeClick, currentDate = null }: NetworkDiagramProps) {
+export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const isPanningRef = useRef(false);
@@ -375,39 +347,6 @@ export function NetworkDiagram({ tasks, onNodeClick, currentDate = null }: Netwo
     setView({ x: offsetX, y: offsetY, scale: fitScale });
     setInitialized(true);
   }, [width, height, initialized]);
-
-  useEffect(() => {
-    if (!initialized || !currentDate || nodes.length === 0 || !svgRef.current) return;
-
-    const criticalInProgress = nodes.find(
-      (node) => node.critical && getTaskStatus(node.start, node.end, currentDate) === "in_progress",
-    );
-    const inProgress = nodes.find(
-      (node) => getTaskStatus(node.start, node.end, currentDate) === "in_progress",
-    );
-    const targetNode =
-      criticalInProgress ??
-      inProgress ??
-      nodes
-        .filter((node) => {
-          const start = toDate(node.start);
-          return start ? start.getTime() >= currentDate.getTime() : false;
-        })
-        .sort(
-          (a, b) =>
-            (toDate(a.start)?.getTime() ?? Number.MAX_SAFE_INTEGER) -
-            (toDate(b.start)?.getTime() ?? Number.MAX_SAFE_INTEGER),
-        )[0] ??
-      nodes[nodes.length - 1];
-
-    const rect = svgRef.current.getBoundingClientRect();
-    const nextScale = Math.max(view.scale, minScale);
-    const nodeCenterX = targetNode.x + targetNode.w / 2;
-    const nodeCenterY = targetNode.y + targetNode.h / 2;
-    const offsetX = rect.width / 2 - nodeCenterX * nextScale;
-    const offsetY = rect.height / 2 - nodeCenterY * nextScale;
-    setView((prev) => ({ ...prev, x: offsetX, y: offsetY, scale: nextScale }));
-  }, [initialized, currentDate, nodes, minScale, view.scale]);
 
   const handleWheel = useCallback(
     (event: React.WheelEvent<SVGSVGElement>) => {
@@ -541,12 +480,7 @@ export function NetworkDiagram({ tasks, onNodeClick, currentDate = null }: Netwo
 
           {/* ── 节点 ── */}
           {nodes.map((node) => (
-            <NodeBlock
-              key={node.id}
-              node={node}
-              onNodeClick={onNodeClick}
-              status={getTaskStatus(node.start, node.end, currentDate)}
-            />
+            <NodeBlock key={node.id} node={node} onNodeClick={onNodeClick} />
           ))}
         </g>
       </svg>
