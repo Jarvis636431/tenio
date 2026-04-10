@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { useProject } from "../hooks/useProject";
-import { formatDate, formatIsoDate } from "@/lib/date";
+import { formatIsoDate } from "@/lib/date";
 import { sortBySeqNo } from "@/lib/array";
 import { useProjectExport } from "../hooks/useProjectExport";
 import { useProjectData } from "../hooks/useProjectData";
 import { useProjectCharts } from "../hooks/useProjectCharts";
-import { ProjectSlider } from "../components/ProjectSlider";
 import { ProjectTrendChart } from "../components/ProjectTrendChart";
 import { ProjectTabBar } from "../components/ProjectTabBar";
 import { UploadsTab } from "../components/UploadsTab";
@@ -14,12 +12,6 @@ import { NetworkDiagram } from "@/components/chart/NetworkDiagram";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface OverviewProps {
   projectId?: string;
@@ -36,7 +28,6 @@ type OverviewTab =
   | "resources";
 
 export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
-  const { currentProject } = useProject();
   const [activeTab, setActiveTab] = useState<OverviewTab>("uploads");
 
   const {
@@ -47,43 +38,16 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     currentProjectName,
     totalDurationLabel,
     onsiteCount,
-    currentDay,
-    setCurrentDay,
-    playbackRate,
-    setPlaybackRate,
-    isPlaying,
-    setIsPlaying,
-    timeRange,
-    selectedTimelineDate,
-    selectedTimelineDateLabel,
-    timelineProgress,
-    reportPeriod,
-    dailyTaskNames,
-    weeklyTaskNames,
   } = useProjectData({ projectId: propsProjectId });
 
-  const { headcountQuery, costQuery, getHeadcountByDate } = useProjectCharts({
+  const { headcountQuery, costQuery } = useProjectCharts({
     projectId: resolvedProjectId,
   });
 
   const headcountChartData = headcountQuery.chartData;
   const costCurveChart = costQuery.chartData;
-  const plannedWorkerCount = getHeadcountByDate(selectedTimelineDateLabel);
 
-  const dailyDateText = formatDate(selectedTimelineDate, "yyyy/mm/dd");
-  const { handleExportWeeklyDOC, handleExportDailyDOC } = useProjectExport(coreGraph, {
-    projectName: currentProjectName,
-    projectLocation: currentProject?.description ?? "",
-    periodStart: reportPeriod.start,
-    periodEnd: reportPeriod.end,
-    dailyDate: dailyDateText,
-    plannedWorkerCount,
-    actualWorkerCount: onsiteCount,
-    weeklyTaskNames,
-    dailyTaskNames,
-    progressStatus: timelineProgress < 33 ? "超前" : timelineProgress > 80 ? "滞后" : "符合计划",
-    remark: "",
-  });
+  const { handleExport } = useProjectExport(coreGraph);
 
   const processTableRows = sortBySeqNo(planTasks);
   const formatDateTime = (value?: string) => formatIsoDate(value, true);
@@ -106,78 +70,19 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
             </div>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                size="sm"
-                className="h-9 rounded-none border border-cyan-400/20 bg-[rgba(4,18,37,0.86)] px-3 text-cyan-100 transition hover:border-cyan-300/35 hover:bg-[rgba(8,34,67,0.92)]"
-              >
-                <Download className="mr-1.5 h-4 w-4" />
-                报告导出
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-none border-cyan-500/20 bg-[#03112a] text-cyan-100"
-            >
-              <DropdownMenuItem
-                className="rounded-none focus:bg-[#0a2a5c] focus:text-cyan-100"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  handleExportWeeklyDOC();
-                }}
-              >
-                导出周报
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="rounded-none focus:bg-[#0a2a5c] focus:text-cyan-100"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  handleExportDailyDOC();
-                }}
-              >
-                导出日报
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            type="button"
+            size="sm"
+            className="h-9 rounded-none border border-cyan-400/20 bg-[rgba(4,18,37,0.86)] px-3 text-cyan-100 transition hover:border-cyan-300/35 hover:bg-[rgba(8,34,67,0.92)]"
+            onClick={handleExport}
+          >
+            <Download className="mr-1.5 h-4 w-4" />
+            导出
+          </Button>
         </div>
       </div>
 
       <ProjectTabBar activeTab={activeTab} onChange={setActiveTab} />
-
-      {timeRange && (
-        <ProjectSlider
-          currentDay={currentDay}
-          startDay={timeRange.startDay}
-          endDay={timeRange.endDay}
-          playbackRate={playbackRate}
-          isPlaying={isPlaying}
-          dateLabel={selectedTimelineDateLabel}
-          progress={timelineProgress}
-          onPreviousDay={() => {
-            setIsPlaying(false);
-            setCurrentDay((d) => Math.max(timeRange.startDay, d - 1));
-          }}
-          onTogglePlay={() => {
-            if (currentDay >= timeRange.endDay) {
-              setCurrentDay(timeRange.startDay);
-              setIsPlaying(true);
-              return;
-            }
-            setIsPlaying((prev) => !prev);
-          }}
-          onNextDay={() => {
-            setIsPlaying(false);
-            setCurrentDay((d) => Math.min(timeRange.endDay, d + 1));
-          }}
-          onChangeRate={setPlaybackRate}
-          onChangeDay={(day) => {
-            setIsPlaying(false);
-            setCurrentDay(day);
-          }}
-        />
-      )}
 
       {activeTab === "uploads" && <UploadsTab projectId={resolvedProjectId} />}
 
@@ -194,7 +99,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
               {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
             </div>
           ) : (
-            <GanttChart data={planTasks} scale="day" currentDate={selectedTimelineDate} />
+            <GanttChart data={planTasks} scale="day" />
           )}
         </div>
       )}
@@ -248,7 +153,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
               {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
             </div>
           ) : (
-            <NetworkDiagram tasks={planTasks} currentDate={selectedTimelineDate} />
+            <NetworkDiagram tasks={planTasks} />
           )}
         </div>
       )}
