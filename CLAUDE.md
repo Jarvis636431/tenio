@@ -46,6 +46,15 @@ pnpm test:watch
 # Type checking
 pnpm typecheck
 
+# Full check (lint + typecheck + test + build)
+pnpm check
+
+# Format code
+pnpm format
+
+# Check formatting without writing
+pnpm format:check
+
 # Preview production build
 pnpm preview
 ```
@@ -106,6 +115,11 @@ src/
    - `src/features/ai/hooks/useChat.ts` manages message state, SSE streaming, interrupt resume, voice input, and cross-project thread switching
    - Feature cross-imports should use `@/features/project` public exports, not deep imports
 
+6. **Feature Architecture Rules**: Detailed rules for feature structure, layer separation, and import restrictions are in [.rules/feature-architecture.md](.rules/feature-architecture.md). Key principles:
+   - Features own their layers (components/hooks/services/types/pages)
+   - Cross-feature imports must use feature barrel (`@/features/ai`)
+   - Shared utilities go in `src/lib`, shared infrastructure in `src/services`
+
 ### Environment Variables
 
 Required in `.env` or `.env.local`:
@@ -155,9 +169,6 @@ Shared utilities in `src/lib/`:
 
 All test files are centralized under `tests/` rather than colocated beside source files.
 
-- `tests/services` - service and API wrapper tests
-- `tests/hooks` - hook tests
-- `tests/components` - UI/component tests
+- `tests/services` - HTTP service and API wrapper tests
 - `tests/stores` - Zustand store tests
-- `tests/utils` - pure utility tests
-- `tests/integration` - broader integration tests
+- `tests/utils` - pure utility tests (date, array, task, queryKeys)
