@@ -1,4 +1,5 @@
 import { AppTopbar } from "@/components/layout/AppTopbar";
+import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import { Chat, useChat } from "@/features/ai";
 
 interface LayoutProps {
@@ -21,5 +22,9 @@ function LayoutContent({ children }: LayoutProps) {
 }
 
 export function AppLayout({ children }: LayoutProps) {
-  return <LayoutContent>{children}</LayoutContent>;
+  return (
+    <ErrorBoundary>
+      <LayoutContent>{children}</LayoutContent>
+    </ErrorBoundary>
+  );
 }
