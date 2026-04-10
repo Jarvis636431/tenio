@@ -35,6 +35,14 @@ type ChatPanelOptions = {
   projectId?: string;
 };
 
+/**
+ * 协调 AI 面板的聊天状态、SSE 流和语音输入。
+ * 为每个项目维护独立的消息线程，支持中断恢复流程。
+ *
+ * @param options - 配置选项
+ * @param options.projectId - 可选的项目 ID 覆盖（默认为路由参数或当前项目）
+ * @returns Chat 组件所需的聊天状态和动作
+ */
 export function useChat(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
   const { currentProject, projects } = useProject();
@@ -125,6 +133,12 @@ export function useChat(options: ChatPanelOptions = {}) {
     }
   }, [recognizedText, clearRecognizedText]);
 
+  /**
+   * 刷新项目在 React Query 缓存中的核心图和曲线数据。
+   * 当 AI 发送 shouldRefetch 事件时调用。
+   *
+   * @param projectId - 要刷新数据的项目 ID
+   */
   const refreshCoreGraph = async (projectId: string) => {
     const [coreGraph, costCurve, headcountCurve] = await Promise.all([
       getProjectCoreGraph(projectId),
@@ -136,6 +150,13 @@ export function useChat(options: ChatPanelOptions = {}) {
     queryClient.setQueryData(projectQueryKeys.headcountCurve(projectId), headcountCurve);
   };
 
+  /**
+   * 使用用户的批准或拒绝恢复被中断的 AI 代理流程。
+   * 创建新的 AI 消息占位符并流式返回响应。
+   *
+   * @param message - 用户对中断提示的回复
+   * @param approved - 用户是否批准了提议的操作
+   */
   const resumeInterrupt = async (message: string, approved: boolean) => {
     if (!threadIdRef.current) {
       return;
@@ -200,6 +221,13 @@ export function useChat(options: ChatPanelOptions = {}) {
     }
   };
 
+  /**
+   * 通过 SSE 流向 AI 代理发送消息。
+   * 创建用户和 AI 消息占位符，流式返回响应，并处理错误。
+   * 当 AI 发送 shouldRefetch 事件时自动刷新项目数据。
+   *
+   * @param messageText - 要发送给 AI 的文本内容
+   */
   const sendMessage = async (messageText: string) => {
     const userMessage: ChatMessage = {
       id: createMessageId(),
@@ -289,6 +317,10 @@ export function useChat(options: ChatPanelOptions = {}) {
     }
   };
 
+  /**
+   * 去除首尾空白，通过 sendMessage 发送消息，并清空输入框。
+   * 由 ChatInput 组件在提交时调用。
+   */
   const handleSendMessage = async () => {
     const trimmed = inputMessage.trim();
     if (!trimmed) return;

@@ -13,6 +13,13 @@ function getSupportedAudioMimeType() {
   return "";
 }
 
+/**
+ * 将 Blob 转换为 base64 编码的字符串。
+ *
+ * @param blob - 要转换的音频 Blob
+ * @returns Promise，resolve 为 base64 字符串（不含 data URL 前缀）
+ * @throws 无法读取时抛出错误
+ */
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -56,6 +63,12 @@ export interface VoiceRecorderResult {
   clearRecognizedText: () => void;
 }
 
+/**
+ * 语音录制 Hook，使用 Web Audio API 和火山语音识别。
+ * 支持开始/停止/切换录音和自动转写。
+ *
+ * @returns 语音录制状态、动作和识别文本
+ */
 export function useVoice(): VoiceRecorderResult {
   const [isRecording, setIsRecording] = useState(false);
   const [isRecognizing, setIsRecognizing] = useState(false);
@@ -65,6 +78,12 @@ export function useVoice(): VoiceRecorderResult {
   const recordingChunksRef = useRef<Blob[]>([]);
   const recordingStreamRef = useRef<MediaStream | null>(null);
 
+  /**
+   * 将音频 Blob 发送到火山语音 API 进行转写。
+   * 成功时设置识别文本，失败时静默记录错误。
+   *
+   * @param audioBlob - 要转写的录音 Blob
+   */
   const transcribeAudio = useCallback(async (audioBlob: Blob) => {
     if (!VOLC_SPEECH.appId || !VOLC_SPEECH.accessToken) {
       logSilentError("未配置火山语音识别信息");
@@ -120,6 +139,10 @@ export function useVoice(): VoiceRecorderResult {
     }
   }, []);
 
+  /**
+   * 请求麦克风权限并开始录音。
+   * 录音停止时自动转写音频。
+   */
   const startRecording = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
       logSilentError("当前浏览器不支持录音功能");
@@ -169,6 +192,10 @@ export function useVoice(): VoiceRecorderResult {
     }
   }, [transcribeAudio]);
 
+  /**
+   * 停止当前录音（如果正在录音）。
+   * 会触发 onstop 处理器，进而调用 transcribeAudio。
+   */
   const stopRecording = useCallback(() => {
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state !== "inactive") {
@@ -176,6 +203,10 @@ export function useVoice(): VoiceRecorderResult {
     }
   }, []);
 
+  /**
+   * 切换录音状态。正在录音则停止，空闲则开始。
+   * 如果正在识别中则不执行任何操作。
+   */
   const toggleRecording = useCallback(() => {
     if (isRecording) {
       stopRecording();
@@ -185,6 +216,9 @@ export function useVoice(): VoiceRecorderResult {
     void startRecording();
   }, [isRecording, isRecognizing, startRecording, stopRecording]);
 
+  /**
+   * 清除当前识别的文本。
+   */
   const clearRecognizedText = useCallback(() => {
     setRecognizedText(null);
   }, []);

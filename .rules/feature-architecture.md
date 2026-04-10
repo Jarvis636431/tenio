@@ -79,6 +79,33 @@ Preferred destinations:
 - `src/services` for app-wide infrastructure
 - `src/components` for truly shared UI
 
+## JSDoc Documentation
+
+All exported hooks, services, and utility functions should have JSDoc comments.
+
+### Requirements
+
+- Use Chinese for all JSDoc comments (中文注释)
+- Include `@param` and `@returns` for function parameters and return values
+- Describe the purpose and any notable side effects
+- Mark internal/helper functions with `@internal` if they are not part of the public API
+
+### Example
+
+```ts
+/**
+ * 协调 AI 面板的聊天状态、SSE 流和语音输入。
+ * 为每个项目维护独立的消息线程。
+ *
+ * @param options - 配置选项
+ * @param options.projectId - 可选的项目 ID 覆盖
+ * @returns Chat state and actions for the Chat component
+ */
+export function useChat(options: ChatPanelOptions = {}) {
+  // ...
+}
+```
+
 ## Review Checklist
 
 When reviewing structural changes:
