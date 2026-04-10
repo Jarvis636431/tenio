@@ -8,6 +8,7 @@ import { APP_DEFAULT_TITLE } from "@/config";
 // Lazy loaded pages
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const LoginPage = lazy(() => import("@/pages/Login"));
+const UploadPage = lazy(() => import("@/pages/Upload"));
 const TITLE_RULES: Array<{ prefix: string; title: string }> = [];
 
 export function AppRoutes() {
@@ -23,6 +24,7 @@ export function AppRoutes() {
     <Suspense fallback={<div className="flex items-center justify-center h-screen">加载中...</div>}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/upload" element={<UploadPage />} />
         <Route path="/" element={<AutoProjectRoute />} />
         <Route
           path="/project/:id"

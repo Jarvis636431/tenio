@@ -45,7 +45,7 @@ function Login({ onLogin }: LoginPageProps) {
       } else {
         await new Promise((resolve) => setTimeout(resolve, 800));
       }
-      navigate("/");
+      navigate("/upload");
     } catch {
       setError("用户名或密码错误");
     } finally {
