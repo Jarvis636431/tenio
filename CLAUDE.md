@@ -61,9 +61,6 @@ pnpm preview
 
 ## Project Architecture
 
-Primary repo rules live in [.rules/feature-architecture.md](.rules/feature-architecture.md).
-Feature-architecture skill entry lives in [.codex/skills/feature-architecture-rules/SKILL.md](.codex/skills/feature-architecture-rules/SKILL.md).
-
 ### Feature-Based Directory Structure
 
 ```
