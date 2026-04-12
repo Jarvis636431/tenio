@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProject } from "./useProject";
@@ -37,31 +37,18 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
   const navigate = useNavigate();
   const { currentProject, projects } = useProject();
 
-  // ===== useProjectCoreGraph 逻辑 =====
   const projectRef = propsProjectId || paramProjectId || currentProject?.id || "";
-  const [resolvedProjectId, setResolvedProjectId] = useState("");
-  const [isResolvingProjectId, setIsResolvingProjectId] = useState(Boolean(projectRef));
+  const matchedProject = useMemo(
+    () => projects.find((project) => project.id === projectRef),
+    [projects, projectRef],
+  );
+  const resolvedProjectId = matchedProject?.id ?? projectRef;
 
   useEffect(() => {
-    if (!projectRef) {
-      setResolvedProjectId("");
-      setIsResolvingProjectId(false);
-      return;
+    if (paramProjectId && matchedProject && paramProjectId !== matchedProject.id) {
+      navigate(`/project/${matchedProject.id}`, { replace: true });
     }
-
-    const directMatch = projects.find((project) => project.id === projectRef);
-    if (directMatch) {
-      setResolvedProjectId(directMatch.id);
-      setIsResolvingProjectId(false);
-      if (paramProjectId && paramProjectId !== directMatch.id) {
-        navigate(`/project/${directMatch.id}`, { replace: true });
-      }
-      return;
-    }
-
-    setResolvedProjectId(projectRef);
-    setIsResolvingProjectId(false);
-  }, [projectRef, projects, currentProject?.id, paramProjectId, navigate]);
+  }, [paramProjectId, matchedProject, navigate]);
 
   const coreGraphQuery = useQuery({
     queryKey: resolvedProjectId
@@ -73,12 +60,12 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
       }
       return getProjectCoreGraph(resolvedProjectId);
     },
-    enabled: Boolean(resolvedProjectId) && !isResolvingProjectId,
+    enabled: Boolean(resolvedProjectId),
     refetchOnWindowFocus: false,
   });
 
   const coreGraph = coreGraphQuery.data;
-  const isLoadingGraph = isResolvingProjectId || coreGraphQuery.isLoading;
+  const isLoadingGraph = coreGraphQuery.isLoading;
 
   // ===== usePlanTasks 逻辑 =====
   const planTasks = useMemo<PlanTask[]>(() => {
@@ -132,9 +119,9 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
     if (!projectRef && !resolvedProjectId) {
       return currentProject?.name || "项目详情";
     }
-    const matchedProject = projects.find((project) => project.id === resolvedProjectId);
-    return matchedProject?.name || currentProject?.name || "项目详情";
-  }, [projectRef, resolvedProjectId, projects, currentProject]);
+    const project = matchedProject ?? projects.find((item) => item.id === resolvedProjectId);
+    return project?.name || currentProject?.name || "项目详情";
+  }, [projectRef, resolvedProjectId, matchedProject, projects, currentProject]);
 
   const totalDurationLabel = useMemo(() => {
     if (!coreGraph?.work_processes.length) return "";
@@ -154,35 +141,12 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
     return `${totalDays}天`;
   }, [coreGraph]);
 
-  const onsiteCount = useMemo(() => {
-    if (!coreGraph?.work_processes.length) return undefined;
-    const now = Date.now();
-    const activeWorkProcesses = coreGraph.work_processes.filter((wp) => {
-      const start = wp.execution_state?.planned_start_datetime
-        ? new Date(wp.execution_state.planned_start_datetime).getTime()
-        : NaN;
-      const end = wp.execution_state?.planned_end_datetime
-        ? new Date(wp.execution_state.planned_end_datetime).getTime()
-        : NaN;
-      if (Number.isNaN(start) || Number.isNaN(end)) return false;
-      return now >= start && now <= end;
-    });
-    if (!activeWorkProcesses.length) return 0;
-    return activeWorkProcesses.reduce(
-      (sum, wp) => sum + (wp.team_size ?? wp.suggested_team_count ?? 0),
-      0,
-    );
-  }, [coreGraph]);
-
   return {
-    // 项目数据
     resolvedProjectId,
     coreGraph,
     isLoadingGraph,
     planTasks,
-    // 项目基本信息
     currentProjectName,
     totalDurationLabel,
-    onsiteCount,
   };
 }

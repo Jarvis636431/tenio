@@ -37,7 +37,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     planTasks,
     currentProjectName,
     totalDurationLabel,
-    onsiteCount,
   } = useProjectData({ projectId: propsProjectId });
 
   const { headcountQuery, costQuery } = useProjectCharts({
@@ -61,11 +60,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
               <h1 className="text-lg font-semibold text-white">{currentProjectName}</h1>
               {totalDurationLabel && (
                 <span className="text-sm text-slate-400">总工期：{totalDurationLabel}</span>
-              )}
-              {typeof onsiteCount === "number" && (
-                <span className="rounded-none border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
-                  {onsiteCount} 人在场
-                </span>
               )}
             </div>
           </div>
