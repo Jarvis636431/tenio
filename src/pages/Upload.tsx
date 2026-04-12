@@ -188,6 +188,7 @@ function UploadPage() {
 
     try {
       const projectId = await ensureProjectId();
+      let hasUploadError = false;
 
       for (const uploadItem of files) {
         if (uploadItem.status !== "pending" && uploadItem.status !== "error") {
@@ -215,6 +216,7 @@ function UploadPage() {
             ),
           );
         } catch (error) {
+          hasUploadError = true;
           setFiles((prev) =>
             prev.map((file) =>
               file.id === uploadItem.id
@@ -228,10 +230,14 @@ function UploadPage() {
           );
         }
       }
+
+      if (!hasUploadError) {
+        navigate(`/project/${projectId}`);
+      }
     } finally {
       setIsAllUploading(false);
     }
-  }, [ensureProjectId, files, uploadFile]);
+  }, [ensureProjectId, files, navigate, uploadFile]);
 
   const handleSkip = useCallback(() => {
     navigate(currentProject?.id ? `/project/${currentProject.id}` : "/");
@@ -568,16 +574,8 @@ function UploadPage() {
               {allCompleted && (
                 <div className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-center">
                   <p className="text-sm text-emerald-200">
-                    所有文件上传完成，可以进入项目继续生成方案。
+                    所有文件上传完成，正在为你进入项目工作台。
                   </p>
-                  <Button
-                    onClick={() =>
-                      navigate(resolvedProjectId ? `/project/${resolvedProjectId}` : "/")
-                    }
-                    className="mt-3 h-11 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-500 text-slate-950 hover:from-cyan-400 hover:to-sky-400"
-                  >
-                    进入项目工作台
-                  </Button>
                 </div>
               )}
             </div>
