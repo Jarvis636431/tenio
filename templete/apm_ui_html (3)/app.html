@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A.PM 施工组织设计 · AI 智能生成</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #020c1b;
+      --bg-panel: #041225;
+      --bg-card: rgba(4,18,37,0.85);
+      --accent: #00d4ff;
+      --accent-dim: rgba(0,212,255,0.12);
+      --accent-border: rgba(0,212,255,0.18);
+      --text: #e8f0fe;
+      --text-muted: rgba(160,180,204,0.65);
+      --text-dim: rgba(160,180,204,0.35);
+      --green: #10b981;
+      --green-dim: rgba(16,185,129,0.1);
+      --amber: #f59e0b;
+      --red: #ef4444;
+    }
+    html { font-size: 14px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      height: 54px;
+      background: rgba(2,12,27,0.94);
+      border-bottom: 1px solid var(--accent-border);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center;
+      padding: 0 24px; gap: 14px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .nav-logo img { width: 26px; height: 26px; object-fit: contain; }
+    .nav-logo-text { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+    .nav-logo-text span { color: var(--accent); }
+    .nav-div { width: 1px; height: 18px; background: var(--accent-border); }
+    .nav-title { font-size: 12px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.04em; }
+    .nav-spacer { flex: 1; }
+    .nav-badge { font-size: 9px; font-weight: 700; padding: 3px 9px; border: 1px solid rgba(0,212,255,0.3); color: var(--accent); letter-spacing: 0.15em; background: var(--accent-dim); }
+    .nav-btn { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 6px 13px; background: var(--accent); color: #020c1b; cursor: pointer; border: none; font-family: inherit; }
+    .nav-btn.ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--accent-border); }
+
+    /* ── Layout ── */
+    .main-wrap { position: relative; z-index: 1; display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 54px); }
+
+    /* ── AI Assistant Sidebar ── */
+    .sidebar { border-right: 1px solid var(--accent-border); background: rgba(2,12,27,0.6); display: flex; flex-direction: column; overflow: hidden; }
+    .ai-header { padding: 14px 16px; border-bottom: 1px solid var(--accent-border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; background: rgba(0,15,40,0.5); }
+    .ai-header-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent), #0066cc); display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff; flex-shrink: 0; }
+    .ai-header-text { font-size: 13px; font-weight: 700; color: #fff; }
+    .ai-header-sub { font-size: 10px; color: var(--text-muted); }
+    .ai-status { margin-left: auto; display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--green); }
+    .ai-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .ai-chat-area { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+    .ai-msg { display: flex; gap: 8px; align-items: flex-start; }
+    .ai-msg.user { flex-direction: row-reverse; }
+    .ai-avatar { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+    .ai-avatar.bot { background: var(--accent-dim); border: 1px solid var(--accent-border); color: var(--accent); }
+    .ai-avatar.me { background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.3); color: #a78bfa; }
+    .ai-bubble { max-width: 220px; padding: 9px 12px; font-size: 12px; line-height: 1.65; }
+    .ai-bubble.bot { background: rgba(0,212,255,0.06); border: 1px solid var(--accent-border); color: rgba(200,215,235,0.85); }
+    .ai-bubble.user { background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.2); color: rgba(200,215,235,0.85); text-align: right; }
+    .ai-bubble .highlight { color: var(--accent); font-weight: 600; }
+    .ai-bubble .warn { color: var(--amber); font-weight: 600; }
+    .ai-time { font-size: 9px; color: var(--text-dim); margin-top: 3px; }
+    .ai-msg.user .ai-time { text-align: right; }
+    .ai-quick-actions { padding: 0 14px 8px; display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
+    .ai-quick-btn { font-size: 10px; padding: 4px 10px; border: 1px solid var(--accent-border); background: rgba(0,212,255,0.04); color: var(--text-muted); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .ai-quick-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .ai-input-area { padding: 10px 14px; border-top: 1px solid var(--accent-border); display: flex; gap: 8px; align-items: center; flex-shrink: 0; background: rgba(0,15,40,0.3); }
+    .ai-input { flex: 1; background: rgba(0,212,255,0.04); border: 1px solid var(--accent-border); color: var(--text); font-size: 12px; padding: 9px 12px; font-family: inherit; outline: none; resize: none; min-height: 36px; max-height: 80px; }
+    .ai-input::placeholder { color: var(--text-dim); }
+    .ai-input:focus { border-color: var(--accent); }
+    .ai-send-btn { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), #0099ff); border: none; color: #020c1b; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .ai-send-btn:hover { opacity: 0.85; }
+    .ai-console { border-top: 1px solid var(--accent-border); flex-shrink: 0; }
+    .ai-console-header { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: rgba(0,15,40,0.5); cursor: pointer; }
+    .ai-console-title { font-size: 10px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.12em; }
+    .ai-console-toggle { margin-left: auto; font-size: 10px; color: var(--text-dim); }
+    .ai-console-body { padding: 8px 14px 10px; display: flex; flex-direction: column; gap: 5px; max-height: 140px; overflow-y: auto; }
+    .ai-log { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-muted); }
+    .ai-log-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .ai-log-time { color: var(--text-dim); margin-left: auto; white-space: nowrap; }
+
+    /* ── Content ── */
+    .content-area { display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Tab bar ── */
+    .tab-bar { display: flex; align-items: center; border-bottom: 1px solid var(--accent-border); background: rgba(2,12,27,0.5); padding: 0 20px; gap: 0; flex-shrink: 0; }
+    .tab { display: flex; align-items: center; gap: 6px; padding: 13px 16px; cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-spacer { flex: 1; }
+    .tab-actions { display: flex; gap: 7px; align-items: center; }
+    .act-btn { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 5px 11px; border: 1px solid var(--accent-border); color: var(--text-muted); background: transparent; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .act-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .act-btn.primary { background: var(--accent); color: #020c1b; border-color: var(--accent); }
+
+    /* ── Panels ── */
+    .panel { display: none; flex: 1; overflow-y: auto; padding: 20px; flex-direction: column; gap: 16px; }
+    .panel.active { display: flex; }
+
+    /* ── Upload panel ── */
+    .file-card { border: 1px solid rgba(16,185,129,0.3); background: rgba(16,185,129,0.06); padding: 13px 16px; display: flex; align-items: center; gap: 13px; }
+    .file-icon { font-size: 22px; color: var(--green); flex-shrink: 0; }
+    .file-name { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+    .file-meta { font-size: 11px; color: var(--text-muted); }
+    .file-ok { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--green); margin-left: auto; flex-shrink: 0; }
+    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .info-card { border: 1px solid var(--accent-border); background: var(--bg-card); padding: 12px 14px; position: relative; }
+    .info-card::before { content: ''; position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: linear-gradient(180deg, var(--accent), transparent); }
+    .info-label { font-size: 9px; font-weight: 600; color: rgba(0,212,255,0.5); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 5px; }
+    .info-value { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .info-sub { font-size: 10px; color: var(--text-muted); }
+    .gen-area { border: 1px solid var(--accent-border); background: linear-gradient(135deg, rgba(0,40,100,0.35), rgba(0,20,55,0.45)); padding: 18px 22px; display: flex; align-items: center; gap: 18px; position: relative; }
+    .gen-area::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), rgba(0,212,255,0.2), transparent); }
+    .gen-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .gen-sub { font-size: 12px; color: var(--text-muted); }
+    .gen-tags { display: flex; gap: 7px; margin-top: 9px; flex-wrap: wrap; }
+    .gen-tag { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 500; padding: 3px 9px; border: 1px solid var(--accent-border); color: var(--text-muted); }
+    .gen-tag .dot { width: 5px; height: 5px; border-radius: 50%; }
+    .gen-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; padding: 13px 28px; background: linear-gradient(135deg, var(--accent), #0099ff); color: #020c1b; cursor: pointer; border: none; font-family: inherit; white-space: nowrap; flex-shrink: 0; }
+
+    /* ── Document panel ── */
+    .doc-toolbar { display: flex; align-items: center; gap: 8px; padding: 9px 13px; border: 1px solid var(--accent-border); background: var(--bg-card); flex-shrink: 0; }
+    .doc-btn { display: flex; align-items: center; gap: 4px; font-size: 11px; padding: 4px 9px; cursor: pointer; border: 1px solid var(--accent-border); color: var(--text-muted); background: transparent; font-family: inherit; }
+    .doc-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .doc-body { border: 1px solid var(--accent-border); background: rgba(255,255,255,0.015); padding: 28px 36px; flex: 1; line-height: 1.95; font-size: 13px; color: rgba(200,215,235,0.82); overflow-y: auto; }
+    .doc-body h1 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 18px; text-align: center; padding-bottom: 12px; border-bottom: 1px solid var(--accent-border); }
+    .doc-body h2 { font-size: 14px; font-weight: 700; color: var(--accent); margin-top: 22px; margin-bottom: 9px; display: flex; align-items: center; gap: 7px; }
+    .doc-body h2::before { content: ''; display: inline-block; width: 3px; height: 14px; background: var(--accent); flex-shrink: 0; }
+    .doc-body h3 { font-size: 13px; font-weight: 600; color: #dde8f8; margin-top: 14px; margin-bottom: 7px; }
+    .doc-body h4 { font-size: 12px; font-weight: 600; color: rgba(200,215,235,0.9); margin-top: 10px; margin-bottom: 5px; }
+    .doc-body p { margin-bottom: 9px; text-indent: 2em; }
+    .doc-body ul, .doc-body ol { margin-left: 2em; margin-bottom: 9px; }
+    .doc-body li { margin-bottom: 3px; }
+    .doc-body table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    .doc-body table th { background: rgba(0,212,255,0.07); border: 1px solid var(--accent-border); padding: 6px 9px; color: var(--accent); font-weight: 600; text-align: center; }
+    .doc-body table td { border: 1px solid rgba(0,212,255,0.09); padding: 5px 9px; }
+    .doc-body table tr:nth-child(even) td { background: rgba(0,212,255,0.02); }
+    .doc-toc { border: 1px solid var(--accent-border); background: rgba(0,20,55,0.4); padding: 14px 18px; margin-bottom: 18px; }
+    .doc-toc-title { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.1em; }
+    .doc-toc ol { margin-left: 1.5em; }
+    .doc-toc li { font-size: 12px; color: var(--text-muted); margin-bottom: 3px; cursor: pointer; }
+    .doc-toc li:hover { color: var(--accent); }
+
+    /* ── Schedule panel ── */
+    .sch-toolbar { display: flex; align-items: center; gap: 8px; padding: 9px 13px; border: 1px solid var(--accent-border); background: var(--bg-card); flex-shrink: 0; flex-wrap: wrap; }
+    .filter-btn { display: flex; align-items: center; gap: 4px; font-size: 11px; padding: 4px 9px; cursor: pointer; border: 1px solid var(--accent-border); color: var(--text-muted); background: transparent; font-family: inherit; }
+    .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .sch-stats { display: flex; gap: 14px; margin-left: auto; }
+    .sstat { font-size: 11px; color: var(--text-muted); }
+    .sstat strong { color: var(--accent); font-weight: 700; }
+    .sch-wrap { border: 1px solid var(--accent-border); overflow: auto; flex: 1; }
+    .sch-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .sch-table thead { position: sticky; top: 0; z-index: 10; }
+    .sch-table thead tr { background: rgba(0,18,50,0.97); }
+    .sch-table thead th { padding: 8px 11px; text-align: left; font-size: 10px; font-weight: 600; color: rgba(0,212,255,0.55); letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 1px solid var(--accent-border); white-space: nowrap; }
+    .sch-table thead th:first-child { width: 40px; text-align: center; }
+    .sch-table tbody tr { border-bottom: 1px solid rgba(0,212,255,0.04); }
+    .sch-table tbody tr:hover { background: rgba(0,212,255,0.025); }
+    .sch-table tbody tr.sum { background: rgba(0,28,60,0.5); }
+    .sch-table tbody tr.sum td { font-weight: 600; color: #fff; }
+    .sch-table td { padding: 6px 11px; color: rgba(200,215,235,0.72); vertical-align: middle; }
+    .sch-table td:first-child { text-align: center; color: var(--text-dim); font-size: 10px; }
+    .ind1 { padding-left: 22px !important; }
+    .ind2 { padding-left: 38px !important; }
+    .dur-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.14); color: var(--accent); }
+    .crit-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--red); margin-right: 4px; vertical-align: middle; }
+    .chip { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 500; padding: 2px 7px; }
+    .chip.pend { background: rgba(245,158,11,0.08); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+    .chip.act { background: rgba(0,212,255,0.07); color: var(--accent); border: 1px solid rgba(0,212,255,0.18); }
+    .chip.done { background: var(--green-dim); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+
+    /* ── Gantt panel ── */
+    .gantt-wrap { border: 1px solid var(--accent-border); overflow: auto; flex: 1; background: rgba(2,10,25,0.8); }
+
+    /* ── Network panel ── */
+    .net-toolbar { display: flex; align-items: center; gap: 8px; padding: 9px 13px; border: 1px solid var(--accent-border); background: var(--bg-card); flex-shrink: 0; }
+    .net-legend { display: flex; gap: 14px; }
+    .leg { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-muted); }
+    .leg-line { width: 18px; height: 2px; }
+    .leg-box { width: 11px; height: 11px; border: 1px solid; }
+    .net-canvas-wrap { flex: 1; overflow: auto; position: relative; min-height: 500px; background: rgba(2,10,25,0.8); border: 1px solid var(--accent-border); }
+
+    /* ── Crew panel ── */
+    .crew-wrap { display: grid; grid-template-columns: 220px 1fr; flex: 1; overflow: hidden; border: 1px solid var(--accent-border); }
+    .crew-sidebar { border-right: 1px solid var(--accent-border); overflow-y: auto; background: rgba(2,10,25,0.6); }
+    .crew-search { padding: 10px; border-bottom: 1px solid var(--accent-border); }
+    .crew-search input { width: 100%; background: rgba(0,212,255,0.05); border: 1px solid var(--accent-border); color: var(--text); font-size: 12px; padding: 6px 10px; font-family: inherit; outline: none; }
+    .crew-search input::placeholder { color: var(--text-dim); }
+    .crew-type-group { }
+    .crew-type-header { display: flex; align-items: center; gap: 7px; padding: 7px 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 1px solid rgba(0,212,255,0.05); background: rgba(0,15,40,0.5); }
+    .crew-type-header:hover { color: var(--text); }
+    .crew-type-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .crew-type-count { margin-left: auto; font-size: 9px; font-weight: 700; padding: 1px 6px; background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+    .crew-item { display: flex; align-items: center; gap: 8px; padding: 7px 12px 7px 20px; font-size: 11px; color: var(--text-muted); cursor: pointer; border-bottom: 1px solid rgba(0,212,255,0.03); transition: all 0.1s; }
+    .crew-item:hover { background: var(--accent-dim); color: var(--text); }
+    .crew-item.active { background: var(--accent-dim); border-left: 2px solid var(--accent); color: var(--accent); font-weight: 600; }
+    .crew-item-tasks { margin-left: auto; font-size: 9px; color: var(--text-dim); }
+    .crew-main { display: flex; flex-direction: column; overflow: hidden; }
+    .crew-header { padding: 14px 18px; border-bottom: 1px solid var(--accent-border); background: rgba(0,15,40,0.4); display: flex; align-items: flex-start; gap: 14px; flex-shrink: 0; }
+    .crew-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+    .crew-meta { font-size: 11px; color: var(--text-muted); }
+    .crew-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--accent-border); flex-shrink: 0; }
+    .crew-stat { border: 1px solid var(--accent-border); background: var(--bg-card); padding: 10px 13px; }
+    .crew-stat-label { font-size: 9px; font-weight: 600; color: rgba(0,212,255,0.5); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+    .crew-stat-value { font-size: 16px; font-weight: 700; color: #fff; }
+    .crew-stat-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .crew-timeline { flex: 1; overflow: auto; padding: 14px 18px; }
+    .crew-tl-title { font-size: 10px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
+    .crew-task-list { display: flex; flex-direction: column; gap: 6px; }
+    .crew-task { border: 1px solid var(--accent-border); background: var(--bg-card); padding: 10px 14px; display: flex; align-items: center; gap: 12px; }
+    .crew-task-num { font-size: 10px; color: var(--text-dim); width: 20px; flex-shrink: 0; text-align: center; }
+    .crew-task-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .crew-task-name { flex: 1; font-size: 12px; color: var(--text); font-weight: 500; }
+    .crew-task-loc { font-size: 10px; color: var(--text-muted); }
+    .crew-task-time { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+    .crew-task-dur { font-size: 10px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+    .crew-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 12px; color: var(--text-dim); }
+    .crew-empty-icon { font-size: 40px; opacity: 0.3; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.15); }
+    ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.18); }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,212,255,0.35); }
+
+    @media (max-width: 900px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .info-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="nav-logo" href="projects.html">
+    <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663381579886/3dGQrYeue3pTedcrRzk4ny/logo_icon_blue_cc74c57f.png" alt="A.PM" />
+    <span class="nav-logo-text"><span>A.PM</span> 智管</span>
+  </a>
+  <div class="nav-div"></div>
+  <span class="nav-title">施工组织设计 · AI 智能生成</span>
+  <div class="nav-spacer"></div>
+  <span class="nav-badge">Beta</span>
+  <button class="nav-btn ghost"><i class="fas fa-history"></i> 历史记录</button>
+  <button class="nav-btn ghost"><i class="fas fa-question-circle"></i> 帮助</button>
+</nav>
+
+<div class="main-wrap">
+  <!-- AI Assistant Sidebar -->
+  <aside class="sidebar">
+    <!-- Header -->
+    <div class="ai-header">
+      <div class="ai-header-icon"><i class="fas fa-robot"></i></div>
+      <div>
+        <div class="ai-header-text">AI 助手</div>
+        <div class="ai-header-sub">孙园镇党群服务中心</div>
+      </div>
+      <div class="ai-status"><div class="ai-status-dot"></div>在线</div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="ai-chat-area">
+      <!-- Bot welcome -->
+      <div class="ai-msg">
+        <div class="ai-avatar bot"><i class="fas fa-robot"></i></div>
+        <div>
+          <div class="ai-bubble bot">您好！我是 A.PM 智能助手。已为您加载<span class="highlight">「孙园镇中洼居党群服务中心办公楼」</span>项目。请问需要什么帮助？</div>
+          <div class="ai-time">14:32</div>
+        </div>
+      </div>
+      <!-- User msg -->
+      <div class="ai-msg user">
+        <div class="ai-avatar me"><i class="fas fa-user"></i></div>
+        <div>
+          <div class="ai-bubble user">帮我看一下当前项目的关键路径有哪些风险点？</div>
+          <div class="ai-time">14:33</div>
+        </div>
+      </div>
+      <!-- Bot response -->
+      <div class="ai-msg">
+        <div class="ai-avatar bot"><i class="fas fa-robot"></i></div>
+        <div>
+          <div class="ai-bubble bot">已分析关键路径，发现 <span class="warn">2 个风险点</span>：<br><br>1. <span class="highlight">基础工程→主体结构</span>衔接窗口仅 1 天，建议预留 2 天缓冲<br><br>2. <span class="highlight">装饰装修</span>与安装工程并行度高，需协调工序避免冲突</div>
+          <div class="ai-time">14:33</div>
+        </div>
+      </div>
+      <!-- User msg -->
+      <div class="ai-msg user">
+        <div class="ai-avatar me"><i class="fas fa-user"></i></div>
+        <div>
+          <div class="ai-bubble user">自动调整进度计划，增加缓冲天数</div>
+          <div class="ai-time">14:34</div>
+        </div>
+      </div>
+      <!-- Bot response -->
+      <div class="ai-msg">
+        <div class="ai-avatar bot"><i class="fas fa-robot"></i></div>
+        <div>
+          <div class="ai-bubble bot"><span class="highlight">✓ 已自动调整</span><br><br>基础→主体衔接缓冲已增至 3 天，总工期保持 <span class="highlight">60 日历天</span>不变。已同步更新甘特图和网络图。</div>
+          <div class="ai-time">14:34</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="ai-quick-actions">
+      <button class="ai-quick-btn"><i class="fas fa-chart-line" style="margin-right:3px;"></i>工期优化</button>
+      <button class="ai-quick-btn"><i class="fas fa-exclamation-triangle" style="margin-right:3px;"></i>风险预警</button>
+      <button class="ai-quick-btn"><i class="fas fa-users" style="margin-right:3px;"></i>人员调度</button>
+      <button class="ai-quick-btn"><i class="fas fa-coins" style="margin-right:3px;"></i>成本分析</button>
+    </div>
+
+    <!-- Input -->
+    <div class="ai-input-area">
+      <textarea class="ai-input" placeholder="输入问题或指令..." rows="1"></textarea>
+      <button class="ai-send-btn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+
+    <!-- Console -->
+    <div class="ai-console">
+      <div class="ai-console-header">
+        <i class="fas fa-terminal" style="font-size:10px;color:var(--accent);"></i>
+        <span class="ai-console-title">控制台</span>
+        <span class="ai-console-toggle"><i class="fas fa-chevron-up"></i></span>
+      </div>
+      <div class="ai-console-body">
+        <div class="ai-log"><div class="ai-log-dot" style="background:var(--green);"></div>招标文件解析完成 · 27,275 字符<span class="ai-log-time">14:32</span></div>
+        <div class="ai-log"><div class="ai-log-dot" style="background:var(--green);"></div>施工组织设计生成完成 · 12,400 字<span class="ai-log-time">14:32</span></div>
+        <div class="ai-log"><div class="ai-log-dot" style="background:var(--green);"></div>进度计划生成完成 · 53 项工序<span class="ai-log-time">14:32</span></div>
+        <div class="ai-log"><div class="ai-log-dot" style="background:var(--green);"></div>甘特图渲染完成 · 271 日历天<span class="ai-log-time">14:33</span></div>
+        <div class="ai-log"><div class="ai-log-dot" style="background:var(--green);"></div>网络图生成完成 · 25 节点<span class="ai-log-time">14:33</span></div>
+        <div class="ai-log"><div class="ai-log-dot" style="background:var(--green);"></div>人员轮转方案完成 · 28 班组<span class="ai-log-time">14:33</span></div>
+        <div class="ai-log"><div class="ai-log-dot" style="background:var(--accent);"></div>关键路径风险分析完成<span class="ai-log-time">14:33</span></div>
+        <div class="ai-log"><div class="ai-log-dot" style="background:var(--accent);"></div>进度计划自动调整完成<span class="ai-log-time">14:34</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="content-area">
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <div class="tab active" id="tab-timecost" onclick="switchTab('timecost')"><i class="fas fa-chart-line"></i> 工期-成本分析</div>
+      <div class="tab" id="tab-upload" onclick="switchTab('upload')"><i class="fas fa-cloud-upload-alt"></i> 上传文件</div>
+      <div class="tab" id="tab-doc" onclick="switchTab('doc')"><i class="fas fa-file-alt"></i> 施工组织设计</div>
+      <div class="tab" id="tab-schedule" onclick="switchTab('schedule')"><i class="fas fa-list-ol"></i> 进度计划列表</div>
+      <div class="tab" id="tab-gantt" onclick="switchTab('gantt')"><i class="fas fa-chart-bar"></i> 甘特图</div>
+      <div class="tab" id="tab-network" onclick="switchTab('network')"><i class="fas fa-project-diagram"></i> 网络图</div>
+      <div class="tab" id="tab-crew" onclick="switchTab('crew')"><i class="fas fa-users"></i> 人员轮转</div>
+      <div class="tab-spacer"></div>
+      <div class="tab-actions">
+        <button class="act-btn"><i class="fas fa-download"></i> 导出全部</button>
+        <button class="act-btn primary"><i class="fas fa-sync-alt"></i> 重新生成</button>
+      </div>
+    </div>
+
+    <!-- ══ UPLOAD ══ -->
+    <div class="panel" id="panel-upload">
+      <div class="file-card">
+        <div class="file-icon"><i class="fas fa-file-word"></i></div>
+        <div style="flex:1;">
+          <div class="file-name">李园镇中洼居党群服务中心办公楼建设工程招标文件.doc</div>
+          <div class="file-meta">46 页 · 27,275 字符 · 上传于 2026-04-07 14:32</div>
+        </div>
+        <div class="file-ok"><i class="fas fa-check-circle"></i> 解析成功</div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:700;color:var(--text-dim);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:9px;"><i class="fas fa-magic" style="color:var(--accent);margin-right:5px;"></i>AI 自动提取的项目信息</div>
+        <div class="info-grid">
+          <div class="info-card"><div class="info-label">项目名称</div><div class="info-value" style="font-size:12px;">孙园镇中洼居党群<br>服务中心办公楼</div><div class="info-sub">建设工程施工</div></div>
+          <div class="info-card"><div class="info-label">建设规模</div><div class="info-value">354 <span style="font-size:11px;color:rgba(0,212,255,0.6);">㎡</span></div><div class="info-sub">建筑面积（约）</div></div>
+          <div class="info-card"><div class="info-label">合同工期</div><div class="info-value">60 <span style="font-size:11px;color:rgba(0,212,255,0.6);">日历天</span></div><div class="info-sub">质量要求：合格</div></div>
+          <div class="info-card"><div class="info-label">发包价</div><div class="info-value">63.66 <span style="font-size:11px;color:rgba(0,212,255,0.6);">万元</span></div><div class="info-sub">控制价 70.73 万元</div></div>
+          <div class="info-card"><div class="info-label">招标人</div><div class="info-value" style="font-size:12px;">泗洪县孙园镇<br>中洼居民委员会</div><div class="info-sub">联系人：刘忠</div></div>
+          <div class="info-card"><div class="info-label">资质要求</div><div class="info-value" style="font-size:12px;">总承包三级<br>及以上</div><div class="info-sub">建筑工程施工</div></div>
+          <div class="info-card"><div class="info-label">资金来源</div><div class="info-value" style="font-size:12px;">财政资金</div><div class="info-sub">已落实</div></div>
+          <div class="info-card"><div class="info-label">评标方式</div><div class="info-value" style="font-size:12px;">合理价随机<br>确定中标人</div><div class="info-sub">资格后审 · 合格制</div></div>
+        </div>
+      </div>
+      <div class="gen-area">
+        <div style="flex:1;">
+          <div class="gen-title"><i class="fas fa-check-circle" style="color:var(--green);margin-right:7px;"></i>AI 已完成全部生成</div>
+          <div class="gen-sub">基于招标文件自动生成完整施工组织设计，包含进度计划、甘特图、网络图、人员轮转</div>
+          <div class="gen-tags">
+            <div class="gen-tag"><div class="dot" style="background:var(--green);"></div>施工组织设计（12,400字）</div>
+            <div class="gen-tag"><div class="dot" style="background:var(--green);"></div>进度计划（53项）</div>
+            <div class="gen-tag"><div class="dot" style="background:var(--green);"></div>甘特图（271天）</div>
+            <div class="gen-tag"><div class="dot" style="background:var(--green);"></div>网络图</div>
+            <div class="gen-tag"><div class="dot" style="background:var(--green);"></div>人员轮转（28班组）</div>
+          </div>
+        </div>
+        <button class="gen-btn" onclick="switchTab('doc')"><i class="fas fa-eye"></i> 查看生成结果</button>
+      </div>
+    </div>
+
+    <!-- ══ DOCUMENT ══ -->
+    <div class="panel" id="panel-doc">
+      <div class="doc-toolbar">
+        <span style="font-size:11px;color:var(--text-muted);"><i class="fas fa-file-alt" style="color:var(--accent);margin-right:5px;"></i>施工组织设计文档</span>
+        <button class="doc-btn"><i class="fas fa-edit"></i> 编辑</button>
+        <div style="flex:1;"></div>
+        <span style="font-size:10px;color:var(--text-dim);">约 12,400 字 · 10 章节</span>
+      </div>
+      <div class="doc-body">
+        <h1>孙园镇中洼居党群服务中心办公楼建设工程<br>施工组织设计</h1>
+
+        <div class="doc-toc">
+          <div class="doc-toc-title"><i class="fas fa-list" style="margin-right:6px;"></i>目录</div>
+          <ol>
+            <li>工程概况及施工特点</li>
+            <li>施工总体部署</li>
+            <li>施工现场平面布置</li>
+            <li>主要施工方案及技术措施</li>
+            <li>工期及施工进度计划安排</li>
+            <li>质量目标、质量保证体系及技术组织措施</li>
+            <li>安全目标、安全保证体系及技术组织措施</li>
+            <li>分包工程的管理</li>
+            <li>环境保护及文明施工</li>
+            <li>计划、统计和信息管理</li>
+          </ol>
+        </div>
+
+        <h2>第1章 工程概况及施工特点</h2>
+        <h3>1.1 工程概况</h3>
+        <h4>1.1.1 工程简述</h4>
+        <table>
+          <tr><th>项目</th><th>内容</th></tr>
+          <tr><td>工程名称</td><td>孙园镇中洼居党群服务中心办公楼建设工程</td></tr>
+          <tr><td>建设单位</td><td>泗洪县孙园镇中洼居民委员会</td></tr>
+          <tr><td>建设地点</td><td>泗洪县孙园镇中洼居</td></tr>
+          <tr><td>建筑面积</td><td>约354平方米</td></tr>
+          <tr><td>合同工期</td><td>60日历天</td></tr>
+          <tr><td>质量标准</td><td>合格</td></tr>
+          <tr><td>发包价</td><td>636,574.03元（控制价707,304.48元，下浮10%）</td></tr>
+          <tr><td>资金来源</td><td>财政资金，已落实</td></tr>
+          <tr><td>评标方法</td><td>合理价随机确定中标人法</td></tr>
+        </table>
+        <p>本工程为孙园镇中洼居党群服务中心办公楼建设工程，位于泗洪县孙园镇中洼居。工程建设单位为泗洪县孙园镇中洼居民委员会，代理机构为江苏经天纬地建设项目管理有限公司。本次招标采用资格后审、合格制方式，要求投标人具备建筑工程施工总承包三级及以上企业资质。</p>
+
+        <h4>1.1.2 项目设计概况</h4>
+        <p><strong>结构设计：</strong>本工程采用砖混结构/框架结构，基础形式为条形基础，抗震设防烈度7度，建筑结构安全等级二级，设计使用年限50年。</p>
+        <p><strong>建筑设计：</strong>建筑层数地上2层，建筑高度约8.0m，室内外高差0.45m。外墙采用加气混凝土砌块，内墙采用加气混凝土砌块，屋面采用有组织排水。</p>
+        <p><strong>主要结构材料：</strong>混凝土采用预拌混凝土，基础垫层C15，基础及主体结构C25，构造柱、圈梁C25；钢筋采用HRB400级钢筋；砌体采用MU10烧结普通砖，M7.5混合砂浆砌筑。</p>
+
+        <h3>1.2 施工特点及重难点分析</h3>
+        <p><strong>工期紧张：</strong>本工程合同工期仅60日历天，需合理组织各工序穿插施工，确保按期竣工。</p>
+        <p><strong>场地限制：</strong>工程位于居民区内，施工场地相对狭小，需合理规划材料堆放和施工机械布置，减少对周边居民的影响。</p>
+        <p><strong>质量要求高：</strong>作为党群服务中心，建筑外观和内部装修质量要求较高，需加强过程质量控制。</p>
+        <p><strong>安全文明施工：</strong>施工现场周边有居民居住，需严格控制噪声、扬尘，做好安全防护措施。</p>
+
+        <h2>第2章 施工总体部署</h2>
+        <h3>2.1 施工目标</h3>
+        <table>
+          <tr><th>目标类型</th><th>目标内容</th></tr>
+          <tr><td>工期目标</td><td>计划开工日期2026年3月10日，竣工日期2026年5月10日，总工期60日历天，确保按期竣工</td></tr>
+          <tr><td>质量目标</td><td>严格执行国家现行施工验收规范及标准，确保工程质量达到合格标准，争创优良工程</td></tr>
+          <tr><td>安全目标</td><td>杜绝重大伤亡事故，轻伤频率控制在1‰以内，实现安全文明施工</td></tr>
+          <tr><td>文明施工</td><td>严格执行文明施工管理规定，保持施工现场整洁有序，减少对周边环境的影响</td></tr>
+          <tr><td>环保目标</td><td>噪声达标，扬尘控制，废水处理，建筑垃圾分类处置</td></tr>
+        </table>
+
+        <h3>2.2 施工组织机构</h3>
+        <p>本工程成立以项目经理为核心的项目管理团队，下设技术、质量、安全、材料、劳务等职能部门，实行项目经理负责制。项目经理须具备房屋建筑工程专业二级及以上注册建造师资格并同时具备B类安全考核证。</p>
+        <table>
+          <tr><th>岗位</th><th>职责</th><th>资质要求</th></tr>
+          <tr><td>项目经理</td><td>全面负责项目管理，对工期、质量、安全、成本负总责</td><td>二级及以上注册建造师，B类安全证</td></tr>
+          <tr><td>技术负责人</td><td>负责技术方案编制、技术交底、质量控制</td><td>工程师及以上职称</td></tr>
+          <tr><td>安全员</td><td>负责安全管理、隐患排查、安全教育</td><td>持证上岗</td></tr>
+          <tr><td>质检员</td><td>负责工程质量检查验收</td><td>持证上岗</td></tr>
+          <tr><td>材料员</td><td>负责材料采购、验收、保管</td><td>持证上岗</td></tr>
+          <tr><td>施工员</td><td>负责现场施工组织协调</td><td>持证上岗</td></tr>
+        </table>
+
+        <h3>2.3 劳动力计划</h3>
+        <p>根据工程量和工期要求，合理配置劳动力资源，各阶段劳动力需求如下：</p>
+        <table>
+          <tr><th>施工阶段</th><th>主要工种</th><th>人数（人）</th><th>工期（天）</th></tr>
+          <tr><td>施工准备</td><td>普工、机械操作工</td><td>8</td><td>5</td></tr>
+          <tr><td>基础工程</td><td>土方工、钢筋工、木工、混凝土工</td><td>20</td><td>15</td></tr>
+          <tr><td>主体结构</td><td>钢筋工、木工、混凝土工、砌筑工</td><td>30</td><td>25</td></tr>
+          <tr><td>屋面工程</td><td>防水工、普工</td><td>10</td><td>7</td></tr>
+          <tr><td>装饰装修</td><td>抹灰工、油漆工、门窗工</td><td>25</td><td>15</td></tr>
+          <tr><td>安装工程</td><td>水电工、管道工</td><td>8</td><td>20（穿插）</td></tr>
+          <tr><td>竣工验收</td><td>综合工种</td><td>10</td><td>5</td></tr>
+        </table>
+
+        <h2>第3章 施工现场平面布置</h2>
+        <h3>3.1 施工平面布置原则</h3>
+        <p>施工平面布置应遵循以下原则：一是尽量减少施工用地，不占或少占农田；二是合理组织运输，减少二次搬运；三是各种材料、构件、机具的堆放位置应满足施工顺序和安全的要求；四是临时设施的搭设应满足安全、消防、环保的要求。</p>
+
+        <h3>3.2 临时设施布置</h3>
+        <p><strong>办公区：</strong>在施工现场入口处设置项目部办公室，配备必要的办公设备和通讯设施。</p>
+        <p><strong>生活区：</strong>在施工现场外侧设置工人生活区，包括宿舍、食堂、卫生间等，满足工人生活需要。</p>
+        <p><strong>材料堆放区：</strong>根据施工流程，在建筑物四周合理设置材料堆放区，钢筋、木材等主要材料就近堆放，减少二次搬运。</p>
+        <p><strong>施工道路：</strong>在施工现场内设置临时施工道路，满足材料运输和消防通道要求，路面采用碎石铺设，宽度不小于4m。</p>
+
+        <h3>3.3 临时用电布置</h3>
+        <p>本工程采用TN-S系统三相五线制供电，在施工现场设置总配电箱，各施工区域设置分配电箱，实行"一机一闸一漏一箱"制度。临时用电线路采用绝缘导线，架空敷设高度不低于4m。</p>
+
+        <h3>3.4 临时用水布置</h3>
+        <p>施工用水从市政管网接入，在施工现场设置总水表，各用水点设置分支管道。现场设置沉淀池，施工废水经沉淀处理后排放。</p>
+
+        <h2>第4章 主要施工方案及技术措施</h2>
+        <h3>4.1 基础工程施工方案</h3>
+        <p><strong>土方开挖：</strong>基坑开挖采用机械开挖与人工修整相结合的方式，挖土机械采用反铲挖掘机，人工配合清底。基坑开挖前，应先进行定位放线，确定基坑开挖范围和深度。开挖过程中，应随时检测基坑边坡稳定性，防止塌方。</p>
+        <p><strong>基坑排水：</strong>基坑四周设置排水沟和集水坑，采用水泵及时排除积水，防止基坑浸水影响地基承载力。</p>
+        <p><strong>基础施工：</strong>基础混凝土浇筑前，应清除基坑内杂物，验收合格后方可浇筑。混凝土浇筑应连续进行，振捣密实，做好养护工作，养护时间不少于7天。</p>
+        <p><strong>回填土：</strong>基础施工完成并验收合格后，进行回填土施工。回填土应分层夯实，每层厚度不超过300mm，压实系数不小于0.94。</p>
+
+        <h3>4.2 主体结构施工方案</h3>
+        <p><strong>模板工程：</strong>柱、梁、板模板采用木模板，支撑体系采用钢管扣件式脚手架。模板安装前，应检查模板的平整度和尺寸，确保模板拼缝严密，不漏浆。模板拆除时，混凝土强度必须达到规范要求。</p>
+        <p><strong>钢筋工程：</strong>钢筋在加工场集中加工，运至现场绑扎。钢筋加工前，应检查钢筋的规格、数量，确保符合设计要求。钢筋绑扎完成后，应进行隐蔽工程验收，合格后方可浇筑混凝土。</p>
+        <p><strong>混凝土工程：</strong>混凝土采用预拌混凝土，由搅拌站供应，泵送入模。混凝土浇筑应分层进行，每层厚度不超过500mm，振捣均匀，严禁漏振、过振。混凝土浇筑完成后，及时进行养护，养护时间不少于14天。</p>
+        <p><strong>砌体工程：</strong>砌体采用MU10烧结普通砖，M7.5混合砂浆砌筑。砌筑前，应将砖块提前浇水湿润，砌筑时应上下错缝，内外搭砌，灰缝饱满，厚度均匀。</p>
+
+        <h3>4.3 屋面工程施工方案</h3>
+        <p><strong>防水层：</strong>屋面防水采用SBS改性沥青防水卷材，厚度不小于4mm，铺设前应对基层进行处理，确保基层平整、干燥、无裂缝。防水卷材铺设应从低处向高处进行，搭接宽度不小于100mm，搭接缝用热熔法粘结。</p>
+        <p><strong>保温层：</strong>屋面保温采用挤塑聚苯板，厚度按设计要求，铺设时应错缝搭接，缝隙用同材料填充。</p>
+        <p><strong>面层：</strong>屋面面层采用细石混凝土，厚度40mm，内配双向钢筋网片，设置分格缝，间距不大于6m。</p>
+
+        <h3>4.4 装饰装修工程施工方案</h3>
+        <p><strong>内墙抹灰：</strong>内墙抹灰采用水泥砂浆打底、纸筋灰罩面，厚度约20mm。抹灰前，应对基层进行清理，浇水湿润，并在阴阳角处设置护角。</p>
+        <p><strong>外墙抹灰：</strong>外墙采用水泥砂浆抹灰，厚度约25mm，并做好防水处理。外墙抹灰完成后，进行外墙涂料施工，涂料应均匀涂刷，不得漏涂、流坠。</p>
+        <p><strong>地面工程：</strong>地面基层采用C15混凝土垫层，厚度80mm；面层采用水泥砂浆找平，厚度20mm；卫生间、厨房等有防水要求的房间，应做防水处理。</p>
+        <p><strong>门窗工程：</strong>门窗采用铝合金型材，玻璃采用中空玻璃。门窗安装前，应检查洞口尺寸，确保符合设计要求。安装时，应保证门窗框水平、垂直，缝隙用发泡剂填充密实。</p>
+
+        <h3>4.5 安装工程施工方案</h3>
+        <p><strong>给排水工程：</strong>给水管道采用PPR管，热熔连接；排水管道采用UPVC管，粘接连接。管道安装前，应进行水压试验，合格后方可隐蔽。</p>
+        <p><strong>电气工程：</strong>电气线管采用PVC管，暗敷于墙体和楼板内。配电箱安装位置应符合设计要求，接地可靠。照明灯具、开关、插座安装应牢固，接线正确。</p>
+
+        <h2>第5章 工期及施工进度计划安排</h2>
+        <h3>5.1 工期规划及要求</h3>
+        <p>根据工程特点和工期要求，本工程总工期60日历天，计划2026年3月10日开工，2026年5月10日竣工。施工进度安排遵循"先地下后地上、先结构后装修、先主体后配套"的原则，合理组织各工序穿插施工。</p>
+
+        <h3>5.2 关键线路分析</h3>
+        <p>本工程关键线路为：开工→施工准备→基础工程（基坑开挖→基础混凝土→回填）→主体结构（一层→二层）→屋面工程→装饰装修→竣工验收。关键线路总工期60天，无总时差。</p>
+
+        <h3>5.3 施工资源计划</h3>
+        <p>根据施工进度计划，合理配置人力、材料、机具等资源，确保各阶段施工顺利进行。主要施工机械包括：挖掘机1台、混凝土泵1台、塔吊1台（视现场情况）、振捣棒4台、砂浆搅拌机2台。</p>
+
+        <h2>第6章 质量目标、质量保证体系及技术组织措施</h2>
+        <h3>6.1 质量目标</h3>
+        <p>本工程质量目标为：确保工程质量达到合格标准，争创优良工程。分部工程合格率100%，单位工程优良率达到85%以上。</p>
+
+        <h3>6.2 质量管理组织机构及主要职责</h3>
+        <p>建立以项目经理为首的质量管理体系，下设质量检查组，负责工程质量的日常检查和验收。实行三检制度（自检、互检、专检），严格执行隐蔽工程验收制度。</p>
+
+        <h3>6.3 质量管理的措施</h3>
+        <p><strong>材料质量控制：</strong>所有进场材料必须有合格证和检验报告，按规定进行复试，不合格材料严禁使用。</p>
+        <p><strong>过程质量控制：</strong>关键工序和特殊工序实行旁站监督，确保施工质量。发现质量问题及时整改，不留质量隐患。</p>
+        <p><strong>隐蔽工程验收：</strong>所有隐蔽工程在隐蔽前必须经监理工程师验收合格，并做好记录。</p>
+        <p><strong>成品保护：</strong>已完成的工程成品应采取有效措施进行保护，防止损坏和污染。</p>
+
+        <h2>第7章 安全目标、安全保证体系及技术组织措施</h2>
+        <h3>7.1 安全管理目标</h3>
+        <p>杜绝重大伤亡事故，轻伤频率控制在1‰以内，实现安全文明施工。按《建筑施工安全检查标准》（JGJ59）达到合格标准。</p>
+
+        <h3>7.2 安全管理制度及办法</h3>
+        <p>建立健全安全生产管理体系，制定安全生产责任制，定期开展安全教育培训。施工现场设置安全警示标志，配备必要的安全防护设施。高处作业人员必须佩戴安全带，临边洞口必须设置防护栏杆和安全网。</p>
+
+        <h3>7.3 重要施工方案安全措施</h3>
+        <p><strong>基坑工程：</strong>基坑开挖深度超过1.5m时，应设置临时支护或放坡，坡顶1m范围内不得堆放材料。</p>
+        <p><strong>高处作业：</strong>凡距地面2m以上的作业均为高处作业，必须设置安全防护设施，作业人员必须系安全带。</p>
+        <p><strong>施工机械：</strong>施工机械设备定期检查维护，严禁带病作业，操作人员必须持证上岗。</p>
+        <p><strong>临时用电：</strong>临时用电必须按规范设置，配电箱设置漏电保护器，严禁私拉乱接。</p>
+
+        <h2>第8章 分包工程的管理</h2>
+        <h3>8.1 工程分包范围</h3>
+        <p>本工程主体结构施工由总承包单位自行施工，以下专业工程可进行分包：给排水安装工程、电气安装工程、门窗工程、外墙涂料工程。</p>
+
+        <h3>8.2 分包商选择条件</h3>
+        <p>分包商必须具备相应的资质等级，有良好的施工业绩和信誉，能够提供足够的劳动力和施工机械，并接受总承包单位的统一管理。</p>
+
+        <h2>第9章 环境保护及文明施工</h2>
+        <h3>9.1 环境保护措施</h3>
+        <p>施工过程中采取有效措施控制噪声、扬尘、污水等污染，严格遵守当地环保法规。施工废水经沉淀处理后排放，严禁直接排入市政管网。合理安排施工时间，夜间22:00至次日6:00禁止进行产生噪声的施工作业。</p>
+
+        <h3>9.2 文明施工措施</h3>
+        <p>施工现场实行封闭管理，设置围挡，高度不低于1.8m。保持场容场貌整洁，建筑垃圾及时清运，防止扬尘污染。施工人员统一着装，佩戴安全帽，遵守现场管理规定。</p>
+
+        <h2>第10章 计划、统计和信息管理</h2>
+        <h3>10.1 计划管理</h3>
+        <p>编制月度、周度施工计划，定期召开生产协调会，及时解决施工中出现的问题。对施工进度进行动态管理，发现偏差及时采取纠偏措施。</p>
+
+        <h3>10.2 信息管理</h3>
+        <p>建立工程信息管理系统，对工程进度、质量、安全、成本等信息进行实时记录和分析。定期向建设单位和监理单位报送施工进度报告，确保各方信息畅通。</p>
+      </div>
+    </div>
+
+    <!-- ══ SCHEDULE ══ -->
+    <div class="panel" id="panel-schedule">
+      <div class="sch-toolbar">
+        <button class="filter-btn active">全部</button>
+        <button class="filter-btn"><i class="fas fa-exclamation-circle" style="color:var(--red);"></i> 关键路径</button>
+        <button class="filter-btn">仅汇总</button>
+        <div class="sch-stats">
+          <span class="sstat">总工期 <strong>271天</strong></span>
+          <span class="sstat">工序 <strong>53项</strong></span>
+          <span class="sstat">关键工序 <strong>22项</strong></span>
+        </div>
+        <button class="act-btn" style="margin-left:6px;"><i class="fas fa-download"></i> 导出 Excel</button>
+      </div>
+      <div class="sch-wrap">
+        <table class="sch-table">
+          <thead>
+            <tr>
+              <th>序号</th>
+              <th style="min-width:220px;">任务名称</th>
+              <th>工期</th>
+              <th>开始时间</th>
+              <th>完成时间</th>
+              <th>前置</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody id="scheduleBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ GANTT ══ -->
+    <div class="panel" id="panel-gantt">
+      <div class="sch-toolbar">
+        <span style="font-size:11px;color:var(--text-muted);"><i class="fas fa-calendar-alt" style="color:var(--accent);margin-right:5px;"></i>总工期：271 日历天（2026年3月10日 — 2026年11月30日）</span>
+        <div style="margin-left:auto;display:flex;gap:7px;">
+          <button class="filter-btn active">周</button>
+          <button class="filter-btn">月</button>
+          <button class="act-btn"><i class="fas fa-download"></i> 导出图片</button>
+        </div>
+      </div>
+      <div class="gantt-wrap" id="ganttWrap"></div>
+    </div>
+
+    <!-- ══ NETWORK ══ -->
+    <div class="panel" id="panel-network">
+      <div class="net-toolbar">
+        <span style="font-size:11px;color:var(--text-muted);"><i class="fas fa-route" style="color:var(--accent);margin-right:5px;"></i>施工路径导航图（单代号网络图）</span>
+        <div class="net-legend">
+          <div class="leg"><div class="leg-box" style="border-color:#ef4444;background:rgba(239,68,68,0.15);border-radius:50%;"></div>关键节点</div>
+          <div class="leg"><div class="leg-box" style="border-color:var(--accent);background:var(--accent-dim);border-radius:50%;"></div>普通节点</div>
+          <div class="leg"><div style="width:20px;height:3px;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:2px;"></div>关键路径</div>
+          <div class="leg"><div style="width:20px;height:2px;background:rgba(0,212,255,0.35);border-radius:2px;"></div>普通路径</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:7px;">
+          <button class="act-btn" onclick="zoomNetworkSvg(1.15)"><i class="fas fa-search-plus"></i></button>
+          <button class="act-btn" onclick="zoomNetworkSvg(0.87)"><i class="fas fa-search-minus"></i></button>
+          <button class="act-btn" onclick="resetNetworkZoom()"><i class="fas fa-expand"></i> 重置</button>
+        </div>
+      </div>
+      <div class="net-canvas-wrap" id="netWrap" style="overflow:auto;position:relative;background:radial-gradient(ellipse at center, rgba(0,30,60,0.6) 0%, rgba(4,18,37,1) 70%);">
+        <div id="networkSvgContainer" style="min-width:1400px;min-height:800px;padding:30px;"></div>
+      </div>
+    </div>
+
+    <!-- ══ TIME-COST ══ -->
+    <div class="panel active" id="panel-timecost">
+      <div class="sch-toolbar">
+        <span style="font-size:11px;color:var(--text-muted);"><i class="fas fa-chart-line" style="color:var(--accent);margin-right:5px;"></i>工期-成本优化分析 · 帮助您在开工前确定最合理工期</span>
+
+      </div>
+      <!-- Summary cards -->
+      <div id="tc-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 20px 0;"></div>
+      <!-- Chart -->
+      <div style="padding:16px 20px 0;">
+        <canvas id="tcChart" style="width:100%;height:420px;"></canvas>
+      </div>
+      <!-- Recommendation -->
+      <div id="tc-recommendation" style="margin:16px 20px;border:1px solid rgba(0,212,255,0.2);background:rgba(0,212,255,0.04);padding:16px 20px;"></div>
+      <!-- Detail table -->
+      <div style="padding:0 20px 20px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">各工期方案明细</div>
+        <table id="tc-table" style="width:100%;border-collapse:collapse;font-size:12px;"></table>
+      </div>
+    </div>
+
+    <!-- ══ CREW ══ -->
+    <div class="panel" id="panel-crew" style="padding:0;">
+      <div class="crew-wrap">
+        <!-- Crew sidebar -->
+        <div class="crew-sidebar">
+          <div class="crew-search">
+            <input type="text" placeholder="搜索班组或工种..." id="crewSearch" oninput="filterCrew(this.value)" />
+          </div>
+          <div id="crewList"></div>
+          <div style="padding:10px 12px;font-size:10px;color:var(--text-dim);border-top:1px solid var(--accent-border);margin-top:4px;">
+            共 28 个班组 · 7 个工种
+          </div>
+        </div>
+        <!-- Crew main -->
+        <div class="crew-main" id="crewMain">
+          <div class="crew-empty">
+            <div class="crew-empty-icon"><i class="fas fa-hard-hat"></i></div>
+            <div style="font-size:14px;font-weight:600;color:var(--text-muted);">选择一个班组查看任务</div>
+            <div style="font-size:12px;">从左侧面板中选择一个班组，即可查看该班组的施工任务时间线和详细信息</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Tab switching ──
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'schedule') renderSchedule();
+  if (name === 'gantt') renderGantt();
+  if (name === 'network') renderNetwork();
+  if (name === 'crew') initCrew();
+  if (name === 'timecost') renderTimeCost();
+}
+
+// ── Schedule Data (from PDF) ──
+const TASKS = [
+  { id:1,  name:'开工',                  dur:0,   start:'2026-03-10', end:'2026-03-10', pre:'—',    sum:false, crit:true  },
+  { id:2,  name:'进场及施工准备',         dur:15,  start:'2026-03-10', end:'2026-03-24', pre:'1',    sum:false, crit:true  },
+  { id:3,  name:'工程桩及支护桩',         dur:42,  start:'2026-03-13', end:'2026-04-23', pre:'2',    sum:true,  crit:false },
+  { id:4,  name:'工程桩',                 dur:18,  start:'2026-03-13', end:'2026-03-30', pre:'2',    sum:false, crit:false, indent:1 },
+  { id:5,  name:'支护桩',                 dur:11,  start:'2026-03-31', end:'2026-04-10', pre:'4',    sum:false, crit:false, indent:1 },
+  { id:6,  name:'打降水井、降水',         dur:15,  start:'2026-04-08', end:'2026-04-22', pre:'4',    sum:false, crit:false },
+  { id:7,  name:'挑槽施工冠梁和支撑',    dur:7,   start:'2026-04-11', end:'2026-04-18', pre:'5',    sum:false, crit:false },
+  { id:8,  name:'冠梁支撑养护',          dur:5,   start:'2026-04-19', end:'2026-04-23', pre:'7',    sum:false, crit:false },
+  { id:9,  name:'塔吊安装',              dur:1,   start:'2026-04-14', end:'2026-04-14', pre:'4',    sum:false, crit:false },
+  { id:10, name:'基础和地下室施工',      dur:45,  start:'2026-04-30', end:'2026-06-13', pre:'8',    sum:true,  crit:true  },
+  { id:11, name:'基坑开挖',              dur:5,   start:'2026-04-24', end:'2026-04-28', pre:'8',    sum:false, crit:true,  indent:1 },
+  { id:12, name:'基坑验槽',              dur:1,   start:'2026-04-29', end:'2026-04-29', pre:'11',   sum:false, crit:false, indent:1 },
+  { id:13, name:'砖胎模垫层及防水',      dur:6,   start:'2026-04-29', end:'2026-05-04', pre:'12',   sum:false, crit:true,  indent:1 },
+  { id:14, name:'底板施工',              dur:9,   start:'2026-05-05', end:'2026-05-14', pre:'13',   sum:false, crit:true,  indent:1 },
+  { id:15, name:'地下室结构施工',        dur:15,  start:'2026-05-15', end:'2026-05-30', pre:'14',   sum:false, crit:true,  indent:1 },
+  { id:16, name:'基础验收',              dur:1,   start:'2026-05-22', end:'2026-05-22', pre:'15',   sum:false, crit:false, indent:1 },
+  { id:17, name:'换撑带施工',            dur:1,   start:'2026-05-22', end:'2026-05-22', pre:'15',   sum:false, crit:false, indent:1 },
+  { id:18, name:'拆除支撑（1-1）',       dur:3,   start:'2026-05-28', end:'2026-05-30', pre:'17',   sum:false, crit:false, indent:1 },
+  { id:19, name:'地下室外防水及回填',    dur:7,   start:'2026-06-05', end:'2026-06-11', pre:'18',   sum:false, crit:true,  indent:1 },
+  { id:20, name:'拆除支撑（2-2）',       dur:1,   start:'2026-06-12', end:'2026-06-12', pre:'19',   sum:false, crit:false, indent:1 },
+  { id:21, name:'拔除型钢',              dur:2,   start:'2026-06-12', end:'2026-06-13', pre:'20',   sum:false, crit:false, indent:1 },
+  { id:22, name:'地上主体结构',          dur:81,  start:'2026-05-31', end:'2026-08-20', pre:'15',   sum:true,  crit:true  },
+  { id:23, name:'夹层主体结构',          dur:7,   start:'2026-05-31', end:'2026-06-07', pre:'15',   sum:false, crit:true,  indent:1 },
+  { id:24, name:'首层主体结构',          dur:12,  start:'2026-05-31', end:'2026-06-12', pre:'15',   sum:false, crit:true,  indent:1 },
+  { id:25, name:'二层主体结构',          dur:12,  start:'2026-06-13', end:'2026-06-25', pre:'24',   sum:false, crit:true,  indent:1 },
+  { id:26, name:'三层主体结构',          dur:12,  start:'2026-06-26', end:'2026-07-08', pre:'25',   sum:false, crit:true,  indent:1 },
+  { id:27, name:'四层主体',              dur:12,  start:'2026-07-09', end:'2026-07-21', pre:'26',   sum:false, crit:true,  indent:1 },
+  { id:28, name:'五层主体',              dur:12,  start:'2026-07-22', end:'2026-08-03', pre:'27',   sum:false, crit:true,  indent:1 },
+  { id:29, name:'出屋面结构',            dur:5,   start:'2026-08-04', end:'2026-08-08', pre:'28',   sum:false, crit:true,  indent:1 },
+  { id:30, name:'地下室拆模、清理',      dur:10,  start:'2026-06-25', end:'2026-07-05', pre:'19',   sum:false, crit:false },
+  { id:31, name:'首层、夹层模板拆除清理',dur:7,   start:'2026-07-09', end:'2026-07-16', pre:'23',   sum:false, crit:false },
+  { id:32, name:'二层模板拆除、清理',    dur:5,   start:'2026-07-22', end:'2026-07-27', pre:'25',   sum:false, crit:false },
+  { id:33, name:'三层模板拆除、清理',    dur:5,   start:'2026-08-03', end:'2026-08-08', pre:'26',   sum:false, crit:false },
+  { id:34, name:'四层模板拆除、清理',    dur:5,   start:'2026-08-09', end:'2026-08-14', pre:'27',   sum:false, crit:false },
+  { id:35, name:'五层模板拆除、清理',    dur:5,   start:'2026-08-15', end:'2026-08-20', pre:'28',   sum:false, crit:false },
+  { id:36, name:'出屋面结构模板拆除',    dur:3,   start:'2026-08-15', end:'2026-08-18', pre:'29',   sum:false, crit:false },
+  { id:37, name:'物料提升机安装',        dur:1,   start:'2026-07-16', end:'2026-07-16', pre:'31',   sum:false, crit:false },
+  { id:38, name:'二次结构施工',          dur:82,  start:'2026-07-10', end:'2026-09-29', pre:'24',   sum:true,  crit:false },
+  { id:39, name:'地下室二次结构',        dur:14,  start:'2026-07-10', end:'2026-07-24', pre:'30',   sum:false, crit:false, indent:1 },
+  { id:40, name:'首层、夹层二次结构',    dur:15,  start:'2026-07-16', end:'2026-07-31', pre:'31',   sum:false, crit:false, indent:1 },
+  { id:41, name:'二层二次结构',          dur:15,  start:'2026-07-27', end:'2026-08-11', pre:'32',   sum:false, crit:false, indent:1 },
+  { id:42, name:'三层二次结构',          dur:15,  start:'2026-08-09', end:'2026-08-24', pre:'33',   sum:false, crit:false, indent:1 },
+  { id:43, name:'四层二次结构',          dur:15,  start:'2026-08-15', end:'2026-08-30', pre:'34',   sum:false, crit:false, indent:1 },
+  { id:44, name:'五层二次结构',          dur:15,  start:'2026-08-21', end:'2026-09-05', pre:'35',   sum:false, crit:false, indent:1 },
+  { id:45, name:'机房层二次结构',        dur:5,   start:'2026-08-19', end:'2026-08-24', pre:'29',   sum:false, crit:false, indent:1 },
+  { id:46, name:'主体验收',              dur:1,   start:'2026-09-06', end:'2026-09-07', pre:'44',   sum:false, crit:true  },
+  { id:47, name:'内檐抹灰',              dur:50,  start:'2026-09-08', end:'2026-10-28', pre:'46',   sum:false, crit:true  },
+  { id:48, name:'屋面施工',              dur:30,  start:'2026-08-28', end:'2026-09-27', pre:'29',   sum:false, crit:false },
+  { id:49, name:'塔吊拆除',              dur:1,   start:'2026-09-27', end:'2026-09-27', pre:'47',   sum:false, crit:false },
+  { id:50, name:'门窗工程',              dur:70,  start:'2026-09-14', end:'2026-11-23', pre:'46',   sum:false, crit:false },
+  { id:51, name:'外檐保温及幕墙',        dur:70,  start:'2026-09-14', end:'2026-11-23', pre:'46',   sum:false, crit:false },
+  { id:52, name:'物料提升机拆除',        dur:1,   start:'2026-10-30', end:'2026-10-30', pre:'47',   sum:false, crit:false },
+  { id:53, name:'给排水、消防工程',      dur:196, start:'2026-05-16', end:'2026-11-28', pre:'14',   sum:false, crit:false },
+];
+
+function renderSchedule() {
+  const tbody = document.getElementById('scheduleBody');
+  if (tbody.innerHTML.trim()) return;
+  let html = '';
+  TASKS.forEach(t => {
+    const indClass = t.indent === 1 ? 'ind1' : t.indent === 2 ? 'ind2' : '';
+    const sumClass = t.sum ? 'sum' : '';
+    const critDot = t.crit && !t.sum ? '<span class="crit-dot"></span>' : '';
+    const durText = t.dur === 0 ? '里程碑' : `${t.dur} days`;
+    html += `<tr class="${sumClass}">
+      <td>${t.id}</td>
+      <td class="${indClass}">${critDot}${t.name}</td>
+      <td><span class="dur-badge">${durText}</span></td>
+      <td>${t.start.replace(/-/g,'年').replace(/(\d{4})年(\d{2})年(\d{2})/,'$1年$2月$3日')}</td>
+      <td>${t.end.replace(/-/g,'年').replace(/(\d{4})年(\d{2})年(\d{2})/,'$1年$2月$3日')}</td>
+      <td style="color:var(--text-dim);font-size:11px;">${t.pre}</td>
+      <td><span class="chip pend"><i class="fas fa-clock" style="font-size:8px;"></i> 待开始</span></td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+// ── Gantt ──
+function renderGantt() {
+  const wrap = document.getElementById('ganttWrap');
+  if (wrap.innerHTML.trim()) return;
+
+  // Project start: 2026-03-10, end: 2026-11-30 = 265 days
+  const projStart = new Date('2026-03-10');
+  const projEnd = new Date('2026-11-30');
+  const totalDays = Math.ceil((projEnd - projStart) / 86400000) + 1;
+  const dayW = 5; // px per day (compact)
+  const taskColW = 220;
+  const durColW = 55;
+  const rowH = 26;
+
+  // Month groups
+  const months = [];
+  let d = new Date(projStart);
+  while (d <= projEnd) {
+    const y = d.getFullYear(), m = d.getMonth();
+    const label = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'][m];
+    const startOffset = Math.floor((d - projStart) / 86400000);
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    const remaining = Math.min(daysInMonth - d.getDate() + 1, totalDays - startOffset);
+    months.push({ label, startOffset, days: remaining });
+    d = new Date(y, m+1, 1);
+  }
+
+  let html = `<div style="min-width:${taskColW+durColW+totalDays*dayW}px;">`;
+
+  // Month header
+  html += `<div style="display:flex;background:rgba(0,18,50,0.97);border-bottom:1px solid rgba(0,212,255,0.15);position:sticky;top:0;z-index:20;">`;
+  html += `<div style="width:${taskColW}px;flex-shrink:0;padding:7px 11px;font-size:9px;font-weight:700;color:rgba(0,212,255,0.5);letter-spacing:0.12em;border-right:1px solid rgba(0,212,255,0.1);">任务名称</div>`;
+  html += `<div style="width:${durColW}px;flex-shrink:0;padding:7px 0;text-align:center;font-size:9px;font-weight:700;color:rgba(0,212,255,0.5);border-right:1px solid rgba(0,212,255,0.1);">工期</div>`;
+  months.forEach(m => {
+    html += `<div style="width:${m.days*dayW}px;flex-shrink:0;text-align:center;padding:7px 0;font-size:10px;font-weight:600;color:rgba(0,212,255,0.65);border-right:1px solid rgba(0,212,255,0.07);">${m.label}</div>`;
+  });
+  html += `</div>`;
+
+  // Rows
+  TASKS.forEach(t => {
+    const isSum = t.sum;
+    const isCrit = t.crit;
+    const rowBg = isSum ? 'rgba(0,28,60,0.5)' : 'transparent';
+    const nameColor = isSum ? '#fff' : (isCrit ? 'rgba(255,160,160,0.85)' : 'rgba(200,215,235,0.72)');
+    const nameFW = isSum ? '600' : '400';
+    const indent = t.indent === 1 ? 20 : t.indent === 2 ? 36 : 0;
+
+    const tStart = new Date(t.start);
+    const tEnd = new Date(t.end);
+    const startOff = Math.max(0, Math.floor((tStart - projStart) / 86400000));
+    const endOff = Math.floor((tEnd - projStart) / 86400000);
+    const barW = Math.max((endOff - startOff + 1) * dayW, 3);
+    const barX = startOff * dayW;
+
+    html += `<div style="display:flex;align-items:center;min-height:${rowH}px;border-bottom:1px solid rgba(0,212,255,0.035);background:${rowBg};">`;
+    html += `<div style="width:${taskColW}px;flex-shrink:0;padding:3px 11px 3px ${11+indent}px;border-right:1px solid rgba(0,212,255,0.05);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:${nameFW};color:${nameColor};">`;
+    if (isCrit && !isSum) html += `<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#ef4444;margin-right:4px;vertical-align:middle;"></span>`;
+    html += `${t.name}</div>`;
+    html += `<div style="width:${durColW}px;flex-shrink:0;text-align:center;font-size:10px;color:rgba(0,212,255,0.65);border-right:1px solid rgba(0,212,255,0.05);">${t.dur === 0 ? '0d' : t.dur+'d'}</div>`;
+    html += `<div style="flex:1;position:relative;height:${rowH}px;display:flex;align-items:center;">`;
+    // Month grid lines
+    months.forEach(m => {
+      html += `<div style="position:absolute;left:${m.startOffset*dayW}px;top:0;bottom:0;width:1px;background:rgba(0,212,255,0.04);"></div>`;
+    });
+    if (t.dur === 0) {
+      html += `<div style="position:absolute;left:${barX-5}px;width:10px;height:10px;background:var(--accent);transform:rotate(45deg);"></div>`;
+    } else if (isSum) {
+      html += `<div style="position:absolute;left:${barX}px;width:${barW}px;height:7px;background:transparent;border-top:2px solid #fff;border-left:2px solid #fff;border-right:2px solid #fff;"></div>`;
+    } else {
+      const bc = isCrit ? 'linear-gradient(90deg,rgba(239,68,68,0.75),rgba(239,68,68,0.45))' : 'linear-gradient(90deg,#1a9bb8,rgba(0,212,255,0.5))';
+      const bord = isCrit ? 'rgba(239,68,68,0.65)' : 'rgba(0,212,255,0.45)';
+      html += `<div style="position:absolute;left:${barX}px;width:${barW}px;height:13px;background:${bc};border:1px solid ${bord};"></div>`;
+    }
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  wrap.innerHTML = html;
+}
+
+// ── Network Diagram (SVG Map-Navigation Style) ──
+let netSvgScale = 1;
+function zoomNetworkSvg(factor) {
+  netSvgScale *= factor;
+  const container = document.getElementById('networkSvgContainer');
+  container.style.transform = `scale(${netSvgScale})`;
+  container.style.transformOrigin = 'top left';
+}
+function resetNetworkZoom() {
+  netSvgScale = 1;
+  const container = document.getElementById('networkSvgContainer');
+  container.style.transform = 'scale(1)';
+}
+
+function renderNetwork() {
+  const container = document.getElementById('networkSvgContainer');
+  if (container.dataset.rendered) return;
+  container.dataset.rendered = '1';
+
+  // Single-code-number network nodes with ES/EF/LS/LF/TF
+  const nodes = [
+    { id:1,  name:'开工',       dur:0,  es:0,  ef:0,  ls:0,  lf:0,  tf:0,  x:70,   y:380, crit:true  },
+    { id:2,  name:'施工准备',   dur:15, es:0,  ef:15, ls:0,  lf:15, tf:0,  x:210,  y:380, crit:true  },
+    { id:3,  name:'工程桩',     dur:18, es:15, ef:33, ls:20, lf:38, tf:5,  x:370,  y:180, crit:false },
+    { id:4,  name:'支护桩',     dur:11, es:33, ef:44, ls:38, lf:49, tf:5,  x:530,  y:120, crit:false },
+    { id:5,  name:'降水工程',   dur:15, es:33, ef:48, ls:34, lf:49, tf:1,  x:530,  y:240, crit:false },
+    { id:6,  name:'冠梁支撑',   dur:12, es:44, ef:56, ls:49, lf:61, tf:5,  x:690,  y:180, crit:false },
+    { id:7,  name:'塔吊安装',   dur:1,  es:33, ef:34, ls:60, lf:61, tf:27, x:530,  y:380, crit:false },
+    { id:8,  name:'基坑开挖',   dur:5,  es:56, ef:61, ls:56, lf:61, tf:0,  x:850,  y:180, crit:true  },
+    { id:9,  name:'基础垫层',   dur:6,  es:61, ef:67, ls:61, lf:67, tf:0,  x:1010, y:180, crit:true  },
+    { id:10, name:'底板施工',   dur:9,  es:67, ef:76, ls:67, lf:76, tf:0,  x:1170, y:180, crit:true  },
+    { id:11, name:'地下室结构', dur:15, es:76, ef:91, ls:76, lf:91, tf:0,  x:1330, y:280, crit:true  },
+    { id:12, name:'夹层结构',   dur:7,  es:91, ef:98, ls:91, lf:98, tf:0,  x:370,  y:520, crit:true  },
+    { id:13, name:'首层结构',   dur:12, es:91, ef:103,ls:91, lf:103,tf:0,  x:530,  y:520, crit:true  },
+    { id:14, name:'二层结构',   dur:12, es:103,ef:115,ls:103,lf:115,tf:0,  x:690,  y:520, crit:true  },
+    { id:15, name:'三层结构',   dur:12, es:115,ef:127,ls:115,lf:127,tf:0,  x:850,  y:520, crit:true  },
+    { id:16, name:'四层结构',   dur:12, es:127,ef:139,ls:127,lf:139,tf:0,  x:1010, y:520, crit:true  },
+    { id:17, name:'五层结构',   dur:12, es:139,ef:151,ls:139,lf:151,tf:0,  x:1170, y:520, crit:true  },
+    { id:18, name:'出屋面',     dur:5,  es:151,ef:156,ls:151,lf:156,tf:0,  x:1330, y:450, crit:true  },
+    { id:19, name:'二次结构',   dur:82, es:103,ef:185,ls:110,lf:192,tf:7,  x:690,  y:660, crit:false },
+    { id:20, name:'主体验收',   dur:1,  es:185,ef:186,ls:192,lf:193,tf:7,  x:850,  y:660, crit:false },
+    { id:21, name:'内檐抹灰',   dur:30, es:186,ef:216,ls:193,lf:223,tf:7,  x:1010, y:660, crit:false },
+    { id:22, name:'屋面施工',   dur:15, es:156,ef:171,ls:208,lf:223,tf:52, x:1170, y:660, crit:false },
+    { id:23, name:'门窗工程',   dur:20, es:186,ef:206,ls:203,lf:223,tf:17, x:1170, y:760, crit:false },
+    { id:24, name:'竣工验收',   dur:48, es:216,ef:264,ls:223,lf:271,tf:7,  x:1330, y:660, crit:false },
+  ];
+
+  const edges = [
+    { f:1, t:2, crit:true }, { f:2, t:3, crit:false }, { f:2, t:7, crit:false },
+    { f:3, t:4, crit:false }, { f:3, t:5, crit:false },
+    { f:4, t:6, crit:false }, { f:6, t:8, crit:true },
+    { f:8, t:9, crit:true }, { f:9, t:10, crit:true }, { f:10, t:11, crit:true },
+    { f:11, t:12, crit:true }, { f:11, t:13, crit:true },
+    { f:13, t:14, crit:true }, { f:14, t:15, crit:true }, { f:15, t:16, crit:true },
+    { f:16, t:17, crit:true }, { f:17, t:18, crit:true },
+    { f:13, t:19, crit:false }, { f:19, t:20, crit:false },
+    { f:20, t:21, crit:false }, { f:18, t:22, crit:false },
+    { f:20, t:23, crit:false },
+    { f:21, t:24, crit:false }, { f:22, t:24, crit:false }, { f:23, t:24, crit:false },
+  ];
+
+  const nodeMap = {};
+  nodes.forEach(n => nodeMap[n.id] = n);
+
+  // Build SVG
+  const W = 1450, H = 820;
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="font-family:'Noto Sans SC','Space Grotesk',sans-serif;">`;
+
+  // Defs: arrow markers, glow filters, gradients
+  svg += `<defs>
+    <marker id="arrowCrit" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#ef4444"/>
+    </marker>
+    <marker id="arrowNorm" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="7" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0,0 L10,4 L0,8 Z" fill="rgba(0,212,255,0.5)"/>
+    </marker>
+    <filter id="glowCrit" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feFlood flood-color="#ef4444" flood-opacity="0.35" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+      <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowNorm" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feFlood flood-color="#00d4ff" flood-opacity="0.25" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+      <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="critEdgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>`;
+
+  // Draw grid dots (map background)
+  for (let gx = 20; gx < W; gx += 40) {
+    for (let gy = 20; gy < H; gy += 40) {
+      svg += `<circle cx="${gx}" cy="${gy}" r="0.6" fill="rgba(0,212,255,0.08)"/>`;
+    }
+  }
+
+  // Draw edges as curved paths
+  edges.forEach(e => {
+    const from = nodeMap[e.f], to = nodeMap[e.t];
+    if (!from || !to) return;
+    const dx = to.x - from.x, dy = to.y - from.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    // Offset start/end from node center
+    const r = 32;
+    const ux = dx/dist, uy = dy/dist;
+    const sx = from.x + ux*r, sy = from.y + uy*r;
+    const ex = to.x - ux*r, ey = to.y - uy*r;
+    // Slight curve for non-straight edges
+    const mx = (sx+ex)/2, my = (sy+ey)/2;
+    const perpX = -(ey-sy), perpY = (ex-sx);
+    const pLen = Math.sqrt(perpX*perpX + perpY*perpY);
+    const curve = Math.abs(dy) > 30 ? 0 : (dist > 200 ? 15 : 8);
+    const cx = mx + (pLen > 0 ? perpX/pLen*curve : 0);
+    const cy = my + (pLen > 0 ? perpY/pLen*curve : 0);
+
+    if (e.crit) {
+      svg += `<path d="M${sx},${sy} Q${cx},${cy} ${ex},${ey}" fill="none" stroke="url(#critEdgeGrad)" stroke-width="2.5" marker-end="url(#arrowCrit)" opacity="0.85"/>`;
+      // Glow trail for critical path
+      svg += `<path d="M${sx},${sy} Q${cx},${cy} ${ex},${ey}" fill="none" stroke="#ef4444" stroke-width="6" opacity="0.08"/>`;
+    } else {
+      svg += `<path d="M${sx},${sy} Q${cx},${cy} ${ex},${ey}" fill="none" stroke="rgba(0,212,255,0.3)" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arrowNorm)"/>`;
+    }
+  });
+
+  // Draw nodes as single-code-number circles with info
+  nodes.forEach(n => {
+    const r = 28;
+    const filter = n.crit ? 'filter="url(#glowCrit)"' : 'filter="url(#glowNorm)"';
+    const strokeColor = n.crit ? '#ef4444' : 'rgba(0,212,255,0.6)';
+    const fillColor = n.crit ? 'rgba(239,68,68,0.08)' : 'rgba(0,212,255,0.05)';
+    const textColor = n.crit ? '#fca5a5' : 'rgba(180,220,245,0.9)';
+    const idColor = n.crit ? '#ef4444' : '#00d4ff';
+
+    // Outer circle
+    svg += `<circle cx="${n.x}" cy="${n.y}" r="${r}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="${n.crit?2:1.2}" ${filter}/>`;
+    // Inner divider line
+    svg += `<line x1="${n.x-r+6}" y1="${n.y-3}" x2="${n.x+r-6}" y2="${n.y-3}" stroke="${strokeColor}" stroke-width="0.5" opacity="0.4"/>`;
+    // Node ID number (top)
+    svg += `<text x="${n.x}" y="${n.y-11}" text-anchor="middle" fill="${idColor}" font-size="13" font-weight="700" font-family="'Space Grotesk',monospace">${n.id}</text>`;
+    // Node name (bottom)
+    const fontSize = n.name.length > 4 ? 8 : 9;
+    svg += `<text x="${n.x}" y="${n.y+10}" text-anchor="middle" fill="${textColor}" font-size="${fontSize}" font-weight="500">${n.name}</text>`;
+    // Duration badge below
+    svg += `<text x="${n.x}" y="${n.y+r+14}" text-anchor="middle" fill="rgba(160,180,204,0.5)" font-size="8" font-family="'Space Grotesk',monospace">${n.dur}d</text>`;
+
+    // ES/EF labels (top-left / top-right of circle)
+    svg += `<text x="${n.x-r-4}" y="${n.y-r+2}" text-anchor="end" fill="rgba(160,180,204,0.35)" font-size="7" font-family="'Space Grotesk',monospace">ES${n.es}</text>`;
+    svg += `<text x="${n.x+r+4}" y="${n.y-r+2}" text-anchor="start" fill="rgba(160,180,204,0.35)" font-size="7" font-family="'Space Grotesk',monospace">EF${n.ef}</text>`;
+
+    // TF badge (if > 0)
+    if (n.tf > 0) {
+      svg += `<rect x="${n.x+r+2}" y="${n.y+4}" width="24" height="14" rx="3" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.3)" stroke-width="0.5"/>`;
+      svg += `<text x="${n.x+r+14}" y="${n.y+14}" text-anchor="middle" fill="#f59e0b" font-size="7" font-weight="600" font-family="'Space Grotesk',monospace">TF${n.tf}</text>`;
+    }
+  });
+
+  // Summary bar at bottom
+  svg += `<rect x="30" y="${H-45}" width="${W-60}" height="32" rx="4" fill="rgba(0,212,255,0.04)" stroke="rgba(0,212,255,0.12)" stroke-width="1"/>`;
+  svg += `<text x="50" y="${H-24}" fill="rgba(0,212,255,0.7)" font-size="11" font-weight="600">⚓ 施工路径总览</text>`;
+  svg += `<text x="200" y="${H-24}" fill="rgba(160,180,204,0.6)" font-size="10">总工期 271 日历天 · 关键节点 14 个 · 关键路径：开工 → 施工准备 → 基坑开挖 → 基础垫层 → 底板 → 地下室 → 主体结构 → 出屋面</text>`;
+  svg += `<text x="${W-80}" y="${H-24}" fill="rgba(239,68,68,0.6)" font-size="10" font-weight="600">2026.03 — 2026.11</text>`;
+
+  svg += '</svg>';
+  container.innerHTML = svg;
+}
+
+// ── Crew Data ──
+const CREW_TYPES = [
+  { type:'钢筋工', color:'#ef4444', crews:[
+    { name:'钢筋工班组-1', tasks:[
+      { name:'地下室底板钢筋绑扎', loc:'地下室', start:'第18天', end:'第24天', dur:'7天' },
+      { name:'地下室墙体钢筋绑扎', loc:'地下室', start:'第25天', end:'第35天', dur:'11天' },
+      { name:'首层楼板钢筋绑扎', loc:'首层', start:'第55天', end:'第62天', dur:'8天' },
+      { name:'二层楼板钢筋绑扎', loc:'二层', start:'第75天', end:'第82天', dur:'8天' },
+      { name:'三层楼板钢筋绑扎', loc:'三层', start:'第95天', end:'第102天', dur:'8天' },
+    ]},
+    { name:'钢筋工班组-2', tasks:[
+      { name:'基础承台钢筋绑扎', loc:'基础', start:'第14天', end:'第20天', dur:'7天' },
+      { name:'地下室顶板钢筋', loc:'地下室', start:'第36天', end:'第44天', dur:'9天' },
+      { name:'夹层楼板钢筋', loc:'夹层', start:'第65天', end:'第72天', dur:'8天' },
+      { name:'四层楼板钢筋', loc:'四层', start:'第115天', end:'第122天', dur:'8天' },
+      { name:'五层楼板钢筋', loc:'五层', start:'第135天', end:'第142天', dur:'8天' },
+    ]},
+  ]},
+  { type:'木工', color:'#f59e0b', crews:[
+    { name:'木工班组-1', tasks:[
+      { name:'基础模板制作安装', loc:'基础', start:'第12天', end:'第18天', dur:'7天' },
+      { name:'地下室墙体模板', loc:'地下室', start:'第28天', end:'第38天', dur:'11天' },
+      { name:'首层柱模板安装', loc:'首层', start:'第50天', end:'第56天', dur:'7天' },
+      { name:'首层梁板模板', loc:'首层', start:'第57天', end:'第65天', dur:'9天' },
+      { name:'二层柱模板安装', loc:'二层', start:'第70天', end:'第76天', dur:'7天' },
+    ]},
+    { name:'木工班组-2', tasks:[
+      { name:'地下室顶板模板', loc:'地下室', start:'第38天', end:'第46天', dur:'9天' },
+      { name:'夹层模板安装', loc:'夹层', start:'第60天', end:'第68天', dur:'9天' },
+      { name:'二层梁板模板', loc:'二层', start:'第77天', end:'第85天', dur:'9天' },
+      { name:'三层柱模板', loc:'三层', start:'第90天', end:'第96天', dur:'7天' },
+      { name:'三层梁板模板', loc:'三层', start:'第97天', end:'第105天', dur:'9天' },
+    ]},
+  ]},
+  { type:'混凝土工', color:'#8b5cf6', crews:[
+    { name:'混凝土工班组-1', tasks:[
+      { name:'基础垫层混凝土浇筑', loc:'基础', start:'第11天', end:'第13天', dur:'3天' },
+      { name:'底板混凝土浇筑', loc:'地下室', start:'第22天', end:'第26天', dur:'5天' },
+      { name:'地下室墙体混凝土', loc:'地下室', start:'第40天', end:'第46天', dur:'7天' },
+      { name:'首层楼板混凝土', loc:'首层', start:'第63天', end:'第67天', dur:'5天' },
+      { name:'二层楼板混凝土', loc:'二层', start:'第83天', end:'第87天', dur:'5天' },
+    ]},
+    { name:'混凝土工班组-2', tasks:[
+      { name:'地下室顶板混凝土', loc:'地下室', start:'第47天', end:'第51天', dur:'5天' },
+      { name:'夹层楼板混凝土', loc:'夹层', start:'第69天', end:'第73天', dur:'5天' },
+      { name:'三层楼板混凝土', loc:'三层', start:'第103天', end:'第107天', dur:'5天' },
+      { name:'四层楼板混凝土', loc:'四层', start:'第123天', end:'第127天', dur:'5天' },
+      { name:'五层楼板混凝土', loc:'五层', start:'第143天', end:'第147天', dur:'5天' },
+    ]},
+  ]},
+  { type:'砌筑工', color:'#10b981', crews:[
+    { name:'砌筑工班组-1', tasks:[
+      { name:'地下室砌体填充墙', loc:'地下室', start:'第68天', end:'第82天', dur:'15天' },
+      { name:'首层砌体填充墙', loc:'首层', start:'第83天', end:'第97天', dur:'15天' },
+      { name:'二层砌体填充墙', loc:'二层', start:'第98天', end:'第112天', dur:'15天' },
+      { name:'三层砌体填充墙', loc:'三层', start:'第113天', end:'第127天', dur:'15天' },
+    ]},
+    { name:'砌筑工班组-2', tasks:[
+      { name:'夹层砌体填充墙', loc:'夹层', start:'第78天', end:'第92天', dur:'15天' },
+      { name:'四层砌体填充墙', loc:'四层', start:'第128天', end:'第142天', dur:'15天' },
+      { name:'五层砌体填充墙', loc:'五层', start:'第143天', end:'第157天', dur:'15天' },
+      { name:'机房层砌体', loc:'机房层', start:'第148天', end:'第153天', dur:'6天' },
+    ]},
+  ]},
+  { type:'抹灰工', color:'#06b6d4', crews:[
+    { name:'抹灰工班组-1', tasks:[
+      { name:'地下室内墙抹灰', loc:'地下室', start:'第180天', end:'第195天', dur:'16天' },
+      { name:'首层内墙抹灰', loc:'首层', start:'第181天', end:'第196天', dur:'16天' },
+      { name:'二层内墙抹灰', loc:'二层', start:'第197天', end:'第212天', dur:'16天' },
+      { name:'三层内墙抹灰', loc:'三层', start:'第213天', end:'第228天', dur:'16天' },
+    ]},
+    { name:'抹灰工班组-2', tasks:[
+      { name:'夹层内墙抹灰', loc:'夹层', start:'第185天', end:'第200天', dur:'16天' },
+      { name:'四层内墙抹灰', loc:'四层', start:'第229天', end:'第244天', dur:'16天' },
+      { name:'五层内墙抹灰', loc:'五层', start:'第245天', end:'第260天', dur:'16天' },
+    ]},
+  ]},
+  { type:'防水工', color:'#3b82f6', crews:[
+    { name:'防水工班组-1', tasks:[
+      { name:'底板防水施工', loc:'地下室', start:'第16天', end:'第20天', dur:'5天' },
+      { name:'地下室外墙防水', loc:'地下室', start:'第52天', end:'第58天', dur:'7天' },
+      { name:'屋面防水施工', loc:'屋面', start:'第172天', end:'第178天', dur:'7天' },
+      { name:'卫生间防水施工', loc:'各层', start:'第200天', end:'第210天', dur:'11天' },
+    ]},
+  ]},
+  { type:'水电工', color:'#f97316', crews:[
+    { name:'水电工班组-1', tasks:[
+      { name:'地下室水电预留预埋', loc:'地下室', start:'第30天', end:'第45天', dur:'16天' },
+      { name:'首层水电预留预埋', loc:'首层', start:'第55天', end:'第70天', dur:'16天' },
+      { name:'二层水电预留预埋', loc:'二层', start:'第75天', end:'第90天', dur:'16天' },
+      { name:'三层水电预留预埋', loc:'三层', start:'第95天', end:'第110天', dur:'16天' },
+    ]},
+    { name:'水电工班组-2', tasks:[
+      { name:'给排水干管安装', loc:'各层', start:'第160天', end:'第200天', dur:'41天' },
+      { name:'电气桥架安装', loc:'各层', start:'第165天', end:'第205天', dur:'41天' },
+      { name:'配电箱安装调试', loc:'各层', start:'第220天', end:'第240天', dur:'21天' },
+      { name:'系统联调联试', loc:'全楼', start:'第250天', end:'第260天', dur:'11天' },
+    ]},
+  ]},
+];
+
+let selectedCrew = null;
+
+function initCrew() {
+  const listEl = document.getElementById('crewList');
+  if (listEl.innerHTML.trim()) return;
+  renderCrewList('');
+}
+
+function renderCrewList(filter) {
+  const listEl = document.getElementById('crewList');
+  let html = '';
+  CREW_TYPES.forEach(ct => {
+    const filtered = ct.crews.filter(c => !filter || c.name.includes(filter) || ct.type.includes(filter));
+    if (!filtered.length) return;
+    html += `<div class="crew-type-group">
+      <div class="crew-type-header">
+        <div class="crew-type-dot" style="background:${ct.color};"></div>
+        ${ct.type}
+        <span class="crew-type-count">${ct.crews.length}</span>
+      </div>`;
+    filtered.forEach(c => {
+      html += `<div class="crew-item ${selectedCrew === c.name ? 'active' : ''}" onclick="selectCrew('${ct.type}','${c.name}','${ct.color}')">
+        ${c.name}
+        <span class="crew-item-tasks">${c.tasks.length} 项任务</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  listEl.innerHTML = html;
+}
+
+function filterCrew(val) {
+  renderCrewList(val.trim());
+}
+
+function selectCrew(typeName, crewName, color) {
+  selectedCrew = crewName;
+  // re-render list to update active state
+  const filter = document.getElementById('crewSearch').value;
+  renderCrewList(filter);
+
+  let crew = null, typeObj = null;
+  CREW_TYPES.forEach(ct => {
+    if (ct.type === typeName) {
+      typeObj = ct;
+      ct.crews.forEach(c => { if (c.name === crewName) crew = c; });
+    }
+  });
+  if (!crew) return;
+
+  const totalDays = crew.tasks.reduce((s,t) => s + parseInt(t.dur), 0);
+  const mainEl = document.getElementById('crewMain');
+  mainEl.innerHTML = `
+    <div class="crew-header">
+      <div style="width:40px;height:40px;background:${color}22;border:1px solid ${color}55;display:flex;align-items:center;justify-content:center;font-size:18px;color:${color};flex-shrink:0;">
+        <i class="fas fa-hard-hat"></i>
+      </div>
+      <div>
+        <div class="crew-name">${crewName}</div>
+        <div class="crew-meta">${typeName} · 孙园镇党群服务中心办公楼建设工程</div>
+      </div>
+    </div>
+    <div class="crew-stats">
+      <div class="crew-stat">
+        <div class="crew-stat-label">任务数</div>
+        <div class="crew-stat-value">${crew.tasks.length}</div>
+        <div class="crew-stat-sub">项施工任务</div>
+      </div>
+      <div class="crew-stat">
+        <div class="crew-stat-label">总工时</div>
+        <div class="crew-stat-value">${totalDays}</div>
+        <div class="crew-stat-sub">天</div>
+      </div>
+      <div class="crew-stat">
+        <div class="crew-stat-label">工种</div>
+        <div class="crew-stat-value" style="font-size:13px;">${typeName}</div>
+        <div class="crew-stat-sub">专业班组</div>
+      </div>
+      <div class="crew-stat">
+        <div class="crew-stat-label">状态</div>
+        <div class="crew-stat-value" style="font-size:13px;color:var(--amber);">待进场</div>
+        <div class="crew-stat-sub">按计划进场</div>
+      </div>
+    </div>
+    <div class="crew-timeline">
+      <div class="crew-tl-title"><i class="fas fa-list-ul" style="margin-right:5px;color:${color};"></i>任务明细 · ${crew.tasks.length} 项</div>
+      <div class="crew-task-list">
+        ${crew.tasks.map((t,i) => `
+          <div class="crew-task">
+            <div class="crew-task-num">${i+1}</div>
+            <div class="crew-task-dot" style="background:${color};"></div>
+            <div class="crew-task-name">${t.name}</div>
+            <div class="crew-task-loc"><i class="fas fa-map-marker-alt" style="margin-right:3px;color:${color};opacity:0.6;"></i>${t.loc}</div>
+            <div class="crew-task-time">${t.start} → ${t.end}</div>
+            <div class="crew-task-dur">${t.dur}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ── Time-Cost Optimization ──
+const TC_DATA = [
+  // 赶工区间（工期缩短，成本急剧上升）
+  { days:45, direct:42.8, indirect:2.1, total:44.9, mode:'crash', label:'极限赶工', risk:'极高' },
+  { days:50, direct:38.5, indirect:2.3, total:40.8, mode:'crash', label:'强力赶工', risk:'高' },
+  { days:55, direct:34.2, indirect:2.6, total:36.8, mode:'crash', label:'加速施工', risk:'中高' },
+  // 最优区间
+  { days:60, direct:29.6, indirect:2.9, total:32.5, mode:'normal', label:'合同工期', risk:'低', optimal:true },
+  { days:65, direct:27.8, indirect:3.1, total:30.9, mode:'normal', label:'适度宽松', risk:'低', recommend:true },
+  { days:70, direct:26.5, indirect:3.4, total:29.9, mode:'normal', label:'最优工期', risk:'极低', best:true },
+  // 延误区间（工期延长，间接成本上升）
+  { days:75, direct:26.2, indirect:3.7, total:29.9, mode:'normal', label:'略有延误', risk:'低' },
+  { days:80, direct:26.0, indirect:4.0, total:30.0, mode:'extend', label:'一般延误', risk:'中' },
+  { days:90, direct:25.8, indirect:4.5, total:30.3, mode:'extend', label:'较大延误', risk:'中高' },
+  { days:100, direct:25.6, indirect:5.0, total:30.6, mode:'extend', label:'严重延误', risk:'高' },
+  { days:120, direct:25.5, indirect:6.0, total:31.5, mode:'extend', label:'极度延误', risk:'极高' },
+];
+
+let tcChart = null;
+function renderTimeCost() {
+  const best = TC_DATA.find(d => d.best);
+  const contract = TC_DATA.find(d => d.optimal);
+  const min = TC_DATA.reduce((a,b) => a.total < b.total ? a : b);
+
+  // Cards
+  document.getElementById('tc-cards').innerHTML = [
+    { icon:'fa-clock', label:'合同工期', val: contract.days+'天', sub:'发包方要求', color:'var(--accent)' },
+    { icon:'fa-star', label:'最优工期', val: best.days+'天', sub:'成本最低点', color:'#f59e0b' },
+    { icon:'fa-coins', label:'最低总成本', val: min.total.toFixed(1)+'万元', sub:'直接+间接', color:'#10b981' },
+    { icon:'fa-percentage', label:'可节约成本', val: ((contract.total - best.total)/contract.total*100).toFixed(1)+'%', sub:'相比合同工期', color:'#a78bfa' },
+  ].map(c => `
+    <div style="border:1px solid rgba(255,255,255,0.08);background:rgba(4,18,37,0.7);padding:14px 16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <i class="fas ${c.icon}" style="color:${c.color};font-size:13px;"></i>
+        <span style="font-size:10px;color:var(--text-muted);letter-spacing:0.08em;">${c.label}</span>
+      </div>
+      <div style="font-size:22px;font-weight:700;color:${c.color};letter-spacing:-0.02em;">${c.val}</div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:3px;">${c.sub}</div>
+    </div>
+  `).join('');
+
+  // Show all data
+  let data = TC_DATA;
+
+  const labels = data.map(d => d.days+'天');
+  const directCosts = data.map(d => d.direct);
+  const indirectCosts = data.map(d => d.indirect);
+  const totalCosts = data.map(d => d.total);
+
+  // Annotation points
+  const bestIdx = data.findIndex(d => d.best);
+  const contractIdx = data.findIndex(d => d.optimal);
+
+  const ctx = document.getElementById('tcChart').getContext('2d');
+  if (tcChart) tcChart.destroy();
+
+  tcChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '总成本（万元）',
+          data: totalCosts,
+          borderColor: '#00d4ff',
+          backgroundColor: 'rgba(0,212,255,0.08)',
+          borderWidth: 2.5,
+          pointRadius: totalCosts.map((_, i) => (i === bestIdx || i === contractIdx) ? 8 : 4),
+          pointBackgroundColor: totalCosts.map((_, i) => {
+            if (i === bestIdx) return '#f59e0b';
+            if (i === contractIdx) return '#00d4ff';
+            return '#00d4ff';
+          }),
+          pointBorderColor: totalCosts.map((_, i) => {
+            if (i === bestIdx) return '#f59e0b';
+            if (i === contractIdx) return '#ffffff';
+            return '#00d4ff';
+          }),
+          pointBorderWidth: totalCosts.map((_, i) => (i === bestIdx || i === contractIdx) ? 2 : 1),
+          fill: true,
+          tension: 0.4,
+          order: 1,
+        },
+        {
+          label: '直接费用（万元）',
+          data: directCosts,
+          borderColor: '#ef4444',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [5,4],
+          pointRadius: 3,
+          pointBackgroundColor: '#ef4444',
+          fill: false,
+          tension: 0.4,
+          order: 2,
+        },
+        {
+          label: '间接费用（万元）',
+          data: indirectCosts,
+          borderColor: '#a78bfa',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [3,3],
+          pointRadius: 3,
+          pointBackgroundColor: '#a78bfa',
+          fill: false,
+          tension: 0.4,
+          order: 3,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: 'rgba(160,180,204,0.75)', font: { size: 11, family: "'Space Grotesk', sans-serif" }, boxWidth: 20, padding: 16 }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(4,18,37,0.95)',
+          borderColor: 'rgba(0,212,255,0.3)',
+          borderWidth: 1,
+          titleColor: '#00d4ff',
+          bodyColor: 'rgba(160,180,204,0.9)',
+          padding: 12,
+          callbacks: {
+            title: (items) => {
+              const idx = items[0].dataIndex;
+              const d = data[idx];
+              let tag = '';
+              if (d.best) tag = ' ⭐ 最优工期';
+              if (d.optimal) tag = ' 📋 合同工期';
+              return items[0].label + tag;
+            },
+            afterBody: (items) => {
+              const idx = items[0].dataIndex;
+              const d = data[idx];
+              return [`风险等级：${d.risk}`, `方案标签：${d.label}`];
+            }
+          }
+        },
+        annotation: undefined,
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(0,212,255,0.06)' },
+          ticks: { color: 'rgba(160,180,204,0.6)', font: { size: 11 } },
+          title: { display: true, text: '工期（天）', color: 'rgba(160,180,204,0.5)', font: { size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(0,212,255,0.06)' },
+          ticks: { color: 'rgba(160,180,204,0.6)', font: { size: 11 }, callback: v => v.toFixed(1)+'万' },
+          title: { display: true, text: '成本（万元）', color: 'rgba(160,180,204,0.5)', font: { size: 11 } }
+        }
+      }
+    }
+  });
+
+  // Recommendation
+  const saving = (contract.total - best.total).toFixed(1);
+  const extraDays = best.days - contract.days;
+  document.getElementById('tc-recommendation').innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:14px;">
+      <div style="width:36px;height:36px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="fas fa-lightbulb" style="color:#f59e0b;font-size:15px;"></i>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:6px;">AI 工期优化建议</div>
+        <div style="font-size:12px;color:rgba(160,180,204,0.85);line-height:1.8;">
+          基于本项目工程量（354㎡，合同价 63.66 万元），AI 分析得出：
+          <strong style="color:#00d4ff;">最优工期为 ${best.days} 天</strong>，
+          较合同工期（${contract.days}天）延长 ${extraDays} 天，可节约总成本约 
+          <strong style="color:#10b981;">${saving} 万元</strong>（节约率 ${((saving/contract.total)*100).toFixed(1)}%）。
+          <br>建议在投标时将施工计划工期设定为 <strong style="color:#f59e0b;">${best.days}—${best.days+5} 天</strong>，
+          既满足合同要求，又留有合理缓冲，可有效降低赶工风险和额外成本。
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Table
+  const riskColor = { '极低':'#10b981','低':'#10b981','中':'#f59e0b','中高':'#f97316','高':'#ef4444','极高':'#dc2626' };
+  document.getElementById('tc-table').innerHTML = `
+    <thead>
+      <tr style="border-bottom:1px solid rgba(0,212,255,0.15);">
+        ${['工期方案','工期（天）','直接费用','间接费用','总成本','节约/增加','风险等级','推荐'].map(h =>
+          `<th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:0.08em;">${h}</th>`
+        ).join('')}
+      </tr>
+    </thead>
+    <tbody>
+      ${data.map(d => {
+        const diff = (d.total - contract.total).toFixed(1);
+        const diffStr = diff > 0 ? `<span style="color:#ef4444;">+${diff}万</span>` : diff < 0 ? `<span style="color:#10b981;">${diff}万</span>` : `<span style="color:var(--text-muted);">—</span>`;
+        const tag = d.best ? '<span style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);padding:2px 7px;font-size:9px;">最优</span>' :
+                    d.optimal ? '<span style="background:rgba(0,212,255,0.1);color:#00d4ff;border:1px solid rgba(0,212,255,0.25);padding:2px 7px;font-size:9px;">合同</span>' : '';
+        const rowBg = d.best ? 'rgba(245,158,11,0.05)' : d.optimal ? 'rgba(0,212,255,0.04)' : 'transparent';
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);background:${rowBg};">
+          <td style="padding:8px 10px;color:var(--text);">${d.label}</td>
+          <td style="padding:8px 10px;font-weight:600;color:var(--accent);">${d.days}</td>
+          <td style="padding:8px 10px;color:var(--text-muted);">${d.direct.toFixed(1)}万</td>
+          <td style="padding:8px 10px;color:var(--text-muted);">${d.indirect.toFixed(1)}万</td>
+          <td style="padding:8px 10px;font-weight:600;color:var(--text);">${d.total.toFixed(1)}万</td>
+          <td style="padding:8px 10px;">${diffStr}</td>
+          <td style="padding:8px 10px;"><span style="color:${riskColor[d.risk]||'#fff'};font-size:11px;">${d.risk}</span></td>
+          <td style="padding:8px 10px;">${tag}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  `;
+}
+</script>
+</body>
+</html>
