@@ -1,25 +1,39 @@
 import { http, HttpResponse } from "msw";
+import {
+  createProject,
+  getProjectCostCurve,
+  getProjectGraph,
+  getProjectHeadcountCurve,
+  listProjects,
+  selectProjectSolution,
+} from "./apmMockStore";
 
 export const handlers = [
-  // 拦截 GET /api/projects 请求
-  http.get("/api/projects", () => {
-    return HttpResponse.json([
-      {
-        id: "1",
-        name: "Mock Project A",
-        city: "Beijing",
-        status: "active",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "2",
-        name: "Mock Project B",
-        city: "Shanghai",
-        status: "planning",
-        createdAt: new Date().toISOString(),
-      },
-    ]);
+  http.get("*/api/v1/projects", () => {
+    return HttpResponse.json(listProjects());
   }),
 
-  // 你可以在这里继续添加其他接口的拦截规则
+  http.post("*/api/v1/projects/jiuan", async ({ request }) => {
+    const payload = (await request.json()) as { project_name?: string };
+    const response = createProject(payload.project_name?.trim() || "新建项目");
+    return HttpResponse.json(response, { status: 201 });
+  }),
+
+  http.post("*/api/v1/projects/:projectId/solutions", async ({ params, request }) => {
+    const payload = (await request.json()) as { solution_id?: number };
+    const solution = selectProjectSolution(String(params.projectId), payload.solution_id ?? 0);
+    return HttpResponse.json(solution);
+  }),
+
+  http.get("*/api/v1/projects/:projectId/graph", ({ params }) => {
+    return HttpResponse.json(getProjectGraph(String(params.projectId)));
+  }),
+
+  http.get("*/api/v1/projects/:projectId/cost-curve", ({ params }) => {
+    return HttpResponse.json(getProjectCostCurve(String(params.projectId)));
+  }),
+
+  http.get("*/api/v1/projects/:projectId/headcount-curve", ({ params }) => {
+    return HttpResponse.json(getProjectHeadcountCurve(String(params.projectId)));
+  }),
 ];
