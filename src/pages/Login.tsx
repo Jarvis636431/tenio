@@ -1,6 +1,18 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Loader2, X } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Loader2,
+  Lock,
+  Mail,
+  Smartphone,
+  User,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,19 +32,28 @@ interface LoginPageProps {
   onLogin?: (form: LoginForm) => Promise<void>;
 }
 
+type LoginMode = "account" | "phone";
+
 function Login({ onLogin }: LoginPageProps) {
   const navigate = useNavigate();
   const [form, setForm] = useState<LoginForm>({ username: "", password: "" });
+  const [phoneForm, setPhoneForm] = useState({ phone: "", code: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [loginMode, setLoginMode] = useState<LoginMode>("account");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showForgotDialog, setShowForgotDialog] = useState(false);
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!form.username || !form.password) {
+    if (loginMode === "account" && (!form.username || !form.password)) {
       setError("请输入用户名和密码");
+      return;
+    }
+
+    if (loginMode === "phone" && (!phoneForm.phone || !phoneForm.code)) {
+      setError("请输入手机号和验证码");
       return;
     }
 
@@ -40,8 +61,11 @@ function Login({ onLogin }: LoginPageProps) {
     setError(null);
 
     try {
+      const payload =
+        loginMode === "account" ? form : { username: phoneForm.phone, password: phoneForm.code };
+
       if (onLogin) {
-        await onLogin(form);
+        await onLogin(payload);
       } else {
         await new Promise((resolve) => setTimeout(resolve, 800));
       }
@@ -54,114 +78,259 @@ function Login({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020c1b] relative overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-apm-grid">
+      <div className="bg-apm-ambient absolute inset-0" />
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute left-[18%] top-[18%] h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute bottom-[10%] right-[12%] h-[28rem] w-[28rem] rounded-full bg-blue-500/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md px-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-white mb-2">A.PM 智能管理平台</h1>
-          <p className="text-cyan-300/70 text-sm">智慧工地 · 项目管理</p>
-        </div>
-
-        <div className="bg-[#041332]/80 backdrop-blur-xl border border-cyan-900/40 rounded-xl p-8 shadow-2xl">
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-5">
-            <div className="space-y-2">
-              <label htmlFor="username" className="text-sm font-medium text-cyan-100/80">
-                用户名
-              </label>
-              <input
-                id="username"
-                type="text"
-                value={form.username}
-                onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
-                className={cn(
-                  "w-full h-11 px-4 rounded-lg bg-[#020c1b]/80 border border-cyan-900/50",
-                  "text-white placeholder:text-slate-500",
-                  "focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50",
-                  "transition-all duration-200",
-                )}
-                placeholder="请输入用户名"
-                disabled={isLoading}
-              />
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12">
+        <div className="w-full max-w-[420px]">
+          <div className="mb-12 flex items-center justify-center gap-4">
+            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/12 p-3 text-cyan-100 shadow-apm-glow">
+              <Building2 className="h-7 w-7" />
             </div>
-
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-cyan-100/80">
-                密码
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  className={cn(
-                    "w-full h-11 px-4 pr-11 rounded-lg bg-[#020c1b]/80 border border-cyan-900/50",
-                    "text-white placeholder:text-slate-500",
-                    "focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50",
-                    "transition-all duration-200",
-                  )}
-                  placeholder="请输入密码"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-400 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+            <div>
+              <div className="font-display text-[1.75rem] font-semibold tracking-[-0.03em] text-white">
+                A.<span className="text-cyan-300">PM</span> 智管
               </div>
+              <p className="mt-1 text-xs uppercase tracking-[0.24em] text-apm-muted">
+                Smart Construction Workspace
+              </p>
+            </div>
+          </div>
+
+          <div className="apm-topline rounded-[26px] border border-cyan-400/15 bg-[rgba(4,18,37,0.86)] p-8 shadow-apm-panel backdrop-blur-xl">
+            <div className="mb-7">
+              <h1 className="font-display text-xl font-semibold text-white">登录工作台</h1>
+              <p className="mt-1 text-sm text-apm-muted">
+                进入 A.PM AI 工作区，继续上传资料、生成方案与推进项目分析。
+              </p>
             </div>
 
-            <div className="flex justify-between items-center text-sm">
-              <button
-                type="button"
-                onClick={() => setShowForgotDialog(true)}
-                className="text-cyan-400/70 hover:text-cyan-400 transition-colors"
-              >
-                忘记密码？
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowRegisterDialog(true)}
-                className="text-cyan-400/70 hover:text-cyan-400 transition-colors"
-              >
-                立即注册
-              </button>
+            <div className="mb-6 flex border-b border-cyan-400/15">
+              {[
+                { id: "account" as const, label: "账号登录" },
+                { id: "phone" as const, label: "短信登录" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setLoginMode(tab.id);
+                    setError(null);
+                  }}
+                  className={cn(
+                    "flex-1 border-b-2 px-1 py-3 text-sm font-medium transition-colors",
+                    loginMode === tab.id
+                      ? "border-cyan-300 text-cyan-200"
+                      : "border-transparent text-apm-muted hover:text-white",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-11 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/20 transition-all duration-200"
-            >
-              {isLoading ? (
+            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-5">
+              {loginMode === "account" ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  登录中...
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="username"
+                      className="text-[11px] font-semibold uppercase tracking-[0.14em] text-apm-muted"
+                    >
+                      用户名
+                    </label>
+                    <div className="relative">
+                      <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-apm-dim" />
+                      <input
+                        id="username"
+                        type="text"
+                        value={form.username}
+                        onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
+                        className={cn(
+                          "h-12 w-full rounded-xl border border-cyan-400/15 bg-cyan-400/5 pl-11 pr-4",
+                          "text-white placeholder:text-apm-dim",
+                          "focus:border-cyan-300 focus:bg-cyan-400/8 focus:outline-none",
+                          "transition-all duration-200",
+                        )}
+                        placeholder="请输入用户名"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="password"
+                      className="text-[11px] font-semibold uppercase tracking-[0.14em] text-apm-muted"
+                    >
+                      密码
+                    </label>
+                    <div className="relative">
+                      <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-apm-dim" />
+                      <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={form.password}
+                        onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                        className={cn(
+                          "h-12 w-full rounded-xl border border-cyan-400/15 bg-cyan-400/5 pl-11 pr-12",
+                          "text-white placeholder:text-apm-dim",
+                          "focus:border-cyan-300 focus:bg-cyan-400/8 focus:outline-none",
+                          "transition-all duration-200",
+                        )}
+                        placeholder="请输入密码"
+                        disabled={isLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition-colors hover:bg-white/5 hover:text-cyan-200"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </>
               ) : (
-                "登录"
-              )}
-            </Button>
-          </form>
-        </div>
+                <>
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="phone"
+                      className="text-[11px] font-semibold uppercase tracking-[0.14em] text-apm-muted"
+                    >
+                      手机号
+                    </label>
+                    <div className="relative">
+                      <Smartphone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-apm-dim" />
+                      <input
+                        id="phone"
+                        type="tel"
+                        value={phoneForm.phone}
+                        onChange={(e) =>
+                          setPhoneForm((current) => ({ ...current, phone: e.target.value }))
+                        }
+                        className={cn(
+                          "h-12 w-full rounded-xl border border-cyan-400/15 bg-cyan-400/5 pl-11 pr-4",
+                          "text-white placeholder:text-apm-dim",
+                          "focus:border-cyan-300 focus:bg-cyan-400/8 focus:outline-none",
+                          "transition-all duration-200",
+                        )}
+                        placeholder="请输入手机号"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
 
-        <p className="text-center text-slate-500 text-xs mt-6">默认账号: admin / admin123</p>
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="code"
+                      className="text-[11px] font-semibold uppercase tracking-[0.14em] text-apm-muted"
+                    >
+                      验证码
+                    </label>
+                    <div className="flex gap-3">
+                      <div className="relative flex-1">
+                        <KeyRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-apm-dim" />
+                        <input
+                          id="code"
+                          type="text"
+                          value={phoneForm.code}
+                          onChange={(e) =>
+                            setPhoneForm((current) => ({ ...current, code: e.target.value }))
+                          }
+                          className={cn(
+                            "h-12 w-full rounded-xl border border-cyan-400/15 bg-cyan-400/5 pl-11 pr-4",
+                            "text-white placeholder:text-apm-dim",
+                            "focus:border-cyan-300 focus:bg-cyan-400/8 focus:outline-none",
+                            "transition-all duration-200",
+                          )}
+                          placeholder="输入验证码"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="rounded-xl border border-cyan-400/15 bg-cyan-400/10 px-4 text-sm font-medium text-cyan-200 transition-colors hover:bg-cyan-400/15"
+                      >
+                        发送验证码
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="flex items-center justify-between text-sm">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotDialog(true)}
+                  className="text-cyan-300/80 transition-colors hover:text-cyan-200"
+                >
+                  忘记密码？
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowRegisterDialog(true)}
+                  className="text-cyan-300/80 transition-colors hover:text-cyan-200"
+                >
+                  立即注册
+                </button>
+              </div>
+
+              {error && (
+                <p className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  {error}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="h-12 w-full rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 font-semibold tracking-[0.02em] text-slate-950 shadow-lg shadow-cyan-500/20 transition-all duration-200 hover:from-cyan-300 hover:to-sky-400"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    登录中...
+                  </>
+                ) : (
+                  <>
+                    进入工作台
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="my-6 flex items-center gap-4">
+              <div className="h-px flex-1 bg-cyan-400/15" />
+              <span className="text-[10px] uppercase tracking-[0.16em] text-apm-dim">
+                workspace access
+              </span>
+              <div className="h-px flex-1 bg-cyan-400/15" />
+            </div>
+
+            <div className="rounded-2xl border border-cyan-400/10 bg-cyan-400/6 px-4 py-3 text-sm text-apm-muted">
+              默认账号：<span className="text-white">admin</span> /{" "}
+              <span className="text-white">admin123</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <Dialog open={showForgotDialog} onOpenChange={setShowForgotDialog}>
-        <DialogContent className="bg-[#041332] border-cyan-900/50 text-white">
+        <DialogContent className="rounded-[24px] border-cyan-400/15 bg-[rgba(4,18,37,0.94)] text-white shadow-apm-panel backdrop-blur-xl">
           <DialogHeader>
-            <DialogTitle className="text-white">忘记密码</DialogTitle>
-            <DialogDescription className="text-cyan-100/60">
+            <DialogTitle className="font-display text-white">忘记密码</DialogTitle>
+            <DialogDescription className="text-apm-muted">
               输入您的注册邮箱，我们将发送重置密码链接
             </DialogDescription>
           </DialogHeader>
@@ -176,16 +345,17 @@ function Login({ onLogin }: LoginPageProps) {
               type="email"
               placeholder="请输入邮箱地址"
               className={cn(
-                "w-full h-11 px-4 rounded-lg bg-[#020c1b]/80 border border-cyan-900/50",
-                "text-white placeholder:text-slate-500",
-                "focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50",
+                "h-12 w-full rounded-xl border border-cyan-400/15 bg-cyan-400/5 px-4",
+                "text-white placeholder:text-apm-dim",
+                "focus:border-cyan-300 focus:bg-cyan-400/8 focus:outline-none",
               )}
               required
             />
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500"
+              className="h-11 w-full rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:from-cyan-300 hover:to-sky-400"
             >
+              <Mail className="mr-2 h-4 w-4" />
               发送重置链接
             </Button>
           </form>
@@ -193,16 +363,16 @@ function Login({ onLogin }: LoginPageProps) {
       </Dialog>
 
       <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
-        <DialogContent className="bg-[#041332] border-cyan-900/50 text-white max-w-md">
+        <DialogContent className="max-w-md rounded-[24px] border-cyan-400/15 bg-[rgba(4,18,37,0.94)] text-white shadow-apm-panel backdrop-blur-xl">
           <button
             onClick={() => setShowRegisterDialog(false)}
-            className="absolute right-4 top-4 text-slate-400 hover:text-white transition-colors"
+            className="absolute right-4 top-4 rounded-md p-1 text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
           <DialogHeader>
-            <DialogTitle className="text-white text-xl">立即注册</DialogTitle>
-            <DialogDescription className="text-cyan-100/60">
+            <DialogTitle className="font-display text-xl text-white">立即注册</DialogTitle>
+            <DialogDescription className="text-apm-muted">
               创建一个新账号开始使用 A.PM 智能管理平台
             </DialogDescription>
           </DialogHeader>
@@ -219,9 +389,9 @@ function Login({ onLogin }: LoginPageProps) {
                 type="text"
                 placeholder="请输入用户名"
                 className={cn(
-                  "w-full h-11 px-4 rounded-lg bg-[#020c1b]/80 border border-cyan-900/50",
-                  "text-white placeholder:text-slate-500",
-                  "focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50",
+                  "h-11 w-full rounded-xl border border-cyan-400/15 bg-cyan-400/5 px-4",
+                  "text-white placeholder:text-apm-dim",
+                  "focus:border-cyan-300 focus:bg-cyan-400/8 focus:outline-none",
                 )}
                 required
               />
@@ -232,9 +402,9 @@ function Login({ onLogin }: LoginPageProps) {
                 type="email"
                 placeholder="请输入邮箱地址"
                 className={cn(
-                  "w-full h-11 px-4 rounded-lg bg-[#020c1b]/80 border border-cyan-900/50",
-                  "text-white placeholder:text-slate-500",
-                  "focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50",
+                  "h-11 w-full rounded-xl border border-cyan-400/15 bg-cyan-400/5 px-4",
+                  "text-white placeholder:text-apm-dim",
+                  "focus:border-cyan-300 focus:bg-cyan-400/8 focus:outline-none",
                 )}
                 required
               />
@@ -245,9 +415,9 @@ function Login({ onLogin }: LoginPageProps) {
                 type="password"
                 placeholder="请输入密码（至少8位）"
                 className={cn(
-                  "w-full h-11 px-4 rounded-lg bg-[#020c1b]/80 border border-cyan-900/50",
-                  "text-white placeholder:text-slate-500",
-                  "focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50",
+                  "h-11 w-full rounded-xl border border-cyan-400/15 bg-cyan-400/5 px-4",
+                  "text-white placeholder:text-apm-dim",
+                  "focus:border-cyan-300 focus:bg-cyan-400/8 focus:outline-none",
                 )}
                 required
                 minLength={8}
@@ -259,9 +429,9 @@ function Login({ onLogin }: LoginPageProps) {
                 type="password"
                 placeholder="请再次输入密码"
                 className={cn(
-                  "w-full h-11 px-4 rounded-lg bg-[#020c1b]/80 border border-cyan-900/50",
-                  "text-white placeholder:text-slate-500",
-                  "focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50",
+                  "h-11 w-full rounded-xl border border-cyan-400/15 bg-cyan-400/5 px-4",
+                  "text-white placeholder:text-apm-dim",
+                  "focus:border-cyan-300 focus:bg-cyan-400/8 focus:outline-none",
                 )}
                 required
                 minLength={8}
@@ -269,7 +439,7 @@ function Login({ onLogin }: LoginPageProps) {
             </div>
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500"
+              className="h-11 w-full rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:from-cyan-300 hover:to-sky-400"
             >
               注册
             </Button>
