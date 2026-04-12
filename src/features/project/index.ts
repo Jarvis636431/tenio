@@ -18,7 +18,6 @@ export {
   createJiuanProject,
   selectSolution,
 } from "./services/project-api";
-export { createProjectWithDefaultSolution } from "./services/project-bootstrap";
 export {
   getFileList,
   uploadFile,

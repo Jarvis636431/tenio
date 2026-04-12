@@ -8,6 +8,7 @@ import {
   Clock3,
   FolderKanban,
   HardHat,
+  Loader2,
   PlayCircle,
   Search,
   Settings,
@@ -15,7 +16,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useProject, type Project } from "@/features/project";
+import { createJiuanProject, selectSolution, useProject, type Project } from "@/features/project";
+
+const DEFAULT_SOLUTION_ID = 0;
 
 type ProjectFilter = "all" | "active" | "completed" | "pending";
 
@@ -105,9 +108,10 @@ function deriveProjectMetrics(project: Project, index: number) {
 
 function ProjectsPage() {
   const navigate = useNavigate();
-  const { projects, setCurrentProject, isLoading } = useProject();
+  const { projects, setCurrentProject, addProject, isLoading } = useProject();
   const [activeFilter, setActiveFilter] = useState<ProjectFilter>("all");
   const [query, setQuery] = useState("");
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
@@ -141,6 +145,26 @@ function ProjectsPage() {
   const openProject = (project: Project) => {
     setCurrentProject(project);
     navigate(`/project/${project.id}`);
+  };
+
+  const handleCreateProject = async () => {
+    setIsCreatingProject(true);
+    try {
+      const response = await createJiuanProject({
+        project_name: `项目_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      });
+      await selectSolution(response.project_id, { solution_id: DEFAULT_SOLUTION_ID });
+      const nextProject: Project = {
+        id: response.project_id,
+        name: response.project_name,
+        status: "active",
+      };
+      addProject(nextProject);
+      setCurrentProject(nextProject);
+      navigate("/upload");
+    } finally {
+      setIsCreatingProject(false);
+    }
   };
 
   return (
@@ -198,11 +222,21 @@ function ProjectsPage() {
             </div>
 
             <Button
-              onClick={() => navigate("/upload")}
+              onClick={() => void handleCreateProject()}
+              disabled={isCreatingProject}
               className="h-12 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 px-5 font-semibold text-slate-950 hover:from-cyan-300 hover:to-sky-400"
             >
-              <CirclePlus className="mr-2 h-4 w-4" />
-              新建项目
+              {isCreatingProject ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  创建项目中...
+                </>
+              ) : (
+                <>
+                  <CirclePlus className="mr-2 h-4 w-4" />
+                  新建项目
+                </>
+              )}
             </Button>
           </div>
 
@@ -293,11 +327,21 @@ function ProjectsPage() {
                 你可以先创建一个新项目，上传基础设计资料后进入 AI 工作台继续生成施工组织设计方案。
               </p>
               <Button
-                onClick={() => navigate("/upload")}
+                onClick={() => void handleCreateProject()}
+                disabled={isCreatingProject}
                 className="mt-6 h-11 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:from-cyan-300 hover:to-sky-400"
               >
-                <CirclePlus className="mr-2 h-4 w-4" />
-                创建新项目
+                {isCreatingProject ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    创建项目中...
+                  </>
+                ) : (
+                  <>
+                    <CirclePlus className="mr-2 h-4 w-4" />
+                    创建新项目
+                  </>
+                )}
               </Button>
             </div>
           ) : (
@@ -407,11 +451,16 @@ function ProjectsPage() {
 
               <button
                 type="button"
-                onClick={() => navigate("/upload")}
+                onClick={() => void handleCreateProject()}
                 className="group flex min-h-[280px] flex-col items-center justify-center rounded-[24px] border border-dashed border-white/12 bg-apm-panel px-6 py-10 text-center shadow-apm-panel transition-all duration-200 hover:border-cyan-300/30 hover:bg-cyan-400/4"
+                disabled={isCreatingProject}
               >
                 <div className="rounded-2xl border border-cyan-400/10 bg-cyan-400/8 p-4 text-cyan-100 transition-transform duration-200 group-hover:scale-105">
-                  <CirclePlus className="h-7 w-7" />
+                  {isCreatingProject ? (
+                    <Loader2 className="h-7 w-7 animate-spin" />
+                  ) : (
+                    <CirclePlus className="h-7 w-7" />
+                  )}
                 </div>
                 <h2 className="mt-4 font-display text-xl text-white">创建新项目</h2>
                 <p className="mt-2 max-w-xs text-sm leading-6 text-apm-muted">

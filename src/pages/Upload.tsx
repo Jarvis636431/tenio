@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
-  createProjectWithDefaultSolution,
   FILE_CATEGORY_LABELS,
   type FileCategory,
   type FileStatus,
@@ -100,12 +99,12 @@ function formatFileSize(size: number) {
 
 function UploadPage() {
   const navigate = useNavigate();
-  const { currentProject, projects, addProject, setCurrentProject } = useProject();
+  const { currentProject } = useProject();
   const [files, setFiles] = useState<UploadQueueItem[]>([]);
   const [isAllUploading, setIsAllUploading] = useState(false);
   const [dragTarget, setDragTarget] = useState<FileCategory | null>(null);
 
-  const resolvedProjectId = currentProject?.id ?? projects[0]?.id ?? null;
+  const resolvedProjectId = currentProject?.id ?? null;
   const { uploadFile, uploadProgress, isUploading } = useUploads({ projectId: resolvedProjectId });
 
   const progressMap = useMemo(
@@ -166,28 +165,15 @@ function UploadPage() {
     setFiles((prev) => prev.filter((file) => file.id !== id));
   }, []);
 
-  const ensureProjectId = useCallback(async () => {
-    if (currentProject?.id) {
-      return currentProject.id;
-    }
-
-    const fallbackProject = projects[0];
-    if (fallbackProject) {
-      setCurrentProject(fallbackProject);
-      return fallbackProject.id;
-    }
-
-    const nextProject = await createProjectWithDefaultSolution();
-    addProject(nextProject);
-    setCurrentProject(nextProject);
-    return nextProject.id;
-  }, [addProject, currentProject, projects, setCurrentProject]);
-
   const uploadAll = useCallback(async () => {
+    if (!resolvedProjectId) {
+      navigate("/projects");
+      return;
+    }
+
     setIsAllUploading(true);
 
     try {
-      const projectId = await ensureProjectId();
       let hasUploadError = false;
 
       for (const uploadItem of files) {
@@ -204,7 +190,7 @@ function UploadPage() {
         try {
           await uploadFile({
             clientId: uploadItem.id,
-            projectId,
+            projectId: resolvedProjectId,
             file: uploadItem.file,
             category: uploadItem.category,
             description: "",
@@ -232,15 +218,15 @@ function UploadPage() {
       }
 
       if (!hasUploadError) {
-        navigate(`/project/${projectId}`);
+        navigate(`/project/${resolvedProjectId}`);
       }
     } finally {
       setIsAllUploading(false);
     }
-  }, [ensureProjectId, files, navigate, uploadFile]);
+  }, [files, navigate, resolvedProjectId, uploadFile]);
 
   const handleSkip = useCallback(() => {
-    navigate(currentProject?.id ? `/project/${currentProject.id}` : "/");
+    navigate(currentProject?.id ? `/project/${currentProject.id}` : "/projects");
   }, [currentProject, navigate]);
 
   const completedCount = files.filter((file) => file.status === "completed").length;
@@ -419,6 +405,31 @@ function UploadPage() {
       </div>
     );
   };
+
+  if (!resolvedProjectId || !currentProject) {
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-apm-grid">
+        <div className="bg-apm-ambient absolute inset-0" />
+        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-3xl items-center px-6 py-10">
+          <div className="w-full rounded-[28px] border border-white/8 bg-apm-panel p-8 text-center shadow-apm-panel backdrop-blur-md">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/10 bg-cyan-400/8 text-cyan-100">
+              <Upload className="h-6 w-6" />
+            </div>
+            <h1 className="font-display text-2xl text-white">当前没有可上传的项目</h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-apm-muted">
+              请先从项目控制台创建项目，再进入资料上传流程。上传页不再负责自动创建项目。
+            </p>
+            <Button
+              onClick={() => navigate("/projects")}
+              className="mt-6 h-11 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:from-cyan-300 hover:to-sky-400"
+            >
+              返回项目控制台
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-apm-grid">
