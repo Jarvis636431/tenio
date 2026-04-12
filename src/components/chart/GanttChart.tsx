@@ -7,7 +7,6 @@ import type { PlanTask, TimelineScale } from "@/types/domain/plan";
 
 interface GanttChartProps {
   data: PlanTask[];
-  onTaskDetail?: (task: PlanTask) => void;
   scale?: TimelineScale;
 }
 
@@ -224,7 +223,7 @@ const getWorkerBadgeClass = (worker: string): string => {
   );
 };
 
-export function GanttChart({ data, onTaskDetail, scale = "day" }: GanttChartProps) {
+export function GanttChart({ data, scale = "day" }: GanttChartProps) {
   const chartContentRef = useRef<HTMLDivElement>(null);
 
   const ROW_HEIGHT = 28; // h-7
@@ -290,10 +289,6 @@ export function GanttChart({ data, onTaskDetail, scale = "day" }: GanttChartProp
   useEffect(() => {
     chartContentRef.current?.scrollTo({ top: 0, left: 0 });
   }, [filteredData, timelineScale]);
-
-  const handleTaskClick = (task: PlanTask) => {
-    onTaskDetail?.(task);
-  };
 
   const totalRowsHeight = rowVirtualizer.getTotalSize();
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -408,14 +403,13 @@ export function GanttChart({ data, onTaskDetail, scale = "day" }: GanttChartProp
                       >
                         {/* 任务条 - 可点击 */}
                         <div
-                          className="absolute top-0.5 h-6 flex items-center justify-center text-white text-[9px] font-medium shadow-sm animate-fade-in cursor-pointer hover:shadow-lg transition-all duration-200 hover:brightness-110 z-[5]"
+                          className="absolute top-0.5 h-6 flex items-center justify-center text-white text-[9px] font-medium shadow-sm animate-fade-in hover:shadow-lg transition-all duration-200 hover:brightness-110 z-[5]"
                           style={{
                             left: `${item.startOffset * columnWidth}px`,
                             width: `${item.spanUnits * columnWidth}px`,
                             backgroundColor: item.color,
                             minWidth: `${columnWidth}px`,
                           }}
-                          onClick={() => handleTaskClick(item)}
                         >
                           <div className="px-2 text-center flex-1">
                             <div className="font-medium">{item.barLabel}</div>
