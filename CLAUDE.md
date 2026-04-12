@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A.PM 智能管理平台 - 智慧工地/项目管理前端，以"单项目单页面聚合"作为主工作台。
+A.PM 智能管理平台 - 智慧工地/项目管理前端。当前产品结构已经拆分为登录、项目控制台、上传入口和单项目工作台四层。
 
 ## Tech Stack
 
 - **Build Tool**: Vite + React SWC plugin
 - **Framework**: React 18 + TypeScript
-- **Styling**: Tailwind CSS + shadcn-ui (Radix UI primitives)
+- **Styling**: Tailwind CSS + A.PM design tokens in `src/index.css` + shadcn-ui (Radix primitives)
 - **Routing**: React Router v6
 - **State Management**: Zustand (persist middleware)
 - **Data Fetching**: React Query (TanStack Query)
@@ -108,7 +108,7 @@ src/
    - **Server State**: React Query owns project list, core graph, and chart data
 
 5. **AI Chat Flow**:
-   - `src/components/layout/AppLayout.tsx` mounts a persistent chat panel in the center column
+   - `src/components/layout/AppLayout.tsx` mounts a persistent chat panel in the left sidebar
    - `src/features/ai/hooks/useChat.ts` manages message state, SSE streaming, interrupt resume, voice input, and cross-project thread switching
    - Feature cross-imports should use `@/features/project` public exports, not deep imports
 
@@ -116,6 +116,20 @@ src/
    - Features own their layers (components/hooks/services/types/pages)
    - Cross-feature imports must use feature barrel (`@/features/ai`)
    - Shared utilities go in `src/lib`, shared infrastructure in `src/services`
+   - All exported hooks, services, and utility functions require JSDoc comments in Chinese (中文)
+
+7. **Design Evolution Rules**:
+   - `templete/` contains design references only, not production code
+   - `templete/apm_react_template` is historical reference only, not the implementation baseline
+   - `docs/frontend-evolution-guide.md` is the working guide for page mapping and agent constraints
+   - Prefer A.PM token utilities over ad-hoc colors when touching page-level UI
+
+8. **Definition of Done**: A page refactor is considered aligned when:
+   - It uses the shared A.PM token system
+   - Its structure matches the intended reference hierarchy
+   - Repeated visual patterns are extracted into reusable components
+   - No prototype HTML or inline CSS is copied verbatim
+   - Existing lint and typecheck pass
 
 ### Environment Variables
 
@@ -138,11 +152,20 @@ Notes:
 ### Route Structure
 
 - `/login` - Login page
-- `/` - Redirects to default project (`/project/project_001`)
+- `/projects` - Project dashboard / project list entry
+- `/upload` - New project intake and document upload
+- `/` - Redirects to `/projects`
 - `/project/:id` - Main project dashboard (Overview component)
+
+Current intended user flow:
+
+```text
+/login -> /projects -> /upload -> /project/:id
+```
 
 ### Key Files to Understand
 
+- `docs/frontend-evolution-guide.md` - Current UI evolution constraints and page mapping
 - `src/config/index.ts` - All environment-based configuration
 - `src/services/http.ts` - HTTP request wrapper with auth headers
 - `src/features/project/services/project-api.ts` - Main project API calls (core graph, curves)
@@ -152,6 +175,8 @@ Notes:
 - `src/features/project/hooks/useProject.ts` - Selected project state + project list query adapter
 - `src/stores/projectStore.ts` - Client-side project selection state
 - `src/features/ai/hooks/useChat.ts` - AI panel state, SSE parsing, voice input
+- `src/pages/Projects.tsx` - Project dashboard / project list page
+- `src/pages/Upload.tsx` - New-project intake flow
 - `src/features/project/pages/Overview.tsx` - Main dashboard page
 
 ### Utility Libraries
