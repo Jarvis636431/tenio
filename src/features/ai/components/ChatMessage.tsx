@@ -1,3 +1,4 @@
+import { Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
@@ -23,6 +24,7 @@ interface Message {
   id: string;
   content?: string;
   sender: "user" | "ai";
+  timestamp?: Date;
 }
 
 interface ChatMessageProps {
@@ -239,8 +241,8 @@ function renderMessageContent(
       className="break-words"
       components={{
         p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-        ul: ({ children }) => <ul className="list-disc pl-5 space-y-1">{children}</ul>,
-        ol: ({ children }) => <ol className="list-decimal pl-5 space-y-1">{children}</ol>,
+        ul: ({ children }) => <ul className="list-disc space-y-1 pl-5">{children}</ul>,
+        ol: ({ children }) => <ol className="list-decimal space-y-1 pl-5">{children}</ol>,
         li: ({ children }) => <li className="leading-relaxed">{children}</li>,
         blockquote: ({ children }) => (
           <blockquote className="border-l-2 border-cyan-500/40 pl-3 text-cyan-100/70">
@@ -296,26 +298,48 @@ export function ChatMessage({
     message.sender === "ai" && (!message.content || message.content.trim().length === 0);
   if (isEmpty) return null;
 
+  const isUser = message.sender === "user";
+  const timeLabel = message.timestamp
+    ? new Intl.DateTimeFormat("zh-CN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(message.timestamp)
+    : "";
+
   return (
     <div
-      className={cn("flex", {
-        "justify-end": message.sender === "user",
-        "justify-start": message.sender !== "user",
+      className={cn("flex items-start gap-2", {
+        "flex-row-reverse": isUser,
       })}
     >
       <div
-        className={cn("max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-line break-words", {
-          "bg-cyan-600/90 text-white": message.sender === "user",
-          "bg-[#03112a] text-cyan-100 border border-cyan-900/40": message.sender === "ai",
-        })}
-      >
-        {renderMessageContent(
-          message,
-          isThinking,
-          interruptDecision,
-          onInterruptDecision,
-          onResumeInterrupt,
+        className={cn(
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border text-[10px]",
+          {
+            "border-cyan-400/20 bg-cyan-400/10 text-cyan-300": !isUser,
+            "border-violet-400/30 bg-violet-400/10 text-violet-200": isUser,
+          },
         )}
+      >
+        {isUser ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+      </div>
+
+      <div className={cn("max-w-[82%]", { "text-right": isUser })}>
+        <div
+          className={cn("rounded-sm px-3 py-2 text-sm break-words whitespace-pre-line", {
+            "border border-violet-400/20 bg-violet-400/10 text-slate-100": isUser,
+            "border border-cyan-900/40 bg-[rgba(0,212,255,0.06)] text-cyan-100": !isUser,
+          })}
+        >
+          {renderMessageContent(
+            message,
+            isThinking,
+            interruptDecision,
+            onInterruptDecision,
+            onResumeInterrupt,
+          )}
+        </div>
+        {timeLabel && <div className="mt-1 text-[10px] text-apm-dim">{timeLabel}</div>}
       </div>
     </div>
   );

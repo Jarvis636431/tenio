@@ -1,5 +1,5 @@
-import { Sparkles } from "lucide-react";
-import { CardHeader, CardTitle } from "@/components/ui/card";
+import { Bot, Sparkles } from "lucide-react";
+import { useProject } from "@/features/project";
 
 interface ChatHeaderProps {
   mode: "query" | "schedule";
@@ -7,17 +7,36 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ mode, onModeChange }: ChatHeaderProps) {
+  const { currentProject } = useProject();
+
   return (
-    <CardHeader className="shrink-0 flex flex-row items-center justify-between space-y-0 pb-3">
-      <CardTitle className="text-lg font-bold flex items-center gap-2 text-cyan-100">
-        <Sparkles className="w-5 h-5 text-cyan-300" />
-        AI助手
-      </CardTitle>
-      <div className="inline-flex rounded-md border border-cyan-800/50 bg-[#03112a] p-0.5">
+    <div className="shrink-0 border-b border-apm bg-[hsl(var(--apm-bg-overlay))/0.68] px-4 py-3">
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-[linear-gradient(135deg,hsl(var(--apm-accent)),hsl(var(--apm-accent-strong)))] text-[#041225] shadow-apm-glow">
+          <Bot className="h-4 w-4" />
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-display text-sm font-semibold text-white">AI 助手</span>
+            <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+          </div>
+          <div className="truncate text-[11px] text-apm-muted">
+            {currentProject?.name ?? "未选择项目"}
+          </div>
+        </div>
+
+        <div className="ml-auto flex items-center gap-1.5 text-[10px] text-emerald-300">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          在线
+        </div>
+      </div>
+
+      <div className="mt-3 inline-flex rounded-sm border border-cyan-900/60 bg-[#03112a] p-0.5">
         <button
           type="button"
           onClick={() => onModeChange("query")}
-          className={`h-6 rounded px-2 text-[11px] transition ${
+          className={`h-7 rounded-sm px-2.5 text-[11px] transition ${
             mode === "query"
               ? "bg-cyan-500/20 text-cyan-100"
               : "text-cyan-300/70 hover:text-cyan-200"
@@ -28,7 +47,7 @@ export function ChatHeader({ mode, onModeChange }: ChatHeaderProps) {
         <button
           type="button"
           onClick={() => onModeChange("schedule")}
-          className={`h-6 rounded px-2 text-[11px] transition ${
+          className={`h-7 rounded-sm px-2.5 text-[11px] transition ${
             mode === "schedule"
               ? "bg-cyan-500/20 text-cyan-100"
               : "text-cyan-300/70 hover:text-cyan-200"
@@ -37,6 +56,6 @@ export function ChatHeader({ mode, onModeChange }: ChatHeaderProps) {
           调度模式
         </button>
       </div>
-    </CardHeader>
+    </div>
   );
 }
