@@ -1,4 +1,5 @@
-import { useMemo, useRef, useEffect, useState } from "react";
+import { useMemo, useRef, useEffect } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Badge } from "@/components/ui/badge";
 import { parseDate } from "@/lib/date";
 import { formatWorkerCount, isLagTask } from "@/lib/task";
@@ -224,13 +225,9 @@ const getWorkerBadgeClass = (worker: string): string => {
 };
 
 export function GanttChart({ data, onTaskDetail, scale = "day" }: GanttChartProps) {
-  const taskListRef = useRef<HTMLDivElement>(null);
   const chartContentRef = useRef<HTMLDivElement>(null);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const [scrollTop, setScrollTop] = useState(0);
 
   const ROW_HEIGHT = 28; // h-7
-  const [viewportHeight, setViewportHeight] = useState(ROW_HEIGHT * 12);
   const timelineScale = scale;
   const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
   const filteredData = useMemo(() => data.filter((task) => !isLagTask(task.task)), [data]);
@@ -283,72 +280,23 @@ export function GanttChart({ data, onTaskDetail, scale = "day" }: GanttChartProp
     };
   }, [filteredData, timelineScale]);
 
-  useEffect(() => {
-    const chartContent = chartContentRef.current;
-    if (!chartContent) return;
-
-    const updateViewportHeight = () => {
-      // 排除时间轴表头高度，得到任务内容区域可见高度
-      const contentHeight = Math.max(ROW_HEIGHT, chartContent.clientHeight - ROW_HEIGHT);
-      setViewportHeight(contentHeight);
-    };
-
-    updateViewportHeight();
-
-    if (typeof ResizeObserver !== "undefined") {
-      const observer = new ResizeObserver(updateViewportHeight);
-      observer.observe(chartContent);
-      return () => observer.disconnect();
-    }
-
-    window.addEventListener("resize", updateViewportHeight);
-    return () => window.removeEventListener("resize", updateViewportHeight);
-  }, [ROW_HEIGHT]);
-
-  const totalRows = timelineData.length;
-  const visibleRowCount = Math.max(1, Math.ceil(viewportHeight / ROW_HEIGHT) + 2);
-  const startRowIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2);
-  const endRowIndex = Math.min(totalRows, startRowIndex + visibleRowCount + 4);
-  const visibleRows = timelineData.slice(startRowIndex, endRowIndex);
-  const isScrollingRef = useRef(isScrolling);
+  const rowVirtualizer = useVirtualizer({
+    count: timelineData.length,
+    estimateSize: () => ROW_HEIGHT,
+    getScrollElement: () => chartContentRef.current,
+    overscan: 6,
+  });
 
   useEffect(() => {
-    isScrollingRef.current = isScrolling;
-  }, [isScrolling]);
-
-  // 同步滚动逻辑 - 只监听右侧滚动，同步到左侧
-  useEffect(() => {
-    const taskList = taskListRef.current;
-    const chartContent = chartContentRef.current;
-
-    if (!taskList || !chartContent) return;
-
-    const handleChartScroll = () => {
-      if (isScrollingRef.current) return;
-      setIsScrolling(true);
-      taskList.scrollTop = chartContent.scrollTop;
-      setScrollTop(chartContent.scrollTop);
-      setTimeout(() => setIsScrolling(false), 10);
-    };
-
-    // 重置滚动位置
-    taskList.scrollTop = 0;
-    chartContent.scrollTop = 0;
-
-    chartContent.addEventListener("scroll", handleChartScroll, {
-      passive: true,
-    });
-
-    return () => {
-      chartContent.removeEventListener("scroll", handleChartScroll);
-    };
-  }, [filteredData]); // 数据变化时重新建立同步并重置滚动位置
-
-  // 生成日期标头
+    chartContentRef.current?.scrollTo({ top: 0, left: 0 });
+  }, [filteredData, timelineScale]);
 
   const handleTaskClick = (task: PlanTask) => {
     onTaskDetail?.(task);
   };
+
+  const totalRowsHeight = rowVirtualizer.getTotalSize();
+  const virtualRows = rowVirtualizer.getVirtualItems();
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -362,49 +310,49 @@ export function GanttChart({ data, onTaskDetail, scale = "day" }: GanttChartProp
                 <span>任务名称</span>
                 <span className="text-cyan-300/80">工种/人数</span>
               </div>
-              {/* 任务列表（虚拟高度容器） */}
-              <div
-                ref={taskListRef}
-                className="flex-1 overflow-hidden border-r border-cyan-900/40 bg-[#03112a] relative"
-              >
-                <div style={{ height: totalRows * ROW_HEIGHT }} />
-                {visibleRows.map((item, i) => {
-                  const rowIndex = startRowIndex + i;
-                  const top = rowIndex * ROW_HEIGHT;
-                  return (
-                    <div
-                      key={item.id}
-                      className="border-b border-cyan-900/30 h-7 bg-[#04142d]/40 transition-colors relative group grid grid-cols-[minmax(0,1fr)_auto] items-center"
-                      style={{
-                        paddingLeft: "8px",
-                        paddingRight: "8px",
-                        position: "absolute",
-                        top,
-                        left: 0,
-                        right: 0,
-                      }}
-                    >
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/90" />
-                        <div className="font-medium text-[9px] text-cyan-200 truncate">
-                          {item.task}
+              <div className="flex-1 overflow-hidden border-r border-cyan-900/40 bg-[#03112a] relative">
+                <div style={{ height: totalRowsHeight, position: "relative" }}>
+                  {virtualRows.map((virtualRow) => {
+                    const item = timelineData[virtualRow.index];
+                    if (!item) return null;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="border-b border-cyan-900/30 h-7 bg-[#04142d]/40 transition-colors relative group grid grid-cols-[minmax(0,1fr)_auto] items-center"
+                        style={{
+                          paddingLeft: "8px",
+                          paddingRight: "8px",
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: virtualRow.size,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/90" />
+                          <div className="font-medium text-[9px] text-cyan-200 truncate">
+                            {item.task}
+                          </div>
+                        </div>
+                        <div className="ml-2 flex items-center gap-1 whitespace-nowrap">
+                          <Badge
+                            className={`rounded-xs text-[8px] px-1 py-0 ${getWorkerBadgeClass(
+                              item.worker || "",
+                            )}`}
+                          >
+                            {item.worker}
+                          </Badge>
+                          <span className="text-[8px] text-cyan-300/80">
+                            {formatWorkerCount(item.count)}人
+                          </span>
                         </div>
                       </div>
-                      <div className="ml-2 flex items-center gap-1 whitespace-nowrap">
-                        <Badge
-                          className={`rounded-xs text-[8px] px-1 py-0 ${getWorkerBadgeClass(
-                            item.worker || "",
-                          )}`}
-                        >
-                          {item.worker}
-                        </Badge>
-                        <span className="text-[8px] text-cyan-300/80">
-                          {formatWorkerCount(item.count)}人
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -436,7 +384,7 @@ export function GanttChart({ data, onTaskDetail, scale = "day" }: GanttChartProp
                 </div>
 
                 {/* 甘特图内容 */}
-                <div className="flex-1 relative" style={{ height: totalRows * ROW_HEIGHT }}>
+                <div className="flex-1 relative" style={{ height: totalRowsHeight }}>
                   {/* 网格背景使用渐变，避免为每行渲染大量时间单元格 */}
                   <div
                     className="absolute inset-0 pointer-events-none"
@@ -444,14 +392,19 @@ export function GanttChart({ data, onTaskDetail, scale = "day" }: GanttChartProp
                       backgroundImage: `repeating-linear-gradient(to right, rgba(56,189,248,0.12) 0, rgba(56,189,248,0.12) 1px, transparent 1px, transparent ${columnWidth}px), repeating-linear-gradient(to bottom, rgba(56,189,248,0.08) 0, rgba(56,189,248,0.08) 1px, transparent 1px, transparent ${ROW_HEIGHT}px)`,
                     }}
                   />
-                  {visibleRows.map((item, i) => {
-                    const rowIndex = startRowIndex + i;
-                    const top = rowIndex * ROW_HEIGHT;
+                  {virtualRows.map((virtualRow) => {
+                    const item = timelineData[virtualRow.index];
+                    if (!item) return null;
+
                     return (
                       <div
                         key={item.id}
                         className="absolute left-0 right-0 border-b border-cyan-900/30 hover:bg-[#0a234a]/35 transition-colors"
-                        style={{ top, height: ROW_HEIGHT }}
+                        style={{
+                          top: 0,
+                          height: virtualRow.size,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
                       >
                         {/* 任务条 - 可点击 */}
                         <div
