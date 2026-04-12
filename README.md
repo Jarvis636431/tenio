@@ -1,11 +1,16 @@
 # A.PM 智能管理平台
 
-智慧工地/项目管理前端，当前版本以“单项目单页面聚合”作为主工作台。
+智慧工地/项目管理前端。当前版本已经形成完整的工作流入口：
+
+- 登录页 `/login`
+- 项目控制台 `/projects`
+- 项目资料上传页 `/upload`
+- 单项目工作台 `/project/:id`
 
 ## 技术栈
 
 - Vite + React + TypeScript
-- Tailwind CSS + shadcn-ui（Radix UI）
+- Tailwind CSS + shadcn-ui（Radix primitives）
 - React Router + React Query
 - three.js + web-ifc/web-ifc-three
 - Recharts
@@ -14,20 +19,37 @@
 
 - 顶层路由：
   - `/login`
+  - `/projects`
   - `/`
   - `/upload`
   - `/project/:id`（项目工作台，核心为 `Overview`）
-- 应用主布局 `AppLayout` 为三栏：
-  - 左：极简侧边栏（logo + home）
-  - 中：常驻 AI ChatPanel
-  - 右：业务内容区
+- `/` 当前直接跳转到 `/projects`
+- 项目控制台页 `Projects`：
+  - 顶部导航栏
+  - 欢迎区和统计卡片
+  - 项目筛选 / 搜索
+  - 项目卡片列表
+  - 新建项目入口
+- 应用主布局 `AppLayout` 当前为 AI 工作台壳层：
+  - 左：AI 助手侧栏
+  - 右：项目工作区
 - 项目页 `Overview` 聚合：
-  - 项目头部 `ProjectHeader`
-  - 进度时间轴
-  - 资源趋势（人员/成本）
-  - 施工计划（甘特图/网络图）
-  - 模型预览
-  - 当日工序列表（与时间轴同步）
+  - 工作台头部
+  - Tab 控制条
+  - 施工计划（甘特图 / 网络图）
+  - 资源趋势（人员 / 成本）
+  - 文档 / 上传 / 资源面板
+
+## 当前用户流程
+
+```text
+/login
+  -> /projects
+  -> /upload   (新建项目)
+  -> /project/:id
+```
+
+上传页在成功上传全部资料后会直接进入对应项目工作台。
 
 ## 本地开发
 
@@ -66,21 +88,30 @@ VITE_VOLC_SECRET_KEY=your_volc_secret_key
 
 ```text
 src/
-  components/        # 跨 feature 共享的基础 UI / layout
+  components/        # 跨 feature 共享的基础 UI / layout / chart
   config/            # 运行时配置
   features/
     ai/              # AI 会话、语音、SSE 服务
     project/         # 项目工作台、上传、图表、项目服务
-  pages/             # 路由层页面（Login / Upload / NotFound）
+  pages/             # 路由层页面（Login / Projects / Upload / NotFound）
   routes/            # 路由编排
   services/          # 跨 feature 的 HTTP 基础设施
   stores/            # Zustand 状态
   lib/               # 纯工具函数
+  index.css          # A.PM 设计 token 与全局视觉基线
 ```
+
+## 设计系统与原型
+
+- A.PM 设计 token 与全局工具类集中在 `src/index.css`
+- 参考原型和设计指南位于 `templete/`
+- 当前演化约束和页面映射文档位于 `docs/frontend-evolution-guide.md`
+
+不要把 `templete/apm_react_template` 当作当前实现基线。主实现只在 `src/` 下。
 
 ## AI 模块说明
 
-AI 能力由常驻中栏聊天面板提供，入口位于 `src/components/layout/AppLayout.tsx`。
+AI 能力由常驻左侧聊天面板提供，入口位于 `src/components/layout/AppLayout.tsx`。
 
 - UI 组件：`src/features/ai/components/Chat.tsx`
 - 状态与交互编排：`src/features/ai/hooks/useChat.ts`
@@ -122,6 +153,8 @@ AI 能力由常驻中栏聊天面板提供，入口位于 `src/components/layout
 - 上传能力由 `src/features/project/hooks/useUploads.ts` 和 `src/features/project/services/uploads-api.ts` 统一提供
 - 上传页会优先复用当前项目；如果当前没有项目，会先创建一个默认项目后再上传文件
 - 文件分类常量统一来自 `src/features/project/types/uploads.ts`
+- 页面结构已对齐“必传核心资料 + 选传补充资料”的原型
+- 上传全部成功后会直接进入 `/project/:id`
 
 ## Mock
 
