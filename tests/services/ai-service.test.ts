@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractChatMessageContent } from "@/features/ai/services/ai-service";
+import { extractChatMessageContent } from "@/features/ai";
 
 describe("ai-service extractChatMessageContent", () => {
   describe("refetch type", () => {

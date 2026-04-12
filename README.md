@@ -15,6 +15,7 @@
 - 顶层路由：
   - `/login`
   - `/`
+  - `/upload`
   - `/project/:id`（项目工作台，核心为 `Overview`）
 - 应用主布局 `AppLayout` 为三栏：
   - 左：极简侧边栏（logo + home）
@@ -61,32 +62,49 @@ VITE_VOLC_SECRET_KEY=your_volc_secret_key
 
 运行时配置统一在 `src/config/index.ts` 管理（API Base、AI 地址、地图 Key、语音识别配置、环境标志等）。
 
+## 目录结构
+
+```text
+src/
+  components/        # 跨 feature 共享的基础 UI / layout
+  config/            # 运行时配置
+  features/
+    ai/              # AI 会话、语音、SSE 服务
+    project/         # 项目工作台、上传、图表、项目服务
+  pages/             # 路由层页面（Login / Upload / NotFound）
+  routes/            # 路由编排
+  services/          # 跨 feature 的 HTTP 基础设施
+  stores/            # Zustand 状态
+  lib/               # 纯工具函数
+```
+
 ## AI 模块说明
 
 AI 能力由常驻中栏聊天面板提供，入口位于 `src/components/layout/AppLayout.tsx`。
 
-- UI 组件：`src/components/ai/Chat.tsx`
-- 状态与交互编排：`src/components/ai/hooks/useChatPanel.ts`
-- AI 服务封装：`src/services/ai-service.ts`
+- UI 组件：`src/features/ai/components/Chat.tsx`
+- 状态与交互编排：`src/features/ai/hooks/useChat.ts`
+- 语音录制与识别：`src/features/ai/hooks/useVoice.ts`
+- AI 服务封装：`src/features/ai/services/ai-service.ts`
 
 ### AI Agent 初始化
 
 - 接口：`POST ${API_BASE.aiService}/api/agent/init`
-- 封装位置：`src/services/ai-service.ts` 中 `initAgent(payload)`
+- 封装位置：`src/features/ai/services/ai-service.ts` 中 `initAgent(payload)`
 - 入参：`project_id`、`base_date`、`solution_id`、`access_token`
 - `project_id` 由页面上下文传入，不做前端写死：
-  - 项目总览页 `src/pages/project/Overview.tsx` 使用 `resolvedProjectId`
+  - 项目总览页 `src/features/project/pages/Overview.tsx` 使用 `resolvedProjectId`
 
 ### AI 对话与流式返回
 
 - 新对话接口：`POST ${API_BASE.aiService}/api/agent/chat/sse`
 - 中断恢复接口：`POST ${API_BASE.aiService}/api/agent/chat/resume`
-- 前端通过 SSE 增量消费 AI 返回内容，主要逻辑在 `useChatPanel.ts`
+- 前端通过 SSE 增量消费 AI 返回内容，主要逻辑在 `src/features/ai/hooks/useChat.ts`
 - AI 返回 `refetch` 事件时，前端会刷新项目图谱、成本曲线和人数曲线缓存
 
 ### 语音输入
 
-- 语音录制与识别逻辑位于 `src/components/ai/hooks/useChatPanel.ts`
+- 语音录制与识别逻辑位于 `src/features/ai/hooks/useVoice.ts`
 - 识别服务配置来自 `VOLC_SPEECH`
 - 当前实际依赖的关键环境变量：
   - `VITE_VOLC_APP_ID`
@@ -96,7 +114,14 @@ AI 能力由常驻中栏聊天面板提供，入口位于 `src/components/layout
 ### 当前限制
 
 - AI 面板消息和线程状态当前保存在内存中，按项目维度切换，不持久化到本地存储
-- AI SSE 请求当前直接通过 `fetch` 发起，尚未统一接入 `src/services/http.ts`
+- AI SSE 请求已统一接入 `src/services/http.ts` 中的 `requestSse`
+
+## 上传流程
+
+- 上传入口页位于 `src/pages/Upload.tsx`
+- 上传能力由 `src/features/project/hooks/useUploads.ts` 和 `src/features/project/services/uploads-api.ts` 统一提供
+- 上传页会优先复用当前项目；如果当前没有项目，会先创建一个默认项目后再上传文件
+- 文件分类常量统一来自 `src/features/project/types/uploads.ts`
 
 ## Mock
 

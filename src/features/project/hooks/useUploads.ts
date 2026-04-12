@@ -20,11 +20,21 @@ interface UseUploadsOptions {
 }
 
 interface UploadProgress {
+  clientId?: string;
   fileId: string;
   fileName: string;
   percent: number;
   status: "pending" | "uploading" | "completed" | "error";
   error?: string;
+}
+
+interface UploadMutationPayload {
+  file: File;
+  category: FileCategory;
+  description?: string;
+  tags?: string[];
+  clientId?: string;
+  projectId?: string;
 }
 
 export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
@@ -73,18 +83,10 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
   });
 
   // 上传文件 Mutation
-  const uploadMutation = useMutation<
-    FileUploadResponse,
-    Error,
-    {
-      file: File;
-      category: FileCategory;
-      description?: string;
-      tags?: string[];
-    }
-  >({
+  const uploadMutation = useMutation<FileUploadResponse, Error, UploadMutationPayload>({
     mutationFn: async (payload) => {
-      if (!projectId) {
+      const resolvedProjectId = payload.projectId ?? projectId;
+      if (!resolvedProjectId) {
         throw new Error("缺少项目 ID");
       }
       const fileId = `upload-${Date.now()}`;
@@ -93,6 +95,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
       setUploadProgress((prev) => [
         ...prev,
         {
+          clientId: payload.clientId,
           fileId,
           fileName: payload.file.name,
           percent: 0,
@@ -101,7 +104,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
       ]);
 
       try {
-        const result = await uploadFile(projectId, payload, (percent) => {
+        const result = await uploadFile(resolvedProjectId, payload, (percent) => {
           setUploadProgress((prev) =>
             prev.map((p) => (p.fileId === fileId ? { ...p, percent, status: "uploading" } : p)),
           );

@@ -6,6 +6,7 @@ export { Overview } from "./pages/Overview";
 export { useProject } from "./hooks/useProject";
 export { useProjectCharts } from "./hooks/useProjectCharts";
 export { useProjectData } from "./hooks/useProjectData";
+export { useUploads, type UseUploadsReturn } from "./hooks/useUploads";
 export { projectQueryKeys } from "./queryKeys";
 
 export {
@@ -18,6 +19,14 @@ export {
   selectSolution,
 } from "./services/project-api";
 export { createProjectWithDefaultSolution } from "./services/project-bootstrap";
+export {
+  getFileList,
+  uploadFile,
+  deleteFile,
+  updateFile,
+  getFileStats,
+  getFileDownloadUrl,
+} from "./services/uploads-api";
 
 export type {
   Project,
@@ -26,3 +35,17 @@ export type {
   ProjectListResponse,
   ProjectListItem,
 } from "./types";
+export type {
+  FileCategory,
+  FileStatus,
+  ProjectFile,
+  FileUploadPayload,
+  FileUploadResponse,
+  FileListParams,
+  FileListResponse,
+  FileDeletePayload,
+  FileUpdatePayload,
+  FileCategoryStat,
+  FileStatsResponse,
+} from "./types/uploads";
+export { FILE_CATEGORY_LABELS, FILE_CATEGORY_ICONS } from "./types/uploads";

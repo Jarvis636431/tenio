@@ -6,7 +6,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "public/mockServiceWorker.js", "tests/**/*"] },
+  { ignores: ["dist", "public/mockServiceWorker.js"] },
   {
     extends: [
       js.configs.recommended,
@@ -76,6 +76,21 @@ export default tseslint.config(
           ],
         },
       ],
+    },
+  },
+  {
+    files: ["tests/**/*.{ts,tsx}"],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        afterEach: "readonly",
+        beforeEach: "readonly",
+        describe: "readonly",
+        expect: "readonly",
+        it: "readonly",
+        vi: "readonly",
+      },
     },
   },
   {

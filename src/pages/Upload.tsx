@@ -1,104 +1,154 @@
-import { useState, useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, X, FileText, Image, File, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import {
+  createProjectWithDefaultSolution,
+  FILE_CATEGORY_LABELS,
+  type FileCategory,
+  type FileStatus,
+  useProject,
+  useUploads,
+} from "@/features/project";
 
-type FileCategory = "drawing" | "document" | "contract" | "photo" | "bim" | "other";
-
-const FILE_CATEGORY_LABELS: Record<FileCategory, string> = {
-  drawing: "图纸",
-  document: "文档",
-  contract: "合同",
-  photo: "照片",
-  bim: "BIM模型",
-  other: "其他",
-};
-
-interface UploadFile {
+interface UploadQueueItem {
   id: string;
   file: File;
   category: FileCategory;
-  progress: number;
-  status: "pending" | "uploading" | "completed" | "error";
+  status: FileStatus;
+  error?: string;
 }
 
 const CATEGORIES: FileCategory[] = ["drawing", "document", "contract", "photo", "bim", "other"];
+const UPLOAD_ACCEPT =
+  ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.bmp,.dwg,.dxf,.ifc,.rvt,.zip,.rar";
+
+function createQueueItem(file: File): UploadQueueItem {
+  return {
+    id: `file-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    file,
+    category: "other",
+    status: "pending",
+  };
+}
 
 function UploadPage() {
   const navigate = useNavigate();
-  const [files, setFiles] = useState<UploadFile[]>([]);
+  const { currentProject, projects, addProject, setCurrentProject } = useProject();
+  const [files, setFiles] = useState<UploadQueueItem[]>([]);
   const [isAllUploading, setIsAllUploading] = useState(false);
+
+  const resolvedProjectId = currentProject?.id ?? projects[0]?.id ?? null;
+  const { uploadFile, uploadProgress, isUploading } = useUploads({ projectId: resolvedProjectId });
+
+  const progressMap = useMemo(
+    () =>
+      new Map(
+        uploadProgress
+          .filter((item) => item.clientId)
+          .map((item) => [item.clientId as string, item]),
+      ),
+    [uploadProgress],
+  );
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
-    const newFiles: UploadFile[] = selectedFiles.map((file) => ({
-      id: `file-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      file,
-      category: "other" as FileCategory,
-      progress: 0,
-      status: "pending",
-    }));
-    setFiles((prev) => [...prev, ...newFiles]);
+    setFiles((prev) => [...prev, ...selectedFiles.map(createQueueItem)]);
     event.target.value = "";
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    const newFiles: UploadFile[] = droppedFiles.map((file) => ({
-      id: `file-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      file,
-      category: "other" as FileCategory,
-      progress: 0,
-      status: "pending",
-    }));
-    setFiles((prev) => [...prev, ...newFiles]);
+  const handleDrop = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    const droppedFiles = Array.from(event.dataTransfer.files);
+    setFiles((prev) => [...prev, ...droppedFiles.map(createQueueItem)]);
   }, []);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
+  const handleDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
   }, []);
 
   const removeFile = useCallback((id: string) => {
-    setFiles((prev) => prev.filter((f) => f.id !== id));
+    setFiles((prev) => prev.filter((file) => file.id !== id));
   }, []);
 
   const updateFileCategory = useCallback((id: string, category: FileCategory) => {
-    setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, category } : f)));
+    setFiles((prev) => prev.map((file) => (file.id === id ? { ...file, category } : file)));
   }, []);
+
+  const ensureProjectId = useCallback(async () => {
+    if (currentProject?.id) {
+      return currentProject.id;
+    }
+
+    const fallbackProject = projects[0];
+    if (fallbackProject) {
+      setCurrentProject(fallbackProject);
+      return fallbackProject.id;
+    }
+
+    const nextProject = await createProjectWithDefaultSolution();
+    addProject(nextProject);
+    setCurrentProject(nextProject);
+    return nextProject.id;
+  }, [addProject, currentProject, projects, setCurrentProject]);
 
   const uploadAll = useCallback(async () => {
     setIsAllUploading(true);
-    for (const uploadFile of files) {
-      if (uploadFile.status !== "pending") continue;
 
-      setFiles((prev) =>
-        prev.map((f) => (f.id === uploadFile.id ? { ...f, status: "uploading" } : f)),
-      );
+    try {
+      const projectId = await ensureProjectId();
 
-      for (let i = 1; i <= 10; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
+      for (const uploadItem of files) {
+        if (uploadItem.status !== "pending" && uploadItem.status !== "error") {
+          continue;
+        }
+
         setFiles((prev) =>
-          prev.map((f) => (f.id === uploadFile.id ? { ...f, progress: i * 10 } : f)),
+          prev.map((file) =>
+            file.id === uploadItem.id ? { ...file, status: "uploading", error: undefined } : file,
+          ),
         );
-      }
 
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === uploadFile.id ? { ...f, status: "completed", progress: 100 } : f,
-        ),
-      );
+        try {
+          await uploadFile({
+            clientId: uploadItem.id,
+            projectId,
+            file: uploadItem.file,
+            category: uploadItem.category,
+            description: "",
+          });
+
+          setFiles((prev) =>
+            prev.map((file) =>
+              file.id === uploadItem.id ? { ...file, status: "completed", error: undefined } : file,
+            ),
+          );
+        } catch (error) {
+          setFiles((prev) =>
+            prev.map((file) =>
+              file.id === uploadItem.id
+                ? {
+                    ...file,
+                    status: "error",
+                    error: error instanceof Error ? error.message : "上传失败",
+                  }
+                : file,
+            ),
+          );
+        }
+      }
+    } finally {
+      setIsAllUploading(false);
     }
-    setIsAllUploading(false);
-  }, [files]);
+  }, [ensureProjectId, files, uploadFile]);
 
   const handleSkip = useCallback(() => {
-    navigate("/");
-  }, [navigate]);
+    navigate(currentProject?.id ? `/project/${currentProject.id}` : "/");
+  }, [currentProject, navigate]);
 
-  const completedCount = files.filter((f) => f.status === "completed").length;
+  const completedCount = files.filter((file) => file.status === "completed").length;
   const allCompleted = files.length > 0 && completedCount === files.length;
 
   const getFileIcon = (file: File) => {
@@ -108,62 +158,64 @@ function UploadPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020c1b] relative overflow-hidden p-6">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020c1b] p-6">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
       </div>
 
       <div className="relative z-10 w-full max-w-2xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-white mb-2">上传项目资料</h1>
-          <p className="text-cyan-300/70 text-sm">请上传您的项目相关文件，支持多文件上传</p>
+        <div className="mb-8 text-center">
+          <h1 className="mb-2 text-3xl font-semibold text-white">上传项目资料</h1>
+          <p className="text-sm text-cyan-300/70">请上传您的项目相关文件，支持多文件上传</p>
         </div>
 
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           className={cn(
-            "border-2 border-dashed border-cyan-900/60 rounded-xl p-8 text-center",
+            "rounded-xl border-2 border-dashed border-cyan-900/60 p-8 text-center",
             "bg-[#041332]/50 backdrop-blur-sm transition-all duration-200",
             "hover:border-cyan-500/60 hover:bg-[#041332]/70",
           )}
         >
-          <Upload className="h-12 w-12 text-cyan-400/60 mx-auto mb-4" />
-          <p className="text-cyan-100/80 mb-2">拖拽文件到此处，或</p>
+          <Upload className="mx-auto mb-4 h-12 w-12 text-cyan-400/60" />
+          <p className="mb-2 text-cyan-100/80">拖拽文件到此处，或</p>
           <label>
             <input
               type="file"
               multiple
               className="hidden"
               onChange={handleFileSelect}
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.bmp,.dwg,.dxf,.ifc,.rvt,.zip,.rar"
+              accept={UPLOAD_ACCEPT}
             />
-            <span className="inline-block px-4 py-2 bg-cyan-600/20 text-cyan-400 rounded-lg cursor-pointer hover:bg-cyan-600/30 transition-colors">
+            <span className="inline-block cursor-pointer rounded-lg bg-cyan-600/20 px-4 py-2 text-cyan-400 transition-colors hover:bg-cyan-600/30">
               选择文件
             </span>
           </label>
-          <p className="text-slate-500 text-xs mt-3">支持 PDF、Word、Excel、图片、BIM模型等文件</p>
+          <p className="mt-3 text-xs text-slate-500">支持 PDF、Word、Excel、图片、BIM模型等文件</p>
         </div>
 
         {files.length > 0 && (
           <div className="mt-6 space-y-3">
             {files.map((uploadFile) => {
               const FileIcon = getFileIcon(uploadFile.file);
+              const progress = progressMap.get(uploadFile.id);
+
               return (
                 <div
                   key={uploadFile.id}
-                  className="bg-[#041332]/70 backdrop-blur-sm border border-cyan-900/40 rounded-lg p-4"
+                  className="rounded-lg border border-cyan-900/40 bg-[#041332]/70 p-4 backdrop-blur-sm"
                 >
                   <div className="flex items-center gap-4">
-                    <FileIcon className="h-10 w-10 text-cyan-400/70 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-white text-sm truncate">{uploadFile.file.name}</p>
+                    <FileIcon className="h-10 w-10 flex-shrink-0 text-cyan-400/70" />
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center justify-between">
+                        <p className="truncate text-sm text-white">{uploadFile.file.name}</p>
                         {uploadFile.status !== "uploading" && (
                           <button
                             onClick={() => removeFile(uploadFile.id)}
-                            className="text-slate-400 hover:text-red-400 transition-colors"
+                            className="text-slate-400 transition-colors hover:text-red-400"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -173,17 +225,17 @@ function UploadPage() {
                       <div className="flex items-center gap-3">
                         <select
                           value={uploadFile.category}
-                          onChange={(e) =>
-                            updateFileCategory(uploadFile.id, e.target.value as FileCategory)
+                          onChange={(event) =>
+                            updateFileCategory(uploadFile.id, event.target.value as FileCategory)
                           }
                           disabled={
                             uploadFile.status === "uploading" || uploadFile.status === "completed"
                           }
-                          className="text-sm bg-[#020c1b]/80 border border-cyan-900/50 rounded px-2 py-1 text-cyan-100/80 disabled:opacity-50"
+                          className="rounded border border-cyan-900/50 bg-[#020c1b]/80 px-2 py-1 text-sm text-cyan-100/80 disabled:opacity-50"
                         >
-                          {CATEGORIES.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {FILE_CATEGORY_LABELS[cat]}
+                          {CATEGORIES.map((category) => (
+                            <option key={category} value={category}>
+                              {FILE_CATEGORY_LABELS[category]}
                             </option>
                           ))}
                         </select>
@@ -192,13 +244,18 @@ function UploadPage() {
                           <CheckCircle className="h-4 w-4 text-green-400" />
                         )}
                         {uploadFile.status === "uploading" && (
-                          <Loader2 className="h-4 w-4 text-cyan-400 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin text-cyan-400" />
+                        )}
+                        {uploadFile.status === "error" && (
+                          <span className="text-xs text-red-400">
+                            {uploadFile.error ?? "上传失败，请重试"}
+                          </span>
                         )}
                       </div>
 
                       {uploadFile.status !== "pending" && (
                         <Progress
-                          value={uploadFile.progress}
+                          value={uploadFile.status === "completed" ? 100 : (progress?.percent ?? 0)}
                           className="mt-2 h-1 [&>div]:bg-gradient-to-r [&>div]:from-cyan-500 [&>div]:to-blue-500"
                         />
                       )}
@@ -210,20 +267,20 @@ function UploadPage() {
           </div>
         )}
 
-        <div className="flex gap-4 mt-8">
+        <div className="mt-8 flex gap-4">
           <Button
             onClick={handleSkip}
             variant="outline"
-            className="flex-1 h-11 border-cyan-900/50 text-cyan-100/80 hover:bg-cyan-900/20 hover:text-white"
+            className="h-11 flex-1 border-cyan-900/50 text-cyan-100/80 hover:bg-cyan-900/20 hover:text-white"
           >
             稍后上传
           </Button>
           <Button
             onClick={() => void uploadAll()}
-            disabled={files.length === 0 || isAllUploading || allCompleted}
-            className="flex-1 h-11 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium shadow-lg shadow-cyan-500/20"
+            disabled={files.length === 0 || isAllUploading || isUploading || allCompleted}
+            className="h-11 flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 font-medium text-white shadow-lg shadow-cyan-500/20 hover:from-cyan-500 hover:to-blue-500"
           >
-            {isAllUploading ? (
+            {isAllUploading || isUploading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 上传中...
@@ -237,13 +294,13 @@ function UploadPage() {
         </div>
 
         {allCompleted && (
-          <div className="text-center mt-4">
-            <p className="text-green-400 text-sm mb-3">所有文件上传完成！</p>
+          <div className="mt-4 text-center">
+            <p className="mb-3 text-sm text-green-400">所有文件上传完成！</p>
             <Button
-              onClick={() => navigate("/")}
+              onClick={() => navigate(resolvedProjectId ? `/project/${resolvedProjectId}` : "/")}
               className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500"
             >
-              进入首页
+              进入项目
             </Button>
           </div>
         )}
