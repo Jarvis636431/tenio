@@ -12,7 +12,6 @@
 - Vite + React + TypeScript
 - Tailwind CSS + shadcn-ui（Radix primitives）
 - React Router + React Query
-- three.js + web-ifc/web-ifc-three
 - Recharts
 
 ## 当前页面结构（精简版）
@@ -49,7 +48,7 @@
   -> /project/:id
 ```
 
-上传页在成功上传全部资料后会直接进入对应项目工作台。
+上传页在当前实现中会先展示一段“AI 生成中”状态，随后返回 `/projects`。
 
 ## 本地开发
 
@@ -92,7 +91,8 @@ src/
   config/            # 运行时配置
   features/
     ai/              # AI 会话、语音、SSE 服务
-    project/         # 项目工作台、上传、图表、项目服务
+    project/         # 项目工作台、图表、项目服务
+    upload/          # 文件上传与上传结果管理
   pages/             # 路由层页面（Login / Projects / Upload / NotFound）
   routes/            # 路由编排
   services/          # 跨 feature 的 HTTP 基础设施
@@ -149,12 +149,12 @@ AI 能力由常驻左侧聊天面板提供，入口位于 `src/components/layout
 
 ## 上传流程
 
-- 上传入口页位于 `src/pages/Upload.tsx`
-- 上传能力由 `src/features/project/hooks/useUploads.ts` 和 `src/features/project/services/uploads-api.ts` 统一提供
-- 上传页会优先复用当前项目；如果当前没有项目，会先创建一个默认项目后再上传文件
-- 文件分类常量统一来自 `src/features/project/types/uploads.ts`
+- 上传入口页位于 `src/features/upload/pages/UploadPage.tsx`
+- 上传能力由 `src/features/upload/hooks/useUploads.ts` 和 `src/features/upload/services/uploads-api.ts` 提供
+- 当前上传能力仍基于前端 mock store 实现，主要用于演示上传流程与状态
+- 文件分类常量统一来自 `src/features/upload/types/uploads.ts`
 - 页面结构已对齐“必传核心资料 + 选传补充资料”的原型
-- 上传全部成功后会直接进入 `/project/:id`
+- 上传全部成功后会进入生成中状态，并在结束后返回 `/projects`
 
 ## Mock
 

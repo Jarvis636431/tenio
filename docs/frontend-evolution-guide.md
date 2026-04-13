@@ -122,7 +122,7 @@ Reference:
 
 Target:
 
-- `src/pages/Upload.tsx`
+- `src/features/upload/pages/UploadPage.tsx`
 
 Current state:
 
@@ -130,7 +130,7 @@ Current state:
 - stronger upload-state visuals
 - structured file list cards
 - AI-generation guidance state
-- successful upload now navigates directly to `/project/:id`
+- successful upload currently enters a generated-state sequence and then returns to `/projects`
 
 Remaining work:
 
@@ -203,7 +203,7 @@ Completed:
 
 1. Stabilize design tokens in `src/index.css`
 2. Align `AppLayout`, `Overview`, and `ProjectTabBar` with the workspace shell
-3. Rework `Upload.tsx` using the upload prototype
+3. Rework `UploadPage.tsx` using the upload prototype
 4. Rework `Login.tsx` using the login prototype
 5. Refine AI sidebar structure and console panel
 6. Add and route a dashboard/projects page
