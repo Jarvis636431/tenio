@@ -42,7 +42,7 @@ const TABS: Array<{
 
 export function ProjectTabBar({ activeTab, onChange, onExport, onRegenerate }: ProjectTabBarProps) {
   return (
-    <div className="apm-topline shrink-0 border border-apm bg-apm-card shadow-apm-panel">
+    <div className="shrink-0 border border-apm bg-apm-card shadow-apm-panel">
       <div className="flex items-center gap-2 px-3 lg:gap-4 lg:px-4">
         <div className="flex min-w-0 flex-1 items-center gap-0 overflow-x-auto">
           {TABS.map((tab) => {
