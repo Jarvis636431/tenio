@@ -241,7 +241,7 @@ function ProjectsPage() {
         </div>
 
         {/* Filter Bar */}
-        <div className="mb-4.5 flex items-center gap-2.5">
+        <div className="mb-5 flex items-center gap-2.5">
           {(Object.keys(FILTER_LABELS) as ProjectFilter[]).map((filter) => (
             <button
               key={filter}
@@ -288,7 +288,7 @@ function ProjectsPage() {
                 className="flex cursor-pointer flex-col border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] transition-all hover:border-cyan-400 hover:bg-cyan-400/5"
               >
                 {/* Header */}
-                <div className="flex items-start gap-3 border-b border-cyan-400/10 px-4.5 pt-4.5 pb-3.5">
+                <div className="flex items-start gap-3 border-b border-cyan-400/10 px-5 pt-5 pb-3">
                   <div
                     className="flex h-10 w-10 items-center justify-center rounded-lg text-[18px]"
                     style={{
@@ -308,7 +308,7 @@ function ProjectsPage() {
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 px-4.5 py-3.5">
+                <div className="flex-1 px-5 py-4">
                   <div className="mb-3 flex justify-between">
                     <div className="flex flex-col">
                       <span className="text-[9px] uppercase tracking-[0.1em] text-apm-dim">
@@ -393,7 +393,7 @@ function ProjectsPage() {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center gap-2 border-t border-cyan-400/10 px-4.5 py-2.5">
+                <div className="flex items-center gap-2 border-t border-cyan-400/10 px-5 py-2.5">
                   <span
                     className={cn(
                       "rounded border px-2 py-0.5 text-[10px] font-semibold",
