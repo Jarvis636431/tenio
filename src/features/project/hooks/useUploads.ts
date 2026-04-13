@@ -1,18 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getFileList,
-  uploadFile,
-  deleteFile,
-  updateFile,
-  getFileStats,
-} from "../services/uploads-api";
+import { getFileList, uploadFile, deleteFile, updateFile, getFileStats } from "@/features/project";
 import type {
   FileCategory,
   FileListParams,
   ProjectFile,
   FileUploadResponse,
-} from "../types/uploads";
+} from "@/features/project";
 
 interface UseUploadsOptions {
   projectId: string | null | undefined;

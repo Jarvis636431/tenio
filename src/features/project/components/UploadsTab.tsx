@@ -1,7 +1,10 @@
 import { useCallback, useRef, useState } from "react";
-import { useUploads } from "../hooks/useUploads";
-import type { FileCategory } from "../types/uploads";
-import { FILE_CATEGORY_LABELS, FILE_CATEGORY_ICONS } from "../types/uploads";
+import {
+  useUploads,
+  type FileCategory,
+  FILE_CATEGORY_LABELS,
+  FILE_CATEGORY_ICONS,
+} from "@/features/project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";

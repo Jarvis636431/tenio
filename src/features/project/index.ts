@@ -4,10 +4,15 @@
 export { Overview } from "./pages/Overview";
 
 export { useProject } from "./hooks/useProject";
+export { useProjectExport } from "./hooks/useProjectExport";
 export { useProjectCharts } from "./hooks/useProjectCharts";
 export { useProjectData } from "./hooks/useProjectData";
 export { useUploads, type UseUploadsReturn } from "./hooks/useUploads";
 export { projectQueryKeys } from "./queryKeys";
+
+export { ProjectTrendChart } from "./components/ProjectTrendChart";
+export { ProjectTabBar } from "./components/ProjectTabBar";
+export { UploadsTab } from "./components/UploadsTab";
 
 export {
   getProjectList,

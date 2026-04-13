@@ -36,24 +36,70 @@ Notes:
 
 ## Import Rules
 
-### Allowed
+### 统一使用 Barrel 导入
 
-- Inside a feature, use relative imports for the feature's own internals.
-- Outside a feature, import from the feature barrel:
+所有 feature 内部和跨 feature 的导入都必须通过 feature barrel，禁止使用相对路径深入 feature 内部模块。
+
+**正确：**
 
 ```ts
-import { useProject } from "@/features/project";
+// feature 内部导入
+import { useProjectData } from "@/features/project";
+
+// 跨 feature 导入
 import { useChat } from "@/features/ai";
+import { getProjectList } from "@/features/project";
 ```
 
-### Disallowed
-
-- Deep-importing another feature's internals:
+**错误：**
 
 ```ts
-import { useProject } from "@/features/project/hooks/useProject";
-import { getProcessInfo } from "@/features/project/services/project-api";
+// 禁止使用相对路径深入 feature 内部
+import { useProjectData } from "../hooks/useProjectData";
+import { getProjectList } from "./services/project-api";
+import type { FileCategory } from "../types/uploads";
 ```
+
+### 原理
+
+Barrel 导入提供了：
+
+- **稳定的公共 API**：模块内部重构（如移动文件）不影响消费者
+- **清晰的边界**：通过 barrel 导出的才是真正公共的接口
+- **可维护性**：修改内部结构时只需更新 barrel export，无需追踪所有消费者
+
+### Barrel Export 要求
+
+每个 feature 的 `index.ts` 必须：
+
+1. 导出该 feature 的所有公共组件、hooks、services、types
+2. 使用命名的 barrel 导出（非 default），便于 tree-shaking
+3. 不导出 internal（以 `@internal` 注释标记）的实现细节
+
+**正确示例：**
+
+```ts
+// index.ts
+export { Overview } from "./pages/Overview";
+export { useProject, useProjectData } from "./hooks";
+export type { Project, ProjectListResponse } from "./types";
+// 不导出 internal 实现
+// export { _internalHelper } from "./internal"; // ❌ 禁止
+```
+
+### Disallowed Patterns
+
+- 深入导入其他 feature 的内部模块：
+
+  ```ts
+  import { useProject } from "@/features/project/hooks/useProject";
+  ```
+
+- 使用相对路径绕过 barrel：
+
+  ```ts
+  import { getProjectList } from "../services/project-api";
+  ```
 
 ## Public Barrel Strategy
 

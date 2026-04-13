@@ -1,11 +1,9 @@
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { useProject } from "./useProject";
-import { getProjectCoreGraph } from "../services/project-api";
+import { useProject, getProjectCoreGraph, projectQueryKeys } from "@/features/project";
 import type { PlanTask } from "@/types/domain/plan";
 import type { CoreGraphResponse } from "@/types/domain/schedulepro";
-import { projectQueryKeys } from "../queryKeys";
 
 interface UseProjectDataOptions {
   projectId?: string;

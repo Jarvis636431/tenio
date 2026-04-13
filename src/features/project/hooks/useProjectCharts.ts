@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getProjectCostCurve, getProjectHeadcountCurve } from "../services/project-api";
-import { projectQueryKeys } from "../queryKeys";
+import {
+  getProjectCostCurve,
+  getProjectHeadcountCurve,
+  projectQueryKeys,
+} from "@/features/project";
 
 interface UseProjectChartsOptions {
   projectId: string | null | undefined;

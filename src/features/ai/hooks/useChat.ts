@@ -7,11 +7,7 @@ import {
   getProjectCostCurve,
   getProjectHeadcountCurve,
 } from "@/features/project";
-import {
-  chatWithAgentStream,
-  resumeAgentStream,
-  extractChatMessageContent,
-} from "../services/ai-service";
+import { chatWithAgentStream, resumeAgentStream, extractChatMessageContent } from "@/features/ai";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVoice } from "./useVoice";
 import { createMessageId } from "@/lib/utils";

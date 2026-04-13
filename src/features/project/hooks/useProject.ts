@@ -2,9 +2,13 @@ import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { useProjectStore } from "@/stores/projectStore";
-import { getProjectList } from "../services/project-api";
-import type { Project, ProjectListItem, ProjectListResponse } from "../types";
-import { projectQueryKeys } from "../queryKeys";
+import {
+  getProjectList,
+  projectQueryKeys,
+  type Project,
+  type ProjectListItem,
+  type ProjectListResponse,
+} from "@/features/project";
 
 function mapProjectList(response: ProjectListResponse): Project[] {
   return response.map((item) => ({

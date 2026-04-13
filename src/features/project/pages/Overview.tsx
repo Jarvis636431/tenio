@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { formatIsoDate } from "@/lib/date";
 import { sortBySeqNo } from "@/lib/array";
-import { useProjectExport } from "../hooks/useProjectExport";
-import { useProjectData } from "../hooks/useProjectData";
-import { useProjectCharts } from "../hooks/useProjectCharts";
-import { ProjectTrendChart } from "../components/ProjectTrendChart";
-import { ProjectTabBar } from "../components/ProjectTabBar";
-import { UploadsTab } from "../components/UploadsTab";
+import {
+  useProjectExport,
+  useProjectData,
+  useProjectCharts,
+  ProjectTrendChart,
+  ProjectTabBar,
+  UploadsTab,
+} from "@/features/project";
 import { GanttChart } from "@/components/chart/GanttChart";
 import { NetworkDiagram } from "@/components/chart/NetworkDiagram";
 import { Skeleton } from "@/components/ui/skeleton";

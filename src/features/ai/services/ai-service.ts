@@ -5,7 +5,7 @@ import type {
   AgentInitResponse,
   AgentResumePayload,
   AgentChatPayload,
-} from "../types";
+} from "@/features/ai";
 
 const AI_BASE_URL = API_BASE.aiService;
 

@@ -11,7 +11,7 @@ import type {
   SelectSolutionPayload,
   SelectSolutionResponse,
 } from "@/types/domain/schedulepro";
-import type { ProcessInfoResponse, ProjectListResponse } from "../types";
+import type { ProcessInfoResponse, ProjectListResponse } from "@/features/project";
 
 const BACKEND_BASE_URL = API_BASE.backend;
 const API_V1 = `${BACKEND_BASE_URL}/api/v1`;

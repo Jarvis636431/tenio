@@ -11,7 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ChatState } from "../";
+import type { ChatState } from "@/features/ai";
 import { ChatInput } from "./ChatInput";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessage } from "./ChatMessage";
