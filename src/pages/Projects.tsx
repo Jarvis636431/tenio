@@ -1,24 +1,20 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowRight,
   Bell,
   Building2,
+  Calendar,
+  CalendarCheck,
   CirclePlus,
-  Clock3,
-  FolderKanban,
+  FileText,
   HardHat,
-  Loader2,
   PlayCircle,
   Search,
   Settings,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { createJiuanProject, selectSolution, useProject, type Project } from "@/features/project";
-
-const DEFAULT_SOLUTION_ID = 0;
+import { useProject, type Project } from "@/features/project";
 
 type ProjectFilter = "all" | "active" | "completed" | "pending";
 
@@ -50,30 +46,10 @@ function normalizeStatus(status?: string): ProjectFilter {
   return "active";
 }
 
-function getStatusLabel(status: ProjectFilter) {
-  return FILTER_LABELS[status];
-}
-
-function getStatusClass(status: ProjectFilter) {
-  if (status === "completed") {
-    return "border-emerald-400/20 bg-emerald-500/10 text-emerald-200";
-  }
-  if (status === "pending") {
-    return "border-amber-400/20 bg-amber-500/10 text-amber-200";
-  }
-  return "border-cyan-400/20 bg-cyan-500/10 text-cyan-200";
-}
-
 function formatDate(dateString?: string) {
-  if (!dateString) {
-    return "未记录";
-  }
-
+  if (!dateString) return "—";
   const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) {
-    return dateString;
-  }
-
+  if (Number.isNaN(date.getTime())) return dateString;
   return new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
     month: "2-digit",
@@ -81,396 +57,376 @@ function formatDate(dateString?: string) {
   }).format(date);
 }
 
-function getProjectAccent(index: number) {
+function getStatusStyle(status: ProjectFilter) {
+  if (status === "completed") {
+    return "border-emerald-400/20 bg-emerald-500/10 text-emerald-200";
+  }
+  if (status === "pending") {
+    return "border-amber-400/20 bg-amber-500/10 text-amber-200";
+  }
+  return "border-cyan-400/20 bg-cyan-400/10 text-cyan-200";
+}
+
+function getProgressColor(status: ProjectFilter) {
+  if (status === "completed") {
+    return "from-emerald-400 to-emerald-500";
+  }
+  if (status === "pending") {
+    return "bg-white/10";
+  }
+  return "from-cyan-400 to-sky-500";
+}
+
+function getAccentStyle(index: number) {
   const accents = [
-    "text-cyan-200 border-cyan-400/20 bg-cyan-500/10",
-    "text-emerald-200 border-emerald-400/20 bg-emerald-500/10",
-    "text-violet-200 border-violet-400/20 bg-violet-500/10",
-    "text-amber-200 border-amber-400/20 bg-amber-500/10",
-    "text-rose-200 border-rose-400/20 bg-rose-500/10",
+    { bg: "rgba(0,212,255,0.1)", border: "rgba(0,212,255,0.25)", color: "var(--accent)" },
+    { bg: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.25)", color: "var(--green)" },
+    { bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)", color: "var(--amber)" },
+    { bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.25)", color: "#a78bfa" },
+    { bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.25)", color: "var(--red)" },
   ];
   return accents[index % accents.length];
 }
 
-function deriveProjectMetrics(project: Project, index: number) {
-  const status = normalizeStatus(project.status);
-  const progress = status === "completed" ? 100 : status === "pending" ? 0 : 28 + (index % 5) * 14;
-  const documents = status === "pending" ? 0 : 4 + (index % 3);
-  const cycleDays = 60 + index * 18;
-
-  return {
-    status,
-    progress,
-    documents,
-    cycleDays,
-  };
-}
-
 function ProjectsPage() {
   const navigate = useNavigate();
-  const { projects, setCurrentProject, addProject, isLoading } = useProject();
+  const { projects } = useProject();
   const [activeFilter, setActiveFilter] = useState<ProjectFilter>("all");
   const [query, setQuery] = useState("");
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
       const normalized = normalizeStatus(project.status);
       const matchesFilter = activeFilter === "all" || normalized === activeFilter;
       const keyword = query.trim().toLowerCase();
-      const matchesQuery =
-        keyword.length === 0 ||
-        project.name.toLowerCase().includes(keyword) ||
-        (project.description ?? "").toLowerCase().includes(keyword);
-
+      const matchesQuery = keyword.length === 0 || project.name.toLowerCase().includes(keyword);
       return matchesFilter && matchesQuery;
     });
   }, [activeFilter, projects, query]);
 
   const stats = useMemo(() => {
     const total = projects.length;
-    const active = projects.filter(
-      (project) => normalizeStatus(project.status) === "active",
-    ).length;
-    const completed = projects.filter(
-      (project) => normalizeStatus(project.status) === "completed",
-    ).length;
-    const generatedDocs = projects.reduce((count, project, index) => {
-      return count + deriveProjectMetrics(project, index).documents;
-    }, 0);
-
-    return { total, active, completed, generatedDocs };
+    const active = projects.filter((p) => normalizeStatus(p.status) === "active").length;
+    const generatedDocs = 18; // mock
+    const avgTime = 4.2; // mock
+    return { total, active, generatedDocs, avgTime };
   }, [projects]);
 
   const openProject = (project: Project) => {
-    setCurrentProject(project);
     navigate(`/project/${project.id}`);
-  };
-
-  const handleCreateProject = async () => {
-    setIsCreatingProject(true);
-    try {
-      const response = await createJiuanProject({
-        project_name: `项目_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      });
-      await selectSolution(response.project_id, { solution_id: DEFAULT_SOLUTION_ID });
-      const nextProject: Project = {
-        id: response.project_id,
-        name: response.project_name,
-        status: "active",
-      };
-      addProject(nextProject);
-      setCurrentProject(nextProject);
-      navigate("/upload");
-    } finally {
-      setIsCreatingProject(false);
-    }
   };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-apm-grid">
       <div className="bg-apm-ambient absolute inset-0" />
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute left-[8%] top-[4%] h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute right-[10%] top-[28%] h-[28rem] w-[28rem] rounded-full bg-sky-500/10 blur-3xl" />
-      </div>
 
-      <div className="relative z-10">
-        <header className="sticky top-0 z-20 border-b border-cyan-400/12 bg-[rgba(2,12,27,0.92)] backdrop-blur-xl">
-          <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-3 px-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/10 p-2 text-cyan-100">
-                <Building2 className="h-4 w-4" />
-              </div>
-              <div className="font-display text-sm font-semibold tracking-[-0.02em] text-white">
-                A.<span className="text-cyan-300">PM</span> 智管
-              </div>
-            </div>
-            <div className="h-5 w-px bg-cyan-400/12" />
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-apm-muted">
-              项目控制台
-            </p>
-            <div className="flex-1" />
-            <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-apm-muted transition-colors hover:text-white">
-              <Bell className="h-3.5 w-3.5" />
-              通知
-            </button>
-            <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-apm-muted transition-colors hover:text-white">
-              <Settings className="h-3.5 w-3.5" />
-              设置
-            </button>
+      {/* Navbar */}
+      <header className="sticky top-0 z-20 border-b border-cyan-400/20 bg-[rgba(2,12,27,0.94)] backdrop-blur-xl">
+        <div className="mx-auto flex h-[54px] w-full max-w-[1200px] items-center gap-3 px-6">
+          <div className="flex items-center gap-2.5">
+            <img
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663381579886/3dGQrYeue3pTedcrRzk4ny/logo_icon_blue_cc74c57f.png"
+              alt="A.PM"
+              className="h-6 w-6 object-contain"
+            />
+            <span className="font-display text-[15px] font-bold tracking-[-0.02em] text-white">
+              A.<span className="text-cyan-400">PM</span> 智管
+            </span>
+          </div>
+          <div className="h-[18px] w-px bg-cyan-400/20" />
+          <span className="text-xs font-medium text-apm-muted">项目控制台</span>
+          <div className="flex-1" />
+          <button className="flex items-center gap-1.5 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-xs text-apm-muted transition-colors hover:border-cyan-400 hover:text-cyan-400">
+            <Bell className="h-3.5 w-3.5" />
+            通知
+            <span className="ml-1 rounded bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+              3
+            </span>
+          </button>
+          <button className="flex items-center gap-1.5 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-xs text-apm-muted transition-colors hover:border-cyan-400 hover:text-cyan-400">
+            <Settings className="h-3.5 w-3.5" />
+            设置
+          </button>
+          <div className="relative">
             <button
-              onClick={() => navigate("/login")}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-apm-muted transition-colors hover:text-white"
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+              className="flex items-center gap-2"
             >
-              退出
-            </button>
-          </div>
-        </header>
-
-        <main className="mx-auto w-full max-w-7xl px-6 py-8">
-          <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-400/10 bg-cyan-400/8 px-3 py-1 text-xs uppercase tracking-[0.22em] text-cyan-100">
-                <Sparkles className="h-3.5 w-3.5" />
-                Project Workspace
-              </p>
-              <h1 className="font-display text-3xl text-white">欢迎进入项目控制台</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-7 text-apm-muted">
-                集中查看项目状态、AI 生成进度和资料准备情况，从这里进入项目工作台或创建新项目。
-              </p>
-            </div>
-
-            <Button
-              onClick={() => void handleCreateProject()}
-              disabled={isCreatingProject}
-              className="h-12 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 px-5 font-semibold text-slate-950 hover:from-cyan-300 hover:to-sky-400"
-            >
-              {isCreatingProject ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  创建项目中...
-                </>
-              ) : (
-                <>
-                  <CirclePlus className="mr-2 h-4 w-4" />
-                  新建项目
-                </>
-              )}
-            </Button>
-          </div>
-
-          <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              {
-                icon: FolderKanban,
-                label: "项目总数",
-                value: stats.total,
-                tone: "text-cyan-200 border-cyan-400/20 bg-cyan-500/10",
-              },
-              {
-                icon: PlayCircle,
-                label: "进行中",
-                value: stats.active,
-                tone: "text-emerald-200 border-emerald-400/20 bg-emerald-500/10",
-              },
-              {
-                icon: Sparkles,
-                label: "AI 已生成文档",
-                value: stats.generatedDocs,
-                tone: "text-amber-200 border-amber-400/20 bg-amber-500/10",
-              },
-              {
-                icon: Clock3,
-                label: "已完成项目",
-                value: stats.completed,
-                tone: "text-violet-200 border-violet-400/20 bg-violet-500/10",
-              },
-            ].map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={stat.label}
-                  className="apm-topline rounded-[22px] border border-white/8 bg-apm-panel p-5 shadow-apm-panel"
-                >
-                  <div className={cn("mb-3 inline-flex rounded-xl border p-3", stat.tone)}>
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="font-display text-3xl text-white">{stat.value}</div>
-                  <div className="mt-1 text-sm text-apm-muted">{stat.label}</div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center">
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(FILTER_LABELS) as ProjectFilter[]).map((filter) => (
-                <button
-                  key={filter}
-                  type="button"
-                  onClick={() => setActiveFilter(filter)}
-                  className={cn(
-                    "rounded-full border px-4 py-2 text-sm transition-colors",
-                    activeFilter === filter
-                      ? "border-cyan-300 bg-cyan-400/10 text-cyan-100"
-                      : "border-white/10 bg-white/5 text-apm-muted hover:text-white",
-                  )}
-                >
-                  {FILTER_LABELS[filter]}
-                </button>
-              ))}
-            </div>
-
-            <div className="relative xl:ml-auto xl:w-[280px]">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-apm-dim" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="搜索项目名称..."
-                className="h-11 w-full rounded-xl border border-cyan-400/15 bg-cyan-400/5 pl-11 pr-4 text-sm text-white placeholder:text-apm-dim focus:border-cyan-300 focus:bg-cyan-400/8 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="rounded-[24px] border border-white/8 bg-apm-panel px-6 py-16 text-center text-sm text-apm-muted shadow-apm-panel">
-              正在加载项目列表...
-            </div>
-          ) : filteredProjects.length === 0 ? (
-            <div className="rounded-[24px] border border-white/8 bg-apm-panel px-6 py-16 text-center shadow-apm-panel">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/10 bg-cyan-400/8 text-cyan-100">
-                <FolderKanban className="h-6 w-6" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-500 text-[13px] font-bold text-white">
+                张
               </div>
-              <h2 className="font-display text-xl text-white">当前没有匹配的项目</h2>
-              <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-apm-muted">
-                你可以先创建一个新项目，上传基础设计资料后进入 AI 工作台继续生成施工组织设计方案。
-              </p>
-              <Button
-                onClick={() => void handleCreateProject()}
-                disabled={isCreatingProject}
-                className="mt-6 h-11 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:from-cyan-300 hover:to-sky-400"
-              >
-                {isCreatingProject ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    创建项目中...
-                  </>
-                ) : (
-                  <>
-                    <CirclePlus className="mr-2 h-4 w-4" />
-                    创建新项目
-                  </>
-                )}
-              </Button>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {filteredProjects.map((project, index) => {
-                const metrics = deriveProjectMetrics(project, index);
+              <div className="flex flex-col items-start">
+                <span className="text-xs font-semibold text-white">张伟</span>
+                <span className="text-[10px] text-apm-muted">项目总监</span>
+              </div>
+            </button>
+            {showUserDropdown && (
+              <div className="absolute right-0 top-full mt-2 min-w-[140px] rounded-lg border border-cyan-400/20 bg-[var(--bg-panel)]">
+                <button className="flex w-full items-center gap-2 border-b border-cyan-400/20 px-4 py-2.5 text-xs text-apm-muted hover:text-white">
+                  账号设置
+                </button>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="flex w-full items-center gap-2 px-4 py-2.5 text-xs text-red-400 hover:text-red-300"
+                >
+                  退出登录
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
 
-                return (
-                  <button
-                    key={project.id}
-                    type="button"
-                    onClick={() => openProject(project)}
-                    className="text-left"
+      {/* Main */}
+      <main className="relative z-10 mx-auto w-full max-w-[1200px] px-6 py-8">
+        {/* Welcome Bar */}
+        <div className="mb-7 flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-[22px] font-bold text-white">欢迎回来，张伟</h1>
+            <p className="mt-1 text-[13px] text-apm-muted">
+              您当前管理 <span className="font-semibold text-cyan-400">{stats.total}</span>{" "}
+              个建筑项目，其中{" "}
+              <span className="font-semibold text-emerald-400">{stats.active}</span> 个进行中
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate("/upload")}
+            className="h-11 rounded-lg bg-gradient-to-r from-cyan-400 to-sky-500 px-5 font-bold text-slate-950 hover:opacity-90"
+          >
+            <CirclePlus className="mr-2 h-4 w-4" />
+            新建项目
+          </Button>
+        </div>
+
+        {/* Stats Row */}
+        <div className="mb-7 grid grid-cols-4 gap-4">
+          <div className="relative border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] p-4">
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-cyan-400 to-transparent" />
+            <div className="mb-2.5 text-[16px]" style={{ color: "var(--accent)" }}>
+              <Building2 className="h-4 w-4" />
+            </div>
+            <div className="font-display text-[26px] font-bold text-white">{stats.total}</div>
+            <div className="mt-0.5 text-[11px] text-apm-muted">项目总数</div>
+          </div>
+          <div className="relative border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] p-4">
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-emerald-400 to-transparent" />
+            <div className="mb-2.5 text-[16px]" style={{ color: "var(--green)" }}>
+              <PlayCircle className="h-4 w-4" />
+            </div>
+            <div className="font-display text-[26px] font-bold text-white">{stats.active}</div>
+            <div className="mt-0.5 text-[11px] text-apm-muted">进行中</div>
+          </div>
+          <div className="relative border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] p-4">
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-amber-400 to-transparent" />
+            <div className="mb-2.5 text-[16px]" style={{ color: "var(--amber)" }}>
+              <FileText className="h-4 w-4" />
+            </div>
+            <div className="font-display text-[26px] font-bold text-white">
+              {stats.generatedDocs}
+            </div>
+            <div className="mt-0.5 text-[11px] text-apm-muted">AI 已生成文档</div>
+          </div>
+          <div className="relative border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] p-4">
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet-400 to-transparent" />
+            <div className="mb-2.5 text-[16px]" style={{ color: "#a78bfa" }}>
+              <Search className="h-4 w-4" />
+            </div>
+            <div className="font-display text-[26px] font-bold text-white">
+              {stats.avgTime}
+              <small className="text-[14px]"> min</small>
+            </div>
+            <div className="mt-0.5 text-[11px] text-apm-muted">平均生成耗时</div>
+          </div>
+        </div>
+
+        {/* Filter Bar */}
+        <div className="mb-4.5 flex items-center gap-2.5">
+          {(Object.keys(FILTER_LABELS) as ProjectFilter[]).map((filter) => (
+            <button
+              key={filter}
+              type="button"
+              onClick={() => setActiveFilter(filter)}
+              className={cn(
+                "rounded-lg border px-3.5 py-1.5 text-[12px] font-medium transition-colors",
+                activeFilter === filter
+                  ? "border-cyan-400 bg-cyan-400/10 text-cyan-400"
+                  : "border-cyan-400/20 bg-transparent text-apm-muted hover:border-cyan-400/35 hover:text-white",
+              )}
+            >
+              {FILTER_LABELS[filter]}
+            </button>
+          ))}
+          <div className="ml-auto flex items-center gap-2 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3">
+            <Search className="h-3.5 w-3.5 text-apm-dim" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="搜索项目名称..."
+              className="h-7 w-[180px] bg-transparent py-1.5 text-[12px] text-white placeholder:text-apm-dim outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Project Grid */}
+        <div className="grid grid-cols-3 gap-4">
+          {filteredProjects.map((project, index) => {
+            const status = normalizeStatus(project.status);
+            const accent = getAccentStyle(index);
+            const progress =
+              status === "completed" ? 100 : status === "pending" ? 0 : 35 + (index % 5) * 14;
+            const contractDays = 60 + index * 18;
+            const contractAmount = (63.66 + index * 12).toFixed(2);
+            const aiDocs = status === "pending" ? 0 : 4 + (index % 3);
+            const endDate = "2026-06-07";
+
+            return (
+              <article
+                key={project.id}
+                onClick={() => openProject(project)}
+                className="flex cursor-pointer flex-col border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] transition-all hover:border-cyan-400 hover:bg-cyan-400/5"
+              >
+                {/* Header */}
+                <div className="flex items-start gap-3 border-b border-cyan-400/10 px-4.5 pt-4.5 pb-3.5">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-lg text-[18px]"
+                    style={{
+                      background: accent.bg,
+                      border: `1px solid ${accent.border}`,
+                      color: accent.color,
+                    }}
                   >
-                    <article className="group rounded-[24px] border border-white/8 bg-apm-panel shadow-apm-panel transition-all duration-200 hover:border-cyan-300/30 hover:bg-cyan-400/4 hover:shadow-apm-glow">
-                      <div className="flex items-start gap-4 border-b border-white/6 px-5 py-5">
-                        <div
-                          className={cn(
-                            "flex h-12 w-12 items-center justify-center rounded-2xl border",
-                            getProjectAccent(index),
-                          )}
-                        >
-                          <HardHat className="h-5 w-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h2 className="line-clamp-2 text-base font-semibold leading-6 text-white">
-                            {project.name}
-                          </h2>
-                          <p className="mt-1 text-xs leading-5 text-apm-muted">
-                            {project.description?.trim() || `项目编号 ${project.id}`}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="px-5 py-4">
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <p className="text-[10px] uppercase tracking-[0.18em] text-apm-dim">
-                              状态
-                            </p>
-                            <p className="mt-2 text-sm font-medium text-white">
-                              {getStatusLabel(metrics.status)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] uppercase tracking-[0.18em] text-apm-dim">
-                              文档数
-                            </p>
-                            <p className="mt-2 text-sm font-medium text-white">
-                              {metrics.documents} 份
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] uppercase tracking-[0.18em] text-apm-dim">
-                              周期
-                            </p>
-                            <p className="mt-2 text-sm font-medium text-white">
-                              {metrics.cycleDays} 天
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mt-5">
-                          <div className="mb-2 flex items-center justify-between text-xs text-apm-muted">
-                            <span>项目进度</span>
-                            <span className="font-medium text-cyan-100">
-                              {metrics.status === "pending" ? "待启动" : `${metrics.progress}%`}
-                            </span>
-                          </div>
-                          <div className="h-1.5 rounded-full bg-white/6">
-                            <div
-                              className={cn(
-                                "h-full rounded-full",
-                                metrics.status === "completed"
-                                  ? "bg-gradient-to-r from-emerald-400 to-emerald-500"
-                                  : metrics.status === "pending"
-                                    ? "bg-white/10"
-                                    : "bg-gradient-to-r from-cyan-400 to-sky-500",
-                              )}
-                              style={{ width: `${metrics.progress}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 border-t border-white/6 px-5 py-3">
-                        <span
-                          className={cn(
-                            "rounded-full border px-2.5 py-1 text-[11px] font-medium",
-                            getStatusClass(metrics.status),
-                          )}
-                        >
-                          {getStatusLabel(metrics.status)}
-                        </span>
-                        <span className="text-xs text-apm-dim">
-                          创建于 {formatDate(project.createdAt)}
-                        </span>
-                        <span className="ml-auto inline-flex items-center gap-1 text-xs text-cyan-200">
-                          进入工作台
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </span>
-                      </div>
-                    </article>
-                  </button>
-                );
-              })}
-
-              <button
-                type="button"
-                onClick={() => void handleCreateProject()}
-                className="group flex min-h-[280px] flex-col items-center justify-center rounded-[24px] border border-dashed border-white/12 bg-apm-panel px-6 py-10 text-center shadow-apm-panel transition-all duration-200 hover:border-cyan-300/30 hover:bg-cyan-400/4"
-                disabled={isCreatingProject}
-              >
-                <div className="rounded-2xl border border-cyan-400/10 bg-cyan-400/8 p-4 text-cyan-100 transition-transform duration-200 group-hover:scale-105">
-                  {isCreatingProject ? (
-                    <Loader2 className="h-7 w-7 animate-spin" />
-                  ) : (
-                    <CirclePlus className="h-7 w-7" />
-                  )}
+                    <HardHat className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="mb-1 line-clamp-2 text-[14px] font-semibold leading-5 text-white">
+                      {project.name}
+                    </h2>
+                    <p className="text-[10px] text-apm-muted">{project.description || "—"}</p>
+                  </div>
                 </div>
-                <h2 className="mt-4 font-display text-xl text-white">创建新项目</h2>
-                <p className="mt-2 max-w-xs text-sm leading-6 text-apm-muted">
-                  上传基础设计资料，生成新的施工组织设计工作台。
-                </p>
-              </button>
+
+                {/* Body */}
+                <div className="flex-1 px-4.5 py-3.5">
+                  <div className="mb-3 flex justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase tracking-[0.1em] text-apm-dim">
+                        合同工期
+                      </span>
+                      <span className="mt-0.5 text-[13px] font-semibold text-white">
+                        {contractDays}{" "}
+                        <small className="text-[10px] font-normal text-apm-muted">日历天</small>
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase tracking-[0.1em] text-apm-dim">
+                        发包价
+                      </span>
+                      <span className="mt-0.5 text-[13px] font-semibold text-white">
+                        {contractAmount}{" "}
+                        <small className="text-[10px] font-normal text-apm-muted">万元</small>
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase tracking-[0.1em] text-apm-dim">
+                        AI 文档
+                      </span>
+                      <span className="mt-0.5 text-[13px] font-semibold text-white">
+                        {aiDocs}{" "}
+                        <small className="text-[10px] font-normal text-apm-muted">份</small>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Progress */}
+                  <div className="mt-3">
+                    <div className="mb-1.5 flex items-center justify-between text-[10px] text-apm-muted">
+                      <span>项目进度</span>
+                      <span className="font-semibold text-cyan-400">
+                        {status === "pending" ? "待启动" : `${progress}%`}
+                      </span>
+                    </div>
+                    <div className="h-0.5 bg-white/6">
+                      <div
+                        className={cn(
+                          "h-full",
+                          status !== "pending"
+                            ? `bg-gradient-to-r ${getProgressColor(status)}`
+                            : "bg-white/10",
+                        )}
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Footer info */}
+                  <div className="mt-2 flex items-center justify-between text-[9px] text-apm-dim">
+                    <span>
+                      <Calendar className="inline h-3 w-3" style={{ marginRight: 3 }} />
+                      {status === "completed"
+                        ? "预计结束"
+                        : status === "pending"
+                          ? "预计开工"
+                          : "预计结束"}
+                      ：{endDate}
+                    </span>
+                    {status === "completed" && (
+                      <span className="text-emerald-400">
+                        <FileText className="inline h-3 w-3" style={{ marginRight: 2 }} />
+                        全部完成
+                      </span>
+                    )}
+                    {status === "active" && (
+                      <span className="text-cyan-400">
+                        <HardHat className="inline h-3 w-3" style={{ marginRight: 2 }} />
+                        AI文档已就绪
+                      </span>
+                    )}
+                    {status === "pending" && (
+                      <span className="text-amber-400">
+                        <Search className="inline h-3 w-3" style={{ marginRight: 2 }} />
+                        待上传资料
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center gap-2 border-t border-cyan-400/10 px-4.5 py-2.5">
+                  <span
+                    className={cn(
+                      "rounded border px-2 py-0.5 text-[10px] font-semibold",
+                      getStatusStyle(status),
+                    )}
+                  >
+                    {FILTER_LABELS[status]}
+                  </span>
+                  <span className="text-[10px] text-apm-dim">
+                    <CalendarCheck className="inline h-3 w-3" style={{ marginRight: 3 }} />
+                    开工 {project.createdAt ? formatDate(project.createdAt) : "—"}
+                  </span>
+                  <span className="ml-auto text-[10px] text-apm-dim">
+                    <Calendar className="inline h-3 w-3" style={{ marginRight: 3 }} />
+                    剩余 {status === "pending" ? "—" : `${365 - index * 30} 天`}
+                  </span>
+                </div>
+              </article>
+            );
+          })}
+
+          {/* New Project Card */}
+          <div
+            onClick={() => navigate("/upload")}
+            className="flex min-h-[240px] cursor-pointer flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-cyan-400/20 bg-[rgba(4,18,37,0.85)] text-center transition-all hover:border-cyan-400"
+          >
+            <div className="text-[28px] text-apm-dim">
+              <CirclePlus className="h-7 w-7" />
             </div>
-          )}
-        </main>
-      </div>
+            <span className="text-[13px] text-apm-muted">创建新项目</span>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
