@@ -1,12 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getFileList, uploadFile, deleteFile, updateFile, getFileStats } from "@/features/project";
+import { getFileList, uploadFile, deleteFile, updateFile, getFileStats } from "@/features/upload";
 import type {
   FileCategory,
   FileListParams,
   ProjectFile,
   FileUploadResponse,
-} from "@/features/project";
+} from "@/features/upload";
+import { uploadQueryKeys } from "@/features/upload/queryKeys";
 
 interface UseUploadsOptions {
   projectId: string | null | undefined;
@@ -51,7 +52,9 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
 
   // 文件列表查询
   const fileListQuery = useQuery({
-    queryKey: ["uploads", "files", listParams],
+    queryKey: uploadQueryKeys.fileList(
+      listParams == null ? {} : (listParams as unknown as Record<string, unknown>),
+    ),
     queryFn: async () => {
       if (!listParams) {
         throw new Error("缺少项目 ID");
@@ -64,7 +67,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
 
   // 文件统计查询
   const statsQuery = useQuery({
-    queryKey: ["uploads", "stats", projectId],
+    queryKey: uploadQueryKeys.stats(projectId),
     queryFn: async () => {
       if (!projectId) {
         throw new Error("缺少项目 ID");
@@ -129,10 +132,10 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     onSuccess: () => {
       // 刷新列表和统计
       void queryClient.invalidateQueries({
-        queryKey: ["uploads", "files", { projectId }],
+        queryKey: uploadQueryKeys.fileList({ projectId }),
       });
       void queryClient.invalidateQueries({
-        queryKey: ["uploads", "stats", projectId],
+        queryKey: uploadQueryKeys.stats(projectId),
       });
     },
   });
@@ -147,10 +150,10 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["uploads", "files", { projectId }],
+        queryKey: uploadQueryKeys.fileList({ projectId }),
       });
       void queryClient.invalidateQueries({
-        queryKey: ["uploads", "stats", projectId],
+        queryKey: uploadQueryKeys.stats(projectId),
       });
     },
   });
@@ -170,10 +173,10 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     mutationFn: updateFile,
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["uploads", "files", { projectId }],
+        queryKey: uploadQueryKeys.fileList({ projectId }),
       });
       void queryClient.invalidateQueries({
-        queryKey: ["uploads", "stats", projectId],
+        queryKey: uploadQueryKeys.stats(projectId),
       });
     },
   });
