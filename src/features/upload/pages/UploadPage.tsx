@@ -10,7 +10,6 @@ import {
   FileText,
   Loader2,
   Sparkles,
-  Upload,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -391,9 +390,15 @@ function UploadPage() {
       {/* Navbar */}
       <nav className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-slate-700/50 bg-slate-900 px-6">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Upload className="h-4 w-4 text-cyan-400" />
-            <span className="font-display text-base font-bold text-cyan-400">A.PM 智管</span>
+          <div className="flex items-center gap-2.5">
+            <img
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663381579886/3dGQrYeue3pTedcrRzk4ny/logo_icon_blue_cc74c57f.png"
+              alt="A.PM"
+              className="h-6 w-6 object-contain"
+            />
+            <span className="font-display text-[15px] font-bold tracking-[-0.02em] text-white">
+              A.<span className="text-cyan-400">PM</span> 智管
+            </span>
           </div>
           <span className="text-slate-500">|</span>
           <span className="text-sm text-slate-400">新建项目</span>
