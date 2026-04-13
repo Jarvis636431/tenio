@@ -1,8 +1,8 @@
-import { useProjectStore } from "@/stores/projectStore";
+import { useProject } from "@/features/project";
 import { useTime } from "@/hooks/useTime";
 
 export function AppTopbar() {
-  const currentProject = useProjectStore((state) => state.currentProject);
+  const { currentProject } = useProject();
   const { dateText, timeText } = useTime();
 
   return (

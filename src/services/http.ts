@@ -15,6 +15,35 @@ export type ApiResponse<T> = {
   code?: number | string;
 };
 
+function extractErrorMessage(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null;
+  const record = data as Record<string, unknown>;
+
+  if (typeof record.message === "string") {
+    return record.message;
+  }
+
+  if (record.error && typeof record.error === "object") {
+    const errorRecord = record.error as Record<string, unknown>;
+    if (typeof errorRecord.message === "string") {
+      return errorRecord.message;
+    }
+  }
+
+  if (record.detail) {
+    if (typeof record.detail === "string") return record.detail;
+    if (Array.isArray(record.detail)) {
+      const messages = record.detail
+        .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+        .map((item) => (typeof item.msg === "string" ? item.msg : undefined))
+        .filter((msg): msg is string => !!msg);
+      return messages.join("; ") || null;
+    }
+  }
+
+  return null;
+}
+
 async function parseResponse<T>(response: Response): Promise<T> {
   if (response.ok) {
     if (response.status === 204) {
@@ -23,25 +52,9 @@ async function parseResponse<T>(response: Response): Promise<T> {
     return response.json() as Promise<T>;
   }
 
-  const data = await response.json().catch(() => null);
-  if (data?.message) {
-    throw new Error(data.message);
-  }
-  if (data?.error?.message) {
-    throw new Error(data.error.message);
-  }
-  if (data?.detail) {
-    throw new Error(
-      Array.isArray(data.detail)
-        ? data.detail
-            .map((item: { msg?: string }) => item?.msg)
-            .filter(Boolean)
-            .join("; ")
-        : data.detail,
-    );
-  }
-
-  throw new Error(`请求失败 (${response.status})`);
+  const data = (await response.json().catch(() => null)) as unknown;
+  const message = extractErrorMessage(data);
+  throw new Error(message ?? `请求失败 (${response.status})`);
 }
 
 function isApiResponseEnvelope<T>(payload: unknown): payload is ApiResponse<T> {

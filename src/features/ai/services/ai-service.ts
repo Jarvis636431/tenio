@@ -225,7 +225,7 @@ function extractInterrupt(obj: Record<string, unknown>): string | null {
   const interrupts = obj.__interrupt__;
   if (!Array.isArray(interrupts) || interrupts.length === 0) return null;
 
-  const last = interrupts[interrupts.length - 1];
+  const last: unknown = interrupts[interrupts.length - 1];
 
   if (typeof last === "string") {
     const match = last.match(/Interrupt\(value='([\s\S]*?)', id='.*?'\)/);

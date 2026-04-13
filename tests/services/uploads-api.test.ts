@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getFileStats } from "@/features/project";
+import { getFileStats } from "@/features/upload";
 
 describe("uploads-api helpers", () => {
   describe("getFileStats", () => {

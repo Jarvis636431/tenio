@@ -14,7 +14,8 @@ import type {
   FileStatsResponse,
   FileUpdatePayload,
 } from "@/features/upload";
-import type { ProjectListItem, ProjectListResponse, ProjectFile } from "@/features/project";
+import type { ProjectListItem, ProjectListResponse } from "@/features/project";
+import type { ProjectFile } from "@/features/upload";
 
 interface MockProjectRecord {
   project: ProjectListItem;
