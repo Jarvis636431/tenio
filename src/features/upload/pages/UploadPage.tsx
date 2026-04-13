@@ -3,13 +3,12 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle,
+  CloudUpload,
   DraftingCompass,
   File,
   FileSpreadsheet,
   FileText,
-  Image,
   Loader2,
-  ShieldCheck,
   Sparkles,
   Upload,
   X,
@@ -17,12 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import {
-  FILE_CATEGORY_LABELS,
-  type FileCategory,
-  type FileStatus,
-  useUploads,
-} from "@/features/upload";
+import { type FileCategory, type FileStatus, useUploads } from "@/features/upload";
 
 interface UploadQueueItem {
   id: string;
@@ -40,7 +34,7 @@ type UploadZone = {
   title: string;
   description: string;
   formats: string;
-  icon: typeof ShieldCheck;
+  icon: typeof FileText;
   required?: boolean;
 };
 
@@ -48,8 +42,8 @@ const REQUIRED_ZONE: UploadZone = {
   category: "contract",
   title: "招标文件 / 施工合同",
   description: "上传招标文件或施工合同，AI 将从中提取项目信息。",
-  formats: "支持 .doc .docx .pdf 格式，建议优先上传完整版文本。",
-  icon: ShieldCheck,
+  formats: "支持 .doc .docx .pdf 格式，单文件最大 100MB",
+  icon: FileText,
   required: true,
 };
 
@@ -57,24 +51,33 @@ const OPTIONAL_ZONES: UploadZone[] = [
   {
     category: "document",
     title: "工程量清单",
-    description: "预算书、清单或技术规范书。",
-    formats: "支持 .xls .xlsx .pdf 格式。",
+    description: "预算书或清单。",
+    formats: ".xls .xlsx .pdf",
     icon: FileSpreadsheet,
   },
   {
     category: "drawing",
     title: "CAD 施工图纸",
     description: "建筑、结构或机电施工图。",
-    formats: "支持 .dwg .dxf .pdf 格式。",
+    formats: ".dwg .dxf .pdf",
     icon: DraftingCompass,
   },
   {
     category: "other",
     title: "其他补充资料",
     description: "地勘报告、设计说明、会议纪要等。",
-    formats: "支持多种文档、压缩包与图片格式。",
+    formats: "多种文档格式",
     icon: FileText,
   },
+];
+
+const GENERATION_STEPS = [
+  "文件解析中...",
+  "提取项目信息",
+  "生成施工组织设计",
+  "生成进度计划",
+  "生成甘特图 & 网络图",
+  "工期-成本分析 & 人员轮转",
 ];
 
 function createQueueItem(file: File, category: FileCategory): UploadQueueItem {
@@ -101,8 +104,9 @@ function UploadPage() {
   const [files, setFiles] = useState<UploadQueueItem[]>([]);
   const [isAllUploading, setIsAllUploading] = useState(false);
   const [dragTarget, setDragTarget] = useState<FileCategory | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStep, setGenerationStep] = useState(0);
 
-  // 上传文件（不依赖项目 ID）
   const { uploadFile, uploadProgress } = useUploads({ projectId: null });
 
   const progressMap = useMemo(
@@ -209,8 +213,23 @@ function UploadPage() {
         }
       }
 
-      if (!hasUploadError) {
-        navigate("/projects");
+      if (!hasUploadError && files.length > 0) {
+        // Start generation flow
+        setIsGenerating(true);
+        setGenerationStep(0);
+
+        const interval = setInterval(() => {
+          setGenerationStep((prev) => {
+            if (prev >= GENERATION_STEPS.length - 1) {
+              clearInterval(interval);
+              setTimeout(() => {
+                navigate("/projects");
+              }, 600);
+              return prev;
+            }
+            return prev + 1;
+          });
+        }, 800);
       }
     } finally {
       setIsAllUploading(false);
@@ -224,7 +243,6 @@ function UploadPage() {
   const completedCount = files.filter((file) => file.status === "completed").length;
   const allCompleted = files.length > 0 && completedCount === files.length;
   const requiredFiles = files.filter((file) => file.category === REQUIRED_ZONE.category);
-  const optionalFiles = files.filter((file) => file.category !== REQUIRED_ZONE.category);
   const hasRequiredFiles = requiredFiles.length > 0;
   const filesByCategory = useMemo(() => {
     return files.reduce<Record<FileCategory, UploadQueueItem[]>>(
@@ -244,7 +262,7 @@ function UploadPage() {
   }, [files]);
 
   const getFileIcon = (file: File) => {
-    if (file.type.startsWith("image/")) return Image;
+    if (file.type.startsWith("image/")) return File;
     if (file.type.includes("pdf") || file.type.includes("document")) return FileText;
     return File;
   };
@@ -264,63 +282,45 @@ function UploadPage() {
           return (
             <div
               key={uploadFile.id}
-              className="rounded-xl border border-white/8 bg-[rgba(2,14,30,0.72)] px-4 py-3 shadow-apm-panel"
+              className="flex items-center gap-3 rounded-lg border border-white/8 bg-[rgba(2,14,30,0.72)] px-4 py-3"
             >
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 rounded-lg border border-cyan-400/10 bg-cyan-400/8 p-2 text-cyan-200">
-                  <FileIcon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-white">
-                        {uploadFile.file.name}
-                      </p>
-                      <p className="mt-1 text-xs text-apm-dim">
-                        {FILE_CATEGORY_LABELS[uploadFile.category]} ·{" "}
-                        {formatFileSize(uploadFile.file.size)}
-                      </p>
-                    </div>
-                    {uploadFile.status !== "uploading" && (
-                      <button
-                        onClick={() => removeFile(uploadFile.id)}
-                        className="rounded-md p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-red-300"
-                        aria-label={`移除 ${uploadFile.file.name}`}
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="mt-3 flex items-center gap-2 text-xs">
-                    {uploadFile.status === "completed" && (
-                      <span className="inline-flex items-center gap-1 text-emerald-300">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        已上传完成
-                      </span>
-                    )}
-                    {uploadFile.status === "uploading" && (
-                      <span className="inline-flex items-center gap-1 text-cyan-300">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        上传中 {Math.round(progress?.percent ?? 0)}%
-                      </span>
-                    )}
-                    {uploadFile.status === "pending" && (
-                      <span className="text-slate-400">等待上传</span>
-                    )}
-                    {uploadFile.status === "error" && (
-                      <span className="text-red-300">{uploadFile.error ?? "上传失败，请重试"}</span>
-                    )}
-                  </div>
-
-                  {uploadFile.status !== "pending" && (
-                    <Progress
-                      value={uploadFile.status === "completed" ? 100 : (progress?.percent ?? 0)}
-                      className="mt-3 h-1.5 bg-white/5 [&>div]:bg-gradient-to-r [&>div]:from-cyan-400 [&>div]:to-sky-500"
-                    />
-                  )}
-                </div>
-              </div>
+              <FileIcon className="h-4 w-4 shrink-0 text-cyan-300" />
+              <span className="min-w-0 flex-1 truncate text-sm text-white">
+                {uploadFile.file.name}
+              </span>
+              <span className="text-xs text-apm-dim">{formatFileSize(uploadFile.file.size)}</span>
+              {uploadFile.status === "completed" && (
+                <span className="inline-flex items-center gap-1 text-xs text-emerald-300">
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  已上传
+                </span>
+              )}
+              {uploadFile.status === "uploading" && (
+                <span className="inline-flex items-center gap-1 text-xs text-cyan-300">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  {Math.round(progress?.percent ?? 0)}%
+                </span>
+              )}
+              {uploadFile.status === "pending" && (
+                <span className="text-xs text-slate-400">等待上传</span>
+              )}
+              {uploadFile.status === "error" && (
+                <span className="text-xs text-red-300">{uploadFile.error ?? "上传失败"}</span>
+              )}
+              {uploadFile.status !== "uploading" && (
+                <button
+                  onClick={() => removeFile(uploadFile.id)}
+                  className="shrink-0 rounded-md p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-red-300"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              {uploadFile.status !== "pending" && (
+                <Progress
+                  value={uploadFile.status === "completed" ? 100 : (progress?.percent ?? 0)}
+                  className="absolute bottom-0 left-0 right-0 h-1 rounded-b-lg bg-white/5 [&>div]:bg-cyan-400"
+                />
+              )}
             </div>
           );
         })}
@@ -341,12 +341,11 @@ function UploadPage() {
           onDragOver={handleDragOver(zone.category)}
           onDragLeave={handleDragLeave(zone.category)}
           className={cn(
-            "group block cursor-pointer rounded-[20px] border border-dashed px-5 py-7 transition-all duration-200",
-            "bg-apm-card backdrop-blur-md",
+            "block cursor-pointer rounded-xl border-2 border-dashed px-6 py-10 text-center transition-all duration-300",
             compact ? "h-full min-h-[224px]" : "min-h-[256px]",
             isActive || hasCompleted
-              ? "border-cyan-300/60 bg-cyan-400/8 shadow-apm-glow"
-              : "border-white/10 hover:border-cyan-300/45 hover:bg-cyan-400/6",
+              ? "border-emerald-400/60 bg-emerald-500/6"
+              : "border-slate-600 bg-slate-800/50 hover:border-cyan-400/60 hover:bg-slate-800",
           )}
         >
           <input
@@ -357,38 +356,29 @@ function UploadPage() {
             onChange={handleFileSelect(zone.category)}
           />
 
-          <div className="flex h-full flex-col items-center justify-center text-center">
+          <div className="flex h-full flex-col items-center justify-center">
             <div
               className={cn(
-                "mb-4 rounded-2xl border p-4 transition-colors",
-                isActive || hasCompleted
-                  ? "border-cyan-300/30 bg-cyan-400/12 text-cyan-100"
-                  : "border-white/10 bg-white/5 text-cyan-200/80 group-hover:text-cyan-100",
+                "mb-4 text-slate-400 transition-colors",
+                isActive || hasCompleted ? "text-emerald-400" : "group-hover:text-cyan-300",
               )}
             >
-              <Icon className={cn(compact ? "h-7 w-7" : "h-8 w-8")} />
+              <Icon className={cn(compact ? "h-7 w-7" : "h-9 w-9")} />
             </div>
-            <div className="mb-2 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-apm-dim">
-              {zone.required ? (
-                <span className="rounded-full border border-red-400/20 bg-red-500/12 px-2.5 py-1 text-red-200">
-                  必传
-                </span>
-              ) : (
-                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-slate-300">
-                  选传
-                </span>
-              )}
-              <span>{FILE_CATEGORY_LABELS[zone.category]}</span>
-            </div>
-            <h3 className={cn("font-display text-white", compact ? "text-lg" : "text-xl")}>
+            <h3 className={cn("mb-2 font-medium text-white", compact ? "text-base" : "text-base")}>
               {zone.title}
             </h3>
-            <p className="mt-2 max-w-md text-sm leading-6 text-apm-muted">{zone.description}</p>
-            <p className="mt-3 text-xs leading-5 text-apm-dim">{zone.formats}</p>
-            {zoneFiles.length > 0 && (
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/12 px-3 py-1 text-xs text-emerald-200">
-                <CheckCircle className="h-3.5 w-3.5" />
+            <p className="max-w-md text-sm text-slate-400">{zone.description}</p>
+            <p className="mt-2 text-xs text-slate-500">{zone.formats}</p>
+            {zoneFiles.length > 0 && !hasCompleted && (
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-200">
                 已选择 {zoneFiles.length} 个文件
+              </div>
+            )}
+            {hasCompleted && (
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200">
+                <CheckCircle className="h-3.5 w-3.5" />
+                已上传
               </div>
             )}
           </div>
@@ -399,167 +389,134 @@ function UploadPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-apm-grid">
-      <div className="bg-apm-ambient absolute inset-0" />
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute left-[10%] top-[8%] h-80 w-80 rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute bottom-[12%] right-[8%] h-96 w-96 rounded-full bg-sky-500/10 blur-3xl" />
-      </div>
-
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10">
-        <div className="mb-8 flex items-center justify-between rounded-2xl border border-white/8 bg-apm-panel px-5 py-3 shadow-apm-panel backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl border border-cyan-400/10 bg-cyan-400/10 p-2 text-cyan-200">
-              <Upload className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="font-display text-lg text-white">A.PM 智管</p>
-              <p className="text-xs uppercase tracking-[0.24em] text-apm-dim">Project Intake</p>
-            </div>
+    <div className="min-h-screen bg-[#0a0e17]">
+      {/* Navbar */}
+      <nav className="flex h-12 items-center justify-between border-b border-slate-700/50 bg-slate-900 px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Upload className="h-4 w-4 text-cyan-400" />
+            <span className="font-display text-base font-bold text-cyan-400">A.PM 智管</span>
           </div>
-          <Button
+          <span className="text-slate-500">|</span>
+          <span className="text-sm text-slate-400">新建项目</span>
+        </div>
+        <button
+          onClick={handleSkip}
+          className="rounded-md border border-slate-600 bg-transparent px-4 py-1.5 text-sm text-slate-400 transition-all hover:border-cyan-400/60 hover:text-cyan-300"
+        >
+          <ArrowLeft className="mr-1.5 inline h-3.5 w-3.5" />
+          返回控制台
+        </button>
+      </nav>
+
+      {/* Main */}
+      <div className="mx-auto max-w-[880px] px-6 pb-20 pt-12">
+        {/* Page Header */}
+        <div className="mb-12 text-center">
+          <h1 className="mb-3 flex items-center justify-center gap-3 text-3xl font-bold text-white">
+            <CloudUpload className="h-7 w-7 text-cyan-400" />
+            上传基础设计资料
+          </h1>
+          <p className="text-sm leading-7 text-slate-400">
+            上传 <span className="text-cyan-300">招标文件或施工合同</span> 后，AI
+            将自动解析并生成完整的施工组织设计方案
+            <br />
+            包含进度计划、甘特图、网络图、工期-成本分析和人员轮转方案
+          </p>
+        </div>
+
+        {/* Required Section */}
+        <section className="mb-8">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="rounded-sm border border-red-500/80 bg-red-500/20 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-red-200">
+              必传
+            </span>
+            <span className="text-sm font-medium uppercase tracking-wider text-slate-400">
+              核心文件
+            </span>
+            <div className="h-px flex-1 bg-slate-700/50" />
+          </div>
+          {renderDropZone(REQUIRED_ZONE)}
+        </section>
+
+        {/* Optional Section */}
+        <section className="mb-10">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="rounded-sm border border-slate-600/80 bg-slate-700/30 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-slate-300">
+              选传
+            </span>
+            <span className="text-sm font-medium text-slate-400">
+              补充资料（上传后可提升生成精度）
+            </span>
+            <div className="h-px flex-1 bg-slate-700/50" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {OPTIONAL_ZONES.map((zone) => renderDropZone(zone, true))}
+          </div>
+        </section>
+
+        {/* Tip Box */}
+        <div className="mb-10 rounded-xl border border-amber-500/30 bg-amber-500/8 px-5 py-4 text-sm leading-7 text-slate-300">
+          <span className="mr-1.5 font-bold text-amber-400">提示：</span>
+          <strong className="text-slate-200">招标文件/施工合同</strong> 为必传资料，AI
+          将自动从中提取项目名称、建设单位、工期、造价等关键信息。 补充上传工程量清单和 CAD
+          图纸可显著提升生成方案的精度和完整度。
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-between pt-2">
+          <button
             onClick={handleSkip}
-            variant="ghost"
-            className="h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-slate-300 hover:bg-white/8 hover:text-white"
+            className="rounded-lg border border-slate-600 bg-transparent px-7 py-3 text-sm text-slate-400 transition-all hover:border-cyan-400/60 hover:text-cyan-300"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            返回工作台
+            <ArrowLeft className="mr-2 inline h-4 w-4" />
+            返回控制台
+          </button>
+          <Button
+            onClick={() => void uploadAll()}
+            disabled={!hasRequiredFiles || isAllUploading || allCompleted}
+            className="h-12 rounded-lg bg-cyan-400 px-10 py-3 text-base font-bold text-slate-950 shadow-lg shadow-cyan-400/30 transition-all hover:bg-cyan-300 hover:shadow-cyan-400/50 disabled:bg-slate-500 disabled:text-slate-300 disabled:shadow-none"
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            {isAllUploading ? "上传资料中..." : allCompleted ? "资料上传完成" : "开始 AI 智能生成"}
           </Button>
         </div>
-
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="rounded-[28px] border border-white/8 bg-apm-panel p-6 shadow-apm-panel backdrop-blur-md">
-            <div className="apm-topline mb-8 rounded-[22px] border border-white/8 bg-apm-card p-6">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/10 bg-cyan-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.22em] text-cyan-100">
-                <Sparkles className="h-3.5 w-3.5" />
-                AI Intake Workflow
-              </div>
-              <h1 className="font-display text-3xl leading-tight text-white">上传基础设计资料</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-apm-muted">
-                上传 <span className="text-cyan-100">招标文件或施工合同</span> 后，AI
-                将自动解析并生成施工组织设计方案。
-                后续可补充工程量清单、施工图与其他资料，以提高进度计划、资源配置和网络图的生成精度。
-              </p>
-            </div>
-
-            <section className="mb-8">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="rounded-full border border-red-400/20 bg-red-500/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-red-200">
-                  必传
-                </span>
-                <p className="text-sm font-medium text-apm-muted">核心文件</p>
-                <div className="h-px flex-1 bg-white/8" />
-              </div>
-              {renderDropZone(REQUIRED_ZONE)}
-            </section>
-
-            <section>
-              <div className="mb-4 flex items-center gap-3">
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
-                  选传
-                </span>
-                <p className="text-sm font-medium text-apm-muted">补充资料，上传后可提升生成精度</p>
-                <div className="h-px flex-1 bg-white/8" />
-              </div>
-              <div className="grid gap-4 xl:grid-cols-3">
-                {OPTIONAL_ZONES.map((zone) => renderDropZone(zone, true))}
-              </div>
-            </section>
-          </div>
-
-          <aside className="space-y-6">
-            <div className="rounded-[24px] border border-white/8 bg-apm-panel p-5 shadow-apm-panel backdrop-blur-md">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-apm-dim">
-                Upload Summary
-              </p>
-              <div className="mt-4 grid gap-3">
-                <div className="rounded-2xl border border-white/8 bg-apm-card p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-apm-dim">核心文件</p>
-                  <p className="mt-2 font-display text-3xl text-white">{requiredFiles.length}</p>
-                  <p className="mt-1 text-sm text-apm-muted">
-                    {hasRequiredFiles ? "已满足基础生成条件" : "尚未上传招标文件或施工合同"}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-apm-card p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-apm-dim">补充资料</p>
-                  <p className="mt-2 font-display text-3xl text-white">{optionalFiles.length}</p>
-                  <p className="mt-1 text-sm text-apm-muted">
-                    工程量、图纸和补充文档会提升模型解析精度
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-apm-card p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-apm-dim">已完成上传</p>
-                  <p className="mt-2 font-display text-3xl text-white">{completedCount}</p>
-                  <p className="mt-1 text-sm text-apm-muted">
-                    {files.length > 0
-                      ? `共 ${files.length} 个文件进入上传队列`
-                      : "等待添加项目资料"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-[24px] border border-amber-400/20 bg-[rgba(245,158,11,0.08)] p-5 shadow-apm-panel backdrop-blur-md">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-200">
-                上传提示
-              </p>
-              <div className="mt-4 space-y-3 text-sm leading-6 text-amber-50/80">
-                <p>
-                  <span className="font-medium text-amber-100">必传：</span>
-                  招标文件或施工合同是 AI 生成施工组织设计的基础输入。
-                </p>
-                <p>
-                  <span className="font-medium text-amber-100">选传：</span>
-                  工程量清单、施工图纸与其他文档可提升工序拆解、资源计划和进度推演质量。
-                </p>
-                <p>支持多文件上传。当前上传页只负责资料入库，方案生成仍在下一步工作台内完成。</p>
-              </div>
-            </div>
-
-            <div className="rounded-[24px] border border-white/8 bg-apm-panel p-5 shadow-apm-panel backdrop-blur-md">
-              <div className="space-y-3">
-                <Button
-                  onClick={() => void uploadAll()}
-                  disabled={!hasRequiredFiles || isAllUploading || allCompleted}
-                  className="h-12 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-sky-500 font-medium text-slate-950 shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-sky-400"
-                >
-                  {isAllUploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      上传资料中...
-                    </>
-                  ) : allCompleted ? (
-                    "资料上传完成"
-                  ) : (
-                    `开始上传${files.length > 0 ? ` (${files.length})` : ""}`
-                  )}
-                </Button>
-                <Button
-                  onClick={handleSkip}
-                  variant="ghost"
-                  className="h-12 w-full rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:bg-white/8 hover:text-white"
-                >
-                  稍后上传
-                </Button>
-              </div>
-
-              {!hasRequiredFiles && (
-                <p className="mt-3 text-xs leading-5 text-amber-200/80">
-                  请先上传"招标文件 / 施工合同"，再开始上传流程。
-                </p>
-              )}
-
-              {allCompleted && (
-                <div className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-center">
-                  <p className="text-sm text-emerald-200">
-                    所有文件上传完成，正在为你进入项目工作台。
-                  </p>
-                </div>
-              )}
-            </div>
-          </aside>
-        </div>
       </div>
+
+      {/* Generating Overlay */}
+      {isGenerating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0e17]/95">
+          <div className="w-80 text-center">
+            <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-[3px] border-slate-700 border-t-cyan-400" />
+            <h2 className="mb-2 text-xl font-bold text-white">AI 正在智能生成...</h2>
+            <p className="mb-8 text-sm text-slate-400">正在解析文件并生成施工组织设计方案</p>
+            <div className="space-y-2 text-left">
+              {GENERATION_STEPS.map((step, index) => (
+                <div
+                  key={step}
+                  className={cn(
+                    "flex items-center gap-3 text-sm",
+                    index < generationStep
+                      ? "text-emerald-400"
+                      : index === generationStep
+                        ? "text-cyan-300"
+                        : "text-slate-500",
+                  )}
+                >
+                  {index < generationStep ? (
+                    <CheckCircle className="h-4 w-4 shrink-0" />
+                  ) : index === generationStep ? (
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                  ) : (
+                    <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600" />
+                  )}
+                  <span>{step}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
