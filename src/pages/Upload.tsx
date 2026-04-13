@@ -21,7 +21,6 @@ import {
   FILE_CATEGORY_LABELS,
   type FileCategory,
   type FileStatus,
-  useProject,
   useUploads,
 } from "@/features/project";
 
@@ -99,13 +98,12 @@ function formatFileSize(size: number) {
 
 function UploadPage() {
   const navigate = useNavigate();
-  const { currentProject } = useProject();
   const [files, setFiles] = useState<UploadQueueItem[]>([]);
   const [isAllUploading, setIsAllUploading] = useState(false);
   const [dragTarget, setDragTarget] = useState<FileCategory | null>(null);
 
-  const resolvedProjectId = currentProject?.id ?? null;
-  const { uploadFile, uploadProgress, isUploading } = useUploads({ projectId: resolvedProjectId });
+  // 上传文件（不依赖项目 ID）
+  const { uploadFile, uploadProgress } = useUploads({ projectId: null });
 
   const progressMap = useMemo(
     () =>
@@ -166,11 +164,6 @@ function UploadPage() {
   }, []);
 
   const uploadAll = useCallback(async () => {
-    if (!resolvedProjectId) {
-      navigate("/projects");
-      return;
-    }
-
     setIsAllUploading(true);
 
     try {
@@ -190,7 +183,6 @@ function UploadPage() {
         try {
           await uploadFile({
             clientId: uploadItem.id,
-            projectId: resolvedProjectId,
             file: uploadItem.file,
             category: uploadItem.category,
             description: "",
@@ -218,16 +210,16 @@ function UploadPage() {
       }
 
       if (!hasUploadError) {
-        navigate(`/project/${resolvedProjectId}`);
+        navigate("/projects");
       }
     } finally {
       setIsAllUploading(false);
     }
-  }, [files, navigate, resolvedProjectId, uploadFile]);
+  }, [files, navigate, uploadFile]);
 
   const handleSkip = useCallback(() => {
-    navigate(currentProject?.id ? `/project/${currentProject.id}` : "/projects");
-  }, [currentProject, navigate]);
+    navigate("/projects");
+  }, [navigate]);
 
   const completedCount = files.filter((file) => file.status === "completed").length;
   const allCompleted = files.length > 0 && completedCount === files.length;
@@ -406,31 +398,6 @@ function UploadPage() {
     );
   };
 
-  if (!resolvedProjectId || !currentProject) {
-    return (
-      <div className="relative min-h-screen overflow-hidden bg-apm-grid">
-        <div className="bg-apm-ambient absolute inset-0" />
-        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-3xl items-center px-6 py-10">
-          <div className="w-full rounded-[28px] border border-white/8 bg-apm-panel p-8 text-center shadow-apm-panel backdrop-blur-md">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/10 bg-cyan-400/8 text-cyan-100">
-              <Upload className="h-6 w-6" />
-            </div>
-            <h1 className="font-display text-2xl text-white">当前没有可上传的项目</h1>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-apm-muted">
-              请先从项目控制台创建项目，再进入资料上传流程。上传页不再负责自动创建项目。
-            </p>
-            <Button
-              onClick={() => navigate("/projects")}
-              className="mt-6 h-11 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:from-cyan-300 hover:to-sky-400"
-            >
-              返回项目控制台
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative min-h-screen overflow-hidden bg-apm-grid">
       <div className="bg-apm-ambient absolute inset-0" />
@@ -553,10 +520,10 @@ function UploadPage() {
               <div className="space-y-3">
                 <Button
                   onClick={() => void uploadAll()}
-                  disabled={!hasRequiredFiles || isAllUploading || isUploading || allCompleted}
+                  disabled={!hasRequiredFiles || isAllUploading || allCompleted}
                   className="h-12 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-sky-500 font-medium text-slate-950 shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-sky-400"
                 >
-                  {isAllUploading || isUploading ? (
+                  {isAllUploading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       上传资料中...

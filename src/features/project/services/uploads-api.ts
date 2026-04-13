@@ -33,10 +33,9 @@ export async function getFileList(params: FileListParams): Promise<FileListRespo
 }
 
 /**
- * 上传文件
+ * 上传文件（不依赖项目 ID，文件先暂存，上传完成后再创建项目）
  */
 export async function uploadFile(
-  projectId: string,
   payload: { file: File; category: FileCategory; description?: string; tags?: string[] },
   onProgress?: (percent: number) => void,
 ): Promise<FileUploadResponse> {
@@ -45,7 +44,8 @@ export async function uploadFile(
     onProgress?.(i * 10);
   }
 
-  const nextFile = addMockFile(projectId, payload);
+  // 临时项目 ID，正式流程中后端会创建真实项目
+  const nextFile = addMockFile("temp", payload);
   return {
     fileId: nextFile.id,
     name: nextFile.name,
