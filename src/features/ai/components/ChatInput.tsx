@@ -64,7 +64,7 @@ export function ChatInput({
       <div className="px-4 pb-3">
         <div className="rounded-sm border border-cyan-900/70 bg-[rgba(0,212,255,0.04)] px-3 py-3 shadow-[inset_0_0_0_1px_rgba(8,145,178,0.14)]">
           <Input
-            placeholder="输入问题或调度指令..."
+            placeholder="输入问题..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleInputEnter}

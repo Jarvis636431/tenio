@@ -1,12 +1,7 @@
 import { Bot, Sparkles } from "lucide-react";
 import { useProject } from "@/features/project";
 
-interface ChatHeaderProps {
-  mode: "query" | "schedule";
-  onModeChange: (mode: "query" | "schedule") => void;
-}
-
-export function ChatHeader({ mode, onModeChange }: ChatHeaderProps) {
+export function ChatHeader() {
   const { currentProject } = useProject();
 
   return (
@@ -30,31 +25,6 @@ export function ChatHeader({ mode, onModeChange }: ChatHeaderProps) {
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
           在线
         </div>
-      </div>
-
-      <div className="mt-3 inline-flex rounded-sm border border-cyan-900/60 bg-[#03112a] p-0.5">
-        <button
-          type="button"
-          onClick={() => onModeChange("query")}
-          className={`h-7 rounded-sm px-2.5 text-[11px] transition ${
-            mode === "query"
-              ? "bg-cyan-500/20 text-cyan-100"
-              : "text-cyan-300/70 hover:text-cyan-200"
-          }`}
-        >
-          查询模式
-        </button>
-        <button
-          type="button"
-          onClick={() => onModeChange("schedule")}
-          className={`h-7 rounded-sm px-2.5 text-[11px] transition ${
-            mode === "schedule"
-              ? "bg-cyan-500/20 text-cyan-100"
-              : "text-cyan-300/70 hover:text-cyan-200"
-          }`}
-        >
-          调度模式
-        </button>
       </div>
     </div>
   );

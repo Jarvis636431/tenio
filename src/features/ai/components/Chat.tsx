@@ -37,7 +37,6 @@ export function Chat({ state, className }: ChatProps) {
     scrollAreaRef,
   } = state;
   const [interruptDecisions, setInterruptDecisions] = useState<Record<string, "yes" | "no">>({});
-  const [mode, setMode] = useState<"query" | "schedule">("query");
   const quickQueries = [
     { label: "当前施工进度如何？", icon: BarChart3 },
     { label: "今日在场人数？", icon: Users },
@@ -50,7 +49,7 @@ export function Chat({ state, className }: ChatProps) {
     () => [
       { text: "项目上下文已加载", tone: "success" as const },
       {
-        text: mode === "schedule" ? "当前模式：调度分析" : "当前模式：问题查询",
+        text: "AI 助手已就绪",
         tone: "info" as const,
       },
       {
@@ -58,7 +57,7 @@ export function Chat({ state, className }: ChatProps) {
         tone: isThinking ? ("info" as const) : ("success" as const),
       },
     ],
-    [isThinking, messages.length, mode],
+    [isThinking, messages.length],
   );
 
   return (
@@ -68,7 +67,7 @@ export function Chat({ state, className }: ChatProps) {
         className,
       )}
     >
-      <ChatHeader mode={mode} onModeChange={setMode} />
+      <ChatHeader />
 
       <div className="min-h-0 flex-1 overflow-hidden px-4">
         <div className="h-full min-h-0 overflow-y-auto" ref={scrollAreaRef}>
