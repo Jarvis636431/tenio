@@ -43,9 +43,9 @@ export default tseslint.config(
       "@typescript-eslint/no-unsafe-return": "warn",
       "@typescript-eslint/no-unsafe-argument": "warn",
       "@typescript-eslint/no-base-to-string": "error",
-      "@typescript-eslint/restrict-template-expressions": "off",
-      "@typescript-eslint/require-await": "off",
-      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/restrict-template-expressions": "error",
+      "@typescript-eslint/require-await": "warn",
+      "@typescript-eslint/no-unnecessary-type-assertion": "warn",
       "@typescript-eslint/no-redundant-type-constituents": "off",
       "no-restricted-imports": [
         "error",

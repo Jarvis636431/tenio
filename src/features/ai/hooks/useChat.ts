@@ -73,7 +73,7 @@ export function useChat(options: ChatPanelOptions = {}) {
     [options.projectId, routeProjectId, currentProject?.id],
   );
 
-  const resolveProjectId = async (projectRef: string) => {
+  const resolveProjectId = (projectRef: string) => {
     if (!projectRef) return "";
     const directMatch = projects.find((project) => project.id === projectRef);
     if (directMatch) return directMatch.id;
@@ -266,7 +266,7 @@ export function useChat(options: ChatPanelOptions = {}) {
               const projectRef = options.projectId || routeProjectId || currentProject?.id || "";
               if (projectRef) {
                 void (async () => {
-                  const projectId = await resolveProjectId(projectRef);
+                  const projectId = resolveProjectId(projectRef);
                   if (projectId) {
                     await refreshCoreGraph(projectId);
                   }

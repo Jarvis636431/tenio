@@ -68,7 +68,7 @@ export function unwrapApiResponseData<T>(payload: T | ApiResponse<T>): T {
   if (isApiResponseEnvelope<T>(payload)) {
     return payload.data;
   }
-  return payload as T;
+  return payload;
 }
 
 function buildRequestHeaders(options: RequestOptions): HeadersInit {

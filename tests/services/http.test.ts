@@ -46,7 +46,7 @@ describe("http helpers", () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => ({ ok: true }),
+      json: () => Promise.resolve({ ok: true }),
     } as Response);
 
     const result = await requestJson<{ ok: boolean }>("https://example.com/api", {
@@ -68,12 +68,13 @@ describe("http helpers", () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => ({
-        data: {
-          project_id: "p-001",
-        },
-        message: "ok",
-      }),
+      json: () =>
+        Promise.resolve({
+          data: {
+            project_id: "p-001",
+          },
+          message: "ok",
+        }),
     } as Response);
 
     const result = await requestApiData<{ project_id: string }>("https://example.com/api", {
@@ -88,9 +89,10 @@ describe("http helpers", () => {
     fetchMock.mockResolvedValue({
       ok: false,
       status: 400,
-      json: async () => ({
-        detail: [{ msg: "参数错误" }],
-      }),
+      json: () =>
+        Promise.resolve({
+          detail: [{ msg: "参数错误" }],
+        }),
     } as Response);
 
     await expect(requestJson("https://example.com/api", { token: "token-123" })).rejects.toThrow(
