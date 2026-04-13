@@ -315,10 +315,10 @@ function UploadPage() {
                   <X className="h-4 w-4" />
                 </button>
               )}
-              {uploadFile.status !== "pending" && (
+              {uploadFile.status === "uploading" && (
                 <Progress
-                  value={uploadFile.status === "completed" ? 100 : (progress?.percent ?? 0)}
-                  className="absolute bottom-0 left-0 right-0 h-1 rounded-b-lg bg-white/5 [&>div]:bg-cyan-400"
+                  value={progress?.percent ?? 0}
+                  className="h-1 w-16 rounded-full bg-white/10 [&>div]:bg-cyan-400"
                 />
               )}
             </div>
@@ -365,9 +365,7 @@ function UploadPage() {
             >
               <Icon className={cn(compact ? "h-7 w-7" : "h-9 w-9")} />
             </div>
-            <h3 className={cn("mb-2 font-medium text-white", compact ? "text-base" : "text-base")}>
-              {zone.title}
-            </h3>
+            <h3 className="mb-2 text-base font-medium text-white">{zone.title}</h3>
             <p className="max-w-md text-sm text-slate-400">{zone.description}</p>
             <p className="mt-2 text-xs text-slate-500">{zone.formats}</p>
             {zoneFiles.length > 0 && !hasCompleted && (
