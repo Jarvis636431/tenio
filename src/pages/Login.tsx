@@ -96,7 +96,7 @@ function Login({ onLogin }: LoginPageProps) {
           </div>
 
           {/* Login Card */}
-          <div className="overflow-hidden rounded-xl border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] shadow-apm-panel backdrop-blur-xl">
+          <div className="overflow-hidden border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] shadow-apm-panel backdrop-blur-xl">
             {/* Top gradient bar */}
             <div className="h-[2px] bg-gradient-to-r from-cyan-400 via-cyan-400/50 to-transparent" />
 
