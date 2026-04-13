@@ -13,10 +13,8 @@ import type {
   FileListResponse,
   FileStatsResponse,
   FileUpdatePayload,
-  ProjectListItem,
-  ProjectListResponse,
-  ProjectFile,
-} from "@/features/project";
+} from "@/features/upload";
+import type { ProjectListItem, ProjectListResponse, ProjectFile } from "@/features/project";
 
 interface MockProjectRecord {
   project: ProjectListItem;

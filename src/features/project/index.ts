@@ -13,32 +13,6 @@ export { ProjectTrendChart } from "./components/ProjectTrendChart";
 export { ProjectTabBar } from "./components/ProjectTabBar";
 export { UploadsTab } from "./components/UploadsTab";
 
-// Re-export from upload feature for backwards compatibility
-export {
-  useUploads,
-  type UseUploadsReturn,
-  uploadQueryKeys,
-  getFileList,
-  uploadFile,
-  deleteFile,
-  updateFile,
-  getFileStats,
-  getFileDownloadUrl,
-  FILE_CATEGORY_LABELS,
-  FILE_CATEGORY_ICONS,
-  type FileCategory,
-  type FileStatus,
-  type ProjectFile,
-  type FileUploadPayload,
-  type FileUploadResponse,
-  type FileListParams,
-  type FileListResponse,
-  type FileDeletePayload,
-  type FileUpdatePayload,
-  type FileCategoryStat,
-  type FileStatsResponse,
-} from "@/features/upload";
-
 export {
   getProjectList,
   getProcessInfo,
