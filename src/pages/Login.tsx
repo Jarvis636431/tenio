@@ -101,7 +101,7 @@ function Login({ onLogin }: LoginPageProps) {
             </div>
           </div>
 
-          <div className="apm-topline rounded-[26px] border border-cyan-400/15 bg-[rgba(4,18,37,0.86)] p-8 shadow-apm-panel backdrop-blur-xl">
+          <div className="apm-topline rounded-[26px] border border-apm bg-apm-card p-8 shadow-apm-panel backdrop-blur-xl">
             <div className="mb-7">
               <h1 className="font-display text-xl font-semibold text-white">登录工作台</h1>
               <p className="mt-1 text-sm text-apm-muted">
@@ -188,7 +188,7 @@ function Login({ onLogin }: LoginPageProps) {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition-colors hover:bg-white/5 hover:text-cyan-200"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-apm-dim transition-colors hover:bg-white/5 hover:text-cyan-200"
                         tabIndex={-1}
                       >
                         {showPassword ? (
@@ -327,7 +327,7 @@ function Login({ onLogin }: LoginPageProps) {
       </div>
 
       <Dialog open={showForgotDialog} onOpenChange={setShowForgotDialog}>
-        <DialogContent className="rounded-[24px] border-cyan-400/15 bg-[rgba(4,18,37,0.94)] text-white shadow-apm-panel backdrop-blur-xl">
+        <DialogContent className="rounded-[24px] border-cyan-400/15 bg-apm-panel text-white shadow-apm-panel backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle className="font-display text-white">忘记密码</DialogTitle>
             <DialogDescription className="text-apm-muted">
@@ -363,10 +363,10 @@ function Login({ onLogin }: LoginPageProps) {
       </Dialog>
 
       <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
-        <DialogContent className="max-w-md rounded-[24px] border-cyan-400/15 bg-[rgba(4,18,37,0.94)] text-white shadow-apm-panel backdrop-blur-xl">
+        <DialogContent className="max-w-md rounded-[24px] border-cyan-400/15 bg-apm-panel text-white shadow-apm-panel backdrop-blur-xl">
           <button
             onClick={() => setShowRegisterDialog(false)}
-            className="absolute right-4 top-4 rounded-md p-1 text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+            className="absolute right-4 top-4 rounded-md p-1 text-apm-dim transition-colors hover:bg-white/5 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
