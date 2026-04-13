@@ -389,7 +389,7 @@ function UploadPage() {
   return (
     <div className="min-h-screen bg-[#0a0e17]">
       {/* Navbar */}
-      <nav className="flex h-12 items-center justify-between border-b border-slate-700/50 bg-slate-900 px-6">
+      <nav className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-slate-700/50 bg-slate-900 px-6">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Upload className="h-4 w-4 text-cyan-400" />

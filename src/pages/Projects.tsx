@@ -118,7 +118,7 @@ function ProjectsPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-apm-grid">
+    <div className="relative min-h-screen bg-apm-grid">
       <div className="bg-apm-ambient absolute inset-0" />
 
       {/* Navbar */}
