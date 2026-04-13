@@ -4,7 +4,7 @@ import {
   type FileCategory,
   FILE_CATEGORY_LABELS,
   FILE_CATEGORY_ICONS,
-} from "@/features/project";
+} from "@/features/upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";

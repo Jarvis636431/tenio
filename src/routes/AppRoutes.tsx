@@ -8,7 +8,7 @@ import { APP_DEFAULT_TITLE } from "@/config";
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const LoginPage = lazy(() => import("@/pages/Login"));
 const ProjectsPage = lazy(() => import("@/pages/Projects"));
-const UploadPage = lazy(() => import("@/pages/Upload"));
+const UploadPage = lazy(() => import("@/features/upload/pages/UploadPage"));
 const TITLE_RULES: Array<{ prefix: string; title: string }> = [
   { prefix: "/login", title: "A.PM 智管 · 登录" },
   { prefix: "/projects", title: "A.PM 智管 · 项目控制台" },

@@ -7,12 +7,37 @@ export { useProject } from "./hooks/useProject";
 export { useProjectExport } from "./hooks/useProjectExport";
 export { useProjectCharts } from "./hooks/useProjectCharts";
 export { useProjectData } from "./hooks/useProjectData";
-export { useUploads, type UseUploadsReturn } from "./hooks/useUploads";
 export { projectQueryKeys } from "./queryKeys";
 
 export { ProjectTrendChart } from "./components/ProjectTrendChart";
 export { ProjectTabBar } from "./components/ProjectTabBar";
 export { UploadsTab } from "./components/UploadsTab";
+
+// Re-export from upload feature for backwards compatibility
+export {
+  useUploads,
+  type UseUploadsReturn,
+  uploadQueryKeys,
+  getFileList,
+  uploadFile,
+  deleteFile,
+  updateFile,
+  getFileStats,
+  getFileDownloadUrl,
+  FILE_CATEGORY_LABELS,
+  FILE_CATEGORY_ICONS,
+  type FileCategory,
+  type FileStatus,
+  type ProjectFile,
+  type FileUploadPayload,
+  type FileUploadResponse,
+  type FileListParams,
+  type FileListResponse,
+  type FileDeletePayload,
+  type FileUpdatePayload,
+  type FileCategoryStat,
+  type FileStatsResponse,
+} from "@/features/upload";
 
 export {
   getProjectList,
@@ -23,14 +48,6 @@ export {
   createJiuanProject,
   selectSolution,
 } from "./services/project-api";
-export {
-  getFileList,
-  uploadFile,
-  deleteFile,
-  updateFile,
-  getFileStats,
-  getFileDownloadUrl,
-} from "./services/uploads-api";
 
 export type {
   Project,
@@ -39,17 +56,3 @@ export type {
   ProjectListResponse,
   ProjectListItem,
 } from "./types";
-export type {
-  FileCategory,
-  FileStatus,
-  ProjectFile,
-  FileUploadPayload,
-  FileUploadResponse,
-  FileListParams,
-  FileListResponse,
-  FileDeletePayload,
-  FileUpdatePayload,
-  FileCategoryStat,
-  FileStatsResponse,
-} from "./types/uploads";
-export { FILE_CATEGORY_LABELS, FILE_CATEGORY_ICONS } from "./types/uploads";
