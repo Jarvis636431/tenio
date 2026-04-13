@@ -1,4 +1,4 @@
-import type { ScheduleRow } from "./project";
+import type { ScheduleRow } from "./schedule";
 
 export type TimelineScale = "day" | "hour" | "week" | "month";
 
