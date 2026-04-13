@@ -1,14 +1,18 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { Overview } from "@/features/project";
 import { APP_DEFAULT_TITLE } from "@/config";
 
-// Lazy loaded pages
+// Lazy loaded pages / layouts
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const LoginPage = lazy(() => import("@/pages/Login"));
 const ProjectsPage = lazy(() => import("@/pages/Projects"));
 const UploadPage = lazy(() => import("@/features/upload/pages/UploadPage"));
+const AppLayout = lazy(() =>
+  import("@/components/layout/AppLayout").then((m) => ({ default: m.AppLayout })),
+);
+const Overview = lazy(() =>
+  import("@/features/project/pages/Overview").then((m) => ({ default: m.Overview })),
+);
 const TITLE_RULES: Array<{ prefix: string; title: string }> = [
   { prefix: "/login", title: "A.PM 智管 · 登录" },
   { prefix: "/projects", title: "A.PM 智管 · 项目控制台" },
