@@ -21,8 +21,6 @@ interface AppHeaderProps {
   userName?: string;
   /** 用户角色 */
   userRole?: string;
-  /** Logo 图片地址 */
-  logoSrc?: string;
   /** Logo alt 文本 */
   logoAlt?: string;
   /** 是否显示返回按钮（upload 模式） */
@@ -46,7 +44,6 @@ export function AppHeader({
   showUser = false,
   userName = "张伟",
   userRole = "项目总监",
-  logoSrc,
   logoAlt = "A.PM",
   showBackButton = false,
   onBack,
@@ -56,12 +53,6 @@ export function AppHeader({
   const { dateText, timeText } = useTime();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  const defaultLogoSrc =
-    variant === "console" || variant === "upload"
-      ? "https://d2xsxph8kpxj0f.cloudfront.net/310519663381579886/3dGQrYeue3pTedcrRzk4ny/logo_icon_blue_cc74c57f.png"
-      : "/logo.svg";
-
-  const resolvedLogoSrc = logoSrc || defaultLogoSrc;
   const resolvedTitle =
     title || (variant === "console" ? "项目控制台" : variant === "upload" ? "新建项目" : null);
 
@@ -79,7 +70,7 @@ export function AppHeader({
     >
       {/* Logo + Brand */}
       <div className="flex items-center gap-2.5">
-        <img src={resolvedLogoSrc} alt={logoAlt} className="h-6 w-6 object-contain" />
+        <img src="/logo.svg" alt={logoAlt} className="h-6 w-6 object-contain" />
         <span className="font-display text-[15px] font-bold tracking-[-0.02em] text-white">
           A.<span className="text-cyan-400">PM</span>
           {(variant === "console" || variant === "upload") && " 智管"}
