@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
   projectQueryKeys,
@@ -12,13 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useVoice } from "./useVoice";
 import { createMessageId } from "@/lib/utils";
 import { logSilentError } from "@/lib/log";
-
-export interface ChatMessage {
-  id: string;
-  content: string;
-  sender: "user" | "ai";
-  timestamp: Date;
-}
+import { useChatStore, type ChatMessage } from "@/stores/chatStore";
 
 type ChatPanelOptions = {
   projectId?: string;
@@ -36,7 +30,10 @@ export function useChat(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
   const { currentProject, projects } = useProject();
   const queryClient = useQueryClient();
-  const defaultWelcomeMessage: ChatMessage = useMemo(
+  const abortRef = useRef<AbortController | null>(null);
+  const lastContentRef = useRef<string>("");
+
+  const defaultWelcomeMessage = useMemo<ChatMessage>(
     () => ({
       id: createMessageId(),
       content: "您好！我是 AI 助手，您可以输入施工相关问题或调整指令。",
@@ -45,33 +42,31 @@ export function useChat(options: ChatPanelOptions = {}) {
     }),
     [],
   );
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      ...defaultWelcomeMessage,
-    },
-  ]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [isThinking, setIsThinking] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  const threadIdRef = useRef<string | null>(null);
-  const threadIdByProjectRef = useRef<Record<string, string | null>>({});
-  const messagesByProjectRef = useRef<Record<string, ChatMessage[]>>({});
-  const latestMessagesRef = useRef<ChatMessage[]>(messages);
-  const lastProjectKeyRef = useRef<string>("");
-  const lastContentRef = useRef<string>("");
 
+  const activeProjectKey = useMemo(
+    () => options.projectId || routeProjectId || currentProject?.id || "__default__",
+    [options.projectId, routeProjectId, currentProject?.id],
+  );
+
+  // Store 状态和 actions
+  const messages = useChatStore((state) => state.getMessages(activeProjectKey));
+  const inputMessage = useChatStore((state) => state.inputMessage);
+  const isThinking = useChatStore((state) => state.isThinking);
+  const setActiveProjectKey = useChatStore((state) => state.setActiveProjectKey);
+  const setInputMessage = useChatStore((state) => state.setInputMessage);
+  const setIsThinking = useChatStore((state) => state.setIsThinking);
+  const setMessages = useChatStore((state) => state.setMessages);
+  const addMessage = useChatStore((state) => state.addMessage);
+  const updateLastAIMessage = useChatStore((state) => state.updateLastAIMessage);
+  const removeLastAIMessage = useChatStore((state) => state.removeLastAIMessage);
+  const setThreadId = useChatStore((state) => state.setThreadId);
+  const getThreadId = useChatStore((state) => state.getThreadId);
   const {
     state: { isRecording, isRecognizing },
     actions: { toggleRecording },
     recognizedText,
     clearRecognizedText,
   } = useVoice();
-
-  const activeProjectKey = useMemo(
-    () => options.projectId || routeProjectId || currentProject?.id || "__default__",
-    [options.projectId, routeProjectId, currentProject?.id],
-  );
 
   const resolveProjectId = (projectRef: string) => {
     if (!projectRef) return "";
@@ -80,39 +75,17 @@ export function useChat(options: ChatPanelOptions = {}) {
     return projectRef;
   };
 
+  // 切换项目时重置聊天状态
   useEffect(() => {
-    if (!scrollAreaRef.current) return;
-    scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-  }, [messages, isThinking]);
+    setActiveProjectKey(activeProjectKey);
+  }, [activeProjectKey, setActiveProjectKey]);
 
   useEffect(() => {
-    const lastKey = lastProjectKeyRef.current;
-    if (lastKey && lastKey !== activeProjectKey) {
-      messagesByProjectRef.current[lastKey] = latestMessagesRef.current;
-      threadIdByProjectRef.current[lastKey] = threadIdRef.current;
+    const currentMessages = useChatStore.getState().getMessages(activeProjectKey);
+    if (currentMessages.length === 0) {
+      setMessages(activeProjectKey, [{ ...defaultWelcomeMessage }]);
     }
-
-    const nextMessages = messagesByProjectRef.current[activeProjectKey];
-    setMessages(nextMessages?.length ? nextMessages : [{ ...defaultWelcomeMessage }]);
-    threadIdRef.current = threadIdByProjectRef.current[activeProjectKey] ?? null;
-    lastContentRef.current = "";
-    setInputMessage("");
-    setIsThinking(false);
-    lastProjectKeyRef.current = activeProjectKey;
-  }, [activeProjectKey, defaultWelcomeMessage]);
-
-  useEffect(() => {
-    messagesByProjectRef.current[activeProjectKey] = messages;
-    latestMessagesRef.current = messages;
-  }, [activeProjectKey, messages]);
-
-  useEffect(() => {
-    return () => {
-      if (abortRef.current) {
-        abortRef.current.abort();
-      }
-    };
-  }, []);
+  }, [activeProjectKey, defaultWelcomeMessage, setMessages]);
 
   // 同步语音识别结果到输入框
   useEffect(() => {
@@ -120,7 +93,16 @@ export function useChat(options: ChatPanelOptions = {}) {
       setInputMessage(recognizedText);
       clearRecognizedText();
     }
-  }, [recognizedText, clearRecognizedText]);
+  }, [recognizedText, clearRecognizedText, setInputMessage]);
+
+  // 清理 AbortController
+  useEffect(() => {
+    return () => {
+      if (abortRef.current) {
+        abortRef.current.abort();
+      }
+    };
+  }, []);
 
   /**
    * 刷新项目在 React Query 缓存中的核心图和曲线数据。
@@ -147,7 +129,8 @@ export function useChat(options: ChatPanelOptions = {}) {
    * @param approved - 用户是否批准了提议的操作
    */
   const resumeInterrupt = async (message: string, approved: boolean) => {
-    if (!threadIdRef.current) {
+    const threadId = getThreadId(activeProjectKey);
+    if (!threadId) {
       return;
     }
 
@@ -158,15 +141,13 @@ export function useChat(options: ChatPanelOptions = {}) {
 
     const aiMessageId = createMessageId();
     lastContentRef.current = "";
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: aiMessageId,
-        content: "",
-        sender: "ai",
-        timestamp: new Date(),
-      },
-    ]);
+
+    addMessage(activeProjectKey, {
+      id: aiMessageId,
+      content: "",
+      sender: "ai",
+      timestamp: new Date(),
+    });
     setIsThinking(true);
 
     try {
@@ -174,7 +155,7 @@ export function useChat(options: ChatPanelOptions = {}) {
         {
           message,
           approved,
-          thread_id: threadIdRef.current,
+          thread_id: threadId,
         },
         {
           signal: abortRef.current.signal,
@@ -182,9 +163,7 @@ export function useChat(options: ChatPanelOptions = {}) {
             const { content } = extractChatMessageContent(payload);
             if (content && content.length >= lastContentRef.current.length) {
               lastContentRef.current = content;
-              setMessages((prev) =>
-                prev.map((msg) => (msg.id === aiMessageId ? { ...msg, content } : msg)),
-              );
+              updateLastAIMessage(activeProjectKey, content);
             }
           },
           onDone: () => {
@@ -195,7 +174,7 @@ export function useChat(options: ChatPanelOptions = {}) {
               return;
             }
             logSilentError("[AI]", "AI 服务连接失败", error);
-            setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
+            removeLastAIMessage(activeProjectKey);
             setIsThinking(false);
           },
         },
@@ -205,7 +184,7 @@ export function useChat(options: ChatPanelOptions = {}) {
         return;
       }
       logSilentError("[AI]", "AI 服务连接失败", error);
-      setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
+      removeLastAIMessage(activeProjectKey);
       setIsThinking(false);
     }
   };
@@ -225,12 +204,13 @@ export function useChat(options: ChatPanelOptions = {}) {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    addMessage(activeProjectKey, userMessage);
     setIsThinking(true);
 
-    if (!threadIdRef.current) {
-      threadIdRef.current = `thread-${createMessageId()}`;
-      threadIdByProjectRef.current[activeProjectKey] = threadIdRef.current;
+    let threadId = getThreadId(activeProjectKey);
+    if (!threadId) {
+      threadId = `thread-${createMessageId()}`;
+      setThreadId(activeProjectKey, threadId);
     }
 
     if (abortRef.current) {
@@ -240,21 +220,19 @@ export function useChat(options: ChatPanelOptions = {}) {
 
     const aiMessageId = createMessageId();
     lastContentRef.current = "";
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: aiMessageId,
-        content: "",
-        sender: "ai",
-        timestamp: new Date(),
-      },
-    ]);
+
+    addMessage(activeProjectKey, {
+      id: aiMessageId,
+      content: "",
+      sender: "ai",
+      timestamp: new Date(),
+    });
 
     try {
       await chatWithAgentStream(
         {
           message: messageText,
-          thread_id: threadIdRef.current,
+          thread_id: threadId,
         },
         {
           signal: abortRef.current.signal,
@@ -278,9 +256,7 @@ export function useChat(options: ChatPanelOptions = {}) {
             // 更新消息内容
             if (content && content.length >= lastContentRef.current.length) {
               lastContentRef.current = content;
-              setMessages((prev) =>
-                prev.map((msg) => (msg.id === aiMessageId ? { ...msg, content } : msg)),
-              );
+              updateLastAIMessage(activeProjectKey, content);
             }
           },
           onDone: () => {
@@ -291,7 +267,7 @@ export function useChat(options: ChatPanelOptions = {}) {
               return;
             }
             logSilentError("[AI]", "AI 服务连接失败", error);
-            setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
+            removeLastAIMessage(activeProjectKey);
             setIsThinking(false);
           },
         },
@@ -301,7 +277,7 @@ export function useChat(options: ChatPanelOptions = {}) {
         return;
       }
       logSilentError("[AI]", "AI 服务连接失败", error);
-      setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
+      removeLastAIMessage(activeProjectKey);
       setIsThinking(false);
     }
   };
@@ -333,7 +309,7 @@ export function useChat(options: ChatPanelOptions = {}) {
       }
     },
     toggleRecording,
-    scrollAreaRef,
+    scrollAreaRef: useRef<HTMLDivElement | null>(null),
   };
 }
 
