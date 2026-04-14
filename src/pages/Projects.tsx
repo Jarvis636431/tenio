@@ -120,7 +120,7 @@ function ProjectsPage() {
       <div className="bg-apm-ambient absolute inset-0" />
 
       {/* Navbar */}
-      <AppHeader variant="console" showNotifications showSettings showUser />
+      <AppHeader variant="console" showSettings showUser />
 
       {/* Main */}
       <main className="relative z-10 mx-auto w-full max-w-[1200px] px-6 py-8">

@@ -81,13 +81,9 @@ function Login({ onLogin }: LoginPageProps) {
       <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12">
         <div className="w-full max-w-[420px]">
           {/* Logo Area */}
-          <div className="mb-12 flex items-center gap-3">
+          <div className="mb-12 flex items-center justify-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-cyan-400/20 bg-cyan-400/10">
-              <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663381579886/3dGQrYeue3pTedcrRzk4ny/logo_icon_blue_cc74c57f.png"
-                alt="A.PM"
-                className="h-7 w-7 object-contain"
-              />
+              <img src="/logo.svg" alt="A.PM" className="h-7 w-7 object-contain" />
             </div>
             <span className="font-display text-[22px] font-bold tracking-[-0.02em] text-white">
               A.<span className="text-cyan-400">PM</span> 智管
