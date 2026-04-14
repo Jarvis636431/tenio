@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { AppHeader } from "@/components/layout/AppHeader";
 import { type FileCategory, type FileStatus, useUploads } from "@/features/upload";
 
 interface UploadQueueItem {
@@ -388,29 +389,7 @@ function UploadPage() {
   return (
     <div className="min-h-screen bg-[#0a0e17]">
       {/* Navbar */}
-      <nav className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-slate-700/50 bg-slate-900 px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5">
-            <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663381579886/3dGQrYeue3pTedcrRzk4ny/logo_icon_blue_cc74c57f.png"
-              alt="A.PM"
-              className="h-6 w-6 object-contain"
-            />
-            <span className="font-display text-[15px] font-bold tracking-[-0.02em] text-white">
-              A.<span className="text-cyan-400">PM</span> 智管
-            </span>
-          </div>
-          <span className="text-slate-500">|</span>
-          <span className="text-sm text-slate-400">新建项目</span>
-        </div>
-        <button
-          onClick={handleSkip}
-          className="rounded-md border border-slate-600 bg-transparent px-4 py-1.5 text-sm text-slate-400 transition-all hover:border-cyan-400/60 hover:text-cyan-300"
-        >
-          <ArrowLeft className="mr-1.5 inline h-3.5 w-3.5" />
-          返回控制台
-        </button>
-      </nav>
+      <AppHeader variant="upload" showBackButton onBack={handleSkip} />
 
       {/* Main */}
       <div className="mx-auto max-w-[880px] px-6 pb-20 pt-12">

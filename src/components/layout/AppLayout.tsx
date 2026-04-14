@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { AppTopbar } from "@/components/layout/AppTopbar";
+import { AppHeader } from "@/components/layout/AppHeader";
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import { Chat, useChat } from "@/features/ai";
+import { useProject } from "@/features/project";
 
 interface LayoutProps {
   children: ReactNode;
@@ -9,12 +10,13 @@ interface LayoutProps {
 
 function LayoutContent({ children }: LayoutProps) {
   const chatState = useChat();
+  const { currentProject } = useProject();
 
   return (
     <div className="relative flex h-screen w-full flex-col overflow-hidden bg-[hsl(var(--apm-bg))] text-slate-100">
       <div className="pointer-events-none absolute inset-0 bg-apm-grid opacity-90" />
       <div className="pointer-events-none absolute inset-0 bg-apm-ambient" />
-      <AppTopbar />
+      <AppHeader variant="project" projectName={currentProject?.name} />
 
       <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)]">
         <div className="min-h-0 border-r border-apm bg-[hsl(var(--apm-bg-overlay))/0.72] backdrop-blur-sm">
