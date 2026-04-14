@@ -339,14 +339,14 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
     const rect = svgRef.current.getBoundingClientRect();
     const scaleX = rect.width / width;
     const scaleY = rect.height / height;
-    const fitScale = Math.min(scaleX, scaleY) * 60;
+    const fitScale = Math.min(scaleX, scaleY) * 0.9;
     setMinScale(fitScale);
     if (initialized) return;
     const offsetX = (rect.width - width * fitScale) / 2;
     const offsetY = (rect.height - height * fitScale) / 2;
     setView({ x: offsetX, y: offsetY, scale: fitScale });
     setInitialized(true);
-  }, [width, height, initialized]);
+  }, [width, height]);
 
   const handleWheel = useCallback(
     (event: React.WheelEvent<SVGSVGElement>) => {
