@@ -39,3 +39,28 @@ export function formatWorkerCount(count: unknown): string {
   if (!Number.isFinite(value)) return "0";
   return String(Math.round(value));
 }
+
+/**
+ * 根据状态字符串返回对应的 chip 类型
+ * @param status - 状态字符串
+ * @returns chip 类型: done(完成) | act(进行中) | pend(待开始)
+ */
+export function normalizeStatusChip(status?: string): "done" | "act" | "pend" {
+  const s = status?.toLowerCase() ?? "";
+  if (s.includes("完成") || s.includes("done") || s.includes("end")) return "done";
+  if (s.includes("进行") || s.includes("active") || s.includes("start")) return "act";
+  return "pend";
+}
+
+import type { CoreGraphResponse } from "@/types/domain/schedulepro";
+
+/**
+ * 解析 WBS 工作包的大纲层级
+ * @param wp - 工作进程对象
+ * @returns 大纲层级数字
+ */
+export function resolveOutlineLevel(wp: CoreGraphResponse["work_processes"][number]): number {
+  const meta = wp.outline_metadata;
+  if (meta && typeof meta.level === "number") return meta.level;
+  return wp.outline_level ?? 0;
+}

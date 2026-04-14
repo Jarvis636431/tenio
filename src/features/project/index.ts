@@ -15,6 +15,7 @@ export { UploadsTab } from "./components/UploadsTab";
 export { OrganizationTab } from "./components/OrganizationTab";
 export { RotationTab } from "./components/RotationTab";
 export { TimeCostTab } from "./components/TimeCostTab";
+export { ProjectScheduleTable } from "./components/ProjectScheduleTable";
 
 export {
   getProjectList,
