@@ -98,14 +98,14 @@ function Login({ onLogin }: LoginPageProps) {
           {/* Login Card */}
           <div className="overflow-hidden border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] shadow-apm-panel backdrop-blur-xl">
             {/* Top gradient bar */}
-            <div className="h-[2px] bg-gradient-to-r from-cyan-400 via-cyan-400/50 to-transparent" />
+            <div className="h-[2px] bg-gradient-to-r from-cyan-400 via-cyan-400/30 to-transparent" />
 
             <div className="px-8 pb-8 pt-7">
               {/* Header */}
               <div className="mb-1">
                 <h1 className="font-display text-lg font-bold text-white">欢迎回来</h1>
               </div>
-              <p className="mb-6 text-xs text-apm-muted">登录您的账号以访问项目控制台</p>
+              <p className="mb-7 text-xs text-apm-muted">登录您的账号以访问项目控制台</p>
 
               {/* Tabs */}
               <div className="mb-6 flex border-b border-cyan-400/20">
@@ -148,7 +148,7 @@ function Login({ onLogin }: LoginPageProps) {
                             setPhoneForm((current) => ({ ...current, phone: e.target.value }))
                           }
                           className={cn(
-                            "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-9 pr-4",
+                            "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-[38px] pr-4",
                             "text-sm text-white placeholder:text-apm-dim",
                             "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
                           )}
@@ -170,7 +170,7 @@ function Login({ onLogin }: LoginPageProps) {
                               setPhoneForm((current) => ({ ...current, code: e.target.value }))
                             }
                             className={cn(
-                              "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-9 pr-4",
+                              "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-[38px] pr-4",
                               "text-sm text-white placeholder:text-apm-dim",
                               "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
                             )}
@@ -201,7 +201,7 @@ function Login({ onLogin }: LoginPageProps) {
                           value={form.username}
                           onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
                           className={cn(
-                            "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-9 pr-4",
+                            "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-[38px] pr-4",
                             "text-sm text-white placeholder:text-apm-dim",
                             "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
                           )}
@@ -220,7 +220,7 @@ function Login({ onLogin }: LoginPageProps) {
                           value={form.password}
                           onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                           className={cn(
-                            "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-9 pr-4",
+                            "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-[38px] pr-4",
                             "text-sm text-white placeholder:text-apm-dim",
                             "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
                           )}
@@ -272,7 +272,7 @@ function Login({ onLogin }: LoginPageProps) {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="h-[46px] w-full rounded-lg bg-gradient-to-r from-cyan-400 to-sky-500 text-[14px] font-bold tracking-[0.04em] text-slate-950 shadow-lg shadow-cyan-500/20 transition-opacity hover:opacity-90"
+                  className="h-[46px] w-full rounded-lg bg-gradient-to-r from-cyan-400 to-sky-500 text-[14px] font-bold tracking-[0.04em] text-slate-950 transition-opacity hover:opacity-90"
                 >
                   {isLoading ? (
                     <>

@@ -253,6 +253,16 @@ All colors MUST be HSL.
     color: hsl(var(--apm-text-dim));
   }
 
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: hsl(var(--apm-text-muted));
+    letter-spacing: 0.08em;
+    margin-bottom: 7px;
+    text-transform: uppercase;
+  }
+
   .bg-apm-grid {
     background-image:
       linear-gradient(hsl(var(--apm-surface-grid) / 0.025) 1px, transparent 1px),
