@@ -51,7 +51,7 @@ export function ChatInput({
                 onClick={() => {
                   void sendQuickMessage(item.label);
                 }}
-                className="h-7 w-auto justify-start gap-1 rounded-sm border border-cyan-900/60 bg-[rgba(0,212,255,0.04)] px-2 text-apm-muted hover:border-cyan-400/35 hover:bg-cyan-400/10 hover:text-cyan-100"
+                className="h-7 w-auto justify-start gap-1 rounded-sm border border-cyan-400/18 bg-cyan-400/4 px-2 text-apm-muted hover:border-cyan-400/40 hover:bg-cyan-400/10 hover:text-cyan-100"
               >
                 <Icon className="h-2.5 w-2.5 text-cyan-300" />
                 <span className="truncate text-[10px]">{item.label}</span>

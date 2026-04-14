@@ -327,7 +327,7 @@ export function ChatMessage({
       <div className={cn("max-w-[82%]", { "text-right": isUser })}>
         <div
           className={cn("rounded-sm px-3 py-2 text-sm break-words whitespace-pre-line", {
-            "border border-violet-400/20 bg-violet-400/10 text-slate-100": isUser,
+            "border border-violet-400/20 bg-violet-400/10 text-slate-100 text-right": isUser,
             "border border-cyan-900/40 bg-[rgba(0,212,255,0.06)] text-cyan-100": !isUser,
           })}
         >

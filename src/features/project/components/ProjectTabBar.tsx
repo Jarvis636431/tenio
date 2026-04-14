@@ -8,7 +8,6 @@ import {
   List,
   RotateCw,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 type ProjectTabKey =
   | "timeCost"
@@ -42,9 +41,9 @@ const TABS: Array<{
 
 export function ProjectTabBar({ activeTab, onChange, onExport, onRegenerate }: ProjectTabBarProps) {
   return (
-    <div className="shrink-0 border border-apm bg-apm-card shadow-apm-panel">
-      <div className="flex items-center gap-2 px-3 lg:gap-4 lg:px-4">
-        <div className="flex min-w-0 flex-1 items-center gap-0 overflow-x-auto">
+    <div className="shrink-0 border-b border-cyan-400/15 bg-[rgba(2,12,27,0.5)]">
+      <div className="flex items-center gap-0 px-5">
+        <div className="flex min-w-0 flex-1 items-center overflow-x-auto">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -54,14 +53,14 @@ export function ProjectTabBar({ activeTab, onChange, onExport, onRegenerate }: P
                 key={tab.key}
                 type="button"
                 onClick={() => onChange(tab.key)}
-                className={`group relative shrink-0 border-b-2 px-2 py-3 text-xs transition lg:px-3 lg:text-sm ${
+                className={`group relative shrink-0 border-b-2 px-4 py-3 text-sm transition ${
                   isActive
-                    ? "border-cyan-300 text-slate-50"
+                    ? "border-cyan-400 text-cyan-400"
                     : "border-transparent text-slate-400 hover:border-cyan-400/30 hover:text-cyan-100"
                 }`}
               >
-                <span className="flex items-center gap-1.5 font-medium lg:gap-2">
-                  <Icon className="h-3 w-3 lg:h-3.5 lg:w-3.5" />
+                <span className="flex items-center gap-2 font-medium">
+                  <Icon className="h-3.5 w-3.5" />
                   {tab.label}
                 </span>
               </button>
@@ -69,24 +68,22 @@ export function ProjectTabBar({ activeTab, onChange, onExport, onRegenerate }: P
           })}
         </div>
 
-        <div className="hidden shrink-0 items-center gap-2 lg:flex">
-          <Button
+        <div className="flex shrink-0 items-center gap-2">
+          <button
             type="button"
-            size="sm"
-            variant="outline"
-            className="h-8 rounded-sm border-cyan-400/20 bg-transparent px-3 text-xs text-cyan-100 transition hover:border-cyan-300/35 hover:bg-cyan-400/10"
             onClick={onRegenerate}
+            className="flex items-center gap-1.5 rounded-sm border border-cyan-400/18 bg-transparent px-3 py-1.5 text-xs font-medium text-apm-muted transition-all hover:border-cyan-400 hover:text-cyan-400 hover:bg-cyan-400/10"
           >
+            <RotateCw className="h-3 w-3" />
             重新生成
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            size="sm"
-            className="h-8 rounded-sm border border-cyan-400/20 bg-[linear-gradient(135deg,hsl(var(--apm-accent)),hsl(var(--apm-accent-strong)))] px-3 text-xs font-medium text-[#020c1b] transition hover:opacity-90"
             onClick={onExport}
+            className="flex items-center gap-1.5 rounded-sm border border-cyan-400 bg-cyan-400 px-3 py-1.5 text-xs font-medium text-[#020c1b] transition hover:opacity-85"
           >
             导出全部
-          </Button>
+          </button>
         </div>
       </div>
     </div>

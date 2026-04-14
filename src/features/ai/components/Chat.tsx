@@ -63,7 +63,7 @@ export function Chat({ state, className }: ChatProps) {
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 w-full flex-col overflow-hidden bg-gradient-to-b from-[#020a1d] to-[#041332] backdrop-blur-sm",
+        "flex h-full min-h-0 w-full flex-col overflow-hidden bg-[rgba(2,12,27,0.6)] backdrop-blur-sm",
         className,
       )}
     >

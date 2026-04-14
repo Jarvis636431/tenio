@@ -18,13 +18,13 @@ function LayoutContent({ children }: LayoutProps) {
       <div className="pointer-events-none absolute inset-0 bg-apm-ambient" />
       <AppHeader variant="project" projectName={currentProject?.name} showSettings showUser />
 
-      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)]">
+      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[280px_minmax(0,1fr)]">
         <div className="min-h-0 border-r border-apm bg-[hsl(var(--apm-bg-overlay))/0.72] backdrop-blur-sm">
           <Chat state={chatState} className="h-full" />
         </div>
 
         <main className="min-h-0 overflow-hidden">
-          <div className="h-full overflow-x-hidden overflow-y-auto px-5 py-5">{children}</div>
+          <div className="h-full overflow-x-hidden overflow-y-auto p-5">{children}</div>
         </main>
       </div>
     </div>
