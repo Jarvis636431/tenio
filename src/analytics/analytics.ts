@@ -1,5 +1,6 @@
 import { ANALYTICS_CONFIG } from "@/analytics/config";
 import { ConsoleAnalyticsProvider, NoopAnalyticsProvider } from "@/analytics/providers";
+import { parseAnalyticsContext, parseAnalyticsPayload } from "@/analytics/schema";
 import type {
   AnalyticsContext,
   AnalyticsEventEnvelope,
@@ -61,10 +62,10 @@ export class AnalyticsClient {
    * @param partialContext - 要更新的上下文字段
    */
   setContext(partialContext: Partial<AnalyticsContext>) {
-    this.context = {
+    this.context = parseAnalyticsContext({
       ...this.context,
       ...partialContext,
-    };
+    });
   }
 
   /**
@@ -82,7 +83,7 @@ export class AnalyticsClient {
    * @param context - 用户或会话上下文
    */
   identify(context: AnalyticsContext) {
-    this.setContext(context);
+    this.setContext(parseAnalyticsContext(context));
     void this.provider.identify?.(this.getContext());
   }
 
@@ -98,13 +99,15 @@ export class AnalyticsClient {
     payload: AnalyticsEventMap[TName],
     options?: AnalyticsTrackOptions & { context?: Partial<AnalyticsContext> },
   ) {
+    const parsedContext = parseAnalyticsContext({
+      ...this.context,
+      ...options?.context,
+    });
+    const parsedPayload = parseAnalyticsPayload(name, payload);
     const event: AnalyticsEventEnvelope<TName> = {
       name,
-      payload,
-      context: {
-        ...this.context,
-        ...options?.context,
-      },
+      payload: parsedPayload,
+      context: parsedContext,
       timestamp: new Date().toISOString(),
     };
 

@@ -1,12 +1,12 @@
-const env = import.meta.env;
+import { appEnv } from "@/schemas/env";
 
 const trimTrailingSlash = (value?: string) => value?.replace(/\/$/, "");
 
-export const IS_DEV = env.MODE === "development";
+export const IS_DEV = appEnv.MODE === "development";
 
 export const APP_DEFAULT_TITLE = "A.PM 智能管理平台";
-const apiBaseUrl = trimTrailingSlash(env.VITE_API_BASE_URL);
-const aiServiceUrl = trimTrailingSlash(env.VITE_AI_SERVICE_URL) ?? "http://127.0.0.1:8123";
+const apiBaseUrl = trimTrailingSlash(appEnv.VITE_API_BASE_URL);
+const aiServiceUrl = trimTrailingSlash(appEnv.VITE_AI_SERVICE_URL) ?? "http://127.0.0.1:8123";
 
 export const API_BASE = {
   backend: apiBaseUrl ?? "http://localhost:8000",
@@ -14,12 +14,12 @@ export const API_BASE = {
 };
 
 export const RESOURCE_BASE_URL =
-  trimTrailingSlash(env.VITE_RESOURCE_BASE_URL) ?? "https://apmoss.emio.cn/public/resources";
+  trimTrailingSlash(appEnv.VITE_RESOURCE_BASE_URL) ?? "https://apmoss.emio.cn/public/resources";
 
 export const VOLC_SPEECH = {
   apiUrl: "https://openspeech.bytedance.com/api/v3/auc/bigmodel/recognize/flash",
   resourceId: "volc.bigasr.auc_turbo",
-  appId: env.VITE_VOLC_APP_ID ?? "",
-  accessToken: env.VITE_VOLC_ACCESS_TOKEN ?? "",
-  secretKey: env.VITE_VOLC_SECRET_KEY ?? "",
+  appId: appEnv.VITE_VOLC_APP_ID ?? "",
+  accessToken: appEnv.VITE_VOLC_ACCESS_TOKEN ?? "",
+  secretKey: appEnv.VITE_VOLC_SECRET_KEY ?? "",
 };

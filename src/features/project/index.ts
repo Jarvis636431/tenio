@@ -26,6 +26,13 @@ export {
   createJiuanProject,
   selectSolution,
 } from "./services/project-api";
+export {
+  costCurveResponseSchema,
+  headcountCurveResponseSchema,
+  legacyCostCurveResponseSchema,
+  legacyHeadcountCurveResponseSchema,
+  projectListResponseSchema,
+} from "./services/project-schema";
 
 export type {
   Project,

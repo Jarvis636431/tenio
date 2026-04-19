@@ -1,5 +1,13 @@
 import { API_BASE } from "@/config";
 import { request, requestSse, type SseRequestOptions } from "@/services/http";
+import {
+  agentChatPayloadSchema,
+  agentInitPayloadSchema,
+  agentInitResponseSchema,
+  agentResumePayloadSchema,
+  parseAiStreamPayload,
+  parseAiVerifyPayload,
+} from "./ai-schema";
 import type {
   AgentInitPayload,
   AgentInitResponse,
@@ -13,14 +21,16 @@ const AI_BASE_URL = API_BASE.aiService;
  * 初始化 AI Agent
  */
 export async function initAgent(payload: AgentInitPayload): Promise<AgentInitResponse> {
-  return request<AgentInitResponse>(`${AI_BASE_URL}/api/agent/init`, {
+  const parsedPayload = agentInitPayloadSchema.parse(payload);
+  const response = await request<AgentInitResponse>(`${AI_BASE_URL}/api/agent/init`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(parsedPayload),
     unwrap: false,
   });
+  return agentInitResponseSchema.parse(response);
 }
 
 /**
@@ -33,12 +43,13 @@ export async function chatWithAgentStream(
     signal?: AbortSignal;
   },
 ): Promise<Response> {
+  const parsedPayload = agentChatPayloadSchema.parse(payload);
   return requestSse(`${AI_BASE_URL}/api/agent/chat/sse`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(parsedPayload),
     signal: handlers.signal,
     onMessage: handlers.onMessage,
     onDone: handlers.onDone,
@@ -56,12 +67,13 @@ export async function resumeAgentStream(
     signal?: AbortSignal;
   },
 ): Promise<Response> {
+  const parsedPayload = agentResumePayloadSchema.parse(payload);
   return requestSse(`${AI_BASE_URL}/api/agent/chat/resume`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(parsedPayload),
     signal: handlers.signal,
     onMessage: handlers.onMessage,
     onDone: handlers.onDone,
@@ -78,14 +90,13 @@ export function extractChatMessageContent(payload: unknown): {
   type?: string;
   shouldRefetch?: boolean;
 } {
-  const obj =
-    typeof payload === "object" && payload !== null ? (payload as Record<string, unknown>) : null;
-
-  if (!obj) {
+  const parsed = parseAiStreamPayload(payload);
+  if (!parsed.success) {
     return { content: null };
   }
 
-  const messageType = obj.type as string | undefined;
+  const obj = parsed.data;
+  const messageType = obj.type;
 
   // refetch 类型：触发数据刷新
   if (messageType === "refetch") {
@@ -139,12 +150,13 @@ export function extractChatMessageContent(payload: unknown): {
  * 构建验证消息
  */
 function buildVerifyMessage(data: unknown): string | null {
-  if (!data || typeof data !== "object") {
+  const parsed = parseAiVerifyPayload(data);
+  if (!parsed.success) {
     return null;
   }
 
-  const payload = data as Record<string, unknown>;
-  const verifyType = (payload.verify_type as string) ?? "unknown";
+  const payload = parsed.data;
+  const verifyType = payload.verify_type ?? "unknown";
   const lines: string[] = [];
 
   switch (verifyType) {
@@ -162,7 +174,7 @@ function buildVerifyMessage(data: unknown): string | null {
 
     case "unexpected_event":
       lines.push("类型：突发事件验证");
-      if (typeof payload.intent === "string") lines.push(`意图：${payload.intent}`);
+      if (payload.intent) lines.push(`意图：${payload.intent}`);
       if (payload.affected_task_ids) {
         lines.push(`受影响任务：${JSON.stringify(payload.affected_task_ids)}`);
       }
@@ -180,21 +192,25 @@ function buildVerifyMessage(data: unknown): string | null {
  * 从 update 类型消息中提取内容
  */
 function extractUpdateContent(obj: Record<string, unknown>): string | null {
-  if (typeof obj.message === "string") return obj.message;
-  if (typeof obj.data === "string") return obj.data;
+  const parsed = parseAiStreamPayload(obj);
+  if (!parsed.success) {
+    return null;
+  }
 
-  if (obj.data && typeof obj.data === "object") {
-    const dataObj = obj.data as Record<string, unknown>;
-    const routeObj =
-      (dataObj.project_info_query as { messages?: Array<{ content?: string; type?: string }> }) ??
-      (dataObj.knowledge_query as { messages?: Array<{ content?: string; type?: string }> });
+  if (parsed.data.message) return parsed.data.message;
+  if (typeof parsed.data.data === "string") return parsed.data.data;
 
-    const messages = routeObj?.messages ?? [];
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const msg = messages[i];
-      if (msg?.type === "tool" || msg?.type === "system") continue;
-      if (msg?.content) return msg.content;
-    }
+  const nested = parseAiStreamPayload(parsed.data.data);
+  if (!nested.success) {
+    return null;
+  }
+
+  const routeObj = nested.data.project_info_query ?? nested.data.knowledge_query;
+  const messages = routeObj?.messages ?? [];
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (msg?.type === "tool" || msg?.type === "system") continue;
+    if (msg?.content) return msg.content;
   }
 
   return null;
@@ -204,9 +220,16 @@ function extractUpdateContent(obj: Record<string, unknown>): string | null {
  * 从路由字段提取消息内容
  */
 function extractFromRoute(obj: Record<string, unknown>, routeKey: string): string | null {
-  const routeObj = obj[routeKey] as
-    | { messages?: Array<{ content?: string; type?: string }> }
-    | undefined;
+  const parsed = parseAiStreamPayload(obj);
+  if (!parsed.success) {
+    return null;
+  }
+  const routeObj =
+    routeKey === "knowledge_query"
+      ? parsed.data.knowledge_query
+      : routeKey === "project_info_query"
+        ? parsed.data.project_info_query
+        : parsed.data.conversation;
   if (!routeObj?.messages) return null;
 
   const messages = routeObj.messages;
@@ -222,7 +245,11 @@ function extractFromRoute(obj: Record<string, unknown>, routeKey: string): strin
  * 提取中断消息内容
  */
 function extractInterrupt(obj: Record<string, unknown>): string | null {
-  const interrupts = obj.__interrupt__;
+  const parsed = parseAiStreamPayload(obj);
+  if (!parsed.success) {
+    return null;
+  }
+  const interrupts = parsed.data.__interrupt__;
   if (!Array.isArray(interrupts) || interrupts.length === 0) return null;
 
   const last: unknown = interrupts[interrupts.length - 1];

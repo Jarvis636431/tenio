@@ -1,5 +1,12 @@
 import { API_BASE } from "@/config";
 import { request, buildUrl } from "@/services/http";
+import {
+  costCurveResponseSchema,
+  headcountCurveResponseSchema,
+  legacyCostCurveResponseSchema,
+  legacyHeadcountCurveResponseSchema,
+  projectListResponseSchema,
+} from "./project-schema";
 import type {
   CreateJiuanProjectPayload,
   CreateJiuanProjectResponse,
@@ -21,7 +28,8 @@ const API_V1 = `${BACKEND_BASE_URL}/api/v1`;
 // ============================================================================
 
 export async function getProjectList(): Promise<ProjectListResponse> {
-  return request<ProjectListResponse>(`${API_V1}/projects`);
+  const response = await request<ProjectListResponse>(`${API_V1}/projects`);
+  return projectListResponseSchema.parse(response);
 }
 
 export async function getProcessInfo(
@@ -58,18 +66,19 @@ function normalizeCostCurveResponse(
 ): CostCurveResponse {
   // 新版格式直接返回
   if ("dates" in payload && "total_costs" in payload) {
-    return payload;
+    return costCurveResponseSchema.parse(payload);
   }
   // 旧版格式转换
-  const points = payload.points ?? [];
+  const parsedPayload = legacyCostCurveResponseSchema.parse(payload);
+  const points = parsedPayload.points;
   return {
-    project_id: payload.project_id,
+    project_id: parsedPayload.project_id,
     days: points.map((_: CostCurvePoint, index: number) => index + 1),
     dates: points.map((p: CostCurvePoint) => p.date),
     total_costs: points.map((p: CostCurvePoint) => p.total_cost),
     material_costs: points.map((p: CostCurvePoint) => p.material_cost ?? 0),
     floating_costs: points.map((p: CostCurvePoint) => p.floating_cost ?? 0),
-    generated_at: payload.generated_at,
+    generated_at: parsedPayload.generated_at,
   };
 }
 
@@ -78,16 +87,17 @@ function normalizeHeadcountCurveResponse(
 ): HeadcountCurveResponse {
   // 新版格式直接返回
   if ("dates" in payload && "headcounts" in payload) {
-    return payload;
+    return headcountCurveResponseSchema.parse(payload);
   }
   // 旧版格式转换
-  const points = payload.points ?? [];
+  const parsedPayload = legacyHeadcountCurveResponseSchema.parse(payload);
+  const points = parsedPayload.points;
   return {
-    project_id: payload.project_id,
+    project_id: parsedPayload.project_id,
     days: points.map((_: HeadcountCurvePoint, index: number) => index + 1),
     dates: points.map((p: HeadcountCurvePoint) => p.date),
     headcounts: points.map((p: HeadcountCurvePoint) => p.headcount),
-    generated_at: payload.generated_at,
+    generated_at: parsedPayload.generated_at,
   };
 }
 
