@@ -41,12 +41,12 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const { handleExport } = useProjectExport(coreGraph);
 
   const panelClass =
-    "apm-topline min-h-[360px] overflow-hidden border border-apm bg-apm-card shadow-apm-panel";
+    "min-h-[360px] overflow-hidden border border-none bg-apm-card shadow-apm-panel px-4";
   const emptyPanelClass =
     "flex h-full min-h-[360px] items-center justify-center text-sm text-apm-muted";
 
   return (
-    <div className="flex min-h-full flex-col gap-4 bg-transparent px-0 pt-0 pb-0 text-slate-100">
+    <div className="flex min-h-full flex-col gap-4 bg-transparent p-0 text-slate-100">
       <ProjectTabBar
         activeTab={activeTab}
         onChange={setActiveTab}

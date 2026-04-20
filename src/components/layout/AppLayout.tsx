@@ -24,7 +24,7 @@ function LayoutContent({ children }: LayoutProps) {
         </div>
 
         <main className="min-h-0 overflow-hidden">
-          <div className="h-full overflow-x-hidden overflow-y-auto p-5">{children}</div>
+          <div className="h-full overflow-x-hidden overflow-y-auto">{children}</div>
         </main>
       </div>
     </div>
