@@ -9,7 +9,6 @@ export { useProjectCharts } from "./hooks/useProjectCharts";
 export { useProjectData } from "./hooks/useProjectData";
 export { projectQueryKeys } from "./queryKeys";
 
-export { ProjectTrendChart } from "./components/ProjectTrendChart";
 export { ProjectTabBar } from "./components/ProjectTabBar";
 export { UploadsTab } from "./components/UploadsTab";
 export { DocsTab } from "./components/DocsTab";

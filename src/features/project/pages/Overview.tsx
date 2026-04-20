@@ -94,11 +94,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       {activeTab === "docs" && (
         <div className={panelClass}>
           <div className="h-full min-h-[520px] p-4">
-            <DocsTab
-              projectName={currentProjectName}
-              planTasks={planTasks}
-              totalDurationLabel={totalDurationLabel}
-            />
+            <DocsTab content="# 施工组织设计文档" />
           </div>
         </div>
       )}
