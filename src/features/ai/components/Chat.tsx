@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import type { ChatState } from "@/features/ai";
 import { ChatInput } from "./ChatInput";
 import { ChatMessage } from "./ChatMessage";
-import { ChatConsole } from "./ChatConsole";
+import { ChatHistory } from "./ChatHistory";
 
 interface ChatProps {
   state: ChatState;
@@ -97,7 +97,7 @@ export function Chat({ state, className }: ChatProps) {
         quickQueries={quickQueries}
       />
 
-      <ChatConsole items={consoleItems} />
+      <ChatHistory items={consoleItems} />
     </div>
   );
 }
