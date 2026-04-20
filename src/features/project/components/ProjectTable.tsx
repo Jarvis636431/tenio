@@ -4,7 +4,7 @@ import { normalizeStatusChip, resolveOutlineLevel } from "@/lib/task";
 import type { PlanTask } from "@/types/domain/plan";
 import type { CoreGraphResponse } from "@/types/domain/schedulepro";
 
-interface ProjectScheduleTableProps {
+interface ProjectTableProps {
   planTasks: PlanTask[];
   isLoading?: boolean;
   coreGraph?: CoreGraphResponse;
@@ -14,11 +14,7 @@ interface ProjectScheduleTableProps {
  * 项目施工任务计划表格
  * 显示任务序号、工序名称、工期、开始/结束时间、前置任务和状态
  */
-export function ProjectScheduleTable({
-  planTasks,
-  isLoading,
-  coreGraph,
-}: ProjectScheduleTableProps) {
+export function ProjectTable({ planTasks, isLoading, coreGraph }: ProjectTableProps) {
   const processTableRows = sortBySeqNo(planTasks);
   const formatDateTime = (value?: string) => formatIsoDate(value, true);
 

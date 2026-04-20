@@ -5,7 +5,7 @@ import {
   useProjectCharts,
   ProjectTabBar,
   UploadsTab,
-  ProjectScheduleTable,
+  ProjectTable,
   DocsTab,
   ChartTab,
   RotationTab,
@@ -105,11 +105,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
       {activeTab === "scheduleList" && (
         <div className={`${panelClass} min-h-[640px] overflow-auto`}>
-          <ProjectScheduleTable
-            planTasks={planTasks}
-            isLoading={isLoadingGraph}
-            coreGraph={coreGraph}
-          />
+          <ProjectTable planTasks={planTasks} isLoading={isLoadingGraph} coreGraph={coreGraph} />
         </div>
       )}
 
