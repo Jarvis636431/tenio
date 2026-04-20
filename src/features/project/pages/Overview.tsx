@@ -107,25 +107,13 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
       {activeTab === "gantt" && (
         <div className={`${panelClass} min-h-[640px]`}>
-          {planTasks.length === 0 ? (
-            <div className="flex h-full min-h-[640px] items-center justify-center text-cyan-300/70">
-              {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
-            </div>
-          ) : (
-            <GanttChart data={planTasks} scale="day" />
-          )}
+          <GanttChart data={planTasks} scale="day" />
         </div>
       )}
 
       {activeTab === "network" && (
         <div className={`${panelClass} min-h-[640px]`}>
-          {planTasks.length === 0 ? (
-            <div className="flex h-full min-h-[640px] items-center justify-center text-cyan-300/70">
-              {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
-            </div>
-          ) : (
-            <NetworkDiagram tasks={planTasks} />
-          )}
+          <NetworkDiagram tasks={planTasks} />
         </div>
       )}
 

@@ -28,12 +28,6 @@ type TimelineRow = PlanTask & {
   color: string;
 };
 
-const getBaselineDate = () => {
-  const baseline = new Date(2025, 0, 1);
-  baseline.setHours(0, 0, 0, 0);
-  return baseline;
-};
-
 export function GanttChart({ data, scale = "day" }: GanttChartProps) {
   const chartContentRef = useRef<HTMLDivElement>(null);
   const timelineScale = scale;
@@ -41,7 +35,6 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
   const filteredData = useMemo(() => data.filter((task) => !isLagTask(task.task)), [data]);
 
   const { timelineData, totalUnits, headers } = useMemo(() => {
-    const baseline = getBaselineDate();
     const parsedItems = filteredData.map((item) => {
       const start = item.startDate ? parseDate(item.startDate) : null;
       const end = item.endDate ? parseDate(item.endDate) : null;
@@ -56,7 +49,7 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
     });
 
     if (timePoints.length === 0) {
-      timePoints.push(baseline.getTime());
+      return { timelineData: [] as TimelineRow[], totalUnits: 0, headers: [] };
     }
 
     const minTime = Math.min(...timePoints);
@@ -66,20 +59,21 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
     const totalUnits = calculateTotalUnits(startAnchor, maxTime, timelineScale);
     const headers = generateHeaders(startAnchor, totalUnits, timelineScale);
 
-    const timelineData: TimelineRow[] = parsedItems.map(({ item, start, end }) => {
-      const startDate = start ?? baseline;
-      const endDate = end ?? startDate;
-      const startOffset = calculateStartOffset(startDate, startAnchor, timelineScale);
-      const spanUnits = calculateSpanUnits(startDate, endDate, timelineScale);
+    const timelineData: TimelineRow[] = parsedItems
+      .map(({ item, start, end }) => {
+        if (!start || !end) return null;
+        const startOffset = calculateStartOffset(start, startAnchor, timelineScale);
+        const spanUnits = calculateSpanUnits(start, end, timelineScale);
 
-      return {
-        ...item,
-        startOffset,
-        spanUnits,
-        barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
-        color: item.criticalPath ? "hsl(210, 70%, 55%)" : "hsl(210, 6%, 70%)",
-      };
-    });
+        return {
+          ...item,
+          startOffset,
+          spanUnits,
+          barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
+          color: item.criticalPath ? "hsl(210, 70%, 55%)" : "hsl(210, 6%, 70%)",
+        };
+      })
+      .filter(Boolean) as TimelineRow[];
 
     return {
       timelineData,
@@ -98,6 +92,14 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
   useEffect(() => {
     chartContentRef.current?.scrollTo({ top: 0, left: 0 });
   }, [filteredData, timelineScale]);
+
+  if (filteredData.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center text-cyan-300/70">
+        当前项目暂无施工任务数据
+      </div>
+    );
+  }
 
   const totalRowsHeight = rowVirtualizer.getTotalSize();
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -118,7 +120,6 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
                 <div style={{ height: totalRowsHeight, position: "relative" }}>
                   {virtualRows.map((virtualRow) => {
                     const item = timelineData[virtualRow.index];
-                    if (!item) return null;
 
                     return (
                       <div
@@ -198,7 +199,6 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
                   />
                   {virtualRows.map((virtualRow) => {
                     const item = timelineData[virtualRow.index];
-                    if (!item) return null;
 
                     return (
                       <div
