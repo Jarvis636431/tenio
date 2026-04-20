@@ -12,9 +12,9 @@ export { projectQueryKeys } from "./queryKeys";
 export { ProjectTrendChart } from "./components/ProjectTrendChart";
 export { ProjectTabBar } from "./components/ProjectTabBar";
 export { UploadsTab } from "./components/UploadsTab";
-export { OrganizationTab } from "./components/OrganizationTab";
+export { DocsTab } from "./components/DocsTab";
 export { RotationTab } from "./components/RotationTab";
-export { TimeCostTab } from "./components/TimeCostTab";
+export { ChartTab } from "./components/ChartTab";
 export { ProjectScheduleTable } from "./components/ProjectScheduleTable";
 
 export {

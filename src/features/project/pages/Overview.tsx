@@ -6,10 +6,10 @@ import {
   ProjectTabBar,
   UploadsTab,
   ProjectScheduleTable,
+  DocsTab,
+  ChartTab,
+  RotationTab,
 } from "@/features/project";
-import { OrganizationTab } from "../components/OrganizationTab";
-import { RotationTab } from "../components/RotationTab";
-import { TimeCostTab } from "../components/TimeCostTab";
 import { GanttChart } from "@/components/chart/GanttChart";
 import { NetworkDiagram } from "@/components/chart/NetworkDiagram";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,17 +18,10 @@ interface OverviewProps {
   projectId?: string;
 }
 
-type OverviewTab =
-  | "timeCost"
-  | "uploads"
-  | "organization"
-  | "scheduleList"
-  | "gantt"
-  | "network"
-  | "rotation";
+type OverviewTab = "chart" | "uploads" | "docs" | "scheduleList" | "gantt" | "network" | "rotation";
 
 export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
-  const [activeTab, setActiveTab] = useState<OverviewTab>("timeCost");
+  const [activeTab, setActiveTab] = useState<OverviewTab>("chart");
 
   const {
     resolvedProjectId,
@@ -61,7 +54,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         onRegenerate={() => alert("重新生成功能即将上线")}
       />
 
-      {activeTab === "timeCost" && (
+      {activeTab === "chart" && (
         <div className={panelClass}>
           {costQuery.isLoading ? (
             <div className="flex h-[360px] items-center justify-center">
@@ -69,7 +62,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
             </div>
           ) : costCurveChart.points.length > 0 ? (
             <div className="h-full min-h-[520px] p-4">
-              <TimeCostTab
+              <ChartTab
                 totalDurationLabel={totalDurationLabel}
                 planTasks={planTasks}
                 costCurveData={costCurveChart.points}
@@ -92,16 +85,16 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
                 planTaskCount: planTasks.length,
                 totalDurationLabel,
               }}
-              onViewResults={() => setActiveTab("organization")}
+              onViewResults={() => setActiveTab("docs")}
             />
           </div>
         </div>
       )}
 
-      {activeTab === "organization" && (
+      {activeTab === "docs" && (
         <div className={panelClass}>
           <div className="h-full min-h-[520px] p-4">
-            <OrganizationTab
+            <DocsTab
               projectName={currentProjectName}
               planTasks={planTasks}
               totalDurationLabel={totalDurationLabel}

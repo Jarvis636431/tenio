@@ -2,17 +2,13 @@ import type { PlanTask } from "@/types/domain/plan";
 import { FileText, Edit } from "lucide-react";
 import { formatIsoDate } from "@/lib/date";
 
-interface OrganizationTabProps {
+interface DocsTabProps {
   projectName: string;
   planTasks: PlanTask[];
   totalDurationLabel: string;
 }
 
-export function OrganizationTab({
-  projectName,
-  planTasks,
-  totalDurationLabel,
-}: OrganizationTabProps) {
+export function DocsTab({ projectName, planTasks, totalDurationLabel }: DocsTabProps) {
   const taskCount = planTasks.length;
   const criticalCount = planTasks.filter((t) => t.criticalPath).length;
   const keyTasks = planTasks.slice(0, 8);

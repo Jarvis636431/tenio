@@ -11,19 +11,14 @@ import {
   CartesianGrid,
 } from "recharts";
 
-interface TimeCostTabProps {
+interface ChartTabProps {
   totalDurationLabel: string;
   planTasks: PlanTask[];
   costCurveData: { date: string; 总成本: number }[];
   unit: string;
 }
 
-export function TimeCostTab({
-  totalDurationLabel,
-  planTasks,
-  costCurveData,
-  unit,
-}: TimeCostTabProps) {
+export function ChartTab({ totalDurationLabel, planTasks, costCurveData, unit }: ChartTabProps) {
   const contractDays = useMemo(() => {
     const match = totalDurationLabel?.match(/(\d+)/);
     return match ? Number(match[1]) : planTasks.length * 5 || 60;
