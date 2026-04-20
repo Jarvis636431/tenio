@@ -13,7 +13,6 @@ import {
 import { cn } from "@/lib/utils";
 import type { ChatState } from "@/features/ai";
 import { ChatInput } from "./ChatInput";
-import { ChatHeader } from "./ChatHeader";
 import { ChatMessage } from "./ChatMessage";
 
 interface ChatProps {
@@ -67,8 +66,6 @@ export function Chat({ state, className }: ChatProps) {
         className,
       )}
     >
-      <ChatHeader />
-
       <div className="min-h-0 flex-1 overflow-hidden px-4">
         <div className="h-full min-h-0 overflow-y-auto" ref={scrollAreaRef}>
           <div className="space-y-4 py-4">
