@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell, Settings } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTime } from "@/hooks/useTime";
 
@@ -11,16 +11,10 @@ interface AppHeaderProps {
   projectName?: string;
   /** 自定义标题文本 */
   title?: string;
-  /** 是否显示通知按钮 */
-  showNotifications?: boolean;
-  /** 是否显示设置按钮 */
-  showSettings?: boolean;
   /** 是否显示用户信息 */
   showUser?: boolean;
   /** 用户名 */
   userName?: string;
-  /** 用户角色 */
-  userRole?: string;
   /** Logo alt 文本 */
   logoAlt?: string;
   /** 是否显示返回按钮（upload 模式） */
@@ -39,11 +33,8 @@ export function AppHeader({
   variant = "project",
   projectName,
   title,
-  showNotifications = false,
-  showSettings = false,
   showUser = false,
   userName = "张伟",
-  userRole = "项目总监",
   logoAlt = "A.PM",
   showBackButton = false,
   onBack,
@@ -115,42 +106,17 @@ export function AppHeader({
         </button>
       )}
 
-      {/* Notifications (console mode) */}
-      {showNotifications && (
-        <button className="flex items-center gap-1.5 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-xs text-apm-muted transition-colors hover:border-cyan-400 hover:text-cyan-400">
-          <Bell className="h-3.5 w-3.5" />
-          通知
-          <span className="ml-1 rounded bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
-            3
-          </span>
-        </button>
-      )}
-
-      {/* Settings (console mode) */}
-      {showSettings && (
-        <button className="flex items-center gap-1.5 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-xs text-apm-muted transition-colors hover:border-cyan-400 hover:text-cyan-400">
-          <Settings className="h-3.5 w-3.5" />
-          设置
-        </button>
-      )}
-
       {/* User (console mode) */}
       {showUser && (
         <div className="relative">
           <button
             onClick={() => setShowUserDropdown(!showUserDropdown)}
-            className="flex items-center gap-2"
+            className="text-xs font-semibold text-white"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-500 text-[13px] font-bold text-white">
-              {userName.charAt(0)}
-            </div>
-            <div className="flex flex-col items-start">
-              <span className="text-xs font-semibold text-white">{userName}</span>
-              <span className="text-[10px] text-apm-muted">{userRole}</span>
-            </div>
+            {userName}
           </button>
           {showUserDropdown && (
-            <div className="absolute right-0 top-full mt-2 min-w-[140px] rounded-lg border border-cyan-400/20 bg-[var(--bg-panel)]">
+            <div className="absolute right-0 top-full mt-2 min-w-[140px] border border-cyan-400/20 bg-[var(--bg-panel)]">
               <button className="flex w-full items-center gap-2 border-b border-cyan-400/20 px-4 py-2.5 text-xs text-apm-muted hover:text-white">
                 账号设置
               </button>
