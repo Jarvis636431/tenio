@@ -120,7 +120,7 @@ function ProjectsPage() {
       <div className="bg-apm-ambient absolute inset-0" />
 
       {/* Navbar */}
-      <AppHeader variant="console" showSettings showUser />
+      <AppHeader variant="console" showUser />
 
       {/* Main */}
       <main className="relative z-10 mx-auto w-full max-w-[1200px] px-6 py-8">
@@ -136,7 +136,7 @@ function ProjectsPage() {
           </div>
           <Button
             onClick={() => navigate("/upload")}
-            className="h-11 rounded-lg bg-gradient-to-r from-cyan-400 to-sky-500 px-5 font-bold text-slate-950 hover:opacity-90"
+            className="h-11 rounded-none bg-gradient-to-r from-cyan-400 to-sky-500 px-5 font-bold text-slate-950 hover:opacity-90"
           >
             <CirclePlus className="mr-2 h-4 w-4" />
             新建项目
@@ -192,7 +192,7 @@ function ProjectsPage() {
               type="button"
               onClick={() => setActiveFilter(filter)}
               className={cn(
-                "rounded-lg border px-3.5 py-1.5 text-[12px] font-medium transition-colors",
+                "border px-3.5 py-1.5 text-[12px] font-medium transition-colors",
                 activeFilter === filter
                   ? "border-cyan-400 bg-cyan-400/10 text-cyan-400"
                   : "border-cyan-400/20 bg-transparent text-apm-muted hover:border-cyan-400/35 hover:text-white",
@@ -201,7 +201,7 @@ function ProjectsPage() {
               {FILTER_LABELS[filter]}
             </button>
           ))}
-          <div className="ml-auto flex items-center gap-2 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3">
+          <div className="ml-auto flex items-center gap-2 border border-cyan-400/20 bg-cyan-400/5 px-3">
             <Search className="h-3.5 w-3.5 text-apm-dim" />
             <input
               type="text"
@@ -234,7 +234,7 @@ function ProjectsPage() {
                 {/* Header */}
                 <div className="flex items-start gap-3 border-b border-cyan-400/10 px-5 pt-5 pb-3">
                   <div
-                    className="flex h-10 w-10 items-center justify-center rounded-lg text-[18px]"
+                    className="flex h-10 w-10 items-center justify-center text-[18px]"
                     style={{
                       background: accent.bg,
                       border: `1px solid ${accent.border}`,
@@ -340,7 +340,7 @@ function ProjectsPage() {
                 <div className="flex items-center gap-2 border-t border-cyan-400/10 px-5 py-2.5">
                   <span
                     className={cn(
-                      "rounded border px-2 py-0.5 text-[10px] font-semibold",
+                      "border px-2 py-0.5 text-[10px] font-semibold",
                       getStatusStyle(status),
                     )}
                   >
@@ -362,7 +362,7 @@ function ProjectsPage() {
           {/* New Project Card */}
           <div
             onClick={() => navigate("/upload")}
-            className="flex min-h-[240px] cursor-pointer flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-cyan-400/20 bg-[rgba(4,18,37,0.85)] text-center transition-all hover:border-cyan-400"
+            className="flex min-h-[240px] cursor-pointer flex-col items-center justify-center gap-2.5 border border-dashed border-cyan-400/20 bg-[rgba(4,18,37,0.85)] text-center transition-all hover:border-cyan-400"
           >
             <div className="text-[28px] text-apm-dim">
               <CirclePlus className="h-7 w-7" />

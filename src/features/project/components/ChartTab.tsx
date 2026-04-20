@@ -11,19 +11,14 @@ import {
   CartesianGrid,
 } from "recharts";
 
-interface TimeCostTabProps {
+interface ChartTabProps {
   totalDurationLabel: string;
   planTasks: PlanTask[];
   costCurveData: { date: string; 总成本: number }[];
   unit: string;
 }
 
-export function TimeCostTab({
-  totalDurationLabel,
-  planTasks,
-  costCurveData,
-  unit,
-}: TimeCostTabProps) {
+export function ChartTab({ totalDurationLabel, planTasks, costCurveData, unit }: ChartTabProps) {
   const contractDays = useMemo(() => {
     const match = totalDurationLabel?.match(/(\d+)/);
     return match ? Number(match[1]) : planTasks.length * 5 || 60;
@@ -128,7 +123,7 @@ export function TimeCostTab({
       </div>
 
       {/* Chart */}
-      <div className="h-[280px] border border-cyan-400/18 bg-apm-card p-3">
+      <div className="h-[280px] border border-white/[0.08] bg-[rgba(2,12,27,0.6)] p-3">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="rgba(0,212,255,0.06)" vertical={false} />
@@ -222,6 +217,112 @@ export function TimeCostTab({
               ， 既满足合同要求，又留有合理缓冲，可有效降低赶工风险和额外成本。
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Detail Table */}
+      <div className="overflow-hidden">
+        <div className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-apm-muted">
+          各工期方案明细
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-[11px]">
+            <thead>
+              <tr className="border-b border-cyan-400/15">
+                {[
+                  "工期方案",
+                  "工期（天）",
+                  "直接费用",
+                  "间接费用",
+                  "总成本",
+                  "节约/增加",
+                  "风险等级",
+                  "推荐",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="px-2.5 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-cyan-400/55"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {chartData.map((d, i) => {
+                const diff = Number((d.总成本 - (contractPoint?.总成本 ?? d.总成本)).toFixed(1));
+                const isBest = d === bestPoint;
+                const isContract = i === 2 || i === Math.min(2, chartData.length - 1);
+                const isLowRisk = d.总成本 <= (bestPoint?.总成本 ?? d.总成本) * 1.05;
+                const risk = i < 2 ? "高" : isLowRisk ? "低" : diff > 0 ? "中" : "低";
+
+                return (
+                  <tr
+                    key={i}
+                    className={`border-b border-white/[0.04] transition ${
+                      isBest ? "bg-amber-500/[0.05]" : isContract ? "bg-cyan-400/[0.04]" : ""
+                    }`}
+                  >
+                    <td className="px-2.5 py-2 text-white">{d.label}</td>
+                    <td className="px-2.5 py-2 font-semibold text-cyan-400">
+                      {d.label.replace("天", "") || "—"}
+                    </td>
+                    <td className="px-2.5 py-2 text-apm-muted">
+                      {d.直接费用?.toFixed(1) ?? "—"}
+                      {unit}
+                    </td>
+                    <td className="px-2.5 py-2 text-apm-muted">
+                      {d.间接费用?.toFixed(1) ?? "—"}
+                      {unit}
+                    </td>
+                    <td className="px-2.5 py-2 font-semibold text-white">
+                      {d.总成本?.toFixed(1) ?? "—"}
+                      {unit}
+                    </td>
+                    <td className="px-2.5 py-2">
+                      {diff > 0 ? (
+                        <span className="text-red-400">
+                          +{diff}
+                          {unit}
+                        </span>
+                      ) : diff < 0 ? (
+                        <span className="text-emerald-400">
+                          {diff}
+                          {unit}
+                        </span>
+                      ) : (
+                        <span className="text-apm-dim">—</span>
+                      )}
+                    </td>
+                    <td className="px-2.5 py-2">
+                      <span
+                        className={`${
+                          risk === "高"
+                            ? "text-red-400"
+                            : risk === "中"
+                              ? "text-amber-400"
+                              : "text-emerald-400"
+                        }`}
+                      >
+                        {risk}
+                      </span>
+                    </td>
+                    <td className="px-2.5 py-2">
+                      {isBest ? (
+                        <span className="rounded border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-medium text-amber-400">
+                          最优
+                        </span>
+                      ) : isContract ? (
+                        <span className="rounded border border-cyan-400/25 bg-cyan-400/10 px-1.5 py-0.5 text-[9px] font-medium text-cyan-400">
+                          合同
+                        </span>
+                      ) : null}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

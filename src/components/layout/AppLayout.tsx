@@ -16,7 +16,7 @@ function LayoutContent({ children }: LayoutProps) {
     <div className="relative flex h-screen w-full flex-col overflow-hidden bg-[hsl(var(--apm-bg))] text-slate-100">
       <div className="pointer-events-none absolute inset-0 bg-apm-grid opacity-90" />
       <div className="pointer-events-none absolute inset-0 bg-apm-ambient" />
-      <AppHeader variant="project" projectName={currentProject?.name} showSettings showUser />
+      <AppHeader variant="project" projectName={currentProject?.name} showUser />
 
       <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[280px_minmax(0,1fr)]">
         <div className="min-h-0 border-r border-apm bg-[hsl(var(--apm-bg-overlay))/0.72] backdrop-blur-sm">
@@ -24,7 +24,7 @@ function LayoutContent({ children }: LayoutProps) {
         </div>
 
         <main className="min-h-0 overflow-hidden">
-          <div className="h-full overflow-x-hidden overflow-y-auto p-5">{children}</div>
+          <div className="h-full overflow-x-hidden overflow-y-auto">{children}</div>
         </main>
       </div>
     </div>

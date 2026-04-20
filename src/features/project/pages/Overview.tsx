@@ -5,11 +5,11 @@ import {
   useProjectCharts,
   ProjectTabBar,
   UploadsTab,
-  ProjectScheduleTable,
+  ProjectTable,
+  DocsTab,
+  ChartTab,
+  RotationTab,
 } from "@/features/project";
-import { OrganizationTab } from "../components/OrganizationTab";
-import { RotationTab } from "../components/RotationTab";
-import { TimeCostTab } from "../components/TimeCostTab";
 import { GanttChart } from "@/components/chart/GanttChart";
 import { NetworkDiagram } from "@/components/chart/NetworkDiagram";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,17 +18,10 @@ interface OverviewProps {
   projectId?: string;
 }
 
-type OverviewTab =
-  | "timeCost"
-  | "uploads"
-  | "organization"
-  | "scheduleList"
-  | "gantt"
-  | "network"
-  | "rotation";
+type OverviewTab = "chart" | "uploads" | "docs" | "scheduleList" | "gantt" | "network" | "rotation";
 
 export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
-  const [activeTab, setActiveTab] = useState<OverviewTab>("timeCost");
+  const [activeTab, setActiveTab] = useState<OverviewTab>("chart");
 
   const {
     resolvedProjectId,
@@ -48,12 +41,12 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const { handleExport } = useProjectExport(coreGraph);
 
   const panelClass =
-    "apm-topline min-h-[360px] overflow-hidden border border-apm bg-apm-card shadow-apm-panel";
+    "min-h-[360px] overflow-hidden border border-none bg-[rgba(2,12,27,0.6)] shadow-apm-panel px-4";
   const emptyPanelClass =
     "flex h-full min-h-[360px] items-center justify-center text-sm text-apm-muted";
 
   return (
-    <div className="flex min-h-full flex-col gap-4 bg-transparent px-0 pt-0 pb-0 text-slate-100">
+    <div className="flex min-h-full flex-col gap-4 bg-transparent p-0 text-slate-100">
       <ProjectTabBar
         activeTab={activeTab}
         onChange={setActiveTab}
@@ -61,7 +54,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         onRegenerate={() => alert("重新生成功能即将上线")}
       />
 
-      {activeTab === "timeCost" && (
+      {activeTab === "chart" && (
         <div className={panelClass}>
           {costQuery.isLoading ? (
             <div className="flex h-[360px] items-center justify-center">
@@ -69,7 +62,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
             </div>
           ) : costCurveChart.points.length > 0 ? (
             <div className="h-full min-h-[520px] p-4">
-              <TimeCostTab
+              <ChartTab
                 totalDurationLabel={totalDurationLabel}
                 planTasks={planTasks}
                 costCurveData={costCurveChart.points}
@@ -92,55 +85,35 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
                 planTaskCount: planTasks.length,
                 totalDurationLabel,
               }}
-              onViewResults={() => setActiveTab("organization")}
+              onViewResults={() => setActiveTab("docs")}
             />
           </div>
         </div>
       )}
 
-      {activeTab === "organization" && (
+      {activeTab === "docs" && (
         <div className={panelClass}>
           <div className="h-full min-h-[520px] p-4">
-            <OrganizationTab
-              projectName={currentProjectName}
-              planTasks={planTasks}
-              totalDurationLabel={totalDurationLabel}
-            />
+            <DocsTab content="# 施工组织设计文档" />
           </div>
         </div>
       )}
 
       {activeTab === "scheduleList" && (
         <div className={`${panelClass} min-h-[640px] overflow-auto`}>
-          <ProjectScheduleTable
-            planTasks={planTasks}
-            isLoading={isLoadingGraph}
-            coreGraph={coreGraph}
-          />
+          <ProjectTable planTasks={planTasks} isLoading={isLoadingGraph} coreGraph={coreGraph} />
         </div>
       )}
 
       {activeTab === "gantt" && (
         <div className={`${panelClass} min-h-[640px]`}>
-          {planTasks.length === 0 ? (
-            <div className="flex h-full min-h-[640px] items-center justify-center text-cyan-300/70">
-              {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
-            </div>
-          ) : (
-            <GanttChart data={planTasks} scale="day" />
-          )}
+          <GanttChart data={planTasks} scale="day" />
         </div>
       )}
 
       {activeTab === "network" && (
         <div className={`${panelClass} min-h-[640px]`}>
-          {planTasks.length === 0 ? (
-            <div className="flex h-full min-h-[640px] items-center justify-center text-cyan-300/70">
-              {isLoadingGraph ? "加载中..." : "当前项目暂无施工任务数据"}
-            </div>
-          ) : (
-            <NetworkDiagram tasks={planTasks} />
-          )}
+          <NetworkDiagram tasks={planTasks} />
         </div>
       )}
 
