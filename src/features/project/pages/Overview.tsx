@@ -41,7 +41,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const { handleExport } = useProjectExport(coreGraph);
 
   const panelClass =
-    "min-h-[360px] overflow-hidden border border-none bg-apm-card shadow-apm-panel px-4";
+    "min-h-[360px] overflow-hidden border border-none bg-[rgba(2,12,27,0.6)] shadow-apm-panel px-4";
   const emptyPanelClass =
     "flex h-full min-h-[360px] items-center justify-center text-sm text-apm-muted";
 
