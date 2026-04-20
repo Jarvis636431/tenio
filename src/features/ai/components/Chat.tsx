@@ -1,19 +1,10 @@
 import { useMemo, useState } from "react";
-import {
-  BarChart3,
-  Boxes,
-  ChevronUp,
-  CloudSun,
-  Loader2,
-  ShieldAlert,
-  Terminal,
-  Users,
-  Zap,
-} from "lucide-react";
+import { BarChart3, Boxes, CloudSun, Loader2, ShieldAlert, Users, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChatState } from "@/features/ai";
 import { ChatInput } from "./ChatInput";
 import { ChatMessage } from "./ChatMessage";
+import { ChatConsole } from "./ChatConsole";
 
 interface ChatProps {
   state: ChatState;
@@ -106,28 +97,7 @@ export function Chat({ state, className }: ChatProps) {
         quickQueries={quickQueries}
       />
 
-      <div className="shrink-0 border-t border-apm bg-[hsl(var(--apm-bg-overlay))/0.56]">
-        <div className="flex items-center gap-2 px-4 py-2">
-          <Terminal className="h-3.5 w-3.5 text-cyan-300" />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-apm-dim">
-            控制台
-          </span>
-          <ChevronUp className="ml-auto h-3.5 w-3.5 text-apm-dim" />
-        </div>
-        <div className="space-y-1 px-4 pb-3 text-[11px]">
-          {consoleItems.map((item) => (
-            <div key={item.text} className="flex items-center gap-2 text-apm-muted">
-              <span
-                className={cn("h-1.5 w-1.5 rounded-full", {
-                  "bg-emerald-400": item.tone === "success",
-                  "bg-cyan-300": item.tone === "info",
-                })}
-              />
-              <span>{item.text}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <ChatConsole items={consoleItems} />
     </div>
   );
 }
