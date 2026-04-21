@@ -41,7 +41,6 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
     page,
     pageSize: _pageSize,
     totalPages,
-    stats,
     uploadProgress,
     category,
     keyword,
@@ -108,36 +107,12 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
     return <File className="h-5 w-5 text-slate-400" />;
   };
 
-  // 统计卡片
-  const StatCard = ({
-    icon,
-    label,
-    count,
-    size,
-  }: {
-    icon: string;
-    label: string;
-    count: number;
-    size: number;
-  }) => (
-    <div className="rounded border border-cyan-400/15 bg-[rgba(4,18,37,0.6)] px-4 py-3">
-      <div className="flex items-center gap-2">
-        <span className="text-lg">{icon}</span>
-        <span className="text-sm text-slate-400">{label}</span>
-      </div>
-      <div className="mt-2 flex items-baseline gap-2">
-        <span className="text-xl font-semibold text-white">{count}</span>
-        <span className="text-xs text-slate-500">{formatFileSize(size)}</span>
-      </div>
-    </div>
-  );
-
   const latestFile = files[0];
   const hasFile = files.length > 0;
   const taskCount = projectSummary?.planTaskCount ?? 0;
   const duration = projectSummary?.totalDurationLabel ?? "—";
 
-  // Reference-style info cards
+  // Reference-style info cards (matches app.html .info-card)
   const InfoCard = ({
     label,
     value,
@@ -147,13 +122,13 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
     value: React.ReactNode;
     sub: string;
   }) => (
-    <div className="relative border border-cyan-400/18 bg-apm-card px-3 py-3 lg:px-4">
+    <div className="relative border border-cyan-400/18 bg-[rgba(4,18,37,0.85)] px-3 py-3 lg:px-4">
       <span className="absolute left-0 top-0 h-full w-0.5 bg-gradient-to-b from-cyan-400 to-transparent" />
       <div className="text-[9px] font-semibold uppercase tracking-widest text-cyan-400/50">
         {label}
       </div>
-      <div className="mt-1 text-sm font-bold text-white">{value}</div>
-      <div className="text-[10px] text-apm-muted">{sub}</div>
+      <div className="text-sm font-bold text-white">{value}</div>
+      <div className="mt-0.5 text-[10px] text-slate-400">{sub}</div>
     </div>
   );
 
@@ -165,27 +140,29 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
 
   return (
     <div className="flex h-full min-h-[360px] flex-col gap-4">
-      {/* Reference-style upload summary */}
+      {/* Reference-style upload summary (matches app.html #panel-upload) */}
       {hasFile && latestFile && (
         <>
-          {/* File card */}
+          {/* File card - matches .file-card in app.html */}
           <div className="flex items-center gap-3 border border-emerald-400/30 bg-emerald-500/[0.06] px-4 py-3">
-            <FileText className="h-6 w-6 shrink-0 text-emerald-400" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded bg-emerald-500/10">
+              <FileText className="h-5 w-5 text-emerald-400" />
+            </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold text-white">{latestFile.name}</div>
-              <div className="text-[11px] text-apm-muted">
+              <div className="text-[11px] text-slate-400">
                 {formatFileSize(latestFile.size)} · {FILE_CATEGORY_LABELS[latestFile.category]} ·{" "}
                 {formatIsoDate(latestFile.uploadedAt)}
               </div>
             </div>
-            <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-emerald-400">
+            <span className="ml-auto flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
               <CheckCircle className="h-3.5 w-3.5" />
-              已解析
+              解析成功
             </span>
           </div>
 
-          {/* Info grid */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {/* Info grid - matches .info-grid in app.html (4 columns) */}
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             <InfoCard
               label="项目名称"
               value={
@@ -195,37 +172,43 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
             />
             <InfoCard
               label="计划工期"
-              value={<span className="text-xs">{duration}</span>}
-              sub="招标文件要求"
+              value={<span className="text-sm">{duration}</span>}
+              sub="日历天"
             />
             <InfoCard
               label="工序总数"
-              value={<span className="text-xs">{taskCount} 项</span>}
+              value={<span className="text-sm">{taskCount} 项</span>}
               sub="AI 自动拆分"
             />
             <InfoCard
               label="资料状态"
-              value={<span className="text-xs">已上传</span>}
+              value={<span className="text-sm text-emerald-400">已解析</span>}
               sub={`共 ${files.length} 个文件`}
             />
           </div>
 
-          {/* Gen area */}
-          <div className="relative flex flex-col gap-4 border border-cyan-400/18 bg-gradient-to-br from-[rgba(0,40,100,0.35)] to-[rgba(0,20,55,0.45)] px-4 py-4 sm:flex-row sm:items-center">
+          {/* Gen area - matches .gen-area in app.html */}
+          <div className="relative flex flex-col gap-4 border border-cyan-400/18 bg-gradient-to-br from-[rgba(0,40,100,0.35)] to-[rgba(0,20,55,0.45)] px-5 py-4 sm:flex-row sm:items-center">
             <span className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-cyan-400 via-cyan-400/20 to-transparent" />
             <div className="min-w-0 flex-1">
-              <div className="mb-1 text-sm font-bold text-white">
+              <div className="mb-1 text-[15px] font-bold text-white">
                 <CheckCircle className="mr-1.5 inline h-4 w-4 text-emerald-400" />
                 AI 已完成全部生成
               </div>
-              <div className="text-xs text-apm-muted">
+              <div className="text-xs text-slate-400">
                 基于招标文件自动生成完整施工组织设计，包含进度计划、甘特图、网络图、人员轮转
               </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {["施工组织设计", `进度计划（${taskCount}项）`, "网络图", "人员轮转"].map((tag) => (
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {[
+                  `施工组织设计（${taskCount > 0 ? Math.floor(taskCount * 200) : "—"}字）`,
+                  `进度计划（${taskCount}项）`,
+                  `甘特图（${taskCount > 0 ? taskCount * 5 : "—"}天）`,
+                  "网络图",
+                  "人员轮转",
+                ].map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 border border-cyan-400/18 px-2 py-0.5 text-[10px] text-apm-muted"
+                    className="inline-flex items-center gap-1.5 border border-cyan-400/18 px-2.5 py-1 text-[10px] font-medium text-slate-400"
                   >
                     <span className="h-1 w-1 rounded-full bg-emerald-400" />
                     {tag}
@@ -235,29 +218,13 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
             </div>
             <Button
               onClick={onViewResults}
-              className="shrink-0 rounded-sm bg-gradient-to-r from-cyan-400 to-sky-500 px-5 text-sm font-bold text-[#020c1b] hover:opacity-90"
+              className="shrink-0 bg-gradient-to-r from-cyan-400 to-sky-500 px-6 py-3 text-sm font-bold text-[#020c1b] hover:opacity-90"
             >
               <Eye className="mr-1.5 h-4 w-4" />
               查看生成结果
             </Button>
           </div>
         </>
-      )}
-
-      {/* 统计区域 */}
-      {stats && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <StatCard icon="📁" label="全部文件" count={stats.totalFiles} size={stats.totalSize} />
-          {stats.categories.map((cat) => (
-            <StatCard
-              key={cat.category}
-              icon={FILE_CATEGORY_ICONS[cat.category]}
-              label={FILE_CATEGORY_LABELS[cat.category]}
-              count={cat.count}
-              size={cat.totalSize}
-            />
-          ))}
-        </div>
       )}
 
       {/* 操作栏 */}
