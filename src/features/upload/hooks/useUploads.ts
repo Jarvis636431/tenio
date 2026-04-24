@@ -102,7 +102,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
       ]);
 
       try {
-        const result = await uploadFile(payload, (percent) => {
+        const result = await uploadFile({ ...payload, projectId }, (percent) => {
           setUploadProgress((prev) =>
             prev.map((p) => (p.fileId === fileId ? { ...p, percent, status: "uploading" } : p)),
           );
