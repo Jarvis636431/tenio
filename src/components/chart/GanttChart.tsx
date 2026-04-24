@@ -30,8 +30,7 @@ type TimelineRow = PlanTask & {
 
 export function GanttChart({ data, scale = "day" }: GanttChartProps) {
   const chartContentRef = useRef<HTMLDivElement>(null);
-  const timelineScale = scale;
-  const columnWidth = COLUMN_WIDTH_MAP[timelineScale];
+  const columnWidth = COLUMN_WIDTH_MAP[scale];
   const filteredData = useMemo(() => data.filter((task) => !isLagTask(task.task)), [data]);
 
   const { timelineData, totalUnits, headers } = useMemo(() => {
@@ -55,21 +54,21 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
     const minTime = Math.min(...timePoints);
     const maxTime = Math.max(...timePoints);
 
-    const startAnchor = alignDateToScaleStart(new Date(minTime), timelineScale);
-    const totalUnits = calculateTotalUnits(startAnchor, maxTime, timelineScale);
-    const headers = generateHeaders(startAnchor, totalUnits, timelineScale);
+    const startAnchor = alignDateToScaleStart(new Date(minTime), scale);
+    const totalUnits = calculateTotalUnits(startAnchor, maxTime, scale);
+    const headers = generateHeaders(startAnchor, totalUnits, scale);
 
     const timelineData: TimelineRow[] = parsedItems
       .map(({ item, start, end }) => {
         if (!start || !end) return null;
-        const startOffset = calculateStartOffset(start, startAnchor, timelineScale);
-        const spanUnits = calculateSpanUnits(start, end, timelineScale);
+        const startOffset = calculateStartOffset(start, startAnchor, scale);
+        const spanUnits = calculateSpanUnits(start, end, scale);
 
         return {
           ...item,
           startOffset,
           spanUnits,
-          barLabel: `${spanUnits}${UNIT_LABELS[timelineScale]}`,
+          barLabel: `${spanUnits}${UNIT_LABELS[scale]}`,
           color: item.criticalPath ? "hsl(210, 70%, 55%)" : "hsl(210, 6%, 70%)",
         };
       })
@@ -80,7 +79,7 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
       totalUnits,
       headers,
     };
-  }, [filteredData, timelineScale]);
+  }, [filteredData, scale]);
 
   const rowVirtualizer = useVirtualizer({
     count: timelineData.length,
@@ -91,7 +90,7 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
 
   useEffect(() => {
     chartContentRef.current?.scrollTo({ top: 0, left: 0 });
-  }, [filteredData, timelineScale]);
+  }, [filteredData, scale]);
 
   if (filteredData.length === 0) {
     return (
