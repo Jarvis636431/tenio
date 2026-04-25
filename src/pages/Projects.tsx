@@ -106,9 +106,9 @@ function ProjectsPage() {
   const stats = useMemo(() => {
     const total = projects.length;
     const active = projects.filter((p) => normalizeStatus(p.status) === "active").length;
-    const generatedDocs = 18; // mock
-    const avgTime = 4.2; // mock
-    return { total, active, generatedDocs, avgTime };
+    const completed = projects.filter((p) => normalizeStatus(p.status) === "completed").length;
+    const pending = projects.filter((p) => normalizeStatus(p.status) === "pending").length;
+    return { total, active, completed, pending };
   }, [projects]);
 
   const openProject = (project: Project) => {
@@ -166,21 +166,16 @@ function ProjectsPage() {
             <div className="mb-2.5 text-[16px]" style={{ color: "var(--amber)" }}>
               <FileText className="h-4 w-4" />
             </div>
-            <div className="font-display text-[26px] font-bold text-white">
-              {stats.generatedDocs}
-            </div>
-            <div className="mt-0.5 text-[11px] text-apm-muted">AI 已生成文档</div>
+            <div className="font-display text-[26px] font-bold text-white">{stats.completed}</div>
+            <div className="mt-0.5 text-[11px] text-apm-muted">已完成项目</div>
           </div>
           <div className="relative border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] p-4">
             <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet-400 to-transparent" />
             <div className="mb-2.5 text-[16px]" style={{ color: "#a78bfa" }}>
               <Search className="h-4 w-4" />
             </div>
-            <div className="font-display text-[26px] font-bold text-white">
-              {stats.avgTime}
-              <small className="text-[14px]"> min</small>
-            </div>
-            <div className="mt-0.5 text-[11px] text-apm-muted">平均生成耗时</div>
+            <div className="font-display text-[26px] font-bold text-white">{stats.pending}</div>
+            <div className="mt-0.5 text-[11px] text-apm-muted">待启动项目</div>
           </div>
         </div>
 
@@ -218,12 +213,7 @@ function ProjectsPage() {
           {filteredProjects.map((project, index) => {
             const status = normalizeStatus(project.status);
             const accent = getAccentStyle(index);
-            const progress =
-              status === "completed" ? 100 : status === "pending" ? 0 : 35 + (index % 5) * 14;
-            const contractDays = 60 + index * 18;
-            const contractAmount = (63.66 + index * 12).toFixed(2);
-            const aiDocs = status === "pending" ? 0 : 4 + (index % 3);
-            const endDate = "2026-06-07";
+            const progress = status === "completed" ? 100 : 0;
 
             return (
               <article
@@ -258,28 +248,19 @@ function ProjectsPage() {
                       <span className="text-[9px] uppercase tracking-[0.1em] text-apm-dim">
                         合同工期
                       </span>
-                      <span className="mt-0.5 text-[13px] font-semibold text-white">
-                        {contractDays}{" "}
-                        <small className="text-[10px] font-normal text-apm-muted">日历天</small>
-                      </span>
+                      <span className="mt-0.5 text-[13px] font-semibold text-white">—</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[9px] uppercase tracking-[0.1em] text-apm-dim">
                         发包价
                       </span>
-                      <span className="mt-0.5 text-[13px] font-semibold text-white">
-                        {contractAmount}{" "}
-                        <small className="text-[10px] font-normal text-apm-muted">万元</small>
-                      </span>
+                      <span className="mt-0.5 text-[13px] font-semibold text-white">—</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[9px] uppercase tracking-[0.1em] text-apm-dim">
                         AI 文档
                       </span>
-                      <span className="mt-0.5 text-[13px] font-semibold text-white">
-                        {aiDocs}{" "}
-                        <small className="text-[10px] font-normal text-apm-muted">份</small>
-                      </span>
+                      <span className="mt-0.5 text-[13px] font-semibold text-white">—</span>
                     </div>
                   </div>
 
@@ -288,7 +269,7 @@ function ProjectsPage() {
                     <div className="mb-1.5 flex items-center justify-between text-[10px] text-apm-muted">
                       <span>项目进度</span>
                       <span className="font-semibold text-cyan-400">
-                        {status === "pending" ? "待启动" : `${progress}%`}
+                        {status === "completed" ? "100%" : "—"}
                       </span>
                     </div>
                     <div className="h-0.5 bg-white/6">
@@ -313,7 +294,7 @@ function ProjectsPage() {
                         : status === "pending"
                           ? "预计开工"
                           : "预计结束"}
-                      ：{endDate}
+                      ：—
                     </span>
                     {status === "completed" && (
                       <span className="text-emerald-400">
@@ -321,12 +302,7 @@ function ProjectsPage() {
                         全部完成
                       </span>
                     )}
-                    {status === "active" && (
-                      <span className="text-cyan-400">
-                        <HardHat className="inline h-3 w-3" style={{ marginRight: 2 }} />
-                        AI文档已就绪
-                      </span>
-                    )}
+                    {status === "active" && <span className="text-cyan-400">进行中</span>}
                     {status === "pending" && (
                       <span className="text-amber-400">
                         <Search className="inline h-3 w-3" style={{ marginRight: 2 }} />
@@ -352,7 +328,7 @@ function ProjectsPage() {
                   </span>
                   <span className="ml-auto text-[10px] text-apm-dim">
                     <Calendar className="inline h-3 w-3" style={{ marginRight: 3 }} />
-                    剩余 {status === "pending" ? "—" : `${365 - index * 30} 天`}
+                    剩余 —
                   </span>
                 </div>
               </article>

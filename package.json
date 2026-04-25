@@ -74,7 +74,6 @@
     "jsdom": "^29.0.2",
     "lint-staged": "^16.4.0",
     "lovable-tagger": "^1.1.13",
-    "msw": "^2.12.7",
     "postcss": "^8.4.47",
     "prettier": "^3.8.1",
     "tailwindcss": "^3.4.11",
@@ -90,11 +89,6 @@
     ],
     "*.{json,css,md}": [
       "prettier --write"
-    ]
-  },
-  "msw": {
-    "workerDirectory": [
-      "public"
     ]
   }
 }
