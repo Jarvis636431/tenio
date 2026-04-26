@@ -1,62 +1,4 @@
-import { API_BASE } from "@/config";
-import { requestSse, type SseRequestOptions } from "@/services/http";
-import {
-  agentChatPayloadSchema,
-  agentResumePayloadSchema,
-  parseAiStreamPayload,
-  parseAiVerifyPayload,
-} from "./ai-schema";
-import type { AgentResumePayload, AgentChatPayload } from "@/features/ai";
-
-const AI_BASE_URL = API_BASE.aiService;
-
-/**
- * 发送聊天消息并获取 SSE 流式响应
- * @returns 返回 Response 对象，可用于中断请求
- */
-export async function chatWithAgentStream(
-  payload: AgentChatPayload,
-  handlers: Pick<SseRequestOptions, "onMessage" | "onDone" | "onError"> & {
-    signal?: AbortSignal;
-  },
-): Promise<Response> {
-  const parsedPayload = agentChatPayloadSchema.parse(payload);
-  return requestSse(`${AI_BASE_URL}/api/agent/chat/sse`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(parsedPayload),
-    signal: handlers.signal,
-    onMessage: handlers.onMessage,
-    onDone: handlers.onDone,
-    onError: handlers.onError,
-  });
-}
-
-/**
- * 恢复中断的对话并获取 SSE 流式响应
- * @returns 返回 Response 对象，可用于中断请求
- */
-export async function resumeAgentStream(
-  payload: AgentResumePayload,
-  handlers: Pick<SseRequestOptions, "onMessage" | "onDone" | "onError"> & {
-    signal?: AbortSignal;
-  },
-): Promise<Response> {
-  const parsedPayload = agentResumePayloadSchema.parse(payload);
-  return requestSse(`${AI_BASE_URL}/api/agent/chat/resume`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(parsedPayload),
-    signal: handlers.signal,
-    onMessage: handlers.onMessage,
-    onDone: handlers.onDone,
-    onError: handlers.onError,
-  });
-}
+import { parseAiStreamPayload, parseAiVerifyPayload } from "./ai-schema";
 
 /**
  * 提取 SSE 消息中的有效内容
@@ -74,6 +16,14 @@ export function extractChatMessageContent(payload: unknown): {
 
   const obj = parsed.data;
   const messageType = obj.type;
+
+  if (obj.content_text) {
+    return { content: obj.content_text, type: obj.message_type ?? messageType };
+  }
+
+  if (obj.content) {
+    return { content: obj.content, type: obj.message_type ?? messageType };
+  }
 
   // refetch 类型：触发数据刷新
   if (messageType === "refetch") {
@@ -175,6 +125,8 @@ function extractUpdateContent(obj: Record<string, unknown>): string | null {
   }
 
   if (parsed.data.message) return parsed.data.message;
+  if (parsed.data.content_text) return parsed.data.content_text;
+  if (parsed.data.content) return parsed.data.content;
   if (typeof parsed.data.data === "string") return parsed.data.data;
 
   const nested = parseAiStreamPayload(parsed.data.data);

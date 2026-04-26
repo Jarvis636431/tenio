@@ -10,8 +10,10 @@ export interface ChatMessage {
 interface ChatState {
   /** 按项目隔离的消息列表 */
   messagesByProject: Record<string, ChatMessage[]>;
-  /** 按项目的 thread ID */
-  threadIdByProject: Record<string, string | null>;
+  /** 按项目的 agent 会话 ID */
+  sessionIdByProject: Record<string, string | null>;
+  /** 按项目的 agent 服务地址 */
+  agentBaseUrlByProject: Record<string, string | null>;
   /** 当前活跃的项目 key */
   activeProjectKey: string;
   /** 输入框文本 */
@@ -32,10 +34,14 @@ interface ChatState {
   updateLastAIMessage: (projectKey: string, content: string) => void;
   /** 移除指定项目的最后一条消息 */
   removeLastAIMessage: (projectKey: string) => void;
-  /** 设置指定项目的 threadId */
+  /** 设置指定项目的会话 ID */
   setThreadId: (projectKey: string, threadId: string | null) => void;
-  /** 获取指定项目的 threadId */
+  /** 获取指定项目的会话 ID */
   getThreadId: (projectKey: string) => string | null;
+  /** 设置指定项目的 agent 服务地址 */
+  setAgentBaseUrl: (projectKey: string, agentBaseUrl: string | null) => void;
+  /** 获取指定项目的 agent 服务地址 */
+  getAgentBaseUrl: (projectKey: string) => string | null;
   /** 设置输入框文本 */
   setInputMessage: (text: string) => void;
   /** 设置思考状态 */
@@ -46,7 +52,8 @@ interface ChatState {
 
 export const useChatStore = create<ChatState>()((set, get) => ({
   messagesByProject: {},
-  threadIdByProject: {},
+  sessionIdByProject: {},
+  agentBaseUrlByProject: {},
   activeProjectKey: "__default__",
   inputMessage: "",
   isThinking: false,
@@ -116,14 +123,26 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 
   setThreadId: (projectKey, threadId) =>
     set((state) => ({
-      threadIdByProject: {
-        ...state.threadIdByProject,
+      sessionIdByProject: {
+        ...state.sessionIdByProject,
         [projectKey]: threadId,
       },
     })),
 
   getThreadId: (projectKey) => {
-    return get().threadIdByProject[projectKey] ?? null;
+    return get().sessionIdByProject[projectKey] ?? null;
+  },
+
+  setAgentBaseUrl: (projectKey, agentBaseUrl) =>
+    set((state) => ({
+      agentBaseUrlByProject: {
+        ...state.agentBaseUrlByProject,
+        [projectKey]: agentBaseUrl,
+      },
+    })),
+
+  getAgentBaseUrl: (projectKey) => {
+    return get().agentBaseUrlByProject[projectKey] ?? null;
   },
 
   setInputMessage: (text) => set({ inputMessage: text }),
@@ -136,8 +155,12 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         ...state.messagesByProject,
         [projectKey]: [{ ...welcomeMessage }],
       },
-      threadIdByProject: {
-        ...state.threadIdByProject,
+      sessionIdByProject: {
+        ...state.sessionIdByProject,
+        [projectKey]: null,
+      },
+      agentBaseUrlByProject: {
+        ...state.agentBaseUrlByProject,
         [projectKey]: null,
       },
     })),

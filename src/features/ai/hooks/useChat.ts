@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { projectQueryKeys, useProject } from "@/features/project";
-import { chatWithAgentStream, resumeAgentStream, extractChatMessageContent } from "@/features/ai";
+import { extractChatMessageContent } from "@/features/ai";
+import {
+  initAgentSession,
+  issueAgentTicket,
+  sendAgentSessionMessage,
+  subscribeAgentSessionSse,
+} from "@/services/apm-api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVoice } from "./useVoice";
 import { createMessageId } from "@/lib/utils";
@@ -14,7 +20,7 @@ type ChatPanelOptions = {
 
 /**
  * 协调 AI 面板的聊天状态、SSE 流和语音输入。
- * 为每个项目维护独立的消息线程，支持中断恢复流程。
+ * 为每个项目维护独立的 agent 会话，支持中断确认消息续写。
  *
  * @param options - 配置选项
  * @param options.projectId - 可选的项目 ID 覆盖（默认为路由参数或当前项目）
@@ -55,6 +61,8 @@ export function useChat(options: ChatPanelOptions = {}) {
   const removeLastAIMessage = useChatStore((state) => state.removeLastAIMessage);
   const setThreadId = useChatStore((state) => state.setThreadId);
   const getThreadId = useChatStore((state) => state.getThreadId);
+  const setAgentBaseUrl = useChatStore((state) => state.setAgentBaseUrl);
+  const getAgentBaseUrl = useChatStore((state) => state.getAgentBaseUrl);
   const {
     state: { isRecording, isRecognizing },
     actions: { toggleRecording },
@@ -115,6 +123,86 @@ export function useChat(options: ChatPanelOptions = {}) {
     ]);
   };
 
+  const resolveActiveProjectId = () => {
+    const projectRef = options.projectId || routeProjectId || currentProject?.id || "";
+    return resolveProjectId(projectRef);
+  };
+
+  const ensureAgentSession = async (projectId: string) => {
+    const existingSessionId = getThreadId(activeProjectKey);
+    const existingAgentBaseUrl = getAgentBaseUrl(activeProjectKey) ?? undefined;
+    if (existingSessionId) {
+      return {
+        chatSessionId: existingSessionId,
+        agentBaseUrl: existingAgentBaseUrl,
+      };
+    }
+
+    const ticket = await issueAgentTicket({
+      product_code: "apm",
+      project_id: projectId,
+      grant_type: "project_agent_access",
+    });
+    const session = await initAgentSession(
+      {
+        product_code: "apm",
+        project_id: projectId,
+        agent_ticket: ticket.agent_ticket,
+      },
+      { agentBaseUrl: ticket.agent_base_url },
+    );
+
+    setThreadId(activeProjectKey, session.chat_session_id);
+    setAgentBaseUrl(activeProjectKey, ticket.agent_base_url);
+
+    return {
+      chatSessionId: session.chat_session_id,
+      agentBaseUrl: ticket.agent_base_url,
+    };
+  };
+
+  const streamAgentReply = async (
+    chatSessionId: string,
+    messageText: string,
+    signal: AbortSignal,
+    agentBaseUrl?: string,
+  ) => {
+    const streamPromise = subscribeAgentSessionSse(chatSessionId, {
+      agentBaseUrl,
+      signal,
+      onMessage: (payload) => {
+        const { content, shouldRefetch } = extractChatMessageContent(payload);
+
+        if (shouldRefetch) {
+          const projectId = resolveActiveProjectId();
+          if (projectId) {
+            void refreshOverviewArtifacts(projectId);
+          }
+          return;
+        }
+
+        if (content && content.length >= lastContentRef.current.length) {
+          lastContentRef.current = content;
+          updateLastAIMessage(activeProjectKey, content);
+        }
+      },
+      onDone: () => {
+        setIsThinking(false);
+      },
+      onError: (error) => {
+        if (error.name === "AbortError") {
+          return;
+        }
+        logSilentError("[AI]", "AI 服务连接失败", error);
+        removeLastAIMessage(activeProjectKey);
+        setIsThinking(false);
+      },
+    });
+
+    await sendAgentSessionMessage(chatSessionId, { content_text: messageText }, { agentBaseUrl });
+    await streamPromise;
+  };
+
   /**
    * 使用用户的批准或拒绝恢复被中断的 AI 代理流程。
    * 创建新的 AI 消息占位符并流式返回响应。
@@ -123,11 +211,6 @@ export function useChat(options: ChatPanelOptions = {}) {
    * @param approved - 用户是否批准了提议的操作
    */
   const resumeInterrupt = async (message: string, approved: boolean) => {
-    const threadId = getThreadId(activeProjectKey);
-    if (!threadId) {
-      return;
-    }
-
     if (abortRef.current) {
       abortRef.current.abort();
     }
@@ -145,33 +228,16 @@ export function useChat(options: ChatPanelOptions = {}) {
     setIsThinking(true);
 
     try {
-      await resumeAgentStream(
-        {
-          message,
-          approved,
-          thread_id: threadId,
-        },
-        {
-          signal: abortRef.current.signal,
-          onMessage: (payload) => {
-            const { content } = extractChatMessageContent(payload);
-            if (content && content.length >= lastContentRef.current.length) {
-              lastContentRef.current = content;
-              updateLastAIMessage(activeProjectKey, content);
-            }
-          },
-          onDone: () => {
-            setIsThinking(false);
-          },
-          onError: (error) => {
-            if (error.name === "AbortError") {
-              return;
-            }
-            logSilentError("[AI]", "AI 服务连接失败", error);
-            removeLastAIMessage(activeProjectKey);
-            setIsThinking(false);
-          },
-        },
+      const projectId = resolveActiveProjectId();
+      if (!projectId) {
+        throw new Error("缺少项目 ID");
+      }
+      const session = await ensureAgentSession(projectId);
+      await streamAgentReply(
+        session.chatSessionId,
+        `${approved ? "同意" : "拒绝"}：${message}`,
+        abortRef.current.signal,
+        session.agentBaseUrl,
       );
     } catch (error) {
       if ((error as Error).name === "AbortError") {
@@ -201,12 +267,6 @@ export function useChat(options: ChatPanelOptions = {}) {
     addMessage(activeProjectKey, userMessage);
     setIsThinking(true);
 
-    let threadId = getThreadId(activeProjectKey);
-    if (!threadId) {
-      threadId = `thread-${createMessageId()}`;
-      setThreadId(activeProjectKey, threadId);
-    }
-
     if (abortRef.current) {
       abortRef.current.abort();
     }
@@ -223,48 +283,16 @@ export function useChat(options: ChatPanelOptions = {}) {
     });
 
     try {
-      await chatWithAgentStream(
-        {
-          message: messageText,
-          thread_id: threadId,
-        },
-        {
-          signal: abortRef.current.signal,
-          onMessage: (payload) => {
-            const { content, shouldRefetch } = extractChatMessageContent(payload);
-
-            // 处理 refetch 事件
-            if (shouldRefetch) {
-              const projectRef = options.projectId || routeProjectId || currentProject?.id || "";
-              if (projectRef) {
-                void (async () => {
-                  const projectId = resolveProjectId(projectRef);
-                  if (projectId) {
-                    await refreshOverviewArtifacts(projectId);
-                  }
-                })();
-              }
-              return;
-            }
-
-            // 更新消息内容
-            if (content && content.length >= lastContentRef.current.length) {
-              lastContentRef.current = content;
-              updateLastAIMessage(activeProjectKey, content);
-            }
-          },
-          onDone: () => {
-            setIsThinking(false);
-          },
-          onError: (error) => {
-            if (error.name === "AbortError") {
-              return;
-            }
-            logSilentError("[AI]", "AI 服务连接失败", error);
-            removeLastAIMessage(activeProjectKey);
-            setIsThinking(false);
-          },
-        },
+      const projectId = resolveActiveProjectId();
+      if (!projectId) {
+        throw new Error("缺少项目 ID");
+      }
+      const session = await ensureAgentSession(projectId);
+      await streamAgentReply(
+        session.chatSessionId,
+        messageText,
+        abortRef.current.signal,
+        session.agentBaseUrl,
       );
     } catch (error) {
       if ((error as Error).name === "AbortError") {

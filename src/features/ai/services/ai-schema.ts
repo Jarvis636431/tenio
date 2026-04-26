@@ -1,19 +1,9 @@
 import { z } from "zod";
 
-export const agentResumePayloadSchema = z.object({
-  message: z.string().min(1),
-  thread_id: z.string().min(1),
-  approved: z.boolean(),
-});
-
-export const agentChatPayloadSchema = z.object({
-  message: z.string().min(1),
-  thread_id: z.string().nullable(),
-});
-
 const streamMessageSchema = z.object({
   type: z.string().optional(),
   content: z.string().optional(),
+  content_text: z.string().optional(),
 });
 
 const streamRouteSchema = z.object({
@@ -35,7 +25,11 @@ export const aiStreamPayloadSchema = z
   .object({
     type: z.string().optional(),
     message: z.string().optional(),
+    content: z.string().optional(),
+    content_text: z.string().optional(),
     data: z.unknown().optional(),
+    message_role: z.string().optional(),
+    message_type: z.string().optional(),
     knowledge_query: streamRouteSchema.optional(),
     project_info_query: streamRouteSchema.optional(),
     conversation: streamRouteSchema.optional(),

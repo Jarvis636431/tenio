@@ -10,10 +10,4 @@ export {
   type VoiceRecorderResult,
 } from "./hooks/useVoice";
 
-export {
-  chatWithAgentStream,
-  resumeAgentStream,
-  extractChatMessageContent,
-} from "./services/ai-service";
-
-export type { AgentResumePayload, AgentChatPayload } from "./types";
+export { extractChatMessageContent } from "./services/ai-service";
