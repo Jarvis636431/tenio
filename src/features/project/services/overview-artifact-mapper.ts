@@ -1,4 +1,4 @@
-import type { ScheduleArtifact, ScheduleTask, TimeCostArtifact } from "@/services/apm-api";
+import type { ScheduleArtifact, ScheduleTask, TimeCostArtifact } from "./project-api";
 import type { PlanTask } from "@/types/domain/plan";
 
 interface CostCurvePoint {

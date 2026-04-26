@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { projectQueryKeys } from "@/features/project";
-import { getLatestTimeCostArtifact } from "@/services/apm-api";
+import { getLatestTimeCostArtifact } from "../services/project-api";
 import { mapTimeCostArtifactToCostCurve } from "../services/overview-artifact-mapper";
 
 interface UseProjectChartsOptions {

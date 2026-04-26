@@ -1,10 +1,5 @@
-import {
-  completeProjectFileUpload,
-  createProject,
-  deleteProjectFile,
-  initProjectFileUpload,
-  listProjectFiles,
-} from "@/services/apm-api";
+import { API_BASE } from "@/config";
+import { request } from "@/services/http";
 import type {
   FileUploadResponse,
   FileListResponse,
@@ -14,7 +9,6 @@ import type {
   ProjectFile,
   FileCategory,
 } from "@/features/upload";
-import type { ProjectFileItem } from "@/services/apm-api";
 
 interface UploadFilePayload {
   projectId?: string | null;
@@ -22,6 +16,114 @@ interface UploadFilePayload {
   category: FileCategory;
   description?: string;
   tags?: string[];
+}
+
+type ApiListResponse<T> = {
+  items: T[];
+  total?: number;
+  page?: number;
+  page_size?: number;
+};
+
+interface CreateProjectResponse {
+  project_id: string;
+  project_name: string;
+  status: string;
+  created_at: string;
+}
+
+interface UploadInitPayload {
+  original_file_name: string;
+  file_size_bytes: number;
+  file_category: string;
+  file_role: string;
+}
+
+interface UploadInitResponse {
+  file_id: string;
+  upload_url: string;
+  storage_key: string;
+  expire_at: string;
+}
+
+interface CompleteUploadPayload {
+  file_id: string;
+  storage_key: string;
+  upload_status: string;
+}
+
+interface ProjectFileItem {
+  file_id: string;
+  file_category: string;
+  file_role: string;
+  original_file_name: string;
+  file_extension?: string;
+  file_size_bytes: number;
+  page_count?: number;
+  character_count?: number;
+  upload_status: string;
+  parse_status?: string;
+  uploaded_at: string;
+  parsed_at?: string | null;
+  parse_error_message?: string | null;
+}
+
+const APM_API_BASE = `${API_BASE.backend}/api`;
+
+function jsonRequest<T>(path: string, payload?: unknown) {
+  return request<T>(`${APM_API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: payload == null ? undefined : JSON.stringify(payload),
+  });
+}
+
+/**
+ * 创建上传入口使用的项目。
+ */
+async function createUploadProject(projectName: string): Promise<CreateProjectResponse> {
+  return jsonRequest<CreateProjectResponse>("/projects", {
+    project_name: projectName,
+    source_type: "upload",
+  });
+}
+
+/**
+ * 获取项目文件上传凭证。
+ */
+function initProjectFileUpload(
+  projectId: string,
+  payload: UploadInitPayload,
+): Promise<UploadInitResponse> {
+  return jsonRequest<UploadInitResponse>(`/projects/${projectId}/files/upload-init`, payload);
+}
+
+/**
+ * 通知后端文件上传已完成。
+ */
+function completeProjectFileUpload(
+  projectId: string,
+  payload: CompleteUploadPayload,
+): Promise<void> {
+  return jsonRequest<void>(`/projects/${projectId}/files/complete`, payload);
+}
+
+/**
+ * 获取项目文件列表。
+ */
+function listProjectFiles(projectId: string): Promise<ApiListResponse<ProjectFileItem>> {
+  return request<ApiListResponse<ProjectFileItem>>(`${APM_API_BASE}/projects/${projectId}/files`);
+}
+
+/**
+ * 删除项目文件。
+ */
+async function deleteProjectFile(projectId: string, fileId: string): Promise<void> {
+  await request<void>(`${APM_API_BASE}/projects/${projectId}/files/${fileId}`, {
+    method: "DELETE",
+  });
 }
 
 function getFileExtension(fileName: string) {
@@ -105,12 +207,7 @@ export async function uploadFile(
 
   const projectId =
     payload.projectId ??
-    (
-      await createProject({
-        project_name: payload.file.name.replace(/\.[^.]+$/, ""),
-        source_type: "upload",
-      })
-    ).project_id;
+    (await createUploadProject(payload.file.name.replace(/\.[^.]+$/, ""))).project_id;
 
   const init = await initProjectFileUpload(projectId, {
     original_file_name: payload.file.name,

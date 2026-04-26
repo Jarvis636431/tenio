@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProject, projectQueryKeys } from "@/features/project";
-import { getLatestScheduleArtifact } from "@/services/apm-api";
+import { getLatestScheduleArtifact } from "../services/project-api";
 import { mapScheduleArtifactToPlanTasks } from "../services/overview-artifact-mapper";
 
 interface UseProjectDataOptions {
