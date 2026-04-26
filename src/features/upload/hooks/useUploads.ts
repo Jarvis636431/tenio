@@ -33,6 +33,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
   const [keyword, setKeyword] = useState("");
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const createdProjectIdRef = useRef<string | null>(null);
+  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
 
   // 列表查询参数
   const listParams: FileListParams | null = useMemo(() => {
@@ -100,6 +101,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
         });
         if (!projectId && result.projectId) {
           createdProjectIdRef.current = result.projectId;
+          setCreatedProjectId(result.projectId);
         }
 
         // 标记完成
@@ -181,6 +183,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     totalPages: Math.ceil((fileListQuery.data?.total ?? 0) / pageSize),
     stats: statsQuery.data,
     uploadProgress,
+    createdProjectId: projectId ?? createdProjectId,
 
     // 筛选状态
     category,

@@ -17,6 +17,11 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { type FileCategory, type FileStatus, useUploads } from "@/features/upload";
+import {
+  getProjectGenerationStatus,
+  startProjectGeneration,
+  type GenerationStep,
+} from "@/features/project";
 
 interface UploadQueueItem {
   id: string;
@@ -71,7 +76,7 @@ const OPTIONAL_ZONES: UploadZone[] = [
   },
 ];
 
-const GENERATION_STEPS = [
+const FALLBACK_GENERATION_STEPS = [
   "文件解析中...",
   "提取项目信息",
   "生成施工组织设计",
@@ -99,15 +104,52 @@ function formatFileSize(size: number) {
   return `${size} B`;
 }
 
+function isGenerationStepDone(status?: string) {
+  const value = status?.toLowerCase() ?? "";
+  return value === "succeeded" || value === "completed" || value.includes("完成");
+}
+
+function isGenerationStepRunning(status?: string) {
+  const value = status?.toLowerCase() ?? "";
+  return value === "running" || value === "processing" || value.includes("进行");
+}
+
 function UploadPage() {
   const navigate = useNavigate();
   const [files, setFiles] = useState<UploadQueueItem[]>([]);
   const [isAllUploading, setIsAllUploading] = useState(false);
   const [dragTarget, setDragTarget] = useState<FileCategory | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationStep, setGenerationStep] = useState(0);
+  const [generationSteps, setGenerationSteps] = useState<GenerationStep[]>([]);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [uploadedProjectId, setUploadedProjectId] = useState<string | null>(null);
 
   const { uploadFile, uploadProgress } = useUploads({ projectId: null });
+
+  const pollGenerationStatus = useCallback(
+    async (projectId: string) => {
+      const maxAttempts = 180;
+      for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+        const status = await getProjectGenerationStatus(projectId);
+        setGenerationSteps(status.steps ?? []);
+
+        const normalizedStatus = status.generation_status.toLowerCase();
+        if (normalizedStatus === "succeeded" || normalizedStatus === "completed") {
+          navigate(`/project/${projectId}`, { replace: true });
+          return;
+        }
+
+        if (normalizedStatus === "failed") {
+          throw new Error(status.error_message ?? "生成失败，请稍后重试");
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+
+      throw new Error("生成超时，请稍后在项目工作台查看结果");
+    },
+    [navigate],
+  );
 
   const progressMap = useMemo(
     () =>
@@ -172,6 +214,7 @@ function UploadPage() {
 
     try {
       let hasUploadError = false;
+      let targetProjectId = uploadedProjectId;
 
       for (const uploadItem of files) {
         if (uploadItem.status !== "pending" && uploadItem.status !== "error") {
@@ -185,12 +228,16 @@ function UploadPage() {
         );
 
         try {
-          await uploadFile({
+          const result = await uploadFile({
             clientId: uploadItem.id,
             file: uploadItem.file,
             category: uploadItem.category,
             description: "",
           });
+          targetProjectId = targetProjectId ?? result.projectId ?? null;
+          if (targetProjectId) {
+            setUploadedProjectId(targetProjectId);
+          }
 
           setFiles((prev) =>
             prev.map((file) =>
@@ -214,27 +261,23 @@ function UploadPage() {
       }
 
       if (!hasUploadError && files.length > 0) {
-        // Start generation flow
-        setIsGenerating(true);
-        setGenerationStep(0);
+        if (!targetProjectId) {
+          throw new Error("缺少项目 ID，无法启动生成");
+        }
 
-        const interval = setInterval(() => {
-          setGenerationStep((prev) => {
-            if (prev >= GENERATION_STEPS.length - 1) {
-              clearInterval(interval);
-              setTimeout(() => {
-                navigate("/projects");
-              }, 600);
-              return prev;
-            }
-            return prev + 1;
-          });
-        }, 800);
+        setIsGenerating(true);
+        setGenerationError(null);
+        setGenerationSteps([]);
+
+        await startProjectGeneration(targetProjectId, { trigger_source: "upload" });
+        await pollGenerationStatus(targetProjectId);
       }
+    } catch (error) {
+      setGenerationError(error instanceof Error ? error.message : "生成失败，请稍后重试");
     } finally {
       setIsAllUploading(false);
     }
-  }, [files, navigate, uploadFile]);
+  }, [files, pollGenerationStatus, uploadFile, uploadedProjectId]);
 
   const handleSkip = useCallback(() => {
     navigate("/projects");
@@ -244,6 +287,21 @@ function UploadPage() {
   const allCompleted = files.length > 0 && completedCount === files.length;
   const requiredFiles = files.filter((file) => file.category === REQUIRED_ZONE.category);
   const hasRequiredFiles = requiredFiles.length > 0;
+  const displayGenerationSteps =
+    generationSteps.length > 0
+      ? generationSteps
+          .slice()
+          .sort((a, b) => a.step_order - b.step_order)
+          .map((step) => ({
+            key: step.step_code,
+            label: step.step_name,
+            status: step.step_status,
+          }))
+      : FALLBACK_GENERATION_STEPS.map((step, index) => ({
+          key: `fallback-${index}`,
+          label: step,
+          status: index === 0 ? "running" : "pending",
+        }));
   const filesByCategory = useMemo(() => {
     return files.reduce<Record<FileCategory, UploadQueueItem[]>>(
       (accumulator, item) => {
@@ -456,11 +514,15 @@ function UploadPage() {
           </button>
           <Button
             onClick={() => void uploadAll()}
-            disabled={!hasRequiredFiles || isAllUploading || allCompleted}
+            disabled={!hasRequiredFiles || isAllUploading || isGenerating}
             className="h-12 rounded-lg bg-cyan-400 px-10 py-3 text-base font-bold text-slate-950 shadow-lg shadow-cyan-400/30 transition-all hover:bg-cyan-300 hover:shadow-cyan-400/50 disabled:bg-slate-500 disabled:text-slate-300 disabled:shadow-none"
           >
             <Sparkles className="mr-2 h-4 w-4" />
-            {isAllUploading ? "上传资料中..." : allCompleted ? "资料上传完成" : "开始 AI 智能生成"}
+            {isAllUploading
+              ? "上传资料中..."
+              : allCompleted
+                ? "启动 AI 智能生成"
+                : "开始 AI 智能生成"}
           </Button>
         </div>
       </div>
@@ -469,33 +531,58 @@ function UploadPage() {
       {isGenerating && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0e17]/95">
           <div className="w-80 text-center">
-            <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-[3px] border-slate-700 border-t-cyan-400" />
-            <h2 className="mb-2 text-xl font-bold text-white">AI 正在智能生成...</h2>
-            <p className="mb-8 text-sm text-slate-400">正在解析文件并生成施工组织设计方案</p>
+            {generationError ? (
+              <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-red-400/40 bg-red-500/10 text-red-300">
+                <X className="h-7 w-7" />
+              </div>
+            ) : (
+              <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-[3px] border-slate-700 border-t-cyan-400" />
+            )}
+            <h2 className="mb-2 text-xl font-bold text-white">
+              {generationError ? "生成失败" : "AI 正在智能生成..."}
+            </h2>
+            <p className="mb-8 text-sm text-slate-400">
+              {generationError ?? "正在解析文件并生成施工组织设计方案"}
+            </p>
             <div className="space-y-2 text-left">
-              {GENERATION_STEPS.map((step, index) => (
-                <div
-                  key={step}
-                  className={cn(
-                    "flex items-center gap-3 text-sm",
-                    index < generationStep
-                      ? "text-emerald-400"
-                      : index === generationStep
-                        ? "text-cyan-300"
-                        : "text-slate-500",
-                  )}
-                >
-                  {index < generationStep ? (
-                    <CheckCircle className="h-4 w-4 shrink-0" />
-                  ) : index === generationStep ? (
-                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                  ) : (
-                    <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600" />
-                  )}
-                  <span>{step}</span>
-                </div>
-              ))}
+              {displayGenerationSteps.map((step) => {
+                const isDone = isGenerationStepDone(step.status);
+                const isRunning = !generationError && isGenerationStepRunning(step.status);
+                return (
+                  <div
+                    key={step.key}
+                    className={cn(
+                      "flex items-center gap-3 text-sm",
+                      isDone ? "text-emerald-400" : isRunning ? "text-cyan-300" : "text-slate-500",
+                    )}
+                  >
+                    {isDone ? (
+                      <CheckCircle className="h-4 w-4 shrink-0" />
+                    ) : isRunning ? (
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    ) : (
+                      <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600" />
+                    )}
+                    <span>{step.label}</span>
+                  </div>
+                );
+              })}
             </div>
+            {generationError && (
+              <div className="mt-7 flex justify-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsGenerating(false);
+                    setGenerationError(null);
+                  }}
+                  className="border-slate-600 bg-transparent text-slate-300 hover:border-cyan-400/60 hover:text-cyan-300"
+                >
+                  返回修改
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}

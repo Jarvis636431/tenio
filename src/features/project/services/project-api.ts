@@ -84,7 +84,50 @@ export interface TimeCostArtifact extends ArtifactBase {
   options: Array<Record<string, unknown>>;
 }
 
+export interface StartGenerationPayload {
+  trigger_source?: string;
+}
+
+export interface StartGenerationResponse {
+  generation_job_id: string;
+  generation_status: string;
+  started_at: string;
+}
+
+export interface GenerationStep {
+  step_code: string;
+  step_name: string;
+  step_order: number;
+  step_status: string;
+  step_started_at?: string | null;
+  step_finished_at?: string | null;
+}
+
+export interface GenerationStatus {
+  generation_job_id: string;
+  project_id: string;
+  generation_status: string;
+  current_step_code: string;
+  current_step_name: string;
+  step_progress_percent: number;
+  started_at: string;
+  finished_at?: string | null;
+  steps: GenerationStep[];
+  error_code?: string | null;
+  error_message?: string | null;
+}
+
 const APM_API_BASE = `${API_BASE.backend}/api`;
+
+function jsonRequest<T>(path: string, payload?: unknown) {
+  return request<T>(`${APM_API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: payload == null ? undefined : JSON.stringify(payload),
+  });
+}
 
 // ============================================================================
 // 项目列表与基础信息
@@ -139,4 +182,21 @@ export function getLatestTimeCostArtifact(projectId: string): Promise<TimeCostAr
   return request<TimeCostArtifact>(
     `${APM_API_BASE}/projects/${projectId}/artifacts/time-cost/latest`,
   );
+}
+
+/**
+ * 启动项目产物生成。
+ */
+export function startProjectGeneration(
+  projectId: string,
+  payload: StartGenerationPayload = {},
+): Promise<StartGenerationResponse> {
+  return jsonRequest<StartGenerationResponse>(`/projects/${projectId}/generation/start`, payload);
+}
+
+/**
+ * 获取项目生成状态。
+ */
+export function getProjectGenerationStatus(projectId: string): Promise<GenerationStatus> {
+  return request<GenerationStatus>(`${APM_API_BASE}/projects/${projectId}/generation/status`);
 }
