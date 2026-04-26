@@ -16,18 +16,7 @@ export { RotationTab } from "./components/RotationTab";
 export { ChartTab } from "./components/ChartTab";
 export { ProjectTable } from "./components/ProjectTable";
 
-export {
-  getProjectList,
-  getProjectCoreGraph,
-  getProjectCostCurve,
-  getProjectHeadcountCurve,
-} from "./services/project-api";
-export {
-  costCurveResponseSchema,
-  headcountCurveResponseSchema,
-  legacyCostCurveResponseSchema,
-  legacyHeadcountCurveResponseSchema,
-  projectListResponseSchema,
-} from "./services/project-schema";
+export { getProjectList } from "./services/project-api";
+export { projectListResponseSchema } from "./services/project-schema";
 
 export type { Project, ProjectListResponse, ProjectListItem } from "./types";

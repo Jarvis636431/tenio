@@ -51,16 +51,3 @@ export function normalizeStatusChip(status?: string): "done" | "act" | "pend" {
   if (s.includes("进行") || s.includes("active") || s.includes("start")) return "act";
   return "pend";
 }
-
-import type { CoreGraphResponse } from "@/types/domain/schedulepro";
-
-/**
- * 解析 WBS 工作包的大纲层级
- * @param wp - 工作进程对象
- * @returns 大纲层级数字
- */
-export function resolveOutlineLevel(wp: CoreGraphResponse["work_processes"][number]): number {
-  const meta = wp.outline_metadata;
-  if (meta && typeof meta.level === "number") return meta.level;
-  return wp.outline_level ?? 0;
-}

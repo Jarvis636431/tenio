@@ -11,14 +11,12 @@ import {
 import { ArrowUpDown } from "lucide-react";
 import { formatIsoDate } from "@/lib/date";
 import { sortBySeqNo } from "@/lib/array";
-import { normalizeStatusChip, resolveOutlineLevel } from "@/lib/task";
+import { normalizeStatusChip } from "@/lib/task";
 import type { PlanTask } from "@/types/domain/plan";
-import type { CoreGraphResponse } from "@/types/domain/schedulepro";
 
 interface ProjectTableProps {
   planTasks: PlanTask[];
   isLoading?: boolean;
-  coreGraph?: CoreGraphResponse;
 }
 
 type TaskRow = PlanTask & {
@@ -113,19 +111,18 @@ const columns = [
  * 项目施工任务计划表格
  * 使用 TanStack Table 实现，支持排序和分页
  */
-export function ProjectTable({ planTasks, isLoading, coreGraph }: ProjectTableProps) {
+export function ProjectTable({ planTasks, isLoading }: ProjectTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const data = useMemo(() => {
     const sorted = sortBySeqNo(planTasks);
     return sorted.map((task) => {
-      const wp = coreGraph?.work_processes?.find((w) => w.id === task.id);
-      const level = wp ? resolveOutlineLevel(wp) : 0;
-      const isSum = level === 0 || level === 1;
+      const level = task.outlineLevel ?? 0;
+      const isSum = task.isSummaryTask ?? level <= 1;
       const chipType = normalizeStatusChip(task.constructionSituation);
       return { ...task, level, isSum, chipType } as TaskRow;
     });
-  }, [planTasks, coreGraph]);
+  }, [planTasks]);
 
   const table = useReactTable({
     data,

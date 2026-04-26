@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
-import {
-  projectQueryKeys,
-  useProject,
-  getProjectCoreGraph,
-  getProjectCostCurve,
-  getProjectHeadcountCurve,
-} from "@/features/project";
+import { projectQueryKeys, useProject } from "@/features/project";
 import { chatWithAgentStream, resumeAgentStream, extractChatMessageContent } from "@/features/ai";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVoice } from "./useVoice";
@@ -105,20 +99,20 @@ export function useChat(options: ChatPanelOptions = {}) {
   }, []);
 
   /**
-   * 刷新项目在 React Query 缓存中的核心图和曲线数据。
+   * 刷新项目在 React Query 缓存中的工作台产物数据。
    * 当 AI 发送 shouldRefetch 事件时调用。
    *
    * @param projectId - 要刷新数据的项目 ID
    */
-  const refreshCoreGraph = async (projectId: string) => {
-    const [coreGraph, costCurve, headcountCurve] = await Promise.all([
-      getProjectCoreGraph(projectId),
-      getProjectCostCurve(projectId),
-      getProjectHeadcountCurve(projectId),
+  const refreshOverviewArtifacts = async (projectId: string) => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: projectQueryKeys.scheduleArtifact(projectId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: projectQueryKeys.timeCostArtifact(projectId),
+      }),
     ]);
-    queryClient.setQueryData(projectQueryKeys.coreGraph(projectId), coreGraph);
-    queryClient.setQueryData(projectQueryKeys.costCurve(projectId), costCurve);
-    queryClient.setQueryData(projectQueryKeys.headcountCurve(projectId), headcountCurve);
   };
 
   /**
@@ -246,7 +240,7 @@ export function useChat(options: ChatPanelOptions = {}) {
                 void (async () => {
                   const projectId = resolveProjectId(projectRef);
                   if (projectId) {
-                    await refreshCoreGraph(projectId);
+                    await refreshOverviewArtifacts(projectId);
                   }
                 })();
               }

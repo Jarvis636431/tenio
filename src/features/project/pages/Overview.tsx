@@ -25,7 +25,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
   const {
     resolvedProjectId,
-    coreGraph,
+    scheduleArtifact,
     isLoadingGraph,
     planTasks,
     currentProjectName,
@@ -38,7 +38,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
   const costCurveChart = costQuery.chartData;
 
-  const { handleExport } = useProjectExport(coreGraph);
+  const { handleExport } = useProjectExport(scheduleArtifact);
 
   const panelClass =
     "min-h-[360px] overflow-hidden border border-none bg-[rgba(2,12,27,0.6)] shadow-apm-panel px-4";
@@ -101,7 +101,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
       {activeTab === "scheduleList" && (
         <div className={`${panelClass} min-h-[640px] overflow-auto`}>
-          <ProjectTable planTasks={planTasks} isLoading={isLoadingGraph} coreGraph={coreGraph} />
+          <ProjectTable planTasks={planTasks} isLoading={isLoadingGraph} />
         </div>
       )}
 

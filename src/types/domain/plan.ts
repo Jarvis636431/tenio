@@ -33,4 +33,6 @@ export interface PlanTask {
   component?: string;
   criticalPath?: boolean;
   seqNo?: number;
+  outlineLevel?: number;
+  isSummaryTask?: boolean;
 }

@@ -19,6 +19,9 @@ interface ChartTabProps {
 }
 
 export function ChartTab({ totalDurationLabel, planTasks, costCurveData, unit }: ChartTabProps) {
+  const formatLabel = (value: string) =>
+    /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(5) : value;
+
   const chartData = useMemo(() => {
     if (!costCurveData || costCurveData.length === 0) {
       return [];
@@ -27,7 +30,7 @@ export function ChartTab({ totalDurationLabel, planTasks, costCurveData, unit }:
     return costCurveData
       .filter((_, index) => index % step === 0 || index === costCurveData.length - 1)
       .map((item) => ({
-        label: item.date.slice(5),
+        label: formatLabel(item.date),
         总成本: item.总成本,
       }));
   }, [costCurveData]);

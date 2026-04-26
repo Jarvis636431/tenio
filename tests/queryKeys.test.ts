@@ -6,19 +6,21 @@ describe("projectQueryKeys", () => {
     expect(projectQueryKeys.list).toEqual(["projects"]);
   });
 
-  it("coreGraph returns correct key with projectId", () => {
-    expect(projectQueryKeys.coreGraph("p-001")).toEqual(["project", "core-graph", "p-001"]);
+  it("scheduleArtifact returns correct key with projectId", () => {
+    expect(projectQueryKeys.scheduleArtifact("p-001")).toEqual([
+      "project",
+      "artifact",
+      "schedule",
+      "p-001",
+    ]);
   });
 
-  it("costCurve returns correct key with projectId", () => {
-    expect(projectQueryKeys.costCurve("p-002")).toEqual(["overview", "cost-curve", "p-002"]);
-  });
-
-  it("headcountCurve returns correct key with projectId", () => {
-    expect(projectQueryKeys.headcountCurve("p-003")).toEqual([
-      "overview",
-      "headcount-curve",
-      "p-003",
+  it("timeCostArtifact returns correct key with projectId", () => {
+    expect(projectQueryKeys.timeCostArtifact("p-002")).toEqual([
+      "project",
+      "artifact",
+      "time-cost",
+      "p-002",
     ]);
   });
 
