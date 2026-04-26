@@ -6,14 +6,7 @@ export { default as UploadPage } from "./pages/UploadPage";
 export { useUploads, type UseUploadsReturn } from "./hooks/useUploads";
 export { uploadQueryKeys } from "./queryKeys";
 
-export {
-  getFileList,
-  uploadFile,
-  deleteFile,
-  updateFile,
-  getFileStats,
-  getFileDownloadUrl,
-} from "./services/uploads-api";
+export { getFileList, uploadFile, deleteFile, getFileStats } from "./services/uploads-api";
 
 export type {
   FileCategory,
@@ -24,7 +17,6 @@ export type {
   FileListParams,
   FileListResponse,
   FileDeletePayload,
-  FileUpdatePayload,
   FileCategoryStat,
   FileStatsResponse,
 } from "./types/uploads";

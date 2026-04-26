@@ -1,37 +1,14 @@
 import { API_BASE } from "@/config";
-import { request, requestSse, type SseRequestOptions } from "@/services/http";
+import { requestSse, type SseRequestOptions } from "@/services/http";
 import {
   agentChatPayloadSchema,
-  agentInitPayloadSchema,
-  agentInitResponseSchema,
   agentResumePayloadSchema,
   parseAiStreamPayload,
   parseAiVerifyPayload,
 } from "./ai-schema";
-import type {
-  AgentInitPayload,
-  AgentInitResponse,
-  AgentResumePayload,
-  AgentChatPayload,
-} from "@/features/ai";
+import type { AgentResumePayload, AgentChatPayload } from "@/features/ai";
 
 const AI_BASE_URL = API_BASE.aiService;
-
-/**
- * 初始化 AI Agent
- */
-export async function initAgent(payload: AgentInitPayload): Promise<AgentInitResponse> {
-  const parsedPayload = agentInitPayloadSchema.parse(payload);
-  const response = await request<AgentInitResponse>(`${AI_BASE_URL}/api/agent/init`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(parsedPayload),
-    unwrap: false,
-  });
-  return agentInitResponseSchema.parse(response);
-}
 
 /**
  * 发送聊天消息并获取 SSE 流式响应

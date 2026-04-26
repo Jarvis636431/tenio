@@ -1,12 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  deleteFile,
-  getFileDownloadUrl,
-  getFileList,
-  getFileStats,
-  updateFile,
-  uploadFile,
-} from "@/features/upload";
+import { deleteFile, getFileList, getFileStats, uploadFile } from "@/features/upload";
 
 describe("uploads-api", () => {
   beforeEach(() => {
@@ -26,10 +19,10 @@ describe("uploads-api", () => {
       json: () =>
         Promise.resolve({
           data: {
-            list: [],
+            items: [],
             total: 0,
             page: 2,
-            pageSize: 20,
+            page_size: 20,
           },
           message: "ok",
         }),
@@ -44,32 +37,60 @@ describe("uploads-api", () => {
     });
 
     expect(result.total).toBe(0);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8000/api/v1/projects/project-001/files?category=drawing&keyword=cad&page=2&page_size=20",
-      {
-        method: undefined,
-        headers: {},
-        body: undefined,
-      },
-    );
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/projects/project-001/files", {
+      method: undefined,
+      headers: {},
+      body: undefined,
+    });
   });
 
-  it("uploads project files with form data", async () => {
+  it("uploads project files through upload credentials", async () => {
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () =>
-        Promise.resolve({
-          data: {
-            fileId: "file-001",
-            name: "contract.pdf",
-            url: "/uploads/contract.pdf",
-            size: 1200,
-            uploadedAt: "2026-04-24T00:00:00.000Z",
-          },
-        }),
-    } as Response);
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            data: {
+              file_id: "file-001",
+              upload_url: "https://upload.example.com/contract.pdf",
+              storage_key: "projects/project-001/contract.pdf",
+              expire_at: "2026-04-24T01:00:00.000Z",
+            },
+          }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ data: null }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            data: {
+              items: [
+                {
+                  file_id: "file-001",
+                  file_category: "contract",
+                  file_role: "primary_contract",
+                  original_file_name: "contract.pdf",
+                  file_extension: "pdf",
+                  file_size_bytes: 1200,
+                  upload_status: "completed",
+                  uploaded_at: "2026-04-24T00:00:00.000Z",
+                },
+              ],
+            },
+          }),
+      } as Response);
     const onProgress = vi.fn();
 
     const result = await uploadFile(
@@ -84,30 +105,91 @@ describe("uploads-api", () => {
     );
 
     expect(result.fileId).toBe("file-001");
+    expect(result.projectId).toBe("project-001");
     expect(onProgress).toHaveBeenCalledWith(0);
     expect(onProgress).toHaveBeenCalledWith(100);
 
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("http://localhost:8000/api/v1/projects/project-001/files");
-    expect(init?.method).toBe("POST");
-    expect(init?.body).toBeInstanceOf(FormData);
-    expect(init?.headers).toEqual({});
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://localhost:8000/api/projects/project-001/files/upload-init",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          original_file_name: "contract.pdf",
+          file_size_bytes: 7,
+          file_category: "contract",
+          file_role: "primary_contract",
+        }),
+      },
+    );
+    const [uploadUrl, uploadInit] = fetchMock.mock.calls[1];
+    expect(uploadUrl).toBe("https://upload.example.com/contract.pdf");
+    expect(uploadInit?.method).toBe("PUT");
+    expect(uploadInit?.body).toBeInstanceOf(File);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "http://localhost:8000/api/projects/project-001/files/complete",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          file_id: "file-001",
+          storage_key: "projects/project-001/contract.pdf",
+          upload_status: "completed",
+        }),
+      },
+    );
   });
 
-  it("uploads temporary files when no project id is available", async () => {
+  it("creates a project before uploading when no project id is available", async () => {
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () =>
-        Promise.resolve({
-          fileId: "file-temp",
-          name: "contract.pdf",
-          url: "/uploads/contract.pdf",
-          size: 1200,
-          uploadedAt: "2026-04-24T00:00:00.000Z",
-        }),
-    } as Response);
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            data: {
+              project_id: "project-created",
+              project_name: "contract",
+              status: "created",
+              created_at: "2026-04-24T00:00:00.000Z",
+            },
+          }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            data: {
+              file_id: "file-temp",
+              upload_url: "https://upload.example.com/temp.pdf",
+              storage_key: "projects/project-created/temp.pdf",
+              expire_at: "2026-04-24T01:00:00.000Z",
+            },
+          }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ data: null }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ data: { items: [] } }),
+      } as Response);
 
     await uploadFile({
       projectId: null,
@@ -115,11 +197,16 @@ describe("uploads-api", () => {
       category: "contract",
     });
 
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("http://localhost:8000/api/v1/files");
-    expect(init?.method).toBe("POST");
-    expect(init?.headers).toEqual({});
-    expect(init?.body).toBeInstanceOf(FormData);
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:8000/api/projects", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        project_name: "contract",
+        source_type: "upload",
+      }),
+    });
   });
 
   it("deletes project files through the backend", async () => {
@@ -133,7 +220,7 @@ describe("uploads-api", () => {
     await deleteFile({ projectId: "project-001", fileId: "file-001" });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8000/api/v1/projects/project-001/files/file-001",
+      "http://localhost:8000/api/projects/project-001/files/file-001",
       {
         method: "DELETE",
         headers: {},
@@ -142,89 +229,39 @@ describe("uploads-api", () => {
     );
   });
 
-  it("updates file metadata through the backend", async () => {
+  it("derives file stats from the new project file list", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
       json: () =>
         Promise.resolve({
-          id: "file-001",
-          projectId: "project-001",
-          name: "updated.pdf",
-          originalName: "original.pdf",
-          size: 1200,
-          type: "application/pdf",
-          category: "document",
-          url: "/uploads/updated.pdf",
-          uploadedAt: "2026-04-24T00:00:00.000Z",
-          status: "completed",
+          data: {
+            items: [
+              {
+                file_id: "file-001",
+                file_category: "contract",
+                file_role: "primary_contract",
+                original_file_name: "contract.pdf",
+                file_size_bytes: 1200,
+                upload_status: "completed",
+                uploaded_at: "2026-04-24T00:00:00.000Z",
+              },
+            ],
+          },
         }),
     } as Response);
 
-    await updateFile({ fileId: "file-001", name: "updated.pdf", tags: ["图纸"] });
-
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/v1/files/file-001", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name: "updated.pdf", tags: ["图纸"] }),
-    });
-  });
-
-  it("fetches file stats and download URLs through the backend", async () => {
-    const fetchMock = vi.mocked(fetch);
-    fetchMock
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: {
-              totalFiles: 0,
-              totalSize: 0,
-              categories: [],
-            },
-          }),
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: {
-              url: "https://example.com/download/file-001",
-            },
-          }),
-      } as Response);
-
     await expect(getFileStats("project-001")).resolves.toEqual({
-      totalFiles: 0,
-      totalSize: 0,
-      categories: [],
+      totalFiles: 1,
+      totalSize: 1200,
+      categories: [{ category: "contract", count: 1, totalSize: 1200 }],
     });
-    await expect(getFileDownloadUrl("file-001")).resolves.toBe(
-      "https://example.com/download/file-001",
-    );
 
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
-      "http://localhost:8000/api/v1/projects/project-001/files/stats",
-      {
-        method: undefined,
-        headers: {},
-        body: undefined,
-      },
-    );
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      "http://localhost:8000/api/v1/files/file-001/download",
-      {
-        method: undefined,
-        headers: {},
-        body: undefined,
-      },
-    );
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/projects/project-001/files", {
+      method: undefined,
+      headers: {},
+      body: undefined,
+    });
   });
 });

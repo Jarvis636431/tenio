@@ -1,5 +1,6 @@
 import { API_BASE } from "@/config";
-import { request, buildUrl } from "@/services/http";
+import { request } from "@/services/http";
+import { listProjects } from "@/services/apm-api";
 import {
   costCurveResponseSchema,
   headcountCurveResponseSchema,
@@ -8,17 +9,14 @@ import {
   projectListResponseSchema,
 } from "./project-schema";
 import type {
-  CreateJiuanProjectPayload,
-  CreateJiuanProjectResponse,
   CoreGraphResponse,
   CostCurveResponse,
   HeadcountCurveResponse,
   CostCurvePoint,
   HeadcountCurvePoint,
-  SelectSolutionPayload,
-  SelectSolutionResponse,
 } from "@/types/domain/schedulepro";
-import type { ProcessInfoResponse, ProjectListResponse } from "@/features/project";
+import type { ProjectListResponse } from "@/features/project";
+import type { ProjectListItem as ApmProjectListItem } from "@/services/apm-api";
 
 const BACKEND_BASE_URL = API_BASE.backend;
 const API_V1 = `${BACKEND_BASE_URL}/api/v1`;
@@ -27,20 +25,22 @@ const API_V1 = `${BACKEND_BASE_URL}/api/v1`;
 // 项目列表与基础信息
 // ============================================================================
 
-export async function getProjectList(): Promise<ProjectListResponse> {
-  const response = await request<ProjectListResponse>(`${API_V1}/projects`);
-  return projectListResponseSchema.parse(response);
+function mapApmProjectListItem(item: ApmProjectListItem): ProjectListResponse[number] {
+  return {
+    project_id: item.project_id,
+    project_name: item.project_name,
+    description: item.location ?? item.project_type ?? item.status_label,
+    status: item.status,
+    created_at: item.created_at,
+  };
 }
 
-export async function getProcessInfo(
-  projectId: string,
-  options?: { workProcessName?: string },
-): Promise<ProcessInfoResponse> {
-  const url = buildUrl(BACKEND_BASE_URL, "/process_info", {
-    project_id: projectId,
-    work_process_name: options?.workProcessName ?? "",
-  });
-  return request<ProcessInfoResponse>(url, { unwrap: false });
+/**
+ * 获取项目列表。
+ */
+export async function getProjectList(): Promise<ProjectListResponse> {
+  const response = await listProjects();
+  return projectListResponseSchema.parse(response.items.map(mapApmProjectListItem));
 }
 
 // ============================================================================
@@ -113,32 +113,4 @@ export async function getProjectHeadcountCurve(projectId: string): Promise<Headc
     `${API_V1}/projects/${projectId}/headcount-curve`,
   );
   return normalizeHeadcountCurveResponse(response);
-}
-
-// ============================================================================
-// 项目创建与方案选择
-// ============================================================================
-
-export async function createJiuanProject(
-  payload: CreateJiuanProjectPayload,
-): Promise<CreateJiuanProjectResponse> {
-  return request<CreateJiuanProjectResponse>(`${API_V1}/projects/jiuan`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function selectSolution(
-  projectId: string,
-  payload: SelectSolutionPayload,
-): Promise<SelectSolutionResponse> {
-  return request<SelectSolutionResponse>(`${API_V1}/projects/${projectId}/solutions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
 }

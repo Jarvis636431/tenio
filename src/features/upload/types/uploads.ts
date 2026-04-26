@@ -34,6 +34,7 @@ export interface FileUploadPayload {
 
 export interface FileUploadResponse {
   fileId: string;
+  projectId?: string;
   name: string;
   url: string;
   thumbnailUrl?: string;
@@ -59,14 +60,6 @@ export interface FileListResponse {
 export interface FileDeletePayload {
   projectId: string;
   fileId: string;
-}
-
-export interface FileUpdatePayload {
-  fileId: string;
-  name?: string;
-  description?: string;
-  category?: FileCategory;
-  tags?: string[];
 }
 
 export interface FileCategoryStat {

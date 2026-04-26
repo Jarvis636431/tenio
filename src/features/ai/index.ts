@@ -11,15 +11,9 @@ export {
 } from "./hooks/useVoice";
 
 export {
-  initAgent,
   chatWithAgentStream,
   resumeAgentStream,
   extractChatMessageContent,
 } from "./services/ai-service";
 
-export type {
-  AgentInitPayload,
-  AgentInitResponse,
-  AgentResumePayload,
-  AgentChatPayload,
-} from "./types";
+export type { AgentResumePayload, AgentChatPayload } from "./types";

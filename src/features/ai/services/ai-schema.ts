@@ -1,19 +1,5 @@
 import { z } from "zod";
 
-export const agentInitPayloadSchema = z.object({
-  project_id: z.string().min(1),
-  base_date: z.string().min(1),
-  solution_id: z.number(),
-  access_token: z.string().optional(),
-  base_url: z.string().optional(),
-});
-
-export const agentInitResponseSchema = z
-  .object({
-    message: z.string().optional(),
-  })
-  .catchall(z.unknown());
-
 export const agentResumePayloadSchema = z.object({
   message: z.string().min(1),
   thread_id: z.string().min(1),

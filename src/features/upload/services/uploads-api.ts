@@ -1,18 +1,20 @@
-import { API_BASE } from "@/config";
-import { buildUrl, request } from "@/services/http";
+import {
+  completeProjectFileUpload,
+  createProject,
+  deleteProjectFile,
+  initProjectFileUpload,
+  listProjectFiles,
+} from "@/services/apm-api";
 import type {
   FileUploadResponse,
   FileListResponse,
   FileListParams,
   FileDeletePayload,
-  FileUpdatePayload,
   FileStatsResponse,
   ProjectFile,
   FileCategory,
 } from "@/features/upload";
-
-const BACKEND_BASE_URL = API_BASE.backend;
-const API_V1 = `${BACKEND_BASE_URL}/api/v1`;
+import type { ProjectFileItem } from "@/services/apm-api";
 
 interface UploadFilePayload {
   projectId?: string | null;
@@ -22,80 +24,167 @@ interface UploadFilePayload {
   tags?: string[];
 }
 
+function getFileExtension(fileName: string) {
+  const index = fileName.lastIndexOf(".");
+  return index >= 0 ? fileName.slice(index + 1).toLowerCase() : "";
+}
+
+function toUploadRole(category: FileCategory) {
+  if (category === "contract") return "primary_contract";
+  if (category === "drawing") return "drawing";
+  if (category === "document") return "bill_or_document";
+  return "supplement";
+}
+
+function toFeatureFile(item: ProjectFileItem, projectId: string): ProjectFile {
+  const category = (item.file_category || "other") as FileCategory;
+  const fileName = item.original_file_name;
+  const extension = item.file_extension ?? getFileExtension(fileName);
+
+  return {
+    id: item.file_id,
+    projectId,
+    name: fileName,
+    originalName: fileName,
+    size: item.file_size_bytes,
+    type: extension ? `.${extension}` : "",
+    category,
+    url: "",
+    uploadedAt: item.uploaded_at,
+    status: item.upload_status === "completed" ? "completed" : "pending",
+  };
+}
+
+function toFileUploadResponse(item: ProjectFileItem, projectId: string): FileUploadResponse {
+  const file = toFeatureFile(item, projectId);
+  return {
+    fileId: file.id,
+    projectId: file.projectId,
+    name: file.name,
+    url: file.url,
+    size: file.size,
+    uploadedAt: file.uploadedAt,
+  };
+}
+
+function filterFiles(files: ProjectFile[], params: FileListParams) {
+  const keyword = params.keyword?.trim().toLowerCase();
+  return files.filter((file) => {
+    const matchesCategory = !params.category || file.category === params.category;
+    const matchesKeyword = !keyword || file.name.toLowerCase().includes(keyword);
+    return matchesCategory && matchesKeyword;
+  });
+}
+
 /**
  * 获取文件列表
  */
 export async function getFileList(params: FileListParams): Promise<FileListResponse> {
-  const url = buildUrl(API_V1, `/projects/${params.projectId}/files`, {
-    category: params.category ?? "",
-    keyword: params.keyword ?? "",
-    page: params.page ? String(params.page) : "",
-    page_size: params.pageSize ? String(params.pageSize) : "",
-  });
-  return request<FileListResponse>(url);
+  const response = await listProjectFiles(params.projectId);
+  const files = response.items.map((item) => toFeatureFile(item, params.projectId));
+  const filteredFiles = filterFiles(files, params);
+  const page = params.page ?? 1;
+  const pageSize = params.pageSize ?? filteredFiles.length;
+  const start = (page - 1) * pageSize;
+  return {
+    list: filteredFiles.slice(start, start + pageSize),
+    total: filteredFiles.length,
+    page,
+    pageSize,
+  };
 }
 
 /**
- * 上传文件（不依赖项目 ID，文件先暂存，上传完成后再创建项目）
+ * 上传文件；无项目 ID 时先创建临时项目，再走新后端上传凭证流程。
  */
 export async function uploadFile(
   payload: UploadFilePayload,
   onProgress?: (percent: number) => void,
 ): Promise<FileUploadResponse> {
-  const formData = new FormData();
-  formData.append("file", payload.file);
-  formData.append("category", payload.category);
-  if (payload.description) {
-    formData.append("description", payload.description);
-  }
-  payload.tags?.forEach((tag) => formData.append("tags", tag));
-
   onProgress?.(0);
-  const url = payload.projectId
-    ? `${API_V1}/projects/${payload.projectId}/files`
-    : `${API_V1}/files`;
-  const response = await request<FileUploadResponse>(url, {
-    method: "POST",
-    body: formData,
+
+  const projectId =
+    payload.projectId ??
+    (
+      await createProject({
+        project_name: payload.file.name.replace(/\.[^.]+$/, ""),
+        source_type: "upload",
+      })
+    ).project_id;
+
+  const init = await initProjectFileUpload(projectId, {
+    original_file_name: payload.file.name,
+    file_size_bytes: payload.file.size,
+    file_category: payload.category,
+    file_role: toUploadRole(payload.category),
   });
+  onProgress?.(40);
+
+  const uploadResponse = await fetch(init.upload_url, {
+    method: "PUT",
+    body: payload.file,
+  });
+  if (!uploadResponse.ok) {
+    throw new Error(`文件上传失败 (${uploadResponse.status})`);
+  }
+  onProgress?.(80);
+
+  await completeProjectFileUpload(projectId, {
+    file_id: init.file_id,
+    storage_key: init.storage_key,
+    upload_status: "completed",
+  });
+
+  const files = await listProjectFiles(projectId);
+  const uploadedFile = files.items.find((item) => item.file_id === init.file_id);
   onProgress?.(100);
-  return response;
+
+  if (uploadedFile) {
+    return toFileUploadResponse(uploadedFile, projectId);
+  }
+
+  return {
+    fileId: init.file_id,
+    projectId,
+    name: payload.file.name,
+    url: "",
+    size: payload.file.size,
+    uploadedAt: new Date().toISOString(),
+  };
 }
 
 /**
  * 删除文件
  */
 export async function deleteFile(payload: FileDeletePayload): Promise<void> {
-  await request<void>(`${API_V1}/projects/${payload.projectId}/files/${payload.fileId}`, {
-    method: "DELETE",
-  });
-}
-
-/**
- * 更新文件信息
- */
-export async function updateFile(payload: FileUpdatePayload): Promise<ProjectFile> {
-  const { fileId, ...data } = payload;
-  return request<ProjectFile>(`${API_V1}/files/${fileId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+  await deleteProjectFile(payload.projectId, payload.fileId);
 }
 
 /**
  * 获取文件统计
  */
 export async function getFileStats(projectId: string): Promise<FileStatsResponse> {
-  return request<FileStatsResponse>(`${API_V1}/projects/${projectId}/files/stats`);
-}
+  const response = await listProjectFiles(projectId);
+  const categories = new Map<FileCategory, { count: number; totalSize: number }>();
+  let totalSize = 0;
 
-/**
- * 下载文件（获取下载链接）
- */
-export async function getFileDownloadUrl(fileId: string): Promise<string> {
-  const response = await request<{ url: string }>(`${API_V1}/files/${fileId}/download`);
-  return response.url;
+  response.items.forEach((item) => {
+    const category = (item.file_category || "other") as FileCategory;
+    totalSize += item.file_size_bytes;
+    const previous = categories.get(category) ?? { count: 0, totalSize: 0 };
+    categories.set(category, {
+      count: previous.count + 1,
+      totalSize: previous.totalSize + item.file_size_bytes,
+    });
+  });
+
+  return {
+    totalFiles: response.items.length,
+    totalSize,
+    categories: Array.from(categories.entries()).map(([category, stats]) => ({
+      category,
+      count: stats.count,
+      totalSize: stats.totalSize,
+    })),
+  };
 }

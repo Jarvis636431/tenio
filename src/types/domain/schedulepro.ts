@@ -1,39 +1,3 @@
-export interface CreateJiuanProjectPayload {
-  project_name: string;
-}
-
-export interface CreateJiuanProjectResponse {
-  project_id: string;
-  project_name: string;
-  status: "created";
-  work_process_count: number;
-  dependency_count: number;
-}
-
-export interface SelectSolutionPayload {
-  solution_id: number;
-}
-
-export interface HolidayInfo {
-  date: string;
-  name: string;
-}
-
-export interface SelectSolutionResponse {
-  project_id: string;
-  task_id: string;
-  solution_id: number;
-  total_duration_hours: number;
-  start_date: string;
-  finish_date: string;
-  matched_tasks: number;
-  skipped_tasks: number;
-  holidays: HolidayInfo[];
-  daily_schedule: Record<string, string[]>;
-  cost_curve: CostCurvePoint[];
-  headcount_curve: HeadcountCurvePoint[];
-}
-
 export interface CoreGraphWorkProcess {
   id: string;
   project_id: string;

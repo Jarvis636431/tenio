@@ -1,18 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getFileList,
-  uploadFile,
-  deleteFile,
-  updateFile,
-  getFileStats,
-} from "../services/uploads-api";
-import type {
-  FileCategory,
-  FileListParams,
-  ProjectFile,
-  FileUploadResponse,
-} from "../types/uploads";
+import { getFileList, uploadFile, deleteFile, getFileStats } from "../services/uploads-api";
+import type { FileCategory, FileListParams, FileUploadResponse } from "../types/uploads";
 import { uploadQueryKeys } from "../queryKeys";
 
 interface UseUploadsOptions {
@@ -43,6 +32,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
   const [category, setCategory] = useState<FileCategory | undefined>();
   const [keyword, setKeyword] = useState("");
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
+  const createdProjectIdRef = useRef<string | null>(null);
 
   // 列表查询参数
   const listParams: FileListParams | null = useMemo(() => {
@@ -102,11 +92,15 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
       ]);
 
       try {
-        const result = await uploadFile({ ...payload, projectId }, (percent) => {
+        const targetProjectId = projectId ?? createdProjectIdRef.current;
+        const result = await uploadFile({ ...payload, projectId: targetProjectId }, (percent) => {
           setUploadProgress((prev) =>
             prev.map((p) => (p.fileId === fileId ? { ...p, percent, status: "uploading" } : p)),
           );
         });
+        if (!projectId && result.projectId) {
+          createdProjectIdRef.current = result.projectId;
+        }
 
         // 标记完成
         setUploadProgress((prev) =>
@@ -164,29 +158,6 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     },
   });
 
-  // 更新文件 Mutation
-  const updateMutation = useMutation<
-    ProjectFile,
-    Error,
-    {
-      fileId: string;
-      name?: string;
-      description?: string;
-      category?: FileCategory;
-      tags?: string[];
-    }
-  >({
-    mutationFn: updateFile,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: uploadQueryKeys.fileList({ projectId }),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: uploadQueryKeys.stats(projectId),
-      });
-    },
-  });
-
   // 清除已完成的进度
   const clearProgress = useCallback(() => {
     setUploadProgress((prev) =>
@@ -219,7 +190,6 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     isLoading: fileListQuery.isLoading || statsQuery.isLoading,
     isUploading: uploadMutation.isPending,
     isDeleting: deleteMutation.isPending,
-    isUpdating: updateMutation.isPending,
 
     // Actions
     setPage,
@@ -227,7 +197,6 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     setKeyword,
     uploadFile: uploadMutation.mutateAsync,
     deleteFile: deleteMutation.mutateAsync,
-    updateFile: updateMutation.mutateAsync,
     clearProgress,
     resetFilters,
     refetch: () => {

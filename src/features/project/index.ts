@@ -18,12 +18,9 @@ export { ProjectTable } from "./components/ProjectTable";
 
 export {
   getProjectList,
-  getProcessInfo,
   getProjectCoreGraph,
   getProjectCostCurve,
   getProjectHeadcountCurve,
-  createJiuanProject,
-  selectSolution,
 } from "./services/project-api";
 export {
   costCurveResponseSchema,
@@ -33,10 +30,4 @@ export {
   projectListResponseSchema,
 } from "./services/project-schema";
 
-export type {
-  Project,
-  OrderInfoData,
-  ProcessInfoResponse,
-  ProjectListResponse,
-  ProjectListItem,
-} from "./types";
+export type { Project, ProjectListResponse, ProjectListItem } from "./types";
