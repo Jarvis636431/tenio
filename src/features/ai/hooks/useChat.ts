@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { projectQueryKeys, useProject } from "@/features/project";
 import { extractChatMessageContent } from "@/features/ai";
 import {
@@ -8,7 +9,6 @@ import {
   sendAgentSessionMessage,
   subscribeAgentSessionSse,
 } from "../services/ai-api";
-import { useQueryClient } from "@tanstack/react-query";
 import { useVoice } from "./useVoice";
 import { createMessageId } from "@/lib/utils";
 import { logSilentError } from "@/lib/log";
@@ -48,10 +48,12 @@ export function useChat(options: ChatPanelOptions = {}) {
     [options.projectId, routeProjectId, currentProject?.project_id],
   );
 
-  // Store 状态和 actions
+  // Store 状态（读取值，会触发重渲染）
   const messages = useChatStore((state) => state.getMessages(activeProjectKey));
   const inputMessage = useChatStore((state) => state.inputMessage);
   const isThinking = useChatStore((state) => state.isThinking);
+
+  // Store actions（引用稳定，单独选择器不会触发额外重渲染）
   const setActiveProjectKey = useChatStore((state) => state.setActiveProjectKey);
   const setInputMessage = useChatStore((state) => state.setInputMessage);
   const setIsThinking = useChatStore((state) => state.setIsThinking);
@@ -63,12 +65,29 @@ export function useChat(options: ChatPanelOptions = {}) {
   const getThreadId = useChatStore((state) => state.getThreadId);
   const setAgentBaseUrl = useChatStore((state) => state.setAgentBaseUrl);
   const getAgentBaseUrl = useChatStore((state) => state.getAgentBaseUrl);
+
   const {
     state: { isRecording, isRecognizing },
     actions: { toggleRecording },
     recognizedText,
     clearRecognizedText,
   } = useVoice();
+
+  /**
+   * 统一处理 SSE 流或会话中的错误。
+   * 忽略 AbortError，其余错误记录日志并清理最后一条 AI 消息。
+   */
+  const handleStreamError = useCallback(
+    (error: Error) => {
+      if (error.name === "AbortError") {
+        return;
+      }
+      logSilentError("[AI]", "AI 服务连接失败", error);
+      removeLastAIMessage(activeProjectKey);
+      setIsThinking(false);
+    },
+    [activeProjectKey, removeLastAIMessage, setIsThinking],
+  );
 
   const resolveProjectId = (projectRef: string) => {
     if (!projectRef) return "";
@@ -189,14 +208,7 @@ export function useChat(options: ChatPanelOptions = {}) {
       onDone: () => {
         setIsThinking(false);
       },
-      onError: (error) => {
-        if (error.name === "AbortError") {
-          return;
-        }
-        logSilentError("[AI]", "AI 服务连接失败", error);
-        removeLastAIMessage(activeProjectKey);
-        setIsThinking(false);
-      },
+      onError: handleStreamError,
     });
 
     await sendAgentSessionMessage(chatSessionId, { content_text: messageText }, { agentBaseUrl });
@@ -240,12 +252,7 @@ export function useChat(options: ChatPanelOptions = {}) {
         session.agentBaseUrl,
       );
     } catch (error) {
-      if ((error as Error).name === "AbortError") {
-        return;
-      }
-      logSilentError("[AI]", "AI 服务连接失败", error);
-      removeLastAIMessage(activeProjectKey);
-      setIsThinking(false);
+      handleStreamError(error as Error);
     }
   };
 
@@ -295,12 +302,7 @@ export function useChat(options: ChatPanelOptions = {}) {
         session.agentBaseUrl,
       );
     } catch (error) {
-      if ((error as Error).name === "AbortError") {
-        return;
-      }
-      logSilentError("[AI]", "AI 服务连接失败", error);
-      removeLastAIMessage(activeProjectKey);
-      setIsThinking(false);
+      handleStreamError(error as Error);
     }
   };
 

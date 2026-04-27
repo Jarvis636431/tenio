@@ -33,6 +33,25 @@ interface UploadsTabProps {
   onViewResults?: () => void;
 }
 
+interface InfoCardProps {
+  label: string;
+  value: React.ReactNode;
+  sub: string;
+}
+
+function InfoCard({ label, value, sub }: InfoCardProps) {
+  return (
+    <div className="relative border border-cyan-400/18 bg-[rgba(4,18,37,0.85)] px-3 py-3 lg:px-4">
+      <span className="absolute left-0 top-0 h-full w-0.5 bg-gradient-to-b from-cyan-400 to-transparent" />
+      <div className="text-[9px] font-semibold uppercase tracking-widest text-cyan-400/50">
+        {label}
+      </div>
+      <div className="text-sm font-bold text-white">{value}</div>
+      <div className="mt-0.5 text-[10px] text-slate-400">{sub}</div>
+    </div>
+  );
+}
+
 export function UploadsTab({ projectId, projectSummary, onViewResults }: UploadsTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
@@ -111,26 +130,6 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
   const hasFile = files.length > 0;
   const taskCount = projectSummary?.planTaskCount ?? 0;
   const duration = projectSummary?.totalDurationLabel ?? "—";
-
-  // Reference-style info cards (matches app.html .info-card)
-  const InfoCard = ({
-    label,
-    value,
-    sub,
-  }: {
-    label: string;
-    value: React.ReactNode;
-    sub: string;
-  }) => (
-    <div className="relative border border-cyan-400/18 bg-[rgba(4,18,37,0.85)] px-3 py-3 lg:px-4">
-      <span className="absolute left-0 top-0 h-full w-0.5 bg-gradient-to-b from-cyan-400 to-transparent" />
-      <div className="text-[9px] font-semibold uppercase tracking-widest text-cyan-400/50">
-        {label}
-      </div>
-      <div className="text-sm font-bold text-white">{value}</div>
-      <div className="mt-0.5 text-[10px] text-slate-400">{sub}</div>
-    </div>
-  );
 
   if (!projectId) {
     return (
