@@ -9,11 +9,41 @@ export type ApiListResponse<T> = {
   page_size?: number;
 };
 
+export interface ProjectListParams {
+  status?: string;
+  keyword?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface ProjectMetrics {
+  total_count: number;
+  in_progress_count: number;
+  ready_artifact_count: number;
+  average_generation_seconds: number;
+  managed_count: number;
+}
+
 export interface ProjectListItem {
   project_id: string;
   project_name: string;
-  description?: string;
+  short_name: string;
+  location: string;
+  project_type: string;
+  building_area_sqm: number;
+  contract_duration_days: number;
+  contract_amount_cents: number;
+  contract_amount_display: string;
+  ready_artifact_count: number;
+  progress_percent: number;
+  current_phase: string;
   status: string;
+  status_label: string;
+  planned_start_date: string;
+  planned_finish_date: string;
+  actual_finish_date: string | null;
+  remaining_days: number;
+  is_artifact_ready: boolean;
   created_at: string;
 }
 
@@ -30,13 +60,13 @@ export interface ScheduleTask {
   task_id: string;
   sequence_no: number;
   task_name: string;
-  crew_type_name?: string;
-  crew_count?: number;
+  crew_type_name: string;
+  crew_count: number;
   duration_days: number;
   start_date: string;
   end_date: string;
   predecessor_task_ids: string[];
-  predecessor_display?: string;
+  predecessor_display: string;
   task_status: string;
   indent_level: number;
   is_summary_task: boolean;

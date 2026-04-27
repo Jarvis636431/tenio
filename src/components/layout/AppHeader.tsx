@@ -15,6 +15,8 @@ interface AppHeaderProps {
   showUser?: boolean;
   /** 用户名 */
   userName?: string;
+  /** 退出登录处理 */
+  onLogout?: () => void;
   /** Logo alt 文本 */
   logoAlt?: string;
   /** 是否显示返回按钮（upload 模式） */
@@ -35,6 +37,7 @@ export function AppHeader({
   title,
   showUser = false,
   userName = "张伟",
+  onLogout,
   logoAlt = "A.PM",
   showBackButton = false,
   onBack,
@@ -121,7 +124,10 @@ export function AppHeader({
                 账号设置
               </button>
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => {
+                  onLogout?.();
+                  navigate("/login");
+                }}
                 className="flex w-full items-center gap-2 px-4 py-2.5 text-xs text-red-400 hover:text-red-300"
               >
                 退出登录

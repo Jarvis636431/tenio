@@ -2,25 +2,28 @@ import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { useProjectStore } from "@/stores/projectStore";
-import { getProjectList } from "../services/project-api";
+import { getProjectList, getProjectMetrics } from "../services/project-api";
 import { projectQueryKeys } from "../queryKeys";
-import type { ProjectListItem } from "../types";
+import type { ProjectListItem, ProjectListParams } from "../types";
 
 /**
  * 提供项目列表和当前项目的状态管理。
  * 使用 React Query 缓存项目列表，Zustand 持久化当前项目 ID。
+ *
+ * @param params - 项目列表筛选和分页参数
+ * @returns 项目列表、当前项目和刷新动作
  */
-export function useProject() {
+export function useProject(params: ProjectListParams = {}) {
   const { id } = useParams();
   const { currentProjectId, setCurrentProjectId } = useProjectStore();
 
   const projectsQuery = useQuery({
-    queryKey: projectQueryKeys.list,
-    queryFn: getProjectList,
+    queryKey: projectQueryKeys.list(params),
+    queryFn: () => getProjectList(params),
     refetchOnWindowFocus: false,
   });
 
-  const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
+  const projects = useMemo(() => projectsQuery.data?.items ?? [], [projectsQuery.data]);
   const currentProject = useMemo(
     () => projects.find((project) => project.project_id === currentProjectId) ?? null,
     [projects, currentProjectId],
@@ -50,7 +53,23 @@ export function useProject() {
     setCurrentProject,
     setCurrentProjectId,
     projects,
+    total: projectsQuery.data?.total ?? projects.length,
+    page: projectsQuery.data?.page ?? params.page ?? 1,
+    pageSize: projectsQuery.data?.page_size ?? params.page_size ?? projects.length,
     refreshProjects: wrappedRefreshProjects,
     isLoading: projectsQuery.isLoading,
   };
+}
+
+/**
+ * 获取项目控制台统计指标。
+ *
+ * @returns 项目统计查询状态和后端指标
+ */
+export function useProjectMetrics() {
+  return useQuery({
+    queryKey: projectQueryKeys.metrics,
+    queryFn: getProjectMetrics,
+    refetchOnWindowFocus: false,
+  });
 }

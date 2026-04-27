@@ -3,7 +3,19 @@ import { projectQueryKeys } from "@/features/project/queryKeys";
 
 describe("projectQueryKeys", () => {
   it("list returns correct key", () => {
-    expect(projectQueryKeys.list).toEqual(["projects"]);
+    expect(projectQueryKeys.list()).toEqual([
+      "projects",
+      "list",
+      { status: "", keyword: "", page: 1, page_size: 20 },
+    ]);
+  });
+
+  it("list includes normalized params", () => {
+    expect(projectQueryKeys.list({ status: "completed", keyword: "住宅", page: 2 })).toEqual([
+      "projects",
+      "list",
+      { status: "completed", keyword: "住宅", page: 2, page_size: 20 },
+    ]);
   });
 
   it("scheduleArtifact returns correct key with projectId", () => {
@@ -25,6 +37,6 @@ describe("projectQueryKeys", () => {
   });
 
   it("list is an array", () => {
-    expect(Array.isArray(projectQueryKeys.list)).toBe(true);
+    expect(Array.isArray(projectQueryKeys.list())).toBe(true);
   });
 });

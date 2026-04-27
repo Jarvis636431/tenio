@@ -3,7 +3,7 @@
 
 export { Overview } from "./pages/Overview";
 
-export { useProject } from "./hooks/useProject";
+export { useProject, useProjectMetrics } from "./hooks/useProject";
 export { useProjectExport } from "./hooks/useProjectExport";
 export { useProjectData } from "./hooks/useProjectData";
 export { projectQueryKeys } from "./queryKeys";
@@ -16,12 +16,16 @@ export { ChartTab } from "./components/ChartTab";
 export { ProjectTable } from "./components/ProjectTable";
 
 export {
+  getProjectMetrics,
   getProjectGenerationStatus,
   getProjectList,
   startProjectGeneration,
 } from "./services/project-api";
 
 export type {
+  ProjectListItem,
+  ProjectListParams,
+  ProjectMetrics,
   GenerationStep,
   GenerationStatus,
   StartGenerationResponse,

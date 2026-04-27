@@ -1,9 +1,11 @@
 import { API_BASE } from "@/config";
-import { request } from "@/services/http";
+import { buildUrl, request } from "@/services/http";
 import type {
   ApiListResponse,
   GenerationStatus,
   ProjectListItem,
+  ProjectListParams,
+  ProjectMetrics,
   ScheduleArtifact,
   StartGenerationPayload,
   StartGenerationResponse,
@@ -27,11 +29,30 @@ function jsonRequest<T>(path: string, payload?: unknown) {
 // ============================================================================
 
 /**
- * 获取项目列表。
+ * 获取项目统计指标。
+ *
+ * @returns 项目控制台统计指标
  */
-export async function getProjectList(): Promise<ProjectListItem[]> {
-  const response = await request<ApiListResponse<ProjectListItem>>(`${APM_API_BASE}/projects`);
-  return response.items;
+export function getProjectMetrics(): Promise<ProjectMetrics> {
+  return request<ProjectMetrics>(`${APM_API_BASE}/projects/metrics`);
+}
+
+/**
+ * 获取项目列表。
+ *
+ * @param params - 项目列表筛选和分页参数
+ * @returns 项目列表和分页信息
+ */
+export async function getProjectList(
+  params: ProjectListParams = {},
+): Promise<ApiListResponse<ProjectListItem>> {
+  const url = buildUrl(APM_API_BASE, "/projects", {
+    status: params.status ?? "",
+    keyword: params.keyword ?? "",
+    page: params.page == null ? "" : String(params.page),
+    page_size: params.page_size == null ? "" : String(params.page_size),
+  });
+  return request<ApiListResponse<ProjectListItem>>(url);
 }
 
 /**

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Lock, Smartphone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,29 +9,91 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/features/auth";
 import { cn } from "@/lib/utils";
 
 interface LoginForm {
-  username: string;
+  account: string;
   password: string;
 }
 
-interface LoginPageProps {
-  onLogin?: (form: LoginForm) => Promise<void>;
+interface RegisterForm {
+  phone: string;
+  smsCode: string;
+  username: string;
+  password: string;
+  confirmPassword: string;
 }
 
 type LoginMode = "account" | "phone";
 
-function Login({ onLogin }: LoginPageProps) {
+function Login() {
   const navigate = useNavigate();
+  const auth = useAuth();
   const [loginMode, setLoginMode] = useState<LoginMode>("phone");
-  const [form, setForm] = useState<LoginForm>({ username: "", password: "" });
+  const [form, setForm] = useState<LoginForm>({ account: "", password: "" });
   const [phoneForm, setPhoneForm] = useState({ phone: "", code: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(true);
   const [showForgotDialog, setShowForgotDialog] = useState(false);
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [profileForm, setProfileForm] = useState({ username: "", password: "" });
+  const [registerForm, setRegisterForm] = useState<RegisterForm>({
+    phone: "",
+    smsCode: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [smsCooldown, setSmsCooldown] = useState(0);
+  const [registerSmsCooldown, setRegisterSmsCooldown] = useState(0);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (smsCooldown <= 0) return;
+    const timer = window.setInterval(() => {
+      setSmsCooldown((current) => Math.max(0, current - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [smsCooldown]);
+
+  useEffect(() => {
+    if (registerSmsCooldown <= 0) return;
+    const timer = window.setInterval(() => {
+      setRegisterSmsCooldown((current) => Math.max(0, current - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [registerSmsCooldown]);
+
+  const handleSendSms = async () => {
+    if (!phoneForm.phone.trim()) {
+      setError("请输入手机号");
+      return;
+    }
+    setError(null);
+    try {
+      const result = await auth.sendSms(phoneForm.phone.trim());
+      setSmsCooldown(result.cooldown_seconds);
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : "验证码发送失败");
+    }
+  };
+
+  const handleSendRegisterSms = async () => {
+    if (!registerForm.phone.trim()) {
+      setRegisterError("请输入手机号");
+      return;
+    }
+    setRegisterError(null);
+    try {
+      const result = await auth.sendSms(registerForm.phone.trim());
+      setRegisterSmsCooldown(result.cooldown_seconds);
+    } catch (sendError) {
+      setRegisterError(sendError instanceof Error ? sendError.message : "验证码发送失败");
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -40,7 +102,7 @@ function Login({ onLogin }: LoginPageProps) {
       return;
     }
 
-    if (loginMode === "account" && (!form.username || !form.password)) {
+    if (loginMode === "account" && (!form.account || !form.password)) {
       setError("请输入账号和密码");
       return;
     }
@@ -54,17 +116,78 @@ function Login({ onLogin }: LoginPageProps) {
     setError(null);
 
     try {
-      const payload =
-        loginMode === "account" ? form : { username: phoneForm.phone, password: phoneForm.code };
-
-      if (onLogin) {
-        await onLogin(payload);
+      if (loginMode === "account") {
+        await auth.loginWithPassword({
+          account: form.account.trim(),
+          password: form.password,
+          has_agreed_terms: agreed,
+        });
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        const session = await auth.loginWithSms({
+          phone: phoneForm.phone.trim(),
+          sms_code: phoneForm.code.trim(),
+          has_agreed_terms: agreed,
+        });
+        if (session.user.is_profile_completed === false) {
+          setProfileForm({ username: session.user.username || "", password: "" });
+          setShowProfileDialog(true);
+          return;
+        }
       }
       navigate("/projects");
-    } catch {
-      setError("登录失败，请检查账号信息");
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "登录失败，请检查账号信息");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSetupProfile = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!profileForm.username.trim() || !profileForm.password) {
+      setError("请输入用户名和密码");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      await auth.setupProfile({
+        username: profileForm.username.trim(),
+        password: profileForm.password,
+      });
+      setShowProfileDialog(false);
+      navigate("/projects");
+    } catch (profileError) {
+      setError(profileError instanceof Error ? profileError.message : "资料设置失败");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (event: FormEvent) => {
+    event.preventDefault();
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setRegisterError("两次输入的密码不一致");
+      return;
+    }
+    setRegisterError(null);
+    setIsLoading(true);
+    try {
+      await auth.loginWithSms({
+        phone: registerForm.phone.trim(),
+        sms_code: registerForm.smsCode.trim(),
+        has_agreed_terms: true,
+      });
+      await auth.setupProfile({
+        username: registerForm.username.trim(),
+        password: registerForm.password,
+      });
+      setShowRegisterDialog(false);
+      navigate("/projects");
+    } catch (registerSubmitError) {
+      setRegisterError(
+        registerSubmitError instanceof Error ? registerSubmitError.message : "注册失败",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -176,9 +299,11 @@ function Login({ onLogin }: LoginPageProps) {
                         </div>
                         <button
                           type="button"
+                          onClick={() => void handleSendSms()}
+                          disabled={auth.isSendingSms || smsCooldown > 0 || isLoading}
                           className="shrink-0 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-4 text-[12px] font-semibold text-cyan-400 transition-colors hover:bg-cyan-400/20"
                         >
-                          获取验证码
+                          {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
                         </button>
                       </div>
                     </div>
@@ -189,19 +314,19 @@ function Login({ onLogin }: LoginPageProps) {
                 {loginMode === "account" && (
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="form-label">账号 / 邮箱</label>
+                      <label className="form-label">手机号账号</label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-[13px] w-[13px] text-apm-dim" />
                         <input
                           type="text"
-                          value={form.username}
-                          onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
+                          value={form.account}
+                          onChange={(e) => setForm((f) => ({ ...f, account: e.target.value }))}
                           className={cn(
                             "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-[38px] pr-4",
                             "text-sm text-white placeholder:text-apm-dim",
                             "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
                           )}
-                          placeholder="请输入账号或邮箱"
+                          placeholder="请输入手机号账号"
                           disabled={isLoading}
                         />
                       </div>
@@ -395,21 +520,46 @@ function Login({ onLogin }: LoginPageProps) {
           <DialogHeader>
             <DialogTitle className="font-display text-xl text-white">立即注册</DialogTitle>
             <DialogDescription className="text-apm-muted">
-              创建一个新账号开始使用 A.PM 智能管理平台
+              使用手机号验证码创建账号，并设置用户名和密码
             </DialogDescription>
           </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setShowRegisterDialog(false);
-            }}
-            className="space-y-4"
-          >
+          <form onSubmit={(e) => void handleRegister(e)} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-cyan-100/80">用户名</label>
+              <label className="text-sm font-medium text-cyan-100/80">手机号</label>
+              <div className="flex gap-2">
+                <input
+                  type="tel"
+                  value={registerForm.phone}
+                  onChange={(e) =>
+                    setRegisterForm((current) => ({ ...current, phone: e.target.value }))
+                  }
+                  placeholder="请输入手机号"
+                  className={cn(
+                    "h-11 min-w-0 flex-1 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
+                    "text-sm text-white placeholder:text-apm-dim",
+                    "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
+                  )}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleSendRegisterSms()}
+                  disabled={auth.isSendingSms || registerSmsCooldown > 0 || isLoading}
+                  className="shrink-0 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 text-[12px] font-semibold text-cyan-400 transition-colors hover:bg-cyan-400/20 disabled:opacity-60"
+                >
+                  {registerSmsCooldown > 0 ? `${registerSmsCooldown}s` : "获取验证码"}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-cyan-100/80">验证码</label>
               <input
                 type="text"
-                placeholder="请输入用户名"
+                value={registerForm.smsCode}
+                onChange={(e) =>
+                  setRegisterForm((current) => ({ ...current, smsCode: e.target.value }))
+                }
+                placeholder="请输入验证码"
                 className={cn(
                   "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
                   "text-sm text-white placeholder:text-apm-dim",
@@ -419,10 +569,14 @@ function Login({ onLogin }: LoginPageProps) {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-cyan-100/80">邮箱</label>
+              <label className="text-sm font-medium text-cyan-100/80">用户名</label>
               <input
-                type="email"
-                placeholder="请输入邮箱地址"
+                type="text"
+                value={registerForm.username}
+                onChange={(e) =>
+                  setRegisterForm((current) => ({ ...current, username: e.target.value }))
+                }
+                placeholder="请输入用户名"
                 className={cn(
                   "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
                   "text-sm text-white placeholder:text-apm-dim",
@@ -435,6 +589,10 @@ function Login({ onLogin }: LoginPageProps) {
               <label className="text-sm font-medium text-cyan-100/80">密码</label>
               <input
                 type="password"
+                value={registerForm.password}
+                onChange={(e) =>
+                  setRegisterForm((current) => ({ ...current, password: e.target.value }))
+                }
                 placeholder="请输入密码（至少8位）"
                 className={cn(
                   "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
@@ -449,6 +607,13 @@ function Login({ onLogin }: LoginPageProps) {
               <label className="text-sm font-medium text-cyan-100/80">确认密码</label>
               <input
                 type="password"
+                value={registerForm.confirmPassword}
+                onChange={(e) =>
+                  setRegisterForm((current) => ({
+                    ...current,
+                    confirmPassword: e.target.value,
+                  }))
+                }
                 placeholder="请再次输入密码"
                 className={cn(
                   "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
@@ -459,11 +624,77 @@ function Login({ onLogin }: LoginPageProps) {
                 minLength={8}
               />
             </div>
+            {registerError && (
+              <p className="rounded-lg border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">
+                {registerError}
+              </p>
+            )}
             <Button
               type="submit"
+              disabled={isLoading || auth.isLoggingIn || auth.isSettingProfile}
               className="h-11 w-full rounded-lg bg-cyan-500 text-slate-950 hover:bg-cyan-400"
             >
-              注册
+              {isLoading ? "注册中..." : "注册"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Setup Profile Dialog */}
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="max-w-md rounded-xl border border-cyan-400/20 bg-[rgba(4,18,37,0.94)] text-white shadow-apm-panel backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-white">完善账号资料</DialogTitle>
+            <DialogDescription className="text-apm-muted">
+              首次短信登录后需要设置展示用户名和后续登录密码
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(event) => void handleSetupProfile(event)} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-cyan-100/80">用户名</label>
+              <input
+                type="text"
+                value={profileForm.username}
+                onChange={(event) =>
+                  setProfileForm((current) => ({ ...current, username: event.target.value }))
+                }
+                placeholder="请输入用户名"
+                className={cn(
+                  "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
+                  "text-sm text-white placeholder:text-apm-dim",
+                  "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
+                )}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-cyan-100/80">密码</label>
+              <input
+                type="password"
+                value={profileForm.password}
+                onChange={(event) =>
+                  setProfileForm((current) => ({ ...current, password: event.target.value }))
+                }
+                placeholder="请输入密码"
+                className={cn(
+                  "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
+                  "text-sm text-white placeholder:text-apm-dim",
+                  "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
+                )}
+                required
+              />
+            </div>
+            {error && (
+              <p className="rounded-lg border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">
+                {error}
+              </p>
+            )}
+            <Button
+              type="submit"
+              disabled={isLoading || auth.isSettingProfile}
+              className="h-11 w-full rounded-lg bg-cyan-500 text-slate-950 hover:bg-cyan-400"
+            >
+              {isLoading ? "保存中..." : "完成设置"}
             </Button>
           </form>
         </DialogContent>

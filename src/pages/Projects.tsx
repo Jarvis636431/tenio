@@ -12,37 +12,23 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useProject } from "@/features/project";
+import { useAuth } from "@/features/auth";
+import { useProject, useProjectMetrics } from "@/features/project";
 import { AppHeader } from "@/components/layout/AppHeader";
 
-type ProjectFilter = "all" | "active" | "completed" | "pending";
+type ProjectFilter = "all" | "in_progress" | "completed" | "pending";
 
 const FILTER_LABELS: Record<ProjectFilter, string> = {
   all: "全部项目",
-  active: "进行中",
+  in_progress: "进行中",
   completed: "已完成",
   pending: "待启动",
 };
 
 function normalizeStatus(status?: string): ProjectFilter {
-  const value = status?.trim().toLowerCase() ?? "";
-  if (
-    value.includes("完成") ||
-    value.includes("done") ||
-    value.includes("completed") ||
-    value.includes("success")
-  ) {
-    return "completed";
-  }
-  if (
-    value.includes("待") ||
-    value.includes("pending") ||
-    value.includes("draft") ||
-    value.includes("new")
-  ) {
-    return "pending";
-  }
-  return "active";
+  if (status === "completed") return "completed";
+  if (status === "pending") return "pending";
+  return "in_progress";
 }
 
 function formatDate(dateString?: string) {
@@ -76,6 +62,14 @@ function getProgressColor(status: ProjectFilter) {
   return "from-cyan-400 to-sky-500";
 }
 
+function formatDuration(days: number) {
+  return `${days}天`;
+}
+
+function formatRemainingDays(days: number) {
+  return days <= 0 ? "0天" : `${days}天`;
+}
+
 function getAccentStyle(index: number) {
   const accents = [
     { bg: "rgba(0,212,255,0.1)", border: "rgba(0,212,255,0.25)", color: "var(--accent)" },
@@ -89,28 +83,23 @@ function getAccentStyle(index: number) {
 
 function ProjectsPage() {
   const navigate = useNavigate();
-  const { projects } = useProject();
+  const auth = useAuth();
   const [activeFilter, setActiveFilter] = useState<ProjectFilter>("all");
   const [query, setQuery] = useState("");
+  const projectListParams = useMemo(
+    () => ({
+      status: activeFilter === "all" ? undefined : activeFilter,
+      keyword: query.trim() || undefined,
+      page: 1,
+      page_size: 50,
+    }),
+    [activeFilter, query],
+  );
+  const { projects, isLoading } = useProject(projectListParams);
+  const metricsQuery = useProjectMetrics();
 
-  const filteredProjects = useMemo(() => {
-    return projects.filter((project) => {
-      const normalized = normalizeStatus(project.status);
-      const matchesFilter = activeFilter === "all" || normalized === activeFilter;
-      const keyword = query.trim().toLowerCase();
-      const matchesQuery =
-        keyword.length === 0 || project.project_name.toLowerCase().includes(keyword);
-      return matchesFilter && matchesQuery;
-    });
-  }, [activeFilter, projects, query]);
-
-  const stats = useMemo(() => {
-    const total = projects.length;
-    const active = projects.filter((p) => normalizeStatus(p.status) === "active").length;
-    const completed = projects.filter((p) => normalizeStatus(p.status) === "completed").length;
-    const pending = projects.filter((p) => normalizeStatus(p.status) === "pending").length;
-    return { total, active, completed, pending };
-  }, [projects]);
+  const metrics = metricsQuery.data;
+  const displayName = auth.user?.display_name ?? auth.user?.username ?? "未登录用户";
 
   const openProject = (project: { project_id: string }) => {
     navigate(`/project/${project.project_id}`);
@@ -121,18 +110,24 @@ function ProjectsPage() {
       <div className="bg-apm-ambient absolute inset-0" />
 
       {/* Navbar */}
-      <AppHeader variant="console" showUser />
+      <AppHeader variant="console" showUser userName={displayName} onLogout={auth.logout} />
 
       {/* Main */}
       <main className="relative z-10 mx-auto w-full max-w-[1200px] px-6 py-8">
         {/* Welcome Bar */}
         <div className="mb-7 flex items-center justify-between">
           <div>
-            <h1 className="font-display text-[22px] font-bold text-white">欢迎回来，张伟</h1>
+            <h1 className="font-display text-[22px] font-bold text-white">
+              欢迎回来，{displayName}
+            </h1>
             <p className="mt-1 text-[13px] text-apm-muted">
-              您当前管理 <span className="font-semibold text-cyan-400">{stats.total}</span>{" "}
+              您当前管理{" "}
+              <span className="font-semibold text-cyan-400">{metrics?.managed_count ?? 0}</span>{" "}
               个建筑项目，其中{" "}
-              <span className="font-semibold text-emerald-400">{stats.active}</span> 个进行中
+              <span className="font-semibold text-emerald-400">
+                {metrics?.in_progress_count ?? 0}
+              </span>{" "}
+              个进行中
             </p>
           </div>
           <Button
@@ -151,7 +146,9 @@ function ProjectsPage() {
             <div className="mb-2.5 text-[16px]" style={{ color: "var(--accent)" }}>
               <Building2 className="h-4 w-4" />
             </div>
-            <div className="font-display text-[26px] font-bold text-white">{stats.total}</div>
+            <div className="font-display text-[26px] font-bold text-white">
+              {metrics?.total_count ?? 0}
+            </div>
             <div className="mt-0.5 text-[11px] text-apm-muted">项目总数</div>
           </div>
           <div className="relative border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] p-4">
@@ -159,7 +156,9 @@ function ProjectsPage() {
             <div className="mb-2.5 text-[16px]" style={{ color: "var(--green)" }}>
               <PlayCircle className="h-4 w-4" />
             </div>
-            <div className="font-display text-[26px] font-bold text-white">{stats.active}</div>
+            <div className="font-display text-[26px] font-bold text-white">
+              {metrics?.in_progress_count ?? 0}
+            </div>
             <div className="mt-0.5 text-[11px] text-apm-muted">进行中</div>
           </div>
           <div className="relative border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] p-4">
@@ -167,16 +166,20 @@ function ProjectsPage() {
             <div className="mb-2.5 text-[16px]" style={{ color: "var(--amber)" }}>
               <FileText className="h-4 w-4" />
             </div>
-            <div className="font-display text-[26px] font-bold text-white">{stats.completed}</div>
-            <div className="mt-0.5 text-[11px] text-apm-muted">已完成项目</div>
+            <div className="font-display text-[26px] font-bold text-white">
+              {metrics?.ready_artifact_count ?? 0}
+            </div>
+            <div className="mt-0.5 text-[11px] text-apm-muted">AI 成果</div>
           </div>
           <div className="relative border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] p-4">
             <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet-400 to-transparent" />
             <div className="mb-2.5 text-[16px]" style={{ color: "#a78bfa" }}>
               <Search className="h-4 w-4" />
             </div>
-            <div className="font-display text-[26px] font-bold text-white">{stats.pending}</div>
-            <div className="mt-0.5 text-[11px] text-apm-muted">待启动项目</div>
+            <div className="font-display text-[26px] font-bold text-white">
+              {metrics?.average_generation_seconds ?? 0}s
+            </div>
+            <div className="mt-0.5 text-[11px] text-apm-muted">平均生成耗时</div>
           </div>
         </div>
 
@@ -211,10 +214,20 @@ function ProjectsPage() {
 
         {/* Project Grid */}
         <div className="grid grid-cols-3 gap-4">
-          {filteredProjects.map((project, index) => {
+          {isLoading && (
+            <div className="col-span-3 border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] px-5 py-8 text-center text-sm text-apm-muted">
+              项目加载中...
+            </div>
+          )}
+          {!isLoading && projects.length === 0 && (
+            <div className="col-span-3 border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] px-5 py-8 text-center text-sm text-apm-muted">
+              暂无项目
+            </div>
+          )}
+          {projects.map((project, index) => {
             const status = normalizeStatus(project.status);
             const accent = getAccentStyle(index);
-            const progress = status === "completed" ? 100 : 0;
+            const progress = project.progress_percent;
 
             return (
               <article
@@ -238,7 +251,9 @@ function ProjectsPage() {
                     <h2 className="mb-1 line-clamp-2 text-[14px] font-semibold leading-5 text-white">
                       {project.project_name}
                     </h2>
-                    <p className="text-[10px] text-apm-muted">{project.description || "—"}</p>
+                    <p className="text-[10px] text-apm-muted">
+                      {project.location} · {project.project_type}
+                    </p>
                   </div>
                 </div>
 
@@ -249,19 +264,25 @@ function ProjectsPage() {
                       <span className="text-[9px] uppercase tracking-[0.1em] text-apm-dim">
                         合同工期
                       </span>
-                      <span className="mt-0.5 text-[13px] font-semibold text-white">—</span>
+                      <span className="mt-0.5 text-[13px] font-semibold text-white">
+                        {formatDuration(project.contract_duration_days)}
+                      </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[9px] uppercase tracking-[0.1em] text-apm-dim">
                         发包价
                       </span>
-                      <span className="mt-0.5 text-[13px] font-semibold text-white">—</span>
+                      <span className="mt-0.5 text-[13px] font-semibold text-white">
+                        {project.contract_amount_display}
+                      </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[9px] uppercase tracking-[0.1em] text-apm-dim">
                         AI 文档
                       </span>
-                      <span className="mt-0.5 text-[13px] font-semibold text-white">—</span>
+                      <span className="mt-0.5 text-[13px] font-semibold text-white">
+                        {project.ready_artifact_count}
+                      </span>
                     </div>
                   </div>
 
@@ -270,7 +291,7 @@ function ProjectsPage() {
                     <div className="mb-1.5 flex items-center justify-between text-[10px] text-apm-muted">
                       <span>项目进度</span>
                       <span className="font-semibold text-cyan-400">
-                        {status === "completed" ? "100%" : "—"}
+                        {project.progress_percent}%
                       </span>
                     </div>
                     <div className="h-0.5 bg-white/6">
@@ -291,23 +312,28 @@ function ProjectsPage() {
                     <span>
                       <Calendar className="inline h-3 w-3" style={{ marginRight: 3 }} />
                       {status === "completed"
-                        ? "预计结束"
+                        ? "实际结束"
                         : status === "pending"
                           ? "预计开工"
                           : "预计结束"}
-                      ：—
+                      ：
+                      {status === "pending"
+                        ? formatDate(project.planned_start_date)
+                        : formatDate(project.planned_finish_date)}
                     </span>
                     {status === "completed" && (
                       <span className="text-emerald-400">
                         <FileText className="inline h-3 w-3" style={{ marginRight: 2 }} />
-                        全部完成
+                        {project.status_label}
                       </span>
                     )}
-                    {status === "active" && <span className="text-cyan-400">进行中</span>}
+                    {status === "in_progress" && (
+                      <span className="text-cyan-400">{project.current_phase}</span>
+                    )}
                     {status === "pending" && (
                       <span className="text-amber-400">
                         <Search className="inline h-3 w-3" style={{ marginRight: 2 }} />
-                        待上传资料
+                        {project.status_label}
                       </span>
                     )}
                   </div>
@@ -321,15 +347,15 @@ function ProjectsPage() {
                       getStatusStyle(status),
                     )}
                   >
-                    {FILTER_LABELS[status]}
+                    {project.status_label}
                   </span>
                   <span className="text-[10px] text-apm-dim">
                     <CalendarCheck className="inline h-3 w-3" style={{ marginRight: 3 }} />
-                    开工 {project.created_at ? formatDate(project.created_at) : "—"}
+                    开工 {formatDate(project.planned_start_date)}
                   </span>
                   <span className="ml-auto text-[10px] text-apm-dim">
                     <Calendar className="inline h-3 w-3" style={{ marginRight: 3 }} />
-                    剩余 —
+                    剩余 {formatRemainingDays(project.remaining_days)}
                   </span>
                 </div>
               </article>

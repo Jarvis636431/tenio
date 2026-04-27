@@ -1,3 +1,5 @@
+import { useAuthStore } from "@/stores/authStore";
+
 interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   headers?: HeadersInit;
@@ -72,8 +74,9 @@ export function unwrapApiResponseData<T>(payload: T | ApiResponse<T>): T {
 }
 
 function buildRequestHeaders(options: RequestOptions): HeadersInit {
+  const token = options.token ?? useAuthStore.getState().accessToken ?? undefined;
   return {
-    ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 }
