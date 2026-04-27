@@ -1,7 +1,6 @@
 import { API_BASE } from "@/config";
-import { buildUrl, request } from "@/services/http";
-import { projectListResponseSchema } from "./project-schema";
-import type { ProjectListResponse } from "@/features/project";
+import { request } from "@/services/http";
+import type { Project } from "@/features/project";
 
 export type ApiListResponse<T> = {
   items: T[];
@@ -9,13 +8,6 @@ export type ApiListResponse<T> = {
   page?: number;
   page_size?: number;
 };
-
-export interface ProjectListParams {
-  status?: string;
-  keyword?: string;
-  page?: number;
-  page_size?: number;
-}
 
 export interface ProjectListItem {
   project_id: string;
@@ -133,37 +125,22 @@ function jsonRequest<T>(path: string, payload?: unknown) {
 // 项目列表与基础信息
 // ============================================================================
 
-function mapApmProjectListItem(item: ProjectListItem): ProjectListResponse[number] {
+function toProject(item: ProjectListItem): Project {
   return {
-    project_id: item.project_id,
-    project_name: item.project_name,
+    id: item.project_id,
+    name: item.project_name,
     description: item.location ?? item.project_type ?? item.status_label,
     status: item.status,
-    created_at: item.created_at,
+    createdAt: item.created_at,
   };
-}
-
-/**
- * 获取项目列表原始响应。
- */
-export function listProjects(
-  params: ProjectListParams = {},
-): Promise<ApiListResponse<ProjectListItem>> {
-  const url = buildUrl(APM_API_BASE, "/projects", {
-    status: params.status ?? "",
-    keyword: params.keyword ?? "",
-    page: params.page ? String(params.page) : "",
-    page_size: params.page_size ? String(params.page_size) : "",
-  });
-  return request<ApiListResponse<ProjectListItem>>(url);
 }
 
 /**
  * 获取项目列表。
  */
-export async function getProjectList(): Promise<ProjectListResponse> {
-  const response = await listProjects();
-  return projectListResponseSchema.parse(response.items.map(mapApmProjectListItem));
+export async function getProjectList(): Promise<Project[]> {
+  const response = await request<ApiListResponse<ProjectListItem>>(`${APM_API_BASE}/projects`);
+  return response.items.map(toProject);
 }
 
 /**

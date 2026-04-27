@@ -4,21 +4,11 @@ import { useParams } from "react-router-dom";
 import { useProjectStore } from "@/stores/projectStore";
 import { getProjectList } from "../services/project-api";
 import { projectQueryKeys } from "../queryKeys";
-import type { Project, ProjectListItem, ProjectListResponse } from "../types";
-
-function mapProjectList(response: ProjectListResponse): Project[] {
-  return response.map((item) => ({
-    id: item.project_id,
-    name: item.project_name,
-    description: item.description,
-    status: item.status,
-    createdAt: item.created_at,
-  }));
-}
+import type { Project } from "../types";
 
 /**
- * 兼容原有 ProjectContext 的 hook
- * 提供相同的 API，但使用 Zustand 作为底层实现
+ * 提供项目列表和当前项目的状态管理。
+ * 使用 React Query 缓存项目列表，Zustand 持久化当前项目 ID。
  */
 export function useProject() {
   const { id } = useParams();
@@ -31,7 +21,7 @@ export function useProject() {
     refetchOnWindowFocus: false,
   });
 
-  const projects = useMemo(() => mapProjectList(projectsQuery.data ?? []), [projectsQuery.data]);
+  const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
   const currentProject = useMemo(
     () => projects.find((project) => project.id === currentProjectId) ?? null,
     [projects, currentProjectId],
@@ -56,36 +46,19 @@ export function useProject() {
   };
 
   const addProject = (project: Project) => {
-    queryClient.setQueryData<ProjectListResponse>(projectQueryKeys.list, (previous = []) => {
-      const nextItem: ProjectListItem = {
-        project_id: project.id,
-        project_name: project.name,
-        description: project.description,
-        status: project.status ?? "",
-        created_at: project.createdAt ?? new Date().toISOString(),
-      };
-      const existing = previous.find((item) => item.project_id === project.id);
+    queryClient.setQueryData<Project[]>(projectQueryKeys.list, (previous = []) => {
+      const existing = previous.find((item) => item.id === project.id);
       if (existing) {
-        return previous.map((item) =>
-          item.project_id === project.id ? { ...item, ...nextItem } : item,
-        );
+        return previous.map((item) => (item.id === project.id ? { ...item, ...project } : item));
       }
-      return [...previous, nextItem];
+      return [...previous, project];
     });
   };
 
   const updateProject = (updatedProject: Project) => {
-    queryClient.setQueryData<ProjectListResponse>(projectQueryKeys.list, (previous = []) =>
+    queryClient.setQueryData<Project[]>(projectQueryKeys.list, (previous = []) =>
       previous.map((item) =>
-        item.project_id === updatedProject.id
-          ? {
-              ...item,
-              project_name: updatedProject.name,
-              description: updatedProject.description,
-              status: updatedProject.status ?? item.status,
-              created_at: updatedProject.createdAt ?? item.created_at,
-            }
-          : item,
+        item.id === updatedProject.id ? { ...item, ...updatedProject } : item,
       ),
     );
   };

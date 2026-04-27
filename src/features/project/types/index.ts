@@ -14,14 +14,3 @@ export interface Project {
   createdAt?: string;
   description?: string;
 }
-
-export interface ProjectListItem {
-  project_id: string;
-  project_name: string;
-  description?: string;
-  status: string;
-  created_at: string;
-  updated_at?: string;
-}
-
-export type ProjectListResponse = ProjectListItem[];
