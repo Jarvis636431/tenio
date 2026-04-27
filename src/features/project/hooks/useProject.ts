@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { useProjectStore } from "@/stores/projectStore";
 import { getProjectList } from "../services/project-api";
 import { projectQueryKeys } from "../queryKeys";
-import type { ProjectListItem } from "../services/project-api";
+import type { ProjectListItem } from "../types";
 
 /**
  * 提供项目列表和当前项目的状态管理。

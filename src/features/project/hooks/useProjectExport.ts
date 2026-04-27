@@ -1,4 +1,4 @@
-import type { ScheduleArtifact } from "../services/project-api";
+import type { ScheduleArtifact } from "../types";
 
 /**
  * 提供项目工作台导出动作。

@@ -2,11 +2,8 @@ import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProject, projectQueryKeys } from "@/features/project";
-import {
-  getLatestScheduleArtifact,
-  getLatestTimeCostArtifact,
-  type TimeCostArtifact,
-} from "../services/project-api";
+import { getLatestScheduleArtifact, getLatestTimeCostArtifact } from "../services/project-api";
+import type { TimeCostArtifact } from "../types";
 
 interface UseProjectDataOptions {
   projectId?: string;
