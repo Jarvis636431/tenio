@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Loader2, Lock, Smartphone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,8 +27,24 @@ interface RegisterForm {
 
 type LoginMode = "account" | "phone";
 
+interface RedirectLocationState {
+  from?: {
+    pathname?: string;
+    search?: string;
+  };
+}
+
+function getRedirectPath(state: unknown) {
+  if (!state || typeof state !== "object") return "/projects";
+  const redirectState = state as RedirectLocationState;
+  const pathname = redirectState.from?.pathname;
+  if (!pathname) return "/projects";
+  return `${pathname}${redirectState.from?.search ?? ""}`;
+}
+
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const auth = useAuth();
   const [loginMode, setLoginMode] = useState<LoginMode>("phone");
   const [form, setForm] = useState<LoginForm>({ account: "", password: "" });
@@ -50,6 +66,7 @@ function Login() {
   const [smsCooldown, setSmsCooldown] = useState(0);
   const [registerSmsCooldown, setRegisterSmsCooldown] = useState(0);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const redirectTo = getRedirectPath(location.state);
 
   useEffect(() => {
     if (smsCooldown <= 0) return;
@@ -134,7 +151,7 @@ function Login() {
           return;
         }
       }
-      navigate("/projects");
+      navigate(redirectTo, { replace: true });
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : "登录失败，请检查账号信息");
     } finally {
@@ -156,7 +173,7 @@ function Login() {
         password: profileForm.password,
       });
       setShowProfileDialog(false);
-      navigate("/projects");
+      navigate(redirectTo, { replace: true });
     } catch (profileError) {
       setError(profileError instanceof Error ? profileError.message : "资料设置失败");
     } finally {
@@ -183,7 +200,7 @@ function Login() {
         password: registerForm.password,
       });
       setShowRegisterDialog(false);
-      navigate("/projects");
+      navigate(redirectTo, { replace: true });
     } catch (registerSubmitError) {
       setRegisterError(
         registerSubmitError instanceof Error ? registerSubmitError.message : "注册失败",

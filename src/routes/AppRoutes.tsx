@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { APP_DEFAULT_TITLE } from "@/config";
+import { useAuthStore } from "@/stores/authStore";
 
 // Lazy loaded pages / layouts
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -20,6 +21,27 @@ const TITLE_RULES: Array<{ prefix: string; title: string }> = [
   { prefix: "/project/", title: "A.PM 智管 · 项目工作台" },
 ];
 
+function RequireAuth({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  if (!accessToken) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return <>{children}</>;
+}
+
+function LoginRoute() {
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  if (accessToken) {
+    return <Navigate to="/projects" replace />;
+  }
+
+  return <LoginPage />;
+}
+
 export function AppRoutes() {
   const location = useLocation();
 
@@ -32,16 +54,39 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-screen">加载中...</div>}>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/upload" element={<UploadPage />} />
-        <Route path="/" element={<Navigate to="/projects" replace />} />
+        <Route path="/login" element={<LoginRoute />} />
+        <Route
+          path="/projects"
+          element={
+            <RequireAuth>
+              <ProjectsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/upload"
+          element={
+            <RequireAuth>
+              <UploadPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <RequireAuth>
+              <Navigate to="/projects" replace />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/project/:id"
           element={
-            <AppLayout>
-              <Overview />
-            </AppLayout>
+            <RequireAuth>
+              <AppLayout>
+                <Overview />
+              </AppLayout>
+            </RequireAuth>
           }
         />
         <Route path="*" element={<NotFound />} />
