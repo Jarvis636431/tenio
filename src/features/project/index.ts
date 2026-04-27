@@ -23,7 +23,6 @@ export {
 } from "./services/project-api";
 export { projectListResponseSchema } from "./services/project-schema";
 
-export type { Project } from "./types";
 export type {
   GenerationStep,
   GenerationStatus,

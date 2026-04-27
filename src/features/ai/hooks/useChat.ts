@@ -44,8 +44,8 @@ export function useChat(options: ChatPanelOptions = {}) {
   );
 
   const activeProjectKey = useMemo(
-    () => options.projectId || routeProjectId || currentProject?.id || "__default__",
-    [options.projectId, routeProjectId, currentProject?.id],
+    () => options.projectId || routeProjectId || currentProject?.project_id || "__default__",
+    [options.projectId, routeProjectId, currentProject?.project_id],
   );
 
   // Store 状态和 actions
@@ -72,8 +72,8 @@ export function useChat(options: ChatPanelOptions = {}) {
 
   const resolveProjectId = (projectRef: string) => {
     if (!projectRef) return "";
-    const directMatch = projects.find((project) => project.id === projectRef);
-    if (directMatch) return directMatch.id;
+    const directMatch = projects.find((project) => project.project_id === projectRef);
+    if (directMatch) return directMatch.project_id;
     return projectRef;
   };
 
@@ -124,7 +124,7 @@ export function useChat(options: ChatPanelOptions = {}) {
   };
 
   const resolveActiveProjectId = () => {
-    const projectRef = options.projectId || routeProjectId || currentProject?.id || "";
+    const projectRef = options.projectId || routeProjectId || currentProject?.project_id || "";
     return resolveProjectId(projectRef);
   };
 

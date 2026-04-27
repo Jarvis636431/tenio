@@ -1,6 +1,5 @@
 import { API_BASE } from "@/config";
 import { request } from "@/services/http";
-import type { Project } from "@/features/project";
 
 export type ApiListResponse<T> = {
   items: T[];
@@ -12,23 +11,8 @@ export type ApiListResponse<T> = {
 export interface ProjectListItem {
   project_id: string;
   project_name: string;
-  short_name?: string;
-  location?: string;
-  project_type?: string;
-  building_area_sqm?: number;
-  contract_duration_days?: number;
-  contract_amount_cents?: number;
-  contract_amount_display?: string;
-  ready_artifact_count?: number;
-  progress_percent?: number;
-  current_phase?: string;
+  description?: string;
   status: string;
-  status_label?: string;
-  planned_start_date?: string;
-  planned_finish_date?: string;
-  actual_finish_date?: string | null;
-  remaining_days?: number;
-  is_artifact_ready?: boolean;
   created_at: string;
 }
 
@@ -125,22 +109,12 @@ function jsonRequest<T>(path: string, payload?: unknown) {
 // 项目列表与基础信息
 // ============================================================================
 
-function toProject(item: ProjectListItem): Project {
-  return {
-    id: item.project_id,
-    name: item.project_name,
-    description: item.location ?? item.project_type ?? item.status_label,
-    status: item.status,
-    createdAt: item.created_at,
-  };
-}
-
 /**
  * 获取项目列表。
  */
-export async function getProjectList(): Promise<Project[]> {
+export async function getProjectList(): Promise<ProjectListItem[]> {
   const response = await request<ApiListResponse<ProjectListItem>>(`${APM_API_BASE}/projects`);
-  return response.items.map(toProject);
+  return response.items;
 }
 
 /**

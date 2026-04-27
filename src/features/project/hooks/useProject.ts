@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { useProjectStore } from "@/stores/projectStore";
 import { getProjectList } from "../services/project-api";
 import { projectQueryKeys } from "../queryKeys";
-import type { Project } from "../types";
+import type { ProjectListItem } from "../services/project-api";
 
 /**
  * 提供项目列表和当前项目的状态管理。
@@ -23,16 +23,16 @@ export function useProject() {
 
   const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
   const currentProject = useMemo(
-    () => projects.find((project) => project.id === currentProjectId) ?? null,
+    () => projects.find((project) => project.project_id === currentProjectId) ?? null,
     [projects, currentProjectId],
   );
 
   // 路由同步：当 URL 中的项目 ID 变化时，自动切换当前项目
   useEffect(() => {
     if (id && projects.length > 0) {
-      const project = projects.find((p) => p.id === id);
-      if (project && project.id !== currentProjectId) {
-        setCurrentProjectId(project.id);
+      const project = projects.find((p) => p.project_id === id);
+      if (project && project.project_id !== currentProjectId) {
+        setCurrentProjectId(project.project_id);
       }
     }
   }, [id, projects, currentProjectId, setCurrentProjectId]);
@@ -41,24 +41,26 @@ export function useProject() {
     await projectsQuery.refetch();
   };
 
-  const setCurrentProject = (project: Project | null) => {
-    setCurrentProjectId(project?.id ?? null);
+  const setCurrentProject = (project: ProjectListItem | null) => {
+    setCurrentProjectId(project?.project_id ?? null);
   };
 
-  const addProject = (project: Project) => {
-    queryClient.setQueryData<Project[]>(projectQueryKeys.list, (previous = []) => {
-      const existing = previous.find((item) => item.id === project.id);
+  const addProject = (project: ProjectListItem) => {
+    queryClient.setQueryData<ProjectListItem[]>(projectQueryKeys.list, (previous = []) => {
+      const existing = previous.find((item) => item.project_id === project.project_id);
       if (existing) {
-        return previous.map((item) => (item.id === project.id ? { ...item, ...project } : item));
+        return previous.map((item) =>
+          item.project_id === project.project_id ? { ...item, ...project } : item,
+        );
       }
       return [...previous, project];
     });
   };
 
-  const updateProject = (updatedProject: Project) => {
-    queryClient.setQueryData<Project[]>(projectQueryKeys.list, (previous = []) =>
+  const updateProject = (updatedProject: ProjectListItem) => {
+    queryClient.setQueryData<ProjectListItem[]>(projectQueryKeys.list, (previous = []) =>
       previous.map((item) =>
-        item.id === updatedProject.id ? { ...item, ...updatedProject } : item,
+        item.project_id === updatedProject.project_id ? { ...item, ...updatedProject } : item,
       ),
     );
   };

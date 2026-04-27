@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useProject, type Project } from "@/features/project";
+import { useProject } from "@/features/project";
 import { AppHeader } from "@/components/layout/AppHeader";
 
 type ProjectFilter = "all" | "active" | "completed" | "pending";
@@ -98,7 +98,8 @@ function ProjectsPage() {
       const normalized = normalizeStatus(project.status);
       const matchesFilter = activeFilter === "all" || normalized === activeFilter;
       const keyword = query.trim().toLowerCase();
-      const matchesQuery = keyword.length === 0 || project.name.toLowerCase().includes(keyword);
+      const matchesQuery =
+        keyword.length === 0 || project.project_name.toLowerCase().includes(keyword);
       return matchesFilter && matchesQuery;
     });
   }, [activeFilter, projects, query]);
@@ -111,8 +112,8 @@ function ProjectsPage() {
     return { total, active, completed, pending };
   }, [projects]);
 
-  const openProject = (project: Project) => {
-    navigate(`/project/${project.id}`);
+  const openProject = (project: { project_id: string }) => {
+    navigate(`/project/${project.project_id}`);
   };
 
   return (
@@ -217,7 +218,7 @@ function ProjectsPage() {
 
             return (
               <article
-                key={project.id}
+                key={project.project_id}
                 onClick={() => openProject(project)}
                 className="flex cursor-pointer flex-col border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] transition-all hover:border-cyan-400 hover:bg-cyan-400/5"
               >
@@ -235,7 +236,7 @@ function ProjectsPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <h2 className="mb-1 line-clamp-2 text-[14px] font-semibold leading-5 text-white">
-                      {project.name}
+                      {project.project_name}
                     </h2>
                     <p className="text-[10px] text-apm-muted">{project.description || "—"}</p>
                   </div>
@@ -324,7 +325,7 @@ function ProjectsPage() {
                   </span>
                   <span className="text-[10px] text-apm-dim">
                     <CalendarCheck className="inline h-3 w-3" style={{ marginRight: 3 }} />
-                    开工 {project.createdAt ? formatDate(project.createdAt) : "—"}
+                    开工 {project.created_at ? formatDate(project.created_at) : "—"}
                   </span>
                   <span className="ml-auto text-[10px] text-apm-dim">
                     <Calendar className="inline h-3 w-3" style={{ marginRight: 3 }} />
