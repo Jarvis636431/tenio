@@ -2,14 +2,94 @@ import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProject, projectQueryKeys } from "@/features/project";
-import { getLatestScheduleArtifact, getLatestTimeCostArtifact } from "../services/project-api";
 import {
-  mapScheduleArtifactToPlanTasks,
-  mapTimeCostArtifactToCostCurve,
-} from "../services/overview-artifact-mapper";
+  getLatestScheduleArtifact,
+  getLatestTimeCostArtifact,
+  type TimeCostArtifact,
+} from "../services/project-api";
 
 interface UseProjectDataOptions {
   projectId?: string;
+}
+
+interface CostCurvePoint {
+  date: string;
+  总成本: number;
+}
+
+function readNumber(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return null;
+}
+
+function readString(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  return null;
+}
+
+function resolveCostValue(record: Record<string, unknown>) {
+  const cents = readNumber(record, [
+    "total_cost_cents",
+    "minimum_total_cost_cents",
+    "cost_cents",
+    "total_amount_cents",
+  ]);
+  if (cents !== null) return cents / 100;
+
+  return readNumber(record, ["total_cost", "minimum_total_cost", "cost", "total_amount", "amount"]);
+}
+
+function resolveCostLabel(record: Record<string, unknown>, index: number) {
+  const directLabel = readString(record, ["date", "label", "option_name", "scheme_name"]);
+  if (directLabel) return directLabel;
+
+  const duration = readNumber(record, [
+    "duration_days",
+    "optimal_duration_days",
+    "contract_duration_days",
+    "days",
+  ]);
+  if (duration !== null) return `方案${duration}天`;
+
+  return `方案${index + 1}`;
+}
+
+function mapTimeCostArtifactToCostCurve(artifact?: TimeCostArtifact | null): CostCurvePoint[] {
+  if (!artifact) return [];
+
+  const optionPoints = artifact.options
+    .map((option, index) => {
+      const cost = resolveCostValue(option);
+      if (cost === null) return null;
+      return {
+        date: resolveCostLabel(option, index),
+        总成本: Number(cost.toFixed(2)),
+      };
+    })
+    .filter((point): point is CostCurvePoint => point !== null);
+
+  if (optionPoints.length > 0) return optionPoints;
+
+  if (Number.isFinite(artifact.minimum_total_cost_cents)) {
+    return [
+      {
+        date: `最优${artifact.optimal_duration_days}天`,
+        总成本: Number((artifact.minimum_total_cost_cents / 100).toFixed(2)),
+      },
+    ];
+  }
+
+  return [];
 }
 
 export function useProjectData({ projectId: propsProjectId }: UseProjectDataOptions = {}) {
@@ -46,10 +126,7 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
 
   const scheduleArtifact = scheduleQuery.data;
   const isLoadingGraph = scheduleQuery.isLoading;
-  const planTasks = useMemo(
-    () => mapScheduleArtifactToPlanTasks(scheduleArtifact),
-    [scheduleArtifact],
-  );
+  const planTasks = useMemo(() => scheduleArtifact?.tasks ?? [], [scheduleArtifact]);
 
   // ===== useOverviewMetrics 逻辑 =====
   const currentProjectName = useMemo(() => {

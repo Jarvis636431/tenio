@@ -2,11 +2,11 @@ import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import dagre from "dagre";
 import { formatDateString } from "@/lib/date";
 import { isLagTask, formatDurationDays } from "@/lib/task";
-import type { PlanTask } from "@/types/domain/plan";
+import type { ScheduleTask } from "@/features/project";
 
 interface NetworkDiagramProps {
-  tasks: PlanTask[];
-  onNodeClick?: (task: PlanTask) => void;
+  tasks: ScheduleTask[];
+  onNodeClick?: (task: ScheduleTask) => void;
 }
 
 type Node = {
@@ -16,7 +16,7 @@ type Node = {
   start: string;
   end: string;
   level: number;
-  task: PlanTask;
+  task: ScheduleTask;
   critical: boolean;
   x: number;
   y: number;
@@ -61,13 +61,6 @@ const LAYOUT = {
   maxScale: 3,
   scaleFactor: 1.1,
 } as const;
-
-function parseDependencyIds(value: string): string[] {
-  return value
-    .split(/[,\s]+/)
-    .map((item) => item.trim())
-    .filter((id) => id.length > 0);
-}
 
 /** 估算文字像素宽度（中文≈fontSize，其他≈fontSize*0.55） */
 function estimateTextWidth(text: string, fontSize: number): number {
@@ -136,15 +129,12 @@ function DateBox({ x, y, date, theme }: DateBoxProps) {
 /* ── 单个节点块 ── */
 interface NodeBlockProps {
   node: Node;
-  onNodeClick?: (task: PlanTask) => void;
+  onNodeClick?: (task: ScheduleTask) => void;
 }
 
 function NodeBlock({ node, onNodeClick }: NodeBlockProps) {
   const { x, y, w, h, critical, task, displayId, title, start, end } = node;
-  const durationValue =
-    task.duration !== ""
-      ? formatDurationDays(task.duration)
-      : formatDurationDays(task.actualWorkDays);
+  const durationValue = task.duration_days != null ? formatDurationDays(task.duration_days) : "";
   const durationText = durationValue ? `${durationValue}天` : "";
   const theme = critical ? NODE_THEME.critical : NODE_THEME.normal;
 
@@ -251,7 +241,7 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
   const [minScale, setMinScale] = useState(0.1);
   const [initialFitDone, setInitialFitDone] = useState(false);
   const visibleTasks = useMemo(
-    () => tasks.filter((task) => task.startTime && task.endTime && !isLagTask(task.task)),
+    () => tasks.filter((task) => task.start_date && task.end_date && !isLagTask(task.task_name)),
     [tasks],
   );
 
@@ -266,30 +256,30 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
       };
     }
 
-    const taskMap = new Map<string, PlanTask>();
-    visibleTasks.forEach((task) => taskMap.set(task.id, task));
+    const taskMap = new Map<string, ScheduleTask>();
+    visibleTasks.forEach((task) => taskMap.set(task.task_id, task));
 
     const rawEdges: Array<{ from: string; to: string }> = [];
     visibleTasks.forEach((task) => {
-      const deps = task.prerequisiteProcess ? parseDependencyIds(task.prerequisiteProcess) : [];
+      const deps = task.predecessor_task_ids || [];
       deps.forEach((depId) => {
         if (!taskMap.has(depId)) return;
-        rawEdges.push({ from: depId, to: task.id });
+        rawEdges.push({ from: depId, to: task.task_id });
       });
     });
 
     const baseNodes: Node[] = visibleTasks.map((task) => ({
-      id: task.id,
-      displayId: task.seqNo ? String(task.seqNo) : task.id,
-      title: task.task,
-      start: task.startTime,
-      end: task.endTime,
+      id: task.task_id,
+      displayId: task.sequence_no ? String(task.sequence_no) : task.task_id,
+      title: task.task_name,
+      start: task.start_date,
+      end: task.end_date,
       level: 0,
       task,
-      critical: Boolean(task.criticalPath),
+      critical: Boolean(task.is_critical_task),
       x: 0,
       y: 0,
-      w: calcNodeWidth(task.task),
+      w: calcNodeWidth(task.task_name),
       h: LAYOUT.nodeH,
     }));
 

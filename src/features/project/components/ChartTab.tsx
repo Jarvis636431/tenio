@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { PlanTask } from "@/types/domain/plan";
+import type { ScheduleTask } from "@/features/project";
 import { Clock, Coins, ListChecks, TrendingDown } from "lucide-react";
 import {
   LineChart,
@@ -13,7 +13,7 @@ import {
 
 interface ChartTabProps {
   totalDurationLabel: string;
-  planTasks: PlanTask[];
+  planTasks: ScheduleTask[];
   costCurveData: { date: string; 总成本: number }[];
   unit: string;
 }

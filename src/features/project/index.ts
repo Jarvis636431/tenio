@@ -26,4 +26,5 @@ export type {
   GenerationStep,
   GenerationStatus,
   StartGenerationResponse,
+  ScheduleTask,
 } from "./services/project-api";

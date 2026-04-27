@@ -10,16 +10,15 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { formatIsoDate } from "@/lib/date";
-import { sortBySeqNo } from "@/lib/array";
 import { normalizeStatusChip } from "@/lib/task";
-import type { PlanTask } from "@/types/domain/plan";
+import type { ScheduleTask } from "@/features/project";
 
 interface ProjectTableProps {
-  planTasks: PlanTask[];
+  planTasks: ScheduleTask[];
   isLoading?: boolean;
 }
 
-type TaskRow = PlanTask & {
+type TaskRow = ScheduleTask & {
   level: number;
   isSum: boolean;
   chipType: "done" | "act" | "pending";
@@ -44,19 +43,19 @@ function StatusChip({ type }: { type: "done" | "act" | "pending" }) {
 }
 
 const columns = [
-  columnHelper.accessor("seqNo", {
+  columnHelper.accessor("sequence_no", {
     header: "序号",
     cell: (info) => info.getValue() ?? info.row.index + 1,
     size: 50,
   }),
-  columnHelper.accessor("task", {
+  columnHelper.accessor("task_name", {
     header: "工序名称",
     cell: (info) => {
       const row = info.row.original;
       const indent = row.level === 1 ? "pl-6" : row.level >= 2 ? "pl-10" : "";
       return (
         <span className={`${indent}`}>
-          {row.criticalPath && !row.isSum && (
+          {row.is_critical_task && !row.isSum && (
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle" />
           )}
           {info.getValue()}
@@ -64,13 +63,13 @@ const columns = [
       );
     },
   }),
-  columnHelper.accessor("duration", {
+  columnHelper.accessor("duration_days", {
     header: "工期",
     cell: (info) => {
       const val = info.getValue();
       return val ? (
         <span className="inline-block border border-cyan-400/14 bg-cyan-400/[0.07] px-1.5 py-0.5 text-[10px] font-semibold text-cyan-400">
-          {val}
+          {val}天
         </span>
       ) : (
         "—"
@@ -78,7 +77,7 @@ const columns = [
     },
     size: 80,
   }),
-  columnHelper.accessor("startTime", {
+  columnHelper.accessor("start_date", {
     header: "开始时间",
     cell: (info) => {
       const val = info.getValue();
@@ -86,7 +85,7 @@ const columns = [
     },
     size: 130,
   }),
-  columnHelper.accessor("endTime", {
+  columnHelper.accessor("end_date", {
     header: "结束时间",
     cell: (info) => {
       const val = info.getValue();
@@ -94,7 +93,7 @@ const columns = [
     },
     size: 130,
   }),
-  columnHelper.accessor("prerequisiteProcess", {
+  columnHelper.accessor("predecessor_display", {
     header: "前置任务",
     cell: (info) => info.getValue() || "—",
     size: 100,
@@ -115,11 +114,11 @@ export function ProjectTable({ planTasks, isLoading }: ProjectTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const data = useMemo(() => {
-    const sorted = sortBySeqNo(planTasks);
+    const sorted = [...planTasks].sort((a, b) => (a.sequence_no ?? 0) - (b.sequence_no ?? 0));
     return sorted.map((task) => {
-      const level = task.outlineLevel ?? 0;
-      const isSum = task.isSummaryTask ?? level <= 1;
-      const chipType = normalizeStatusChip(task.constructionSituation);
+      const level = task.indent_level ?? 0;
+      const isSum = task.is_summary_task ?? level <= 1;
+      const chipType = normalizeStatusChip(task.task_status);
       return { ...task, level, isSum, chipType } as TaskRow;
     });
   }, [planTasks]);
@@ -193,16 +192,17 @@ export function ProjectTable({ planTasks, isLoading }: ProjectTableProps) {
               >
                 {row.getVisibleCells().map((cell) => {
                   const isSum = cell.row.original.isSum;
-                  const isDateCell = cell.column.id === "startTime" || cell.column.id === "endTime";
+                  const isDateCell =
+                    cell.column.id === "start_date" || cell.column.id === "end_date";
                   return (
                     <td
                       key={cell.id}
                       className={`px-3 py-2 ${isSum && isDateCell ? "font-semibold text-white" : ""} ${
-                        isSum && cell.column.id === "task" ? "font-semibold text-white" : ""
+                        isSum && cell.column.id === "task_name" ? "font-semibold text-white" : ""
                       } ${
                         isSum
                           ? ""
-                          : cell.column.id === "task"
+                          : cell.column.id === "task_name"
                             ? "text-[rgba(200,215,235,0.72)]"
                             : "text-apm-dim"
                       }`}

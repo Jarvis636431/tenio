@@ -14,14 +14,15 @@ import {
   calculateSpanUnits,
   alignDateToScaleStart,
 } from "@/lib/gantt";
-import type { PlanTask, TimelineScale } from "@/types/domain/plan";
+import type { ScheduleTask } from "@/features/project";
+import type { TimelineScale } from "@/types/domain/plan";
 
 interface GanttChartProps {
-  data: PlanTask[];
+  data: ScheduleTask[];
   scale?: TimelineScale;
 }
 
-type TimelineRow = PlanTask & {
+type TimelineRow = ScheduleTask & {
   startOffset: number;
   spanUnits: number;
   barLabel: string;
@@ -31,12 +32,12 @@ type TimelineRow = PlanTask & {
 export function GanttChart({ data, scale = "day" }: GanttChartProps) {
   const chartContentRef = useRef<HTMLDivElement>(null);
   const columnWidth = COLUMN_WIDTH_MAP[scale];
-  const filteredData = useMemo(() => data.filter((task) => !isLagTask(task.task)), [data]);
+  const filteredData = useMemo(() => data.filter((task) => !isLagTask(task.task_name)), [data]);
 
   const { timelineData, totalUnits, headers } = useMemo(() => {
     const parsedItems = filteredData.map((item) => {
-      const start = item.startDate ? parseDate(item.startDate) : null;
-      const end = item.endDate ? parseDate(item.endDate) : null;
+      const start = item.start_date ? parseDate(item.start_date) : null;
+      const end = item.end_date ? parseDate(item.end_date) : null;
       return { item, start, end };
     });
 
@@ -69,7 +70,7 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
           startOffset,
           spanUnits,
           barLabel: `${spanUnits}${UNIT_LABELS[scale]}`,
-          color: item.criticalPath ? "hsl(210, 70%, 55%)" : "hsl(210, 6%, 70%)",
+          color: item.is_critical_task ? "hsl(210, 70%, 55%)" : "hsl(210, 6%, 70%)",
         };
       })
       .filter(Boolean) as TimelineRow[];
@@ -122,7 +123,7 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
 
                     return (
                       <div
-                        key={item.id}
+                        key={item.task_id}
                         className="border-b border-cyan-900/30 h-7 bg-[#04142d]/40 transition-colors relative group grid grid-cols-[minmax(0,1fr)_auto] items-center"
                         style={{
                           paddingLeft: "8px",
@@ -138,19 +139,19 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
                         <div className="flex min-w-0 items-center gap-1.5">
                           <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/90" />
                           <div className="font-medium text-[9px] text-cyan-200 truncate">
-                            {item.task}
+                            {item.task_name}
                           </div>
                         </div>
                         <div className="ml-2 flex items-center gap-1 whitespace-nowrap">
                           <Badge
                             className={`rounded-xs text-[8px] px-1 py-0 ${getWorkerBadgeClass(
-                              item.worker || "",
+                              item.crew_type_name || "",
                             )}`}
                           >
-                            {item.worker}
+                            {item.crew_type_name}
                           </Badge>
                           <span className="text-[8px] text-cyan-300/80">
-                            {formatWorkerCount(item.count)}人
+                            {formatWorkerCount(item.crew_count)}人
                           </span>
                         </div>
                       </div>
@@ -201,7 +202,7 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
 
                     return (
                       <div
-                        key={item.id}
+                        key={item.task_id}
                         className="absolute left-0 right-0 border-b border-cyan-900/30 hover:bg-[#0a234a]/35 transition-colors"
                         style={{
                           top: 0,
