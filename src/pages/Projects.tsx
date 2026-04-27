@@ -70,6 +70,10 @@ function formatRemainingDays(days: number) {
   return days <= 0 ? "0天" : `${days}天`;
 }
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "数据加载失败";
+}
+
 function getAccentStyle(index: number) {
   const accents = [
     { bg: "rgba(0,212,255,0.1)", border: "rgba(0,212,255,0.25)", color: "var(--accent)" },
@@ -95,7 +99,12 @@ function ProjectsPage() {
     }),
     [activeFilter, query],
   );
-  const { projects, isLoading } = useProject(projectListParams);
+  const {
+    projects,
+    isLoading,
+    isError: isProjectsError,
+    error: projectsError,
+  } = useProject(projectListParams);
   const metricsQuery = useProjectMetrics();
 
   const metrics = metricsQuery.data;
@@ -138,6 +147,14 @@ function ProjectsPage() {
             新建项目
           </Button>
         </div>
+
+        {(metricsQuery.isError || isProjectsError) && (
+          <div className="mb-5 border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {metricsQuery.isError
+              ? getErrorMessage(metricsQuery.error)
+              : getErrorMessage(projectsError)}
+          </div>
+        )}
 
         {/* Stats Row */}
         <div className="mb-7 grid grid-cols-4 gap-4">
@@ -219,9 +236,14 @@ function ProjectsPage() {
               项目加载中...
             </div>
           )}
-          {!isLoading && projects.length === 0 && (
+          {!isLoading && !isProjectsError && projects.length === 0 && (
             <div className="col-span-3 border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] px-5 py-8 text-center text-sm text-apm-muted">
               暂无项目
+            </div>
+          )}
+          {!isLoading && isProjectsError && (
+            <div className="col-span-3 border border-red-400/25 bg-red-500/10 px-5 py-8 text-center text-sm text-red-200">
+              {getErrorMessage(projectsError)}
             </div>
           )}
           {projects.map((project, index) => {

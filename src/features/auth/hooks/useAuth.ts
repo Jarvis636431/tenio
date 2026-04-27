@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { isUnauthorizedError } from "@/services/http";
 import { useAuthStore } from "@/stores/authStore";
 import {
   getCurrentUser,
@@ -34,7 +36,16 @@ export function useAuth() {
     queryFn: getCurrentUser,
     enabled: Boolean(accessToken),
     refetchOnWindowFocus: false,
+    retry: false,
   });
+
+  useEffect(() => {
+    if (!isUnauthorizedError(meQuery.error)) {
+      return;
+    }
+    clearSession();
+    queryClient.removeQueries({ queryKey: authQueryKeys.me });
+  }, [clearSession, meQuery.error, queryClient]);
 
   const smsMutation = useMutation({
     mutationFn: sendLoginSms,
@@ -79,7 +90,8 @@ export function useAuth() {
     expiresAt,
     user: meQuery.data ?? user,
     isAuthenticated: Boolean(accessToken),
-    isLoadingUser: meQuery.isLoading,
+    isLoadingUser: meQuery.isLoading || meQuery.isFetching,
+    userError: meQuery.error,
     sendSms: smsMutation.mutateAsync,
     loginWithSms: smsLoginMutation.mutateAsync,
     loginWithPassword: passwordLoginMutation.mutateAsync,

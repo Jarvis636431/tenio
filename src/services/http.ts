@@ -17,6 +17,22 @@ export type ApiResponse<T> = {
   code?: number | string;
 };
 
+export class ApiRequestError extends Error {
+  readonly status: number;
+  readonly data: unknown;
+
+  constructor(message: string, status: number, data: unknown) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.data = data;
+  }
+}
+
+export function isUnauthorizedError(error: unknown): boolean {
+  return error instanceof ApiRequestError && (error.status === 401 || error.status === 403);
+}
+
 function extractErrorMessage(data: unknown): string | null {
   if (!data || typeof data !== "object") return null;
   const record = data as Record<string, unknown>;
@@ -56,7 +72,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
 
   const data = (await response.json().catch(() => null)) as unknown;
   const message = extractErrorMessage(data);
-  throw new Error(message ?? `请求失败 (${response.status})`);
+  throw new ApiRequestError(message ?? `请求失败 (${response.status})`, response.status, data);
 }
 
 function isApiResponseEnvelope<T>(payload: unknown): payload is ApiResponse<T> {

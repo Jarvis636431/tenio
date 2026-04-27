@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { buildUrl, requestApiData, requestJson, unwrapApiResponseData } from "@/services/http";
+import {
+  ApiRequestError,
+  buildUrl,
+  requestApiData,
+  requestJson,
+  unwrapApiResponseData,
+} from "@/services/http";
+import { useAuthStore } from "@/stores/authStore";
 
 const localStorageMock: Storage = {
   length: 0,
@@ -17,6 +24,7 @@ describe("http helpers", () => {
   });
 
   afterEach(() => {
+    useAuthStore.getState().logout();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
@@ -63,6 +71,31 @@ describe("http helpers", () => {
     });
   });
 
+  it("requestJson uses persisted auth token when no explicit token is provided", async () => {
+    const fetchMock = vi.mocked(fetch);
+    useAuthStore.setState({
+      accessToken: "stored-token",
+      refreshToken: "refresh-token",
+      expiresAt: "2026-01-01T00:00:00Z",
+      user: null,
+    });
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ ok: true }),
+    } as Response);
+
+    await requestJson<{ ok: boolean }>("https://example.com/api");
+
+    expect(fetchMock).toHaveBeenCalledWith("https://example.com/api", {
+      method: undefined,
+      headers: {
+        Authorization: "Bearer stored-token",
+      },
+      body: undefined,
+    });
+  });
+
   it("requestApiData unwraps standard API envelopes", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue({
@@ -98,5 +131,8 @@ describe("http helpers", () => {
     await expect(requestJson("https://example.com/api", { token: "token-123" })).rejects.toThrow(
       "参数错误",
     );
+    await expect(
+      requestJson("https://example.com/api", { token: "token-123" }),
+    ).rejects.toBeInstanceOf(ApiRequestError);
   });
 });

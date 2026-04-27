@@ -58,6 +58,8 @@ export function useProject(params: ProjectListParams = {}) {
     pageSize: projectsQuery.data?.page_size ?? params.page_size ?? projects.length,
     refreshProjects: wrappedRefreshProjects,
     isLoading: projectsQuery.isLoading,
+    isError: projectsQuery.isError,
+    error: projectsQuery.error,
   };
 }
 

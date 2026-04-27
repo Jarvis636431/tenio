@@ -1,7 +1,7 @@
-import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { APP_DEFAULT_TITLE } from "@/config";
-import { useAuthStore } from "@/stores/authStore";
+import { PublicOnlyRoute, RequireAuth } from "./guards";
 
 // Lazy loaded pages / layouts
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -21,27 +21,6 @@ const TITLE_RULES: Array<{ prefix: string; title: string }> = [
   { prefix: "/project/", title: "A.PM 智管 · 项目工作台" },
 ];
 
-function RequireAuth({ children }: { children: ReactNode }) {
-  const location = useLocation();
-  const accessToken = useAuthStore((state) => state.accessToken);
-
-  if (!accessToken) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-
-  return <>{children}</>;
-}
-
-function LoginRoute() {
-  const accessToken = useAuthStore((state) => state.accessToken);
-
-  if (accessToken) {
-    return <Navigate to="/projects" replace />;
-  }
-
-  return <LoginPage />;
-}
-
 export function AppRoutes() {
   const location = useLocation();
 
@@ -54,7 +33,14 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-screen">加载中...</div>}>
       <Routes>
-        <Route path="/login" element={<LoginRoute />} />
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute>
+              <LoginPage />
+            </PublicOnlyRoute>
+          }
+        />
         <Route
           path="/projects"
           element={
