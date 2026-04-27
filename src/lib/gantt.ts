@@ -1,4 +1,4 @@
-import type { TimelineScale } from "@/types/domain/plan";
+export type TimelineScale = "day" | "hour" | "week" | "month";
 
 const MS_IN_HOUR = 1000 * 60 * 60;
 const MS_IN_DAY = MS_IN_HOUR * 24;

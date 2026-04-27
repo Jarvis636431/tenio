@@ -80,11 +80,18 @@ src/
     project/          # Project management feature
       components/     # Project UI pieces, tabs, local widgets
       pages/          # Overview page
-      hooks/          # useProject, useProjectData, useProjectCharts
-      services/       # project-api, project-bootstrap, uploads-api
+      hooks/          # useProject, useProjectData
+      services/       # project-api
       types/
         index.ts      # Project types
-        uploads.ts    # Upload feature types
+      queryKeys.ts
+      index.ts
+    upload/           # Upload intake feature
+      hooks/          # useUploads
+      pages/          # UploadPage
+      services/       # uploads-api
+      types/
+        uploads.ts
       queryKeys.ts
       index.ts
   hooks/              # Global shared hooks (useTime, useWeather)
@@ -92,7 +99,6 @@ src/
   routes/             # React Router configuration
   stores/             # Zustand stores (client state only)
   services/           # Core infrastructure (http.ts)
-  types/domain/       # Shared domain types (schedulepro, plan)
 ```
 
 ### Key Architecture Patterns
@@ -169,14 +175,13 @@ Current intended user flow:
 - `src/config/index.ts` - All environment-based configuration
 - `src/services/http.ts` - HTTP request wrapper with auth headers
 - `src/features/project/services/project-api.ts` - Main project API calls (core graph, curves)
-- `src/features/project/services/project-bootstrap.ts` - Project creation and bootstrap flow
 - `src/features/ai/services/ai-service.ts` - Agent init and interrupt-resume API calls
 - `src/features/project/hooks/useProjectData.ts` - Project overview data derivation and graph query binding
 - `src/features/project/hooks/useProject.ts` - Selected project state + project list query adapter
 - `src/stores/projectStore.ts` - Client-side project selection state
 - `src/features/ai/hooks/useChat.ts` - AI panel state, SSE parsing, voice input
 - `src/pages/Projects.tsx` - Project dashboard / project list page
-- `src/pages/Upload.tsx` - New-project intake flow
+- `src/features/upload/pages/UploadPage.tsx` - New-project intake flow
 - `src/features/project/pages/Overview.tsx` - Main dashboard page
 
 ### Utility Libraries

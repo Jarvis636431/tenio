@@ -13,9 +13,9 @@ import {
   calculateStartOffset,
   calculateSpanUnits,
   alignDateToScaleStart,
+  type TimelineScale,
 } from "@/lib/gantt";
 import type { ScheduleTask } from "@/features/project";
-import type { TimelineScale } from "@/types/domain/plan";
 
 interface GanttChartProps {
   data: ScheduleTask[];
