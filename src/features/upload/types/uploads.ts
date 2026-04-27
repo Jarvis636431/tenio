@@ -20,6 +20,9 @@ export interface ProjectFile {
   uploadedBy?: string;
   uploadedAt: string;
   status: FileStatus;
+  parseStatus?: string;
+  parsedAt?: string | null;
+  parseErrorMessage?: string | null;
   version?: number;
   parentId?: string;
   tags?: string[];

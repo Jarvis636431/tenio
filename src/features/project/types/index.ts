@@ -75,7 +75,14 @@ export interface TimeCostArtifact extends ArtifactBase {
   minimum_total_cost_cents: number;
   saving_rate_percent: number;
   recommendation: Record<string, unknown>;
-  options: Array<Record<string, unknown>>;
+  options: TimeCostOption[];
+}
+
+export interface TimeCostOption {
+  option_name?: string;
+  duration_days?: number;
+  total_cost_cents?: number;
+  total_cost?: number;
 }
 
 export interface StartGenerationPayload {

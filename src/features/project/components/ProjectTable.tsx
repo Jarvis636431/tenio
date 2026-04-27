@@ -21,12 +21,12 @@ interface ProjectTableProps {
 type TaskRow = ScheduleTask & {
   level: number;
   isSum: boolean;
-  chipType: "done" | "act" | "pending";
+  chipType: "done" | "act" | "pend";
 };
 
 const columnHelper = createColumnHelper<TaskRow>();
 
-function StatusChip({ type }: { type: "done" | "act" | "pending" }) {
+function StatusChip({ type }: { type: "done" | "act" | "pend" }) {
   return (
     <span
       className={`inline-flex items-center gap-1 border px-1.5 py-0.5 text-[10px] font-medium ${

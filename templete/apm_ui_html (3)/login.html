@@ -1,395 +1,491 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>A.PM 智管 · 登录</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --bg: #020c1b;
-      --bg-panel: #041225;
-      --accent: #00d4ff;
-      --accent-dim: rgba(0,212,255,0.12);
-      --accent-border: rgba(0,212,255,0.18);
-      --text: #e8f0fe;
-      --text-muted: rgba(160,180,204,0.65);
-      --text-dim: rgba(160,180,204,0.35);
-      --green: #10b981;
-    }
-    html { font-size: 14px; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image:
-        linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none; z-index: 0;
-    }
-    /* Ambient glow */
-    body::after {
-      content: '';
-      position: fixed;
-      top: 50%; left: 50%;
-      width: 800px; height: 800px;
-      transform: translate(-50%, -50%);
-      background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
-      pointer-events: none; z-index: 0;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A.PM 智管 · 登录</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #020c1b;
+        --bg-panel: #041225;
+        --accent: #00d4ff;
+        --accent-dim: rgba(0, 212, 255, 0.12);
+        --accent-border: rgba(0, 212, 255, 0.18);
+        --text: #e8f0fe;
+        --text-muted: rgba(160, 180, 204, 0.65);
+        --text-dim: rgba(160, 180, 204, 0.35);
+        --green: #10b981;
+      }
+      html {
+        font-size: 14px;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Space Grotesk", "Noto Sans SC", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+        z-index: 0;
+      }
+      /* Ambient glow */
+      body::after {
+        content: "";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 800px;
+        height: 800px;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle, rgba(0, 212, 255, 0.06) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+      }
 
-    .login-container {
-      position: relative; z-index: 1;
-      width: 420px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+      .login-container {
+        position: relative;
+        z-index: 1;
+        width: 420px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
 
-    /* Logo */
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 48px;
-    }
-    .logo-icon {
-      width: 44px; height: 44px;
-      border: 1px solid var(--accent-border);
-      background: var(--accent-dim);
-      display: flex; align-items: center; justify-content: center;
-    }
-    .logo-icon img { width: 28px; height: 28px; object-fit: contain; }
-    .logo-text { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
-    .logo-text span { color: var(--accent); }
-    .logo-sub { font-size: 11px; color: var(--text-muted); margin-left: 14px; letter-spacing: 0.08em; }
+      /* Logo */
+      .logo-area {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 48px;
+      }
+      .logo-icon {
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--accent-border);
+        background: var(--accent-dim);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .logo-icon img {
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+      }
+      .logo-text {
+        font-size: 22px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.02em;
+      }
+      .logo-text span {
+        color: var(--accent);
+      }
+      .logo-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-left: 14px;
+        letter-spacing: 0.08em;
+      }
 
-    /* Card */
-    .login-card {
-      width: 100%;
-      border: 1px solid var(--accent-border);
-      background: rgba(4,18,37,0.85);
-      backdrop-filter: blur(20px);
-      padding: 36px 32px;
-    }
-    .login-card::before {
-      content: '';
-      display: block;
-      height: 2px;
-      background: linear-gradient(90deg, var(--accent), rgba(0,212,255,0.2), transparent);
-      margin: -36px -32px 28px;
-    }
-    .card-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-    .card-sub {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 28px;
-    }
+      /* Card */
+      .login-card {
+        width: 100%;
+        border: 1px solid var(--accent-border);
+        background: rgba(4, 18, 37, 0.85);
+        backdrop-filter: blur(20px);
+        padding: 36px 32px;
+      }
+      .login-card::before {
+        content: "";
+        display: block;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), rgba(0, 212, 255, 0.2), transparent);
+        margin: -36px -32px 28px;
+      }
+      .card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 4px;
+      }
+      .card-sub {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 28px;
+      }
 
-    /* Tabs */
-    .login-tabs {
-      display: flex;
-      gap: 0;
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--accent-border);
-    }
-    .login-tab {
-      flex: 1;
-      text-align: center;
-      padding: 10px 0;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.15s;
-    }
-    .login-tab:hover { color: var(--text); }
-    .login-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+      /* Tabs */
+      .login-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 24px;
+        border-bottom: 1px solid var(--accent-border);
+      }
+      .login-tab {
+        flex: 1;
+        text-align: center;
+        padding: 10px 0;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.15s;
+      }
+      .login-tab:hover {
+        color: var(--text);
+      }
+      .login-tab.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
 
-    /* Form */
-    .form-group {
-      margin-bottom: 18px;
-    }
-    .form-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      letter-spacing: 0.08em;
-      margin-bottom: 7px;
-    }
-    .form-input-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    .form-input-wrap i {
-      position: absolute;
-      left: 13px;
-      font-size: 13px;
-      color: var(--text-dim);
-      pointer-events: none;
-    }
-    .form-input {
-      width: 100%;
-      background: rgba(0,212,255,0.04);
-      border: 1px solid var(--accent-border);
-      color: var(--text);
-      font-size: 13px;
-      padding: 11px 14px 11px 38px;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .form-input::placeholder { color: var(--text-dim); }
-    .form-input:focus { border-color: var(--accent); background: rgba(0,212,255,0.06); }
+      /* Form */
+      .form-group {
+        margin-bottom: 18px;
+      }
+      .form-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        letter-spacing: 0.08em;
+        margin-bottom: 7px;
+      }
+      .form-input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .form-input-wrap i {
+        position: absolute;
+        left: 13px;
+        font-size: 13px;
+        color: var(--text-dim);
+        pointer-events: none;
+      }
+      .form-input {
+        width: 100%;
+        background: rgba(0, 212, 255, 0.04);
+        border: 1px solid var(--accent-border);
+        color: var(--text);
+        font-size: 13px;
+        padding: 11px 14px 11px 38px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .form-input::placeholder {
+        color: var(--text-dim);
+      }
+      .form-input:focus {
+        border-color: var(--accent);
+        background: rgba(0, 212, 255, 0.06);
+      }
 
-    /* Phone code */
-    .phone-row { display: flex; gap: 10px; }
-    .phone-row .form-input { flex: 1; }
-    .send-code-btn {
-      white-space: nowrap;
-      padding: 0 16px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--accent);
-      background: var(--accent-dim);
-      border: 1px solid var(--accent-border);
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s;
-    }
-    .send-code-btn:hover { background: rgba(0,212,255,0.18); }
+      /* Phone code */
+      .phone-row {
+        display: flex;
+        gap: 10px;
+      }
+      .phone-row .form-input {
+        flex: 1;
+      }
+      .send-code-btn {
+        white-space: nowrap;
+        padding: 0 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-border);
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.15s;
+      }
+      .send-code-btn:hover {
+        background: rgba(0, 212, 255, 0.18);
+      }
 
-    /* Checkbox */
-    .form-check {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 22px;
-    }
-    .form-check input[type="checkbox"] {
-      appearance: none;
-      width: 16px; height: 16px;
-      border: 1px solid var(--accent-border);
-      background: rgba(0,212,255,0.04);
-      cursor: pointer;
-      position: relative;
-      flex-shrink: 0;
-    }
-    .form-check input[type="checkbox"]:checked {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-    .form-check input[type="checkbox"]:checked::after {
-      content: '✓';
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 11px;
-      color: #020c1b;
-      font-weight: 700;
-    }
-    .form-check label {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-    .form-check label a {
-      color: var(--accent);
-      text-decoration: none;
-    }
+      /* Checkbox */
+      .form-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 22px;
+      }
+      .form-check input[type="checkbox"] {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 1px solid var(--accent-border);
+        background: rgba(0, 212, 255, 0.04);
+        cursor: pointer;
+        position: relative;
+        flex-shrink: 0;
+      }
+      .form-check input[type="checkbox"]:checked {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .form-check input[type="checkbox"]:checked::after {
+        content: "✓";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 11px;
+        color: #020c1b;
+        font-weight: 700;
+      }
+      .form-check label {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .form-check label a {
+        color: var(--accent);
+        text-decoration: none;
+      }
 
-    /* Submit */
-    .login-btn {
-      width: 100%;
-      padding: 13px;
-      font-size: 14px;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--accent), #0099ff);
-      color: #020c1b;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      letter-spacing: 0.04em;
-      transition: opacity 0.15s;
-    }
-    .login-btn:hover { opacity: 0.9; }
+      /* Submit */
+      .login-btn {
+        width: 100%;
+        padding: 13px;
+        font-size: 14px;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--accent), #0099ff);
+        color: #020c1b;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        letter-spacing: 0.04em;
+        transition: opacity 0.15s;
+      }
+      .login-btn:hover {
+        opacity: 0.9;
+      }
 
-    /* Divider */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin: 22px 0;
-    }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--accent-border);
-    }
-    .divider span {
-      font-size: 10px;
-      color: var(--text-dim);
-      letter-spacing: 0.1em;
-    }
+      /* Divider */
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 22px 0;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--accent-border);
+      }
+      .divider span {
+        font-size: 10px;
+        color: var(--text-dim);
+        letter-spacing: 0.1em;
+      }
 
-    /* Social */
-    .social-row {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-    }
-    .social-btn {
-      width: 44px; height: 44px;
-      border: 1px solid var(--accent-border);
-      background: rgba(0,212,255,0.04);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      font-size: 18px;
-      color: var(--text-muted);
-      transition: all 0.15s;
-    }
-    .social-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+      /* Social */
+      .social-row {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+      }
+      .social-btn {
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--accent-border);
+        background: rgba(0, 212, 255, 0.04);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 18px;
+        color: var(--text-muted);
+        transition: all 0.15s;
+      }
+      .social-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: var(--accent-dim);
+      }
 
-    /* Footer */
-    .login-footer {
-      margin-top: 28px;
-      text-align: center;
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-    .login-footer a { color: var(--accent); text-decoration: none; }
+      /* Footer */
+      .login-footer {
+        margin-top: 28px;
+        text-align: center;
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+      .login-footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
 
-    /* Hidden panels */
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
+      /* Hidden panels */
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
 
-    /* Corner decorations */
-    .corner { position: fixed; z-index: 0; }
-    .corner-tl { top: 0; left: 0; width: 120px; height: 120px; border-top: 1px solid rgba(0,212,255,0.15); border-left: 1px solid rgba(0,212,255,0.15); }
-    .corner-br { bottom: 0; right: 0; width: 120px; height: 120px; border-bottom: 1px solid rgba(0,212,255,0.15); border-right: 1px solid rgba(0,212,255,0.15); }
-  </style>
-</head>
-<body>
+      /* Corner decorations */
+      .corner {
+        position: fixed;
+        z-index: 0;
+      }
+      .corner-tl {
+        top: 0;
+        left: 0;
+        width: 120px;
+        height: 120px;
+        border-top: 1px solid rgba(0, 212, 255, 0.15);
+        border-left: 1px solid rgba(0, 212, 255, 0.15);
+      }
+      .corner-br {
+        bottom: 0;
+        right: 0;
+        width: 120px;
+        height: 120px;
+        border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+        border-right: 1px solid rgba(0, 212, 255, 0.15);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-br"></div>
 
-<div class="corner corner-tl"></div>
-<div class="corner corner-br"></div>
-
-<div class="login-container">
-  <!-- Logo -->
-  <div class="logo-area">
-    <div class="logo-icon">
-      <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663381579886/3dGQrYeue3pTedcrRzk4ny/logo_icon_blue_cc74c57f.png" alt="A.PM" />
-    </div>
-    <span class="logo-text"><span>A.PM</span> 智管</span>
-    <span class="logo-sub">智筑领航</span>
-  </div>
-
-  <!-- Login Card -->
-  <div class="login-card">
-    <div class="card-title">欢迎回来</div>
-    <div class="card-sub">登录您的账号以访问项目控制台</div>
-
-    <!-- Tabs -->
-    <div class="login-tabs">
-      <div class="login-tab active" onclick="switchLoginTab('phone')">手机号登录</div>
-      <div class="login-tab" onclick="switchLoginTab('account')">账号密码登录</div>
-    </div>
-
-    <!-- Phone Login -->
-    <div class="tab-panel active" id="panel-phone">
-      <div class="form-group">
-        <label class="form-label">手机号</label>
-        <div class="form-input-wrap">
-          <i class="fas fa-mobile-alt"></i>
-          <input class="form-input" type="tel" placeholder="请输入手机号" />
+    <div class="login-container">
+      <!-- Logo -->
+      <div class="logo-area">
+        <div class="logo-icon">
+          <img
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663381579886/3dGQrYeue3pTedcrRzk4ny/logo_icon_blue_cc74c57f.png"
+            alt="A.PM"
+          />
         </div>
+        <span class="logo-text"><span>A.PM</span> 智管</span>
+        <span class="logo-sub">智筑领航</span>
       </div>
-      <div class="form-group">
-        <label class="form-label">验证码</label>
-        <div class="phone-row">
-          <div class="form-input-wrap">
-            <i class="fas fa-shield-alt"></i>
-            <input class="form-input" type="text" placeholder="请输入验证码" />
+
+      <!-- Login Card -->
+      <div class="login-card">
+        <div class="card-title">欢迎回来</div>
+        <div class="card-sub">登录您的账号以访问项目控制台</div>
+
+        <!-- Tabs -->
+        <div class="login-tabs">
+          <div class="login-tab active" onclick="switchLoginTab('phone')">手机号登录</div>
+          <div class="login-tab" onclick="switchLoginTab('account')">账号密码登录</div>
+        </div>
+
+        <!-- Phone Login -->
+        <div class="tab-panel active" id="panel-phone">
+          <div class="form-group">
+            <label class="form-label">手机号</label>
+            <div class="form-input-wrap">
+              <i class="fas fa-mobile-alt"></i>
+              <input class="form-input" type="tel" placeholder="请输入手机号" />
+            </div>
           </div>
-          <button class="send-code-btn">获取验证码</button>
+          <div class="form-group">
+            <label class="form-label">验证码</label>
+            <div class="phone-row">
+              <div class="form-input-wrap">
+                <i class="fas fa-shield-alt"></i>
+                <input class="form-input" type="text" placeholder="请输入验证码" />
+              </div>
+              <button class="send-code-btn">获取验证码</button>
+            </div>
+          </div>
         </div>
+
+        <!-- Account Login -->
+        <div class="tab-panel" id="panel-account">
+          <div class="form-group">
+            <label class="form-label">账号 / 邮箱</label>
+            <div class="form-input-wrap">
+              <i class="fas fa-user"></i>
+              <input class="form-input" type="text" placeholder="请输入账号或邮箱" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">密码</label>
+            <div class="form-input-wrap">
+              <i class="fas fa-lock"></i>
+              <input class="form-input" type="password" placeholder="请输入密码" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-check">
+          <input type="checkbox" id="agree" checked />
+          <label for="agree"
+            >我已阅读并同意 <a href="#">服务协议</a> 和 <a href="#">隐私政策</a></label
+          >
+        </div>
+
+        <button class="login-btn" onclick="window.location.href = 'projects.html'">
+          <i class="fas fa-sign-in-alt" style="margin-right: 6px"></i>登 录
+        </button>
+
+        <div class="divider"><span>其他登录方式</span></div>
+
+        <div class="social-row">
+          <div class="social-btn"><i class="fab fa-weixin"></i></div>
+          <div class="social-btn"><i class="fas fa-qrcode"></i></div>
+          <div class="social-btn"><i class="fab fa-qq"></i></div>
+        </div>
+      </div>
+
+      <div class="login-footer">
+        还没有账号？<a href="#">立即注册</a> &nbsp;|&nbsp; <a href="#">忘记密码？</a>
+        <div style="margin-top: 10px; font-size: 10px">© 2026 量维智能科技 · A.PM 智筑领航</div>
       </div>
     </div>
 
-    <!-- Account Login -->
-    <div class="tab-panel" id="panel-account">
-      <div class="form-group">
-        <label class="form-label">账号 / 邮箱</label>
-        <div class="form-input-wrap">
-          <i class="fas fa-user"></i>
-          <input class="form-input" type="text" placeholder="请输入账号或邮箱" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">密码</label>
-        <div class="form-input-wrap">
-          <i class="fas fa-lock"></i>
-          <input class="form-input" type="password" placeholder="请输入密码" />
-        </div>
-      </div>
-    </div>
-
-    <div class="form-check">
-      <input type="checkbox" id="agree" checked />
-      <label for="agree">我已阅读并同意 <a href="#">服务协议</a> 和 <a href="#">隐私政策</a></label>
-    </div>
-
-    <button class="login-btn" onclick="window.location.href='projects.html'">
-      <i class="fas fa-sign-in-alt" style="margin-right:6px;"></i>登 录
-    </button>
-
-    <div class="divider"><span>其他登录方式</span></div>
-
-    <div class="social-row">
-      <div class="social-btn"><i class="fab fa-weixin"></i></div>
-      <div class="social-btn"><i class="fas fa-qrcode"></i></div>
-      <div class="social-btn"><i class="fab fa-qq"></i></div>
-    </div>
-  </div>
-
-  <div class="login-footer">
-    还没有账号？<a href="#">立即注册</a> &nbsp;|&nbsp; <a href="#">忘记密码？</a>
-    <div style="margin-top:10px;font-size:10px;">© 2026 量维智能科技 · A.PM 智筑领航</div>
-  </div>
-</div>
-
-<script>
-function switchLoginTab(tab) {
-  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  if (tab === 'phone') {
-    document.querySelectorAll('.login-tab')[0].classList.add('active');
-    document.getElementById('panel-phone').classList.add('active');
-  } else {
-    document.querySelectorAll('.login-tab')[1].classList.add('active');
-    document.getElementById('panel-account').classList.add('active');
-  }
-}
-</script>
-</body>
+    <script>
+      function switchLoginTab(tab) {
+        document.querySelectorAll(".login-tab").forEach((t) => t.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+        if (tab === "phone") {
+          document.querySelectorAll(".login-tab")[0].classList.add("active");
+          document.getElementById("panel-phone").classList.add("active");
+        } else {
+          document.querySelectorAll(".login-tab")[1].classList.add("active");
+          document.getElementById("panel-account").classList.add("active");
+        }
+      }
+    </script>
+  </body>
 </html>

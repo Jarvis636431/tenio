@@ -154,6 +154,9 @@ function toFeatureFile(item: ProjectFileItem, projectId: string): ProjectFile {
     url: "",
     uploadedAt: item.uploaded_at,
     status: item.upload_status === "completed" ? "completed" : "pending",
+    parseStatus: item.parse_status,
+    parsedAt: item.parsed_at,
+    parseErrorMessage: item.parse_error_message,
   };
 }
 

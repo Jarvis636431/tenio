@@ -52,6 +52,16 @@ function InfoCard({ label, value, sub }: InfoCardProps) {
   );
 }
 
+function isParsed(status?: string) {
+  const value = status?.toLowerCase() ?? "";
+  return value === "succeeded" || value === "completed" || value.includes("完成");
+}
+
+function isParseFailed(status?: string) {
+  const value = status?.toLowerCase() ?? "";
+  return value === "failed" || value === "error" || value.includes("失败");
+}
+
 export function UploadsTab({ projectId, projectSummary, onViewResults }: UploadsTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
@@ -130,6 +140,21 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
   const hasFile = files.length > 0;
   const taskCount = projectSummary?.planTaskCount ?? 0;
   const duration = projectSummary?.totalDurationLabel ?? "—";
+  const hasGeneratedArtifacts = taskCount > 0 || (duration !== "—" && duration.trim() !== "");
+  const latestFileParsed = latestFile ? isParsed(latestFile.parseStatus) : false;
+  const latestFileParseFailed = latestFile ? isParseFailed(latestFile.parseStatus) : false;
+  const fileStatusLabel = latestFileParseFailed
+    ? "解析失败"
+    : latestFileParsed
+      ? "解析成功"
+      : latestFile?.parseStatus
+        ? "解析中"
+        : "已上传";
+  const fileStatusClass = latestFileParseFailed
+    ? "text-red-300"
+    : latestFileParsed
+      ? "text-emerald-400"
+      : "text-cyan-300";
 
   if (!projectId) {
     return (
@@ -154,9 +179,15 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
                 {formatIsoDate(latestFile.uploadedAt)}
               </div>
             </div>
-            <span className="ml-auto flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
-              <CheckCircle className="h-3.5 w-3.5" />
-              解析成功
+            <span
+              className={`ml-auto flex shrink-0 items-center gap-1.5 text-[11px] font-semibold ${fileStatusClass}`}
+            >
+              {latestFileParseFailed ? (
+                <X className="h-3.5 w-3.5" />
+              ) : (
+                <CheckCircle className="h-3.5 w-3.5" />
+              )}
+              {fileStatusLabel}
             </span>
           </div>
 
@@ -167,7 +198,7 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
               value={
                 <span className="text-xs leading-tight">{projectSummary?.projectName || "—"}</span>
               }
-              sub="已提取"
+              sub={hasGeneratedArtifacts ? "已提取" : "等待产物"}
             />
             <InfoCard
               label="计划工期"
@@ -177,52 +208,62 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
             <InfoCard
               label="工序总数"
               value={<span className="text-sm">{taskCount} 项</span>}
-              sub="AI 自动拆分"
+              sub={hasGeneratedArtifacts ? "AI 自动拆分" : "等待生成"}
             />
             <InfoCard
               label="资料状态"
-              value={<span className="text-sm text-emerald-400">已解析</span>}
+              value={<span className={`text-sm ${fileStatusClass}`}>{fileStatusLabel}</span>}
               sub={`共 ${files.length} 个文件`}
             />
           </div>
 
           {/* Gen area - matches .gen-area in app.html */}
-          <div className="relative flex flex-col gap-4 border border-cyan-400/18 bg-gradient-to-br from-[rgba(0,40,100,0.35)] to-[rgba(0,20,55,0.45)] px-5 py-4 sm:flex-row sm:items-center">
-            <span className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-cyan-400 via-cyan-400/20 to-transparent" />
-            <div className="min-w-0 flex-1">
-              <div className="mb-1 text-[15px] font-bold text-white">
-                <CheckCircle className="mr-1.5 inline h-4 w-4 text-emerald-400" />
-                AI 已完成全部生成
+          {hasGeneratedArtifacts ? (
+            <div className="relative flex flex-col gap-4 border border-cyan-400/18 bg-gradient-to-br from-[rgba(0,40,100,0.35)] to-[rgba(0,20,55,0.45)] px-5 py-4 sm:flex-row sm:items-center">
+              <span className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-cyan-400 via-cyan-400/20 to-transparent" />
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 text-[15px] font-bold text-white">
+                  <CheckCircle className="mr-1.5 inline h-4 w-4 text-emerald-400" />
+                  AI 已完成全部生成
+                </div>
+                <div className="text-xs text-slate-400">
+                  基于招标文件自动生成完整施工组织设计，包含进度计划、甘特图、网络图、人员轮转
+                </div>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {[
+                    `施工组织设计（${taskCount > 0 ? Math.floor(taskCount * 200) : "—"}字）`,
+                    `进度计划（${taskCount}项）`,
+                    `甘特图（${taskCount > 0 ? taskCount * 5 : "—"}天）`,
+                    "网络图",
+                    "人员轮转",
+                  ].map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1.5 border border-cyan-400/18 px-2.5 py-1 text-[10px] font-medium text-slate-400"
+                    >
+                      <span className="h-1 w-1 rounded-full bg-emerald-400" />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="text-xs text-slate-400">
-                基于招标文件自动生成完整施工组织设计，包含进度计划、甘特图、网络图、人员轮转
-              </div>
-              <div className="mt-2.5 flex flex-wrap gap-2">
-                {[
-                  `施工组织设计（${taskCount > 0 ? Math.floor(taskCount * 200) : "—"}字）`,
-                  `进度计划（${taskCount}项）`,
-                  `甘特图（${taskCount > 0 ? taskCount * 5 : "—"}天）`,
-                  "网络图",
-                  "人员轮转",
-                ].map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1.5 border border-cyan-400/18 px-2.5 py-1 text-[10px] font-medium text-slate-400"
-                  >
-                    <span className="h-1 w-1 rounded-full bg-emerald-400" />
-                    {tag}
-                  </span>
-                ))}
+              <Button
+                onClick={onViewResults}
+                className="shrink-0 bg-gradient-to-r from-cyan-400 to-sky-500 px-6 py-3 text-sm font-bold text-[#020c1b] hover:opacity-90"
+              >
+                <Eye className="mr-1.5 h-4 w-4" />
+                查看生成结果
+              </Button>
+            </div>
+          ) : (
+            <div className="relative border border-cyan-400/18 bg-[rgba(0,20,55,0.28)] px-5 py-4">
+              <span className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-cyan-400/60 via-cyan-400/10 to-transparent" />
+              <div className="text-[15px] font-bold text-white">资料已上传，等待生成结果</div>
+              <div className="mt-1 text-xs text-slate-400">
+                当前仅展示文件上传和解析状态，尚未检测到进度计划或工期成本产物。
               </div>
             </div>
-            <Button
-              onClick={onViewResults}
-              className="shrink-0 bg-gradient-to-r from-cyan-400 to-sky-500 px-6 py-3 text-sm font-bold text-[#020c1b] hover:opacity-90"
-            >
-              <Eye className="mr-1.5 h-4 w-4" />
-              查看生成结果
-            </Button>
-          </div>
+          )}
         </>
       )}
 

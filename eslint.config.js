@@ -52,7 +52,13 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ["@/features/*/components/*", "@/features/*/hooks/*", "@/features/*/services/*", "@/features/*/types/*", "@/features/*/pages/*"],
+              group: [
+                "@/features/*/components/*",
+                "@/features/*/hooks/*",
+                "@/features/*/services/*",
+                "@/features/*/types/*",
+                "@/features/*/pages/*",
+              ],
               message:
                 "Do not import a feature's internal modules from outside that feature. Use the feature barrel or a documented public entry.",
             },
@@ -69,7 +75,13 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ["@/features/*/components/*", "@/features/*/hooks/*", "@/features/*/services/*", "@/features/*/types/*", "@/features/*/pages/*"],
+              group: [
+                "@/features/*/components/*",
+                "@/features/*/hooks/*",
+                "@/features/*/services/*",
+                "@/features/*/types/*",
+                "@/features/*/pages/*",
+              ],
               message:
                 "Do not deep-import another feature's internals. Import from that feature's barrel or public entry.",
             },
