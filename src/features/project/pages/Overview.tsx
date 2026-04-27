@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   useProjectExport,
   useProjectData,
-  useProjectCharts,
   ProjectTabBar,
   UploadsTab,
   ProjectTable,
@@ -30,11 +29,8 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     planTasks,
     currentProjectName,
     totalDurationLabel,
+    costQuery,
   } = useProjectData({ projectId: propsProjectId });
-
-  const { costQuery } = useProjectCharts({
-    projectId: resolvedProjectId,
-  });
 
   const costCurveChart = costQuery.chartData;
 

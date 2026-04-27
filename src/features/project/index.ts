@@ -5,7 +5,6 @@ export { Overview } from "./pages/Overview";
 
 export { useProject } from "./hooks/useProject";
 export { useProjectExport } from "./hooks/useProjectExport";
-export { useProjectCharts } from "./hooks/useProjectCharts";
 export { useProjectData } from "./hooks/useProjectData";
 export { projectQueryKeys } from "./queryKeys";
 
