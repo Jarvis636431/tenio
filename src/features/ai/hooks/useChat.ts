@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { projectQueryKeys, useProject } from "@/features/project";
-import { extractChatMessageContent } from "@/features/ai";
 import {
   initAgentSession,
   issueAgentTicket,
   sendAgentSessionMessage,
   subscribeAgentSessionSse,
 } from "../services/ai-api";
+import { extractChatMessageContent } from "../services/ai-service";
 import { useVoice } from "./useVoice";
 import { createMessageId } from "@/lib/utils";
 import { logSilentError } from "@/lib/log";

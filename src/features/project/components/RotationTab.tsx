@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import type { ScheduleTask } from "@/features/project";
 import { HardHat, MapPin, Clock } from "lucide-react";
+import type { ScheduleTask } from "../types";
 
 interface RotationTabProps {
   planTasks: ScheduleTask[];

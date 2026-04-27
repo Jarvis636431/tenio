@@ -8,7 +8,7 @@ import type {
   FileStatsResponse,
   ProjectFile,
   FileCategory,
-} from "@/features/upload";
+} from "../types/uploads";
 
 interface UploadFilePayload {
   projectId?: string | null;

@@ -1,17 +1,15 @@
 import { useCallback, useMemo, useState } from "react";
-import {
-  useProjectExport,
-  useProjectData,
-  ProjectTabBar,
-  UploadsTab,
-  ProjectTable,
-  DocsTab,
-  ChartTab,
-  RotationTab,
-} from "@/features/project";
 import { GanttChart } from "@/components/chart/GanttChart";
 import { NetworkDiagram } from "@/components/chart/NetworkDiagram";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChartTab } from "../components/ChartTab";
+import { DocsTab } from "../components/DocsTab";
+import { ProjectTabBar } from "../components/ProjectTabBar";
+import { ProjectTable } from "../components/ProjectTable";
+import { RotationTab } from "../components/RotationTab";
+import { UploadsTab } from "../components/UploadsTab";
+import { useProjectData } from "../hooks/useProjectData";
+import { useProjectExport } from "../hooks/useProjectExport";
 
 interface OverviewProps {
   projectId?: string;

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import type { ScheduleTask } from "@/features/project";
 import { Clock, Coins, ListChecks, TrendingDown } from "lucide-react";
+import type { ScheduleTask } from "../types";
 import {
   LineChart,
   Line,

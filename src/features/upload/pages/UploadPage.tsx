@@ -16,12 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { type FileCategory, type FileStatus, useUploads } from "@/features/upload";
 import {
   getProjectGenerationStatus,
   startProjectGeneration,
   type GenerationStep,
 } from "@/features/project";
+import { useUploads } from "../hooks/useUploads";
+import type { FileCategory, FileStatus } from "../types/uploads";
 
 interface UploadQueueItem {
   id: string;

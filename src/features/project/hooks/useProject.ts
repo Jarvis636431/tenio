@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { useProjectStore } from "@/stores/projectStore";
 import { getProjectList } from "../services/project-api";
@@ -12,7 +12,6 @@ import type { ProjectListItem } from "../types";
  */
 export function useProject() {
   const { id } = useParams();
-  const queryClient = useQueryClient();
   const { currentProjectId, setCurrentProjectId } = useProjectStore();
 
   const projectsQuery = useQuery({
@@ -45,34 +44,12 @@ export function useProject() {
     setCurrentProjectId(project?.project_id ?? null);
   };
 
-  const addProject = (project: ProjectListItem) => {
-    queryClient.setQueryData<ProjectListItem[]>(projectQueryKeys.list, (previous = []) => {
-      const existing = previous.find((item) => item.project_id === project.project_id);
-      if (existing) {
-        return previous.map((item) =>
-          item.project_id === project.project_id ? { ...item, ...project } : item,
-        );
-      }
-      return [...previous, project];
-    });
-  };
-
-  const updateProject = (updatedProject: ProjectListItem) => {
-    queryClient.setQueryData<ProjectListItem[]>(projectQueryKeys.list, (previous = []) =>
-      previous.map((item) =>
-        item.project_id === updatedProject.project_id ? { ...item, ...updatedProject } : item,
-      ),
-    );
-  };
-
   return {
     currentProject,
     currentProjectId,
     setCurrentProject,
     setCurrentProjectId,
     projects,
-    addProject,
-    updateProject,
     refreshProjects: wrappedRefreshProjects,
     isLoading: projectsQuery.isLoading,
   };

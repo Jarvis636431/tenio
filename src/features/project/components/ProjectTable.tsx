@@ -11,7 +11,7 @@ import {
 import { ArrowUpDown } from "lucide-react";
 import { formatIsoDate } from "@/lib/date";
 import { normalizeStatusChip } from "@/lib/task";
-import type { ScheduleTask } from "@/features/project";
+import type { ScheduleTask } from "../types";
 
 interface ProjectTableProps {
   planTasks: ScheduleTask[];

@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { useProject, projectQueryKeys } from "@/features/project";
+import { projectQueryKeys } from "../queryKeys";
 import { getLatestScheduleArtifact, getLatestTimeCostArtifact } from "../services/project-api";
 import type { TimeCostArtifact } from "../types";
+import { useProject } from "./useProject";
 
 interface UseProjectDataOptions {
   projectId?: string;

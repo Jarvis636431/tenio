@@ -36,17 +36,18 @@ Notes:
 
 ## Import Rules
 
-### 统一使用 Barrel 导入
+### Feature 内外导入边界
 
-所有 feature 内部和跨 feature 的导入都必须通过 feature barrel，禁止使用相对路径深入 feature 内部模块。
+跨 feature 的导入必须通过 feature barrel；feature 内部导入应使用相对路径，避免从自己的 barrel 回引造成循环依赖。
 
 **正确：**
 
 ```ts
-// feature 内部导入
-import { useProjectData } from "@/features/project";
+// feature 内部导入：使用相对路径
+import { useProjectData } from "../hooks/useProjectData";
+import type { ScheduleTask } from "../types";
 
-// 跨 feature 导入
+// 跨 feature 导入：使用 public barrel
 import { useChat } from "@/features/ai";
 import { getProjectList } from "@/features/project";
 ```
@@ -54,19 +55,20 @@ import { getProjectList } from "@/features/project";
 **错误：**
 
 ```ts
-// 禁止使用相对路径深入 feature 内部
-import { useProjectData } from "../hooks/useProjectData";
-import { getProjectList } from "./services/project-api";
-import type { FileCategory } from "../types/uploads";
+// 禁止跨 feature 深入内部模块
+import { useProject } from "@/features/project/hooks/useProject";
+
+// 禁止 feature 内部从自己的 barrel 回引
+import { useProjectData } from "@/features/project";
 ```
 
 ### 原理
 
-Barrel 导入提供了：
+跨 feature barrel 导入提供稳定边界；feature 内部相对导入避免 barrel 循环依赖。
 
 - **稳定的公共 API**：模块内部重构（如移动文件）不影响消费者
 - **清晰的边界**：通过 barrel 导出的才是真正公共的接口
-- **可维护性**：修改内部结构时只需更新 barrel export，无需追踪所有消费者
+- **更少循环依赖**：feature 内部实现不通过自己的 public API 回引
 
 ### Barrel Export 要求
 
@@ -82,7 +84,7 @@ Barrel 导入提供了：
 // index.ts
 export { Overview } from "./pages/Overview";
 export { useProject, useProjectData } from "./hooks";
-export type { Project, ProjectListResponse } from "./types";
+export type { ProjectListItem, ScheduleTask } from "./types";
 // 不导出 internal 实现
 // export { _internalHelper } from "./internal"; // ❌ 禁止
 ```
@@ -95,10 +97,10 @@ export type { Project, ProjectListResponse } from "./types";
   import { useProject } from "@/features/project/hooks/useProject";
   ```
 
-- 使用相对路径绕过 barrel：
+- 跨 feature 绕过 barrel：
 
   ```ts
-  import { getProjectList } from "../services/project-api";
+  import { getProjectList } from "@/features/project/services/project-api";
   ```
 
 ## Public Barrel Strategy

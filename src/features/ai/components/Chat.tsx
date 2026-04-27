@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { BarChart3, Boxes, CloudSun, Loader2, ShieldAlert, Users, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ChatState } from "@/features/ai";
+import type { ChatState } from "../hooks/useChat";
 import { ChatInput } from "./ChatInput";
 import { ChatMessage } from "./ChatMessage";
 import { ChatHistory } from "./ChatHistory";
