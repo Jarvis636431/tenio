@@ -15,3 +15,5 @@ export type {
   SetupProfileResponse,
   SmsLoginPayload,
 } from "./types";
+export { Login } from "./pages/Login";
+export { AuthDialog, FormField, FormInput, SMSButton } from "./components";

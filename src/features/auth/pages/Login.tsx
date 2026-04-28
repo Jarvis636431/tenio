@@ -1,15 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Loader2, Lock, Smartphone, User } from "lucide-react";
+import { Lock, Loader2, Smartphone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { useAuth } from "@/features/auth";
+import { AuthDialog, FormField, FormInput, SMSButton } from "@/features/auth/components";
 import { cn } from "@/lib/utils";
 
 interface LoginForm {
@@ -90,12 +84,8 @@ function Login() {
       return;
     }
     setError(null);
-    try {
-      const result = await auth.sendSms(phoneForm.phone.trim());
-      setSmsCooldown(result.cooldown_seconds);
-    } catch (sendError) {
-      setError(sendError instanceof Error ? sendError.message : "验证码发送失败");
-    }
+    const result = await auth.sendSms(phoneForm.phone.trim());
+    setSmsCooldown(result.cooldown_seconds);
   };
 
   const handleSendRegisterSms = async () => {
@@ -104,12 +94,8 @@ function Login() {
       return;
     }
     setRegisterError(null);
-    try {
-      const result = await auth.sendSms(registerForm.phone.trim());
-      setRegisterSmsCooldown(result.cooldown_seconds);
-    } catch (sendError) {
-      setRegisterError(sendError instanceof Error ? sendError.message : "验证码发送失败");
-    }
+    const result = await auth.sendSms(registerForm.phone.trim());
+    setRegisterSmsCooldown(result.cooldown_seconds);
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -273,26 +259,17 @@ function Login() {
                 {/* Phone Login Panel */}
                 {loginMode === "phone" && (
                   <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="form-label">手机号</label>
-                      <div className="relative">
-                        <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-[13px] w-[13px] text-apm-dim" />
-                        <input
-                          type="tel"
-                          value={phoneForm.phone}
-                          onChange={(e) =>
-                            setPhoneForm((current) => ({ ...current, phone: e.target.value }))
-                          }
-                          className={cn(
-                            "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-[38px] pr-4",
-                            "text-sm text-white placeholder:text-apm-dim",
-                            "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                          )}
-                          placeholder="请输入手机号"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </div>
+                    <FormInput
+                      label="手机号"
+                      type="tel"
+                      value={phoneForm.phone}
+                      onChange={(e) =>
+                        setPhoneForm((current) => ({ ...current, phone: e.target.value }))
+                      }
+                      placeholder="请输入手机号"
+                      icon={<Smartphone className="h-[13px] w-[13px]" />}
+                      disabled={isLoading}
+                    />
 
                     <div className="space-y-1.5">
                       <label className="form-label">验证码</label>
@@ -314,14 +291,11 @@ function Login() {
                             disabled={isLoading}
                           />
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => void handleSendSms()}
-                          disabled={auth.isSendingSms || smsCooldown > 0 || isLoading}
-                          className="shrink-0 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-4 text-[12px] font-semibold text-cyan-400 transition-colors hover:bg-cyan-400/20"
-                        >
-                          {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
-                        </button>
+                        <SMSButton
+                          onClick={handleSendSms}
+                          cooldown={smsCooldown}
+                          disabled={auth.isSendingSms || isLoading}
+                        />
                       </div>
                     </div>
                   </div>
@@ -330,43 +304,25 @@ function Login() {
                 {/* Account Login Panel */}
                 {loginMode === "account" && (
                   <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="form-label">手机号账号</label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-[13px] w-[13px] text-apm-dim" />
-                        <input
-                          type="text"
-                          value={form.account}
-                          onChange={(e) => setForm((f) => ({ ...f, account: e.target.value }))}
-                          className={cn(
-                            "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-[38px] pr-4",
-                            "text-sm text-white placeholder:text-apm-dim",
-                            "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                          )}
-                          placeholder="请输入手机号账号"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </div>
+                    <FormInput
+                      label="手机号账号"
+                      type="text"
+                      value={form.account}
+                      onChange={(e) => setForm((f) => ({ ...f, account: e.target.value }))}
+                      placeholder="请输入手机号账号"
+                      icon={<User className="h-[13px] w-[13px]" />}
+                      disabled={isLoading}
+                    />
 
-                    <div className="space-y-1.5">
-                      <label className="form-label">密码</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-[13px] w-[13px] text-apm-dim" />
-                        <input
-                          type="password"
-                          value={form.password}
-                          onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                          className={cn(
-                            "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-[38px] pr-4",
-                            "text-sm text-white placeholder:text-apm-dim",
-                            "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                          )}
-                          placeholder="请输入密码"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </div>
+                    <FormInput
+                      label="密码"
+                      type="password"
+                      value={form.password}
+                      onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                      placeholder="请输入密码"
+                      icon={<Lock className="h-[13px] w-[13px]" />}
+                      disabled={isLoading}
+                    />
                   </div>
                 )}
 
@@ -483,239 +439,121 @@ function Login() {
       </div>
 
       {/* Forgot Password Dialog */}
-      <Dialog open={showForgotDialog} onOpenChange={setShowForgotDialog}>
-        <DialogContent className="max-w-md rounded-xl border border-cyan-400/20 bg-[rgba(4,18,37,0.94)] text-white shadow-apm-panel backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-white">忘记密码</DialogTitle>
-            <DialogDescription className="text-apm-muted">
-              输入您的注册邮箱，我们将发送重置密码链接
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setShowForgotDialog(false);
-            }}
-            className="space-y-4"
-          >
-            <input
-              type="email"
-              placeholder="请输入邮箱地址"
-              className={cn(
-                "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
-                "text-sm text-white placeholder:text-apm-dim",
-                "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-              )}
-              required
-            />
-            <Button
-              type="submit"
-              className="h-11 w-full rounded-lg bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-            >
-              发送重置链接
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AuthDialog
+        open={showForgotDialog}
+        onOpenChange={setShowForgotDialog}
+        title="忘记密码"
+        description="输入您的注册邮箱，我们将发送重置密码链接"
+        submitText="发送重置链接"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setShowForgotDialog(false);
+        }}
+      >
+        <FormInput type="email" placeholder="请输入邮箱地址" className="h-11 w-full" />
+      </AuthDialog>
 
       {/* Register Dialog */}
-      <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
-        <DialogContent className="max-w-md rounded-xl border border-cyan-400/20 bg-[rgba(4,18,37,0.94)] text-white shadow-apm-panel backdrop-blur-xl">
-          <button
-            onClick={() => setShowRegisterDialog(false)}
-            className="absolute right-4 top-4 rounded-md p-1 text-apm-dim transition-colors hover:bg-white/5 hover:text-white"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-white">立即注册</DialogTitle>
-            <DialogDescription className="text-apm-muted">
-              使用手机号验证码创建账号，并设置用户名和密码
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={(e) => void handleRegister(e)} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-cyan-100/80">手机号</label>
-              <div className="flex gap-2">
-                <input
-                  type="tel"
-                  value={registerForm.phone}
-                  onChange={(e) =>
-                    setRegisterForm((current) => ({ ...current, phone: e.target.value }))
-                  }
-                  placeholder="请输入手机号"
-                  className={cn(
-                    "h-11 min-w-0 flex-1 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
-                    "text-sm text-white placeholder:text-apm-dim",
-                    "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                  )}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => void handleSendRegisterSms()}
-                  disabled={auth.isSendingSms || registerSmsCooldown > 0 || isLoading}
-                  className="shrink-0 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 text-[12px] font-semibold text-cyan-400 transition-colors hover:bg-cyan-400/20 disabled:opacity-60"
-                >
-                  {registerSmsCooldown > 0 ? `${registerSmsCooldown}s` : "获取验证码"}
-                </button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-cyan-100/80">验证码</label>
-              <input
-                type="text"
-                value={registerForm.smsCode}
-                onChange={(e) =>
-                  setRegisterForm((current) => ({ ...current, smsCode: e.target.value }))
-                }
-                placeholder="请输入验证码"
-                className={cn(
-                  "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
-                  "text-sm text-white placeholder:text-apm-dim",
-                  "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                )}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-cyan-100/80">用户名</label>
-              <input
-                type="text"
-                value={registerForm.username}
-                onChange={(e) =>
-                  setRegisterForm((current) => ({ ...current, username: e.target.value }))
-                }
-                placeholder="请输入用户名"
-                className={cn(
-                  "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
-                  "text-sm text-white placeholder:text-apm-dim",
-                  "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                )}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-cyan-100/80">密码</label>
-              <input
-                type="password"
-                value={registerForm.password}
-                onChange={(e) =>
-                  setRegisterForm((current) => ({ ...current, password: e.target.value }))
-                }
-                placeholder="请输入密码（至少8位）"
-                className={cn(
-                  "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
-                  "text-sm text-white placeholder:text-apm-dim",
-                  "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                )}
-                required
-                minLength={8}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-cyan-100/80">确认密码</label>
-              <input
-                type="password"
-                value={registerForm.confirmPassword}
-                onChange={(e) =>
-                  setRegisterForm((current) => ({
-                    ...current,
-                    confirmPassword: e.target.value,
-                  }))
-                }
-                placeholder="请再次输入密码"
-                className={cn(
-                  "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
-                  "text-sm text-white placeholder:text-apm-dim",
-                  "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                )}
-                required
-                minLength={8}
-              />
-            </div>
-            {registerError && (
-              <p className="rounded-lg border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">
-                {registerError}
-              </p>
-            )}
-            <Button
-              type="submit"
-              disabled={isLoading || auth.isLoggingIn || auth.isSettingProfile}
-              className="h-11 w-full rounded-lg bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-            >
-              {isLoading ? "注册中..." : "注册"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AuthDialog
+        open={showRegisterDialog}
+        onOpenChange={setShowRegisterDialog}
+        title="立即注册"
+        description="使用手机号验证码创建账号，并设置用户名和密码"
+        submitText="注册"
+        submitDisabled={auth.isLoggingIn || auth.isSettingProfile}
+        isSubmitting={isLoading}
+        error={registerError}
+        onSubmit={handleRegister}
+      >
+        <div className="flex gap-2">
+          <FormInput
+            type="tel"
+            value={registerForm.phone}
+            onChange={(e) => setRegisterForm((current) => ({ ...current, phone: e.target.value }))}
+            placeholder="请输入手机号"
+            className="h-11 min-w-0 flex-1"
+          />
+          <SMSButton
+            onClick={handleSendRegisterSms}
+            cooldown={registerSmsCooldown}
+            disabled={auth.isSendingSms || isLoading}
+          />
+        </div>
+        <FormField label="验证码">
+          <FormInput
+            type="text"
+            value={registerForm.smsCode}
+            onChange={(e) =>
+              setRegisterForm((current) => ({ ...current, smsCode: e.target.value }))
+            }
+            placeholder="请输入验证码"
+          />
+        </FormField>
+        <FormField label="用户名">
+          <FormInput
+            type="text"
+            value={registerForm.username}
+            onChange={(e) =>
+              setRegisterForm((current) => ({ ...current, username: e.target.value }))
+            }
+            placeholder="请输入用户名"
+          />
+        </FormField>
+        <FormField label="密码">
+          <FormInput
+            type="password"
+            value={registerForm.password}
+            onChange={(e) =>
+              setRegisterForm((current) => ({ ...current, password: e.target.value }))
+            }
+            placeholder="请输入密码（至少8位）"
+          />
+        </FormField>
+        <FormField label="确认密码">
+          <FormInput
+            type="password"
+            value={registerForm.confirmPassword}
+            onChange={(e) =>
+              setRegisterForm((current) => ({ ...current, confirmPassword: e.target.value }))
+            }
+            placeholder="请再次输入密码"
+          />
+        </FormField>
+      </AuthDialog>
 
       {/* Setup Profile Dialog */}
-      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="max-w-md rounded-xl border border-cyan-400/20 bg-[rgba(4,18,37,0.94)] text-white shadow-apm-panel backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-white">完善账号资料</DialogTitle>
-            <DialogDescription className="text-apm-muted">
-              首次短信登录后需要设置展示用户名和后续登录密码
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={(event) => void handleSetupProfile(event)} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-cyan-100/80">用户名</label>
-              <input
-                type="text"
-                value={profileForm.username}
-                onChange={(event) =>
-                  setProfileForm((current) => ({ ...current, username: event.target.value }))
-                }
-                placeholder="请输入用户名"
-                className={cn(
-                  "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
-                  "text-sm text-white placeholder:text-apm-dim",
-                  "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                )}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-cyan-100/80">密码</label>
-              <input
-                type="password"
-                value={profileForm.password}
-                onChange={(event) =>
-                  setProfileForm((current) => ({ ...current, password: event.target.value }))
-                }
-                placeholder="请输入密码"
-                className={cn(
-                  "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-4",
-                  "text-sm text-white placeholder:text-apm-dim",
-                  "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                )}
-                required
-              />
-            </div>
-            {error && (
-              <p className="rounded-lg border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">
-                {error}
-              </p>
-            )}
-            <Button
-              type="submit"
-              disabled={isLoading || auth.isSettingProfile}
-              className="h-11 w-full rounded-lg bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-            >
-              {isLoading ? "保存中..." : "完成设置"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AuthDialog
+        open={showProfileDialog}
+        onOpenChange={setShowProfileDialog}
+        title="完善账号资料"
+        description="首次短信登录后需要设置展示用户名和后续登录密码"
+        submitText="完成设置"
+        submitDisabled={auth.isSettingProfile}
+        isSubmitting={isLoading}
+        error={error}
+        onSubmit={handleSetupProfile}
+      >
+        <FormField label="用户名">
+          <FormInput
+            type="text"
+            value={profileForm.username}
+            onChange={(e) =>
+              setProfileForm((current) => ({ ...current, username: e.target.value }))
+            }
+            placeholder="请输入用户名"
+          />
+        </FormField>
+        <FormField label="密码">
+          <FormInput
+            type="password"
+            value={profileForm.password}
+            onChange={(e) =>
+              setProfileForm((current) => ({ ...current, password: e.target.value }))
+            }
+            placeholder="请输入密码"
+          />
+        </FormField>
+      </AuthDialog>
     </div>
   );
 }

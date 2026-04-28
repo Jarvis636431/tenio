@@ -5,7 +5,7 @@ import { PublicOnlyRoute, RequireAuth } from "./guards";
 
 // Lazy loaded pages / layouts
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const LoginPage = lazy(() => import("@/pages/Login"));
+const LoginPage = lazy(() => import("@/features/auth/pages/Login"));
 const ProjectsPage = lazy(() => import("@/pages/Projects"));
 const UploadPage = lazy(() => import("@/features/upload/pages/UploadPage"));
 const AppLayout = lazy(() =>
