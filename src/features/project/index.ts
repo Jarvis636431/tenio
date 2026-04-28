@@ -2,6 +2,7 @@
 // 项目相关功能统一导出
 
 export { Overview } from "./pages/Overview";
+export { default as ProjectsPage } from "./pages/Projects";
 
 export { useProject, useProjectMetrics } from "./hooks/useProject";
 export { useProjectExport } from "./hooks/useProjectExport";

@@ -13,8 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth";
-import { useProject, useProjectMetrics } from "@/features/project";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { useProject, useProjectMetrics } from "../hooks/useProject";
 
 type ProjectFilter = "all" | "in_progress" | "completed" | "pending";
 

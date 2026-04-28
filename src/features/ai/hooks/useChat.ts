@@ -18,6 +18,8 @@ type ChatPanelOptions = {
   projectId?: string;
 };
 
+const EMPTY_CHAT_MESSAGES: ChatMessage[] = [];
+
 /**
  * 协调 AI 面板的聊天状态、SSE 流和语音输入。
  * 为每个项目维护独立的 agent 会话，支持中断确认消息续写。
@@ -49,7 +51,9 @@ export function useChat(options: ChatPanelOptions = {}) {
   );
 
   // Store 状态（读取值，会触发重渲染）
-  const messages = useChatStore((state) => state.getMessages(activeProjectKey));
+  const messages = useChatStore(
+    (state) => state.messagesByProject[activeProjectKey] ?? EMPTY_CHAT_MESSAGES,
+  );
   const inputMessage = useChatStore((state) => state.inputMessage);
   const isThinking = useChatStore((state) => state.isThinking);
 

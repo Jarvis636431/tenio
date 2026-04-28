@@ -1,4 +1,12 @@
-import { useCallback, useMemo, useState, type ChangeEvent, type DragEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -115,6 +123,39 @@ function isGenerationStepRunning(status?: string) {
   return value === "running" || value === "processing" || value.includes("进行");
 }
 
+function createAbortError() {
+  const error = new Error("生成轮询已取消");
+  error.name = "AbortError";
+  return error;
+}
+
+function throwIfAborted(signal: AbortSignal) {
+  if (signal.aborted) {
+    throw createAbortError();
+  }
+}
+
+function waitForNextPoll(signal: AbortSignal, delayMs: number) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal.aborted) {
+      reject(createAbortError());
+      return;
+    }
+
+    function handleAbort() {
+      window.clearTimeout(timeoutId);
+      reject(createAbortError());
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      signal.removeEventListener("abort", handleAbort);
+      resolve();
+    }, delayMs);
+
+    signal.addEventListener("abort", handleAbort, { once: true });
+  });
+}
+
 function UploadPage() {
   const navigate = useNavigate();
   const [files, setFiles] = useState<UploadQueueItem[]>([]);
@@ -124,14 +165,23 @@ function UploadPage() {
   const [generationSteps, setGenerationSteps] = useState<GenerationStep[]>([]);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [uploadedProjectId, setUploadedProjectId] = useState<string | null>(null);
+  const generationAbortRef = useRef<AbortController | null>(null);
 
   const { uploadFile, uploadProgress } = useUploads({ projectId: null });
 
+  useEffect(() => {
+    return () => {
+      generationAbortRef.current?.abort();
+    };
+  }, []);
+
   const pollGenerationStatus = useCallback(
-    async (projectId: string) => {
+    async (projectId: string, signal: AbortSignal) => {
       const maxAttempts = 180;
       for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+        throwIfAborted(signal);
         const status = await getProjectGenerationStatus(projectId);
+        throwIfAborted(signal);
         setGenerationSteps(status.steps ?? []);
 
         const normalizedStatus = status.generation_status.toLowerCase();
@@ -144,7 +194,7 @@ function UploadPage() {
           throw new Error(status.error_message ?? "生成失败，请稍后重试");
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await waitForNextPoll(signal, 2000);
       }
 
       throw new Error("生成超时，请稍后在项目工作台查看结果");
@@ -270,10 +320,16 @@ function UploadPage() {
         setGenerationError(null);
         setGenerationSteps([]);
 
+        generationAbortRef.current?.abort();
+        generationAbortRef.current = new AbortController();
+
         await startProjectGeneration(targetProjectId, { trigger_source: "upload" });
-        await pollGenerationStatus(targetProjectId);
+        await pollGenerationStatus(targetProjectId, generationAbortRef.current.signal);
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
       setGenerationError(error instanceof Error ? error.message : "生成失败，请稍后重试");
     } finally {
       setIsAllUploading(false);

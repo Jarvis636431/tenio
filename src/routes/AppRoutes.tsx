@@ -5,15 +5,15 @@ import { PublicOnlyRoute, RequireAuth } from "./guards";
 
 // Lazy loaded pages / layouts
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const LoginPage = lazy(() => import("@/features/auth/pages/Login"));
-const ProjectsPage = lazy(() => import("@/pages/Projects"));
-const UploadPage = lazy(() => import("@/features/upload/pages/UploadPage"));
+const LoginPage = lazy(() => import("@/features/auth").then((m) => ({ default: m.Login })));
+const ProjectsPage = lazy(() =>
+  import("@/features/project").then((m) => ({ default: m.ProjectsPage })),
+);
+const UploadPage = lazy(() => import("@/features/upload").then((m) => ({ default: m.UploadPage })));
 const AppLayout = lazy(() =>
   import("@/components/layout/AppLayout").then((m) => ({ default: m.AppLayout })),
 );
-const Overview = lazy(() =>
-  import("@/features/project/pages/Overview").then((m) => ({ default: m.Overview })),
-);
+const Overview = lazy(() => import("@/features/project").then((m) => ({ default: m.Overview })));
 const TITLE_RULES: Array<{ prefix: string; title: string }> = [
   { prefix: "/login", title: "A.PM 智管 · 登录" },
   { prefix: "/projects", title: "A.PM 智管 · 项目控制台" },

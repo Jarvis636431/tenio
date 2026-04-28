@@ -455,8 +455,16 @@ function Login() {
         error={registerError}
         onSubmit={handleRegister}
       >
+        <FormField label="手机号">
+          <FormInput
+            type="tel"
+            value={registerForm.phone}
+            onChange={(e) => setRegisterForm((current) => ({ ...current, phone: e.target.value }))}
+            placeholder="请输入手机号"
+          />
+        </FormField>
         <SMSInput
-          label="手机号"
+          label="验证码"
           value={registerForm.smsCode}
           onChange={(code) => setRegisterForm((current) => ({ ...current, smsCode: code }))}
           onSendCode={handleSendRegisterSms}
@@ -464,16 +472,6 @@ function Login() {
           disabled={isLoading}
           error={registerSmsError ?? undefined}
         />
-        <FormField label="验证码">
-          <FormInput
-            type="text"
-            value={registerForm.smsCode}
-            onChange={(e) =>
-              setRegisterForm((current) => ({ ...current, smsCode: e.target.value }))
-            }
-            placeholder="请输入验证码"
-          />
-        </FormField>
         <FormField label="用户名">
           <FormInput
             type="text"

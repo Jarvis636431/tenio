@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { projectQueryKeys } from "@/features/project/queryKeys";
+import { uploadQueryKeys } from "@/features/upload/queryKeys";
 
 describe("projectQueryKeys", () => {
   it("list returns correct key", () => {
@@ -38,5 +39,31 @@ describe("projectQueryKeys", () => {
 
   it("list is an array", () => {
     expect(Array.isArray(projectQueryKeys.list())).toBe(true);
+  });
+});
+
+describe("uploadQueryKeys", () => {
+  it("fileList normalizes empty params", () => {
+    expect(uploadQueryKeys.fileList(null)).toEqual([
+      "uploads",
+      "files",
+      { projectId: "", category: "", keyword: "", page: 1, pageSize: 10 },
+    ]);
+  });
+
+  it("fileList includes typed list params", () => {
+    expect(
+      uploadQueryKeys.fileList({
+        projectId: "p-001",
+        category: "contract",
+        keyword: "合同",
+        page: 2,
+        pageSize: 20,
+      }),
+    ).toEqual([
+      "uploads",
+      "files",
+      { projectId: "p-001", category: "contract", keyword: "合同", page: 2, pageSize: 20 },
+    ]);
   });
 });

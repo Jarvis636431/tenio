@@ -49,9 +49,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
 
   // 文件列表查询
   const fileListQuery = useQuery({
-    queryKey: uploadQueryKeys.fileList(
-      listParams == null ? {} : (listParams as unknown as Record<string, unknown>),
-    ),
+    queryKey: uploadQueryKeys.fileList(listParams),
     queryFn: async () => {
       if (!listParams) {
         throw new Error("缺少项目 ID");
@@ -134,7 +132,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     onSuccess: () => {
       // 刷新列表和统计
       void queryClient.invalidateQueries({
-        queryKey: uploadQueryKeys.fileList({ projectId }),
+        queryKey: uploadQueryKeys.files,
       });
       void queryClient.invalidateQueries({
         queryKey: uploadQueryKeys.stats(projectId),
@@ -152,7 +150,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: uploadQueryKeys.fileList({ projectId }),
+        queryKey: uploadQueryKeys.files,
       });
       void queryClient.invalidateQueries({
         queryKey: uploadQueryKeys.stats(projectId),
