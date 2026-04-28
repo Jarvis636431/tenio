@@ -1,23 +1,21 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Lock, Loader2, Smartphone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/features/auth";
-import { AuthDialog, FormField, FormInput, SMSButton } from "@/features/auth/components";
+import { AuthDialog, FormField, FormInput, SMSInput } from "@/features/auth/components";
+import {
+  accountLoginSchema,
+  phoneLoginSchema,
+  profileSchema,
+  registerSchema,
+} from "@/features/auth/schemas/auth-schemas";
+import { useAuth, useSmsCooldown } from "@/features/auth";
 import { cn } from "@/lib/utils";
-
-interface LoginForm {
-  account: string;
-  password: string;
-}
-
-interface RegisterForm {
-  phone: string;
-  smsCode: string;
-  username: string;
-  password: string;
-  confirmPassword: string;
-}
+import type {
+  AccountLoginFormData,
+  ProfileFormData,
+  RegisterFormData,
+} from "@/features/auth/schemas/auth-schemas";
 
 type LoginMode = "account" | "phone";
 
@@ -41,78 +39,87 @@ function Login() {
   const location = useLocation();
   const auth = useAuth();
   const [loginMode, setLoginMode] = useState<LoginMode>("phone");
-  const [form, setForm] = useState<LoginForm>({ account: "", password: "" });
-  const [phoneForm, setPhoneForm] = useState({ phone: "", code: "" });
+  const [form, setForm] = useState<AccountLoginFormData>({ account: "", password: "" });
+  const [phoneForm, setPhoneForm] = useState<{ phone: string; code: string }>({
+    phone: "",
+    code: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(true);
   const [showForgotDialog, setShowForgotDialog] = useState(false);
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
-  const [profileForm, setProfileForm] = useState({ username: "", password: "" });
-  const [registerForm, setRegisterForm] = useState<RegisterForm>({
+  const [profileForm, setProfileForm] = useState<ProfileFormData>({
+    username: "",
+    password: "",
+  });
+  const [registerForm, setRegisterForm] = useState<RegisterFormData>({
     phone: "",
     smsCode: "",
     username: "",
     password: "",
     confirmPassword: "",
   });
-  const [smsCooldown, setSmsCooldown] = useState(0);
-  const [registerSmsCooldown, setRegisterSmsCooldown] = useState(0);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [smsError, setSmsError] = useState<string | null>(null);
+  const [registerSmsError, setRegisterSmsError] = useState<string | null>(null);
   const redirectTo = getRedirectPath(location.state);
 
-  useEffect(() => {
-    if (smsCooldown <= 0) return;
-    const timer = window.setInterval(() => {
-      setSmsCooldown((current) => Math.max(0, current - 1));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [smsCooldown]);
-
-  useEffect(() => {
-    if (registerSmsCooldown <= 0) return;
-    const timer = window.setInterval(() => {
-      setRegisterSmsCooldown((current) => Math.max(0, current - 1));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [registerSmsCooldown]);
+  const { cooldown: smsCooldown, start: startSmsCooldown } = useSmsCooldown();
+  const { cooldown: registerSmsCooldown, start: startRegisterSmsCooldown } = useSmsCooldown();
 
   const handleSendSms = async () => {
-    if (!phoneForm.phone.trim()) {
-      setError("请输入手机号");
+    const result = phoneLoginSchema.shape.phone.safeParse({ phone: phoneForm.phone });
+    if (!result.success) {
+      setSmsError(result.error.issues[0].message);
       return;
     }
-    setError(null);
-    const result = await auth.sendSms(phoneForm.phone.trim());
-    setSmsCooldown(result.cooldown_seconds);
+    setSmsError(null);
+    try {
+      const res = await auth.sendSms(phoneForm.phone.trim());
+      startSmsCooldown(res.cooldown_seconds);
+    } catch (err) {
+      setSmsError(err instanceof Error ? err.message : "验证码发送失败");
+    }
   };
 
   const handleSendRegisterSms = async () => {
-    if (!registerForm.phone.trim()) {
-      setRegisterError("请输入手机号");
+    const result = registerSchema.shape.phone.safeParse(registerForm.phone);
+    if (!result.success) {
+      setRegisterSmsError(result.error.issues[0].message);
       return;
     }
-    setRegisterError(null);
-    const result = await auth.sendSms(registerForm.phone.trim());
-    setRegisterSmsCooldown(result.cooldown_seconds);
+    setRegisterSmsError(null);
+    try {
+      const res = await auth.sendSms(registerForm.phone.trim());
+      startRegisterSmsCooldown(res.cooldown_seconds);
+    } catch (err) {
+      setRegisterSmsError(err instanceof Error ? err.message : "验证码发送失败");
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
     if (!agreed) {
       setError("请先阅读并同意服务协议和隐私政策");
       return;
     }
 
-    if (loginMode === "account" && (!form.account || !form.password)) {
-      setError("请输入账号和密码");
-      return;
-    }
-
-    if (loginMode === "phone" && (!phoneForm.phone || !phoneForm.code)) {
-      setError("请输入手机号和验证码");
-      return;
+    let validation;
+    if (loginMode === "account") {
+      validation = accountLoginSchema.safeParse(form);
+      if (!validation.success) {
+        setError(validation.error.issues[0].message);
+        return;
+      }
+    } else {
+      validation = phoneLoginSchema.safeParse(phoneForm);
+      if (!validation.success) {
+        setError(validation.error.issues[0].message);
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -147,8 +154,9 @@ function Login() {
 
   const handleSetupProfile = async (event: FormEvent) => {
     event.preventDefault();
-    if (!profileForm.username.trim() || !profileForm.password) {
-      setError("请输入用户名和密码");
+    const validation = profileSchema.safeParse(profileForm);
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
     setIsLoading(true);
@@ -169,8 +177,9 @@ function Login() {
 
   const handleRegister = async (event: FormEvent) => {
     event.preventDefault();
-    if (registerForm.password !== registerForm.confirmPassword) {
-      setRegisterError("两次输入的密码不一致");
+    const validation = registerSchema.safeParse(registerForm);
+    if (!validation.success) {
+      setRegisterError(validation.error.issues[0].message);
       return;
     }
     setRegisterError(null);
@@ -271,33 +280,14 @@ function Login() {
                       disabled={isLoading}
                     />
 
-                    <div className="space-y-1.5">
-                      <label className="form-label">验证码</label>
-                      <div className="flex gap-2.5">
-                        <div className="relative flex-1">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-[13px] w-[13px] text-apm-dim" />
-                          <input
-                            type="text"
-                            value={phoneForm.code}
-                            onChange={(e) =>
-                              setPhoneForm((current) => ({ ...current, code: e.target.value }))
-                            }
-                            className={cn(
-                              "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5 pl-[38px] pr-4",
-                              "text-sm text-white placeholder:text-apm-dim",
-                              "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
-                            )}
-                            placeholder="请输入验证码"
-                            disabled={isLoading}
-                          />
-                        </div>
-                        <SMSButton
-                          onClick={handleSendSms}
-                          cooldown={smsCooldown}
-                          disabled={auth.isSendingSms || isLoading}
-                        />
-                      </div>
-                    </div>
+                    <SMSInput
+                      value={phoneForm.code}
+                      onChange={(code) => setPhoneForm((current) => ({ ...current, code }))}
+                      onSendCode={handleSendSms}
+                      cooldown={smsCooldown}
+                      disabled={isLoading}
+                      error={smsError ?? undefined}
+                    />
                   </div>
                 )}
 
@@ -465,20 +455,15 @@ function Login() {
         error={registerError}
         onSubmit={handleRegister}
       >
-        <div className="flex gap-2">
-          <FormInput
-            type="tel"
-            value={registerForm.phone}
-            onChange={(e) => setRegisterForm((current) => ({ ...current, phone: e.target.value }))}
-            placeholder="请输入手机号"
-            className="h-11 min-w-0 flex-1"
-          />
-          <SMSButton
-            onClick={handleSendRegisterSms}
-            cooldown={registerSmsCooldown}
-            disabled={auth.isSendingSms || isLoading}
-          />
-        </div>
+        <SMSInput
+          label="手机号"
+          value={registerForm.smsCode}
+          onChange={(code) => setRegisterForm((current) => ({ ...current, smsCode: code }))}
+          onSendCode={handleSendRegisterSms}
+          cooldown={registerSmsCooldown}
+          disabled={isLoading}
+          error={registerSmsError ?? undefined}
+        />
         <FormField label="验证码">
           <FormInput
             type="text"
