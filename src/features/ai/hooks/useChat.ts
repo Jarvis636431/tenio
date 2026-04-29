@@ -54,8 +54,8 @@ export function useChat(options: ChatPanelOptions = {}) {
   const messages = useChatStore(
     (state) => state.messagesByProject[activeProjectKey] ?? EMPTY_CHAT_MESSAGES,
   );
-  const inputMessage = useChatStore((state) => state.inputMessage);
-  const isThinking = useChatStore((state) => state.isThinking);
+  const inputMessage = useChatStore((state) => state.inputMessageByProject[activeProjectKey] ?? "");
+  const isThinking = useChatStore((state) => state.thinkingByProject[activeProjectKey] ?? false);
 
   // Store actions（引用稳定，单独选择器不会触发额外重渲染）
   const setActiveProjectKey = useChatStore((state) => state.setActiveProjectKey);
@@ -88,7 +88,7 @@ export function useChat(options: ChatPanelOptions = {}) {
       }
       logSilentError("[AI]", "AI 服务连接失败", error);
       removeLastAIMessage(activeProjectKey);
-      setIsThinking(false);
+      setIsThinking(activeProjectKey, false);
     },
     [activeProjectKey, removeLastAIMessage, setIsThinking],
   );
@@ -115,10 +115,10 @@ export function useChat(options: ChatPanelOptions = {}) {
   // 同步语音识别结果到输入框
   useEffect(() => {
     if (recognizedText) {
-      setInputMessage(recognizedText);
+      setInputMessage(activeProjectKey, recognizedText);
       clearRecognizedText();
     }
-  }, [recognizedText, clearRecognizedText, setInputMessage]);
+  }, [activeProjectKey, recognizedText, clearRecognizedText, setInputMessage]);
 
   // 清理 AbortController
   useEffect(() => {
@@ -210,7 +210,7 @@ export function useChat(options: ChatPanelOptions = {}) {
         }
       },
       onDone: () => {
-        setIsThinking(false);
+        setIsThinking(activeProjectKey, false);
       },
       onError: handleStreamError,
     });
@@ -241,7 +241,7 @@ export function useChat(options: ChatPanelOptions = {}) {
       sender: "ai",
       timestamp: new Date(),
     });
-    setIsThinking(true);
+    setIsThinking(activeProjectKey, true);
 
     try {
       const projectId = resolveActiveProjectId();
@@ -276,7 +276,7 @@ export function useChat(options: ChatPanelOptions = {}) {
     };
 
     addMessage(activeProjectKey, userMessage);
-    setIsThinking(true);
+    setIsThinking(activeProjectKey, true);
 
     if (abortRef.current) {
       abortRef.current.abort();
@@ -317,14 +317,14 @@ export function useChat(options: ChatPanelOptions = {}) {
   const handleSendMessage = async () => {
     const trimmed = inputMessage.trim();
     if (!trimmed) return;
-    setInputMessage("");
+    setInputMessage(activeProjectKey, "");
     await sendMessage(trimmed);
   };
 
   return {
     messages,
     inputMessage,
-    setInputMessage,
+    setInputMessage: (value: string) => setInputMessage(activeProjectKey, value),
     isThinking,
     isRecording,
     isRecognizing,

@@ -16,10 +16,10 @@ interface ChatState {
   agentBaseUrlByProject: Record<string, string | null>;
   /** 当前活跃的项目 key */
   activeProjectKey: string;
-  /** 输入框文本 */
-  inputMessage: string;
-  /** AI 是否正在思考 */
-  isThinking: boolean;
+  /** 按项目隔离的输入框文本 */
+  inputMessageByProject: Record<string, string>;
+  /** 按项目隔离的 AI 思考状态 */
+  thinkingByProject: Record<string, boolean>;
 
   // Actions
   /** 设置当前活跃项目 */
@@ -42,10 +42,14 @@ interface ChatState {
   setAgentBaseUrl: (projectKey: string, agentBaseUrl: string | null) => void;
   /** 获取指定项目的 agent 服务地址 */
   getAgentBaseUrl: (projectKey: string) => string | null;
+  /** 获取指定项目输入框文本 */
+  getInputMessage: (projectKey: string) => string;
   /** 设置输入框文本 */
-  setInputMessage: (text: string) => void;
+  setInputMessage: (projectKey: string, text: string) => void;
+  /** 获取指定项目思考状态 */
+  getIsThinking: (projectKey: string) => boolean;
   /** 设置思考状态 */
-  setIsThinking: (thinking: boolean) => void;
+  setIsThinking: (projectKey: string, thinking: boolean) => void;
   /** 重置指定项目的聊天状态 */
   resetProjectChat: (projectKey: string, welcomeMessage: ChatMessage) => void;
 }
@@ -55,8 +59,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   sessionIdByProject: {},
   agentBaseUrlByProject: {},
   activeProjectKey: "__default__",
-  inputMessage: "",
-  isThinking: false,
+  inputMessageByProject: {},
+  thinkingByProject: {},
 
   setActiveProjectKey: (key) => set({ activeProjectKey: key }),
 
@@ -145,9 +149,29 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     return get().agentBaseUrlByProject[projectKey] ?? null;
   },
 
-  setInputMessage: (text) => set({ inputMessage: text }),
+  getInputMessage: (projectKey) => {
+    return get().inputMessageByProject[projectKey] ?? "";
+  },
 
-  setIsThinking: (thinking) => set({ isThinking: thinking }),
+  setInputMessage: (projectKey, text) =>
+    set((state) => ({
+      inputMessageByProject: {
+        ...state.inputMessageByProject,
+        [projectKey]: text,
+      },
+    })),
+
+  getIsThinking: (projectKey) => {
+    return get().thinkingByProject[projectKey] ?? false;
+  },
+
+  setIsThinking: (projectKey, thinking) =>
+    set((state) => ({
+      thinkingByProject: {
+        ...state.thinkingByProject,
+        [projectKey]: thinking,
+      },
+    })),
 
   resetProjectChat: (projectKey, welcomeMessage) =>
     set((state) => ({
@@ -162,6 +186,14 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       agentBaseUrlByProject: {
         ...state.agentBaseUrlByProject,
         [projectKey]: null,
+      },
+      inputMessageByProject: {
+        ...state.inputMessageByProject,
+        [projectKey]: "",
+      },
+      thinkingByProject: {
+        ...state.thinkingByProject,
+        [projectKey]: false,
       },
     })),
 }));
