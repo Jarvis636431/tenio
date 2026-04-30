@@ -13,9 +13,9 @@ function SMSButton({ onClick, cooldown, disabled }: SMSButtonProps) {
       onClick={() => void onClick()}
       disabled={cooldown > 0 || disabled}
       className={cn(
-        "shrink-0 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-4",
-        "text-[12px] font-semibold text-cyan-400 transition-colors",
-        "hover:bg-cyan-400/20",
+        "h-10 shrink-0 rounded-md border border-cyan-400/25 bg-cyan-400/10 px-3",
+        "text-[12px] font-bold text-cyan-300 transition-colors",
+        "hover:border-cyan-400/50 hover:bg-cyan-400/20 hover:text-cyan-100",
         "disabled:opacity-60 disabled:cursor-not-allowed",
       )}
     >

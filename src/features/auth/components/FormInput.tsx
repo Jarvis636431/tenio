@@ -19,10 +19,10 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           <input
             ref={ref}
             className={cn(
-              "h-11 w-full rounded-lg border border-cyan-400/20 bg-cyan-400/5",
+              "h-10 w-full rounded-md border border-cyan-400/20 bg-cyan-400/5",
               icon ? "pl-[38px] pr-4" : "px-4",
-              "text-sm text-white placeholder:text-apm-dim",
-              "focus:border-cyan-400 focus:bg-cyan-400/8 focus:outline-none",
+              "text-[14px] text-white placeholder:text-apm-dim",
+              "focus:border-cyan-400 focus:bg-cyan-400/10 focus:outline-none focus:ring-1 focus:ring-cyan-400/30",
               error && "border-red-400/50",
               className,
             )}

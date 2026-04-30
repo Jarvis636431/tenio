@@ -34,6 +34,29 @@ function getRedirectPath(state: unknown) {
   return `${pathname}${redirectState.from?.search ?? ""}`;
 }
 
+interface PolicySection {
+  title: string;
+  content: string;
+}
+
+function PolicyContent({ sections }: { sections: PolicySection[] }) {
+  return (
+    <div className="space-y-4 text-[13px] leading-6 text-apm-muted">
+      <div className="rounded-md border border-cyan-400/15 bg-cyan-400/5 px-3.5 py-2.5 text-xs text-cyan-100/80">
+        更新日期：2026年4月30日
+      </div>
+      <div className="space-y-4">
+        {sections.map((section) => (
+          <section key={section.title} className="space-y-1.5">
+            <h3 className="text-sm font-semibold text-cyan-100">{section.title}</h3>
+            <p>{section.content}</p>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,6 +70,8 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(true);
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
   const [showForgotDialog, setShowForgotDialog] = useState(false);
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
@@ -329,7 +354,7 @@ function Login() {
                     我已阅读并同意{" "}
                     <button
                       type="button"
-                      onClick={() => setShowRegisterDialog(true)}
+                      onClick={() => setShowTermsDialog(true)}
                       className="text-cyan-400 hover:underline"
                     >
                       服务协议
@@ -337,7 +362,7 @@ function Login() {
                     和{" "}
                     <button
                       type="button"
-                      onClick={() => setShowForgotDialog(true)}
+                      onClick={() => setShowPrivacyDialog(true)}
                       className="text-cyan-400 hover:underline"
                     >
                       隐私政策
@@ -427,6 +452,84 @@ function Login() {
           </div>
         </div>
       </div>
+
+      {/* Terms Dialog */}
+      <AuthDialog
+        open={showTermsDialog}
+        onOpenChange={setShowTermsDialog}
+        title="服务协议"
+        description="请在使用 A.PM 智能管理平台前阅读以下条款"
+        className="max-w-[620px]"
+      >
+        <PolicyContent
+          sections={[
+            {
+              title: "1. 服务范围",
+              content:
+                "A.PM 为项目资料上传、施工计划分析、成本工期测算和 AI 辅助问答提供数字化工具。平台输出内容用于项目管理参考，具体工程决策仍需结合合同、图纸、现场条件和专业人员判断。",
+            },
+            {
+              title: "2. 账号使用",
+              content:
+                "您应妥善保管账号、验证码和密码，不得将账号转让、出租或用于未经授权的项目数据访问。因账号保管不当造成的风险，由账号使用方承担。",
+            },
+            {
+              title: "3. 数据与资料",
+              content:
+                "您上传的合同、图纸、清单和项目资料应确保来源合法、内容真实，并已获得必要授权。请勿上传与项目无关、侵权、违法或包含恶意代码的文件。",
+            },
+            {
+              title: "4. AI 辅助结果",
+              content:
+                "AI 生成的计划、摘要、建议和分析结果可能存在偏差或遗漏。您应在采纳前进行复核，平台不替代工程咨询、法律、财务或安全生产责任主体。",
+            },
+            {
+              title: "5. 服务变更",
+              content:
+                "平台可能根据产品迭代、运维安全或合规要求调整功能。重大变化会在合理范围内通过页面提示、系统通知或其他方式告知。",
+            },
+          ]}
+        />
+      </AuthDialog>
+
+      {/* Privacy Dialog */}
+      <AuthDialog
+        open={showPrivacyDialog}
+        onOpenChange={setShowPrivacyDialog}
+        title="隐私政策"
+        description="了解我们如何收集、使用和保护您的信息"
+        className="max-w-[620px]"
+      >
+        <PolicyContent
+          sections={[
+            {
+              title: "1. 信息收集",
+              content:
+                "为完成登录、账号识别和项目协作，我们会收集手机号、用户名、登录状态、项目资料上传记录以及使用过程中产生的必要操作日志。",
+            },
+            {
+              title: "2. 信息使用",
+              content:
+                "相关信息用于账号认证、项目数据展示、文件处理、AI 服务调用、故障排查和安全审计。未经授权，我们不会将您的项目资料用于与服务无关的用途。",
+            },
+            {
+              title: "3. 信息保护",
+              content:
+                "我们会通过访问控制、传输保护、权限隔离和日志审计等方式保护数据安全。请您同时妥善保管账号凭据，避免在公共设备上保存登录状态。",
+            },
+            {
+              title: "4. 第三方服务",
+              content:
+                "语音识别、对象存储、AI 推理或地图等能力可能由第三方基础服务提供。我们会在业务必要范围内传递完成服务所需的信息。",
+            },
+            {
+              title: "5. 权利与联系",
+              content:
+                "如需查询、更正或删除账号相关信息，可联系平台管理员或项目服务人员。涉及项目归档、审计或合同履约要求的数据，将按业务和合规要求处理。",
+            },
+          ]}
+        />
+      </AuthDialog>
 
       {/* Forgot Password Dialog */}
       <AuthDialog
