@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Lock, Loader2, Smartphone, User } from "lucide-react";
+import { Eye, EyeOff, Lock, Loader2, Smartphone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthDialog, FormField, FormInput, SMSInput } from "@/features/auth/components";
 import {
@@ -57,6 +57,28 @@ function PolicyContent({ sections }: { sections: PolicySection[] }) {
   );
 }
 
+function PasswordVisibilityButton({
+  visible,
+  onToggle,
+}: {
+  visible: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = visible ? EyeOff : Eye;
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-apm-dim transition-colors hover:bg-cyan-400/10 hover:text-cyan-200 focus:outline-none focus:ring-1 focus:ring-cyan-400/40"
+      aria-label={visible ? "隐藏密码" : "显示密码"}
+      title={visible ? "隐藏密码" : "显示密码"}
+    >
+      <Icon className="h-4 w-4" />
+    </button>
+  );
+}
+
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -75,6 +97,10 @@ function Login() {
   const [showForgotDialog, setShowForgotDialog] = useState(false);
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
+  const [showProfilePassword, setShowProfilePassword] = useState(false);
   const [profileForm, setProfileForm] = useState<ProfileFormData>({
     username: "",
     password: "",
@@ -331,11 +357,17 @@ function Login() {
 
                     <FormInput
                       label="密码"
-                      type="password"
+                      type={showLoginPassword ? "text" : "password"}
                       value={form.password}
                       onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                       placeholder="请输入密码"
                       icon={<Lock className="h-[13px] w-[13px]" />}
+                      rightElement={
+                        <PasswordVisibilityButton
+                          visible={showLoginPassword}
+                          onToggle={() => setShowLoginPassword((current) => !current)}
+                        />
+                      }
                       disabled={isLoading}
                     />
                   </div>
@@ -419,9 +451,16 @@ function Login() {
                 <div className="flex justify-center gap-4">
                   <button
                     type="button"
+                    aria-label="使用微信登录"
+                    title="使用微信登录"
                     className="flex h-11 w-11 items-center justify-center rounded-lg border border-cyan-400/20 bg-cyan-400/5 text-cyan-400 transition-all hover:border-cyan-400 hover:bg-cyan-400/10"
                   >
-                    <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="currentColor">
+                    <svg
+                      aria-hidden="true"
+                      className="h-[18px] w-[18px]"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
                       <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 01.213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 00.167-.054l1.903-1.114a.864.864 0 01.717-.098 10.16 10.16 0 002.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 01-1.162 1.178A1.17 1.17 0 014.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 4.3c-.321-.027-.645-.045-.969-.045a7.3 7.3 0 00-3.87 1.144c.063.044.125.088.188.13.277.17.575.246.878.227.456-.027.89-.224 1.224-.556.336-.333.553-.78.612-1.262.026-.17.01-.338-.023-.5zm1.242-2.627c-.089-.267-.266-.504-.508-.68a1.486 1.486 0 00-.823-.246c-.297 0-.582.089-.817.252a1.194 1.194 0 00-.49.777c-.027.142-.021.285.017.423.089.321.267.61.51.822.244.213.552.33.874.33.268 0 .524-.068.751-.202a1.14 1.14 0 00.486-.7v.224zm2.195-3.958c-.232-.29-.575-.459-.966-.459a1.21 1.21 0 00-.979.479 1.504 1.504 0 00-.31.518c-.054.14-.06.287-.017.427.08.289.233.554.44.757.207.203.477.319.765.33.129 0 .255-.018.375-.053.348-.106.641-.33.835-.636.193-.305.256-.66.18-1.005a1.137 1.137 0 00-.323-.358zm3.519.088c-.101-.31-.304-.57-.58-.744a1.252 1.252 0 00-.873-.14 1.32 1.32 0 00-.783.33c-.215.202-.357.477-.404.783a1.63 1.63 0 00.019.54c.027.14.087.273.178.391.17.23.41.39.683.456.272.067.558.042.818-.07.26-.112.477-.314.619-.58a1.1 1.1 0 00.128-.398c.027-.2-.01-.4-.108-.568h.003z" />
                     </svg>
                   </button>
@@ -587,22 +626,34 @@ function Login() {
         </FormField>
         <FormField label="密码">
           <FormInput
-            type="password"
+            type={showRegisterPassword ? "text" : "password"}
             value={registerForm.password}
             onChange={(e) =>
               setRegisterForm((current) => ({ ...current, password: e.target.value }))
             }
             placeholder="请输入密码（至少8位）"
+            rightElement={
+              <PasswordVisibilityButton
+                visible={showRegisterPassword}
+                onToggle={() => setShowRegisterPassword((current) => !current)}
+              />
+            }
           />
         </FormField>
         <FormField label="确认密码">
           <FormInput
-            type="password"
+            type={showRegisterConfirmPassword ? "text" : "password"}
             value={registerForm.confirmPassword}
             onChange={(e) =>
               setRegisterForm((current) => ({ ...current, confirmPassword: e.target.value }))
             }
             placeholder="请再次输入密码"
+            rightElement={
+              <PasswordVisibilityButton
+                visible={showRegisterConfirmPassword}
+                onToggle={() => setShowRegisterConfirmPassword((current) => !current)}
+              />
+            }
           />
         </FormField>
       </AuthDialog>
@@ -631,12 +682,18 @@ function Login() {
         </FormField>
         <FormField label="密码">
           <FormInput
-            type="password"
+            type={showProfilePassword ? "text" : "password"}
             value={profileForm.password}
             onChange={(e) =>
               setProfileForm((current) => ({ ...current, password: e.target.value }))
             }
             placeholder="请输入密码"
+            rightElement={
+              <PasswordVisibilityButton
+                visible={showProfilePassword}
+                onToggle={() => setShowProfilePassword((current) => !current)}
+              />
+            }
           />
         </FormField>
       </AuthDialog>
