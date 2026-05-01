@@ -3,6 +3,8 @@ import {
   getCurrentUser,
   loginWithPassword,
   loginWithSms,
+  logoutSession,
+  refreshSession,
   sendLoginSms,
   setupProfile,
 } from "@/features/auth";
@@ -133,6 +135,48 @@ describe("auth api", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: "张三", password: "password" }),
+    });
+  });
+
+  it("refreshes session with refresh token", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          data: {
+            access_token: "new-access",
+            refresh_token: "new-refresh",
+            expires_at: "2026-04-28T02:00:00Z",
+            user: { user_id: "u-1", username: "张三" },
+          },
+        }),
+    } as Response);
+
+    await refreshSession({ refresh_token: "refresh" });
+
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/auth/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: "refresh" }),
+    });
+  });
+
+  it("logs out current session", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: null }),
+    } as Response);
+
+    await logoutSession();
+
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/auth/logout", {
+      method: "POST",
+      headers: {},
+      body: undefined,
     });
   });
 

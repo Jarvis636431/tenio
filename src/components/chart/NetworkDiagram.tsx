@@ -134,7 +134,7 @@ interface NodeBlockProps {
 
 function NodeBlock({ node, onNodeClick }: NodeBlockProps) {
   const { x, y, w, h, critical, task, displayId, title, start, end } = node;
-  const durationValue = task.duration_days != null ? formatDurationDays(task.duration_days) : "";
+  const durationValue = task.durationDays != null ? formatDurationDays(task.durationDays) : "";
   const durationText = durationValue ? `${durationValue}天` : "";
   const theme = critical ? NODE_THEME.critical : NODE_THEME.normal;
 
@@ -241,7 +241,7 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
   const [minScale, setMinScale] = useState(0.1);
   const [initialFitDone, setInitialFitDone] = useState(false);
   const visibleTasks = useMemo(
-    () => tasks.filter((task) => task.start_date && task.end_date && !isLagTask(task.task_name)),
+    () => tasks.filter((task) => task.startTime && task.endTime && !isLagTask(task.taskName)),
     [tasks],
   );
 
@@ -257,29 +257,30 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
     }
 
     const taskMap = new Map<string, ScheduleTask>();
-    visibleTasks.forEach((task) => taskMap.set(task.task_id, task));
+    visibleTasks.forEach((task) => taskMap.set(task.taskId, task));
 
     const rawEdges: Array<{ from: string; to: string }> = [];
     visibleTasks.forEach((task) => {
-      const deps = task.predecessor_task_ids || [];
+      const deps = task.dependencies || [];
       deps.forEach((depId) => {
-        if (!taskMap.has(depId)) return;
-        rawEdges.push({ from: depId, to: task.task_id });
+        const depTaskId = String(depId);
+        if (!taskMap.has(depTaskId)) return;
+        rawEdges.push({ from: depTaskId, to: task.taskId });
       });
     });
 
     const baseNodes: Node[] = visibleTasks.map((task) => ({
-      id: task.task_id,
-      displayId: task.sequence_no ? String(task.sequence_no) : task.task_id,
-      title: task.task_name,
-      start: task.start_date,
-      end: task.end_date,
+      id: task.taskId,
+      displayId: task.seqNo ? String(task.seqNo) : task.taskId,
+      title: task.taskName,
+      start: task.startTime,
+      end: task.endTime,
       level: 0,
       task,
-      critical: Boolean(task.is_critical_task),
+      critical: Boolean(task.isCriticalPath),
       x: 0,
       y: 0,
-      w: calcNodeWidth(task.task_name),
+      w: calcNodeWidth(task.taskName),
       h: LAYOUT.nodeH,
     }));
 

@@ -16,6 +16,10 @@ export interface AuthSession {
   user: AuthUser;
 }
 
+export interface RefreshTokenPayload {
+  refresh_token: string;
+}
+
 export interface SendSmsResponse {
   phone: string;
   cooldown_seconds: number;

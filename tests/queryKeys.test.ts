@@ -19,11 +19,11 @@ describe("projectQueryKeys", () => {
     ]);
   });
 
-  it("scheduleArtifact returns correct key with projectId", () => {
-    expect(projectQueryKeys.scheduleArtifact("p-001")).toEqual([
+  it("graphArtifact returns correct key with projectId", () => {
+    expect(projectQueryKeys.graphArtifact("p-001")).toEqual([
       "project",
       "artifact",
-      "schedule",
+      "graph",
       "p-001",
     ]);
   });

@@ -9,9 +9,9 @@ type ApiListResponse<T> = {
 };
 
 export interface AgentTicketPayload {
-  product_code: "apm" | string;
   project_id: string;
-  grant_type: "project_agent_access" | string;
+  product_code?: "apm" | string;
+  grant_type?: "project_agent_access" | string;
 }
 
 export interface AgentTicketResponse {

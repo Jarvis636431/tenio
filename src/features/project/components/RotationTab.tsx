@@ -36,7 +36,7 @@ export function RotationTab({ planTasks }: RotationTabProps) {
   const tradeGroups = useMemo<TradeGroup[]>(() => {
     const byTrade = new Map<string, ScheduleTask[]>();
     for (const task of planTasks) {
-      const trade = task.crew_type_name || "其他工种";
+      const trade = task.crewTypeName || "其他工种";
       const list = byTrade.get(trade) ?? [];
       list.push(task);
       byTrade.set(trade, list);
@@ -80,7 +80,7 @@ export function RotationTab({ planTasks }: RotationTabProps) {
       : (filteredGroups[0]?.crews[0] ?? null);
 
   const totalDays = activeCrew
-    ? activeCrew.tasks.reduce((sum, t) => sum + (t.duration_days || 0), 0)
+    ? activeCrew.tasks.reduce((sum, t) => sum + (t.durationDays || 0), 0)
     : 0;
 
   if (planTasks.length === 0) {
@@ -201,7 +201,7 @@ export function RotationTab({ planTasks }: RotationTabProps) {
               <div className="space-y-2">
                 {activeCrew.tasks.map((t, i) => (
                   <div
-                    key={t.task_id}
+                    key={t.taskId}
                     className="flex flex-wrap items-center gap-2 rounded-sm border border-white/[0.06] bg-[rgba(2,14,30,0.5)] px-3 py-2"
                   >
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-[10px] text-slate-300">
@@ -212,17 +212,17 @@ export function RotationTab({ planTasks }: RotationTabProps) {
                       style={{ background: activeCrew.color }}
                     />
                     <span className="min-w-0 flex-1 truncate text-xs text-slate-200">
-                      {t.task_name}
+                      {t.taskName}
                     </span>
                     <span className="flex items-center gap-1 text-[10px] text-apm-muted">
                       <MapPin
                         className="h-3 w-3"
                         style={{ color: activeCrew.color, opacity: 0.6 }}
                       />
-                      {t.crew_type_name || "—"}
+                      {t.crewTypeName || "—"}
                     </span>
                     <span className="text-[10px] text-apm-dim">
-                      {t.duration_days !== undefined ? `${t.duration_days}天` : "—"}
+                      {t.durationDays !== undefined ? `${t.durationDays}天` : "—"}
                     </span>
                   </div>
                 ))}

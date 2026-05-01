@@ -4,6 +4,8 @@ export {
   getCurrentUser,
   loginWithPassword,
   loginWithSms,
+  logoutSession,
+  refreshSession,
   sendLoginSms,
   setupProfile,
 } from "./services/auth-api";
@@ -11,6 +13,7 @@ export type {
   AuthSession,
   AuthUser,
   PasswordLoginPayload,
+  RefreshTokenPayload,
   SendSmsResponse,
   SetupProfilePayload,
   SetupProfileResponse,

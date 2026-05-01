@@ -138,7 +138,7 @@ export function useChat(options: ChatPanelOptions = {}) {
   const refreshOverviewArtifacts = async (projectId: string) => {
     await Promise.all([
       queryClient.invalidateQueries({
-        queryKey: projectQueryKeys.scheduleArtifact(projectId),
+        queryKey: projectQueryKeys.graphArtifact(projectId),
       }),
       queryClient.invalidateQueries({
         queryKey: projectQueryKeys.timeCostArtifact(projectId),

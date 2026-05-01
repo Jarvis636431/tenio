@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { projectQueryKeys } from "../queryKeys";
-import { getLatestScheduleArtifact, getLatestTimeCostArtifact } from "../services/project-api";
+import { getLatestGraphArtifact, getLatestTimeCostArtifact } from "../services/project-api";
 import type { TimeCostArtifact } from "../types";
 import { useProject } from "./useProject";
 
@@ -69,23 +69,23 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
     }
   }, [paramProjectId, matchedProject, navigate]);
 
-  const scheduleQuery = useQuery({
+  const graphQuery = useQuery({
     queryKey: resolvedProjectId
-      ? projectQueryKeys.scheduleArtifact(resolvedProjectId)
-      : ["project", "artifact", "schedule", "empty"],
+      ? projectQueryKeys.graphArtifact(resolvedProjectId)
+      : ["project", "artifact", "graph", "empty"],
     queryFn: async () => {
       if (!resolvedProjectId) {
         throw new Error("缺少项目 ID");
       }
-      return getLatestScheduleArtifact(resolvedProjectId);
+      return getLatestGraphArtifact(resolvedProjectId);
     },
     enabled: Boolean(resolvedProjectId),
     refetchOnWindowFocus: false,
   });
 
-  const scheduleArtifact = scheduleQuery.data;
-  const isLoadingGraph = scheduleQuery.isLoading;
-  const planTasks = useMemo(() => scheduleArtifact?.tasks ?? [], [scheduleArtifact]);
+  const graphArtifact = graphQuery.data;
+  const isLoadingGraph = graphQuery.isLoading;
+  const planTasks = useMemo(() => graphArtifact?.graph ?? [], [graphArtifact]);
 
   // ===== useOverviewMetrics 逻辑 =====
   const currentProjectName = useMemo(() => {
@@ -98,9 +98,12 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
   }, [projectRef, resolvedProjectId, matchedProject, projects, currentProject]);
 
   const totalDurationLabel = useMemo(() => {
-    if (scheduleArtifact?.total_duration_days) return `${scheduleArtifact.total_duration_days}天`;
+    const totalDurationDays =
+      graphArtifact?.summary?.total_duration_days ??
+      graphArtifact?.version_summary?.total_duration_days;
+    if (totalDurationDays) return `${totalDurationDays}天`;
     return "";
-  }, [scheduleArtifact]);
+  }, [graphArtifact]);
 
   const costQuery = useQuery({
     queryKey: resolvedProjectId
@@ -146,7 +149,7 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
 
   return {
     resolvedProjectId,
-    scheduleArtifact,
+    graphArtifact,
     isLoadingGraph,
     planTasks,
     currentProjectName,

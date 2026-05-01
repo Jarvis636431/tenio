@@ -4,6 +4,7 @@ import type {
   AuthSession,
   AuthUser,
   PasswordLoginPayload,
+  RefreshTokenPayload,
   SendSmsResponse,
   SetupProfilePayload,
   SetupProfileResponse,
@@ -50,6 +51,27 @@ export function loginWithSms(payload: SmsLoginPayload): Promise<AuthSession> {
  */
 export function loginWithPassword(payload: PasswordLoginPayload): Promise<AuthSession> {
   return postJson<AuthSession>("/auth/login/password", payload);
+}
+
+/**
+ * 使用刷新令牌换取新的登录会话。
+ *
+ * @param payload - 刷新令牌请求字段
+ * @returns 新的登录会话
+ */
+export function refreshSession(payload: RefreshTokenPayload): Promise<AuthSession> {
+  return postJson<AuthSession>("/auth/refresh", payload);
+}
+
+/**
+ * 注销当前登录会话。
+ *
+ * @returns 注销结果
+ */
+export function logoutSession(): Promise<void> {
+  return request<void>(`${APM_API_BASE}/auth/logout`, {
+    method: "POST",
+  });
 }
 
 /**

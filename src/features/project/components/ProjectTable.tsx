@@ -43,19 +43,19 @@ function StatusChip({ type }: { type: "done" | "act" | "pend" }) {
 }
 
 const columns = [
-  columnHelper.accessor("sequence_no", {
+  columnHelper.accessor("seqNo", {
     header: "序号",
     cell: (info) => info.getValue() ?? info.row.index + 1,
     size: 50,
   }),
-  columnHelper.accessor("task_name", {
+  columnHelper.accessor("taskName", {
     header: "工序名称",
     cell: (info) => {
       const row = info.row.original;
       const indent = row.level === 1 ? "pl-6" : row.level >= 2 ? "pl-10" : "";
       return (
         <span className={`${indent}`}>
-          {row.is_critical_task && !row.isSum && (
+          {row.isCriticalPath && !row.isSum && (
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle" />
           )}
           {info.getValue()}
@@ -63,7 +63,7 @@ const columns = [
       );
     },
   }),
-  columnHelper.accessor("duration_days", {
+  columnHelper.accessor("durationDays", {
     header: "工期",
     cell: (info) => {
       const val = info.getValue();
@@ -77,7 +77,7 @@ const columns = [
     },
     size: 80,
   }),
-  columnHelper.accessor("start_date", {
+  columnHelper.accessor("startTime", {
     header: "开始时间",
     cell: (info) => {
       const val = info.getValue();
@@ -85,7 +85,7 @@ const columns = [
     },
     size: 130,
   }),
-  columnHelper.accessor("end_date", {
+  columnHelper.accessor("endTime", {
     header: "结束时间",
     cell: (info) => {
       const val = info.getValue();
@@ -93,9 +93,12 @@ const columns = [
     },
     size: 130,
   }),
-  columnHelper.accessor("predecessor_display", {
+  columnHelper.accessor("dependencies", {
     header: "前置任务",
-    cell: (info) => info.getValue() || "—",
+    cell: (info) => {
+      const dependencies = info.getValue();
+      return dependencies.length > 0 ? dependencies.join(", ") : "—";
+    },
     size: 100,
   }),
   columnHelper.accessor("chipType", {
@@ -114,11 +117,11 @@ export function ProjectTable({ planTasks, isLoading }: ProjectTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const data = useMemo(() => {
-    const sorted = [...planTasks].sort((a, b) => (a.sequence_no ?? 0) - (b.sequence_no ?? 0));
+    const sorted = [...planTasks].sort((a, b) => (a.seqNo ?? 0) - (b.seqNo ?? 0));
     return sorted.map((task) => {
-      const level = task.indent_level ?? 0;
-      const isSum = task.is_summary_task ?? level <= 1;
-      const chipType = normalizeStatusChip(task.task_status);
+      const level = task.indentLevel ?? 0;
+      const isSum = task.isSummaryTask ?? false;
+      const chipType = normalizeStatusChip(task.taskStatus);
       return { ...task, level, isSum, chipType } as TaskRow;
     });
   }, [planTasks]);
@@ -192,17 +195,16 @@ export function ProjectTable({ planTasks, isLoading }: ProjectTableProps) {
               >
                 {row.getVisibleCells().map((cell) => {
                   const isSum = cell.row.original.isSum;
-                  const isDateCell =
-                    cell.column.id === "start_date" || cell.column.id === "end_date";
+                  const isDateCell = cell.column.id === "startTime" || cell.column.id === "endTime";
                   return (
                     <td
                       key={cell.id}
                       className={`px-3 py-2 ${isSum && isDateCell ? "font-semibold text-white" : ""} ${
-                        isSum && cell.column.id === "task_name" ? "font-semibold text-white" : ""
+                        isSum && cell.column.id === "taskName" ? "font-semibold text-white" : ""
                       } ${
                         isSum
                           ? ""
-                          : cell.column.id === "task_name"
+                          : cell.column.id === "taskName"
                             ? "text-[rgba(200,215,235,0.72)]"
                             : "text-apm-dim"
                       }`}

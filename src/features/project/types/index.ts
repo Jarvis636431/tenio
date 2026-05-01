@@ -16,6 +16,26 @@ export interface ProjectListParams {
   page_size?: number;
 }
 
+export interface ProjectCreatePayload {
+  project_name?: string | null;
+  source_type?: string;
+}
+
+export interface ProjectCreateResponse {
+  project_id: string;
+  project_name: string;
+  status: string;
+  created_at: string;
+}
+
+export interface MockProjectCreatePayload {
+  mock_dataset_code: string;
+  project_name?: string | null;
+  original_file_name?: string | null;
+  file_extension?: string | null;
+  file_size_bytes?: number | null;
+}
+
 export interface ProjectMetrics {
   total_count: number;
   in_progress_count: number;
@@ -47,6 +67,8 @@ export interface ProjectListItem {
   created_at: string;
 }
 
+export type ProjectDetail = ProjectListItem & Record<string, unknown>;
+
 export interface ArtifactBase {
   artifact_id: string;
   artifact_type: string;
@@ -57,29 +79,48 @@ export interface ArtifactBase {
 }
 
 export interface ScheduleTask {
-  task_id: string;
-  sequence_no: number;
-  task_name: string;
-  crew_type_name: string;
-  crew_count: number;
-  duration_days: number;
-  start_date: string;
-  end_date: string;
-  predecessor_task_ids: string[];
-  predecessor_display: string;
-  task_status: string;
-  indent_level: number;
-  is_summary_task: boolean;
-  is_critical_task: boolean;
+  taskId: string;
+  seqNo: number;
+  taskName: string;
+  crewTypeName: string;
+  crewCount: number;
+  durationDays: number;
+  startTime: string;
+  endTime: string;
+  dependencies: Array<string | number>;
+  taskStatus?: string;
+  indentLevel?: number;
+  isSummaryTask?: boolean;
+  isCriticalPath: boolean;
 }
 
 export interface ScheduleArtifact extends ArtifactBase {
   artifact_type: "graph" | string;
-  total_duration_days: number;
-  task_count: number;
-  critical_task_count: number;
-  tasks: ScheduleTask[];
+  scheme_id?: string;
+  process_version_id?: string;
+  graph: ScheduleTask[];
+  resource_pool?: Record<string, number>;
+  version_summary?: {
+    total_duration_days?: number;
+    planned_start_date?: string;
+    planned_finish_date?: string;
+    task_count?: number;
+    critical_task_count?: number;
+    resource_pool?: Record<string, number>;
+  };
+  compression_summary?: Array<Record<string, unknown>>;
+  summary?: {
+    task_count?: number;
+    critical_task_count?: number;
+    planned_start_date?: string;
+    planned_finish_date?: string;
+    total_duration_days?: number;
+  };
 }
+
+export type DocumentArtifact = ArtifactBase & Record<string, unknown>;
+
+export type CrewPlanArtifact = ArtifactBase & Record<string, unknown>;
 
 export interface TimeCostArtifact extends ArtifactBase {
   artifact_type: "time_cost" | string;
@@ -108,6 +149,11 @@ export interface StartGenerationResponse {
   started_at: string;
 }
 
+export interface RegeneratePayload {
+  artifact_types?: string[] | null;
+  reason?: string | null;
+}
+
 export interface GenerationStep {
   step_code: string;
   step_name: string;
@@ -129,4 +175,28 @@ export interface GenerationStatus {
   steps: GenerationStep[];
   error_code?: string | null;
   error_message?: string | null;
+}
+
+export interface OperationStatus {
+  operation_id: string;
+  operation_status?: string;
+  project_id?: string;
+  error_code?: string | null;
+  error_message?: string | null;
+  [key: string]: unknown;
+}
+
+export interface WorkbenchUploadSummary {
+  [key: string]: unknown;
+}
+
+export interface WorkbenchConsoleLog {
+  [key: string]: unknown;
+}
+
+export interface ProjectScheme {
+  scheme_id: string;
+  scheme_name?: string;
+  is_active?: boolean;
+  [key: string]: unknown;
 }
