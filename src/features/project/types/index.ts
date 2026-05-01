@@ -142,7 +142,6 @@ export interface CrewPlanTask {
   duration_label: string;
   start_date: string;
   end_date: string;
-  [key: string]: unknown;
 }
 
 export interface CrewPlanCrew {
@@ -152,7 +151,6 @@ export interface CrewPlanCrew {
   total_work_days: number;
   crew_status: string;
   tasks: CrewPlanTask[];
-  [key: string]: unknown;
 }
 
 export interface CrewPlanGroup {
@@ -161,37 +159,61 @@ export interface CrewPlanGroup {
   color_hex: string;
   crew_count: number;
   crews: CrewPlanCrew[];
-  [key: string]: unknown;
 }
 
 export interface CrewPlanArtifact extends ArtifactBase {
   artifact_type: "crew_plan" | string;
-  crew_types?: CrewPlanGroup[];
-  summary?: {
-    crew_type_count?: number;
-    crew_count?: number;
-    crew_task_count?: number;
-    planned_start_date?: string;
-    planned_finish_date?: string;
+  crew_types: CrewPlanGroup[];
+  summary: {
+    crew_type_count: number;
+    crew_count: number;
+    crew_task_count: number;
+    planned_start_date: string;
+    planned_finish_date: string;
   };
-  [key: string]: unknown;
 }
 
 export interface TimeCostArtifact extends ArtifactBase {
   artifact_type: "time_cost" | string;
+  scheme_id?: string | null;
+  process_version_id?: string | null;
   contract_duration_days: number;
   optimal_duration_days: number;
   minimum_total_cost_cents: number;
-  saving_rate_percent: number;
-  recommendation: Record<string, unknown>;
+  saving_rate_percent: number | null;
+  recommendation: TimeCostRecommendation;
   options: TimeCostOption[];
+  curve: TimeCostCurve;
+}
+
+export interface TimeCostRecommendation {
+  recommended_duration_days: number;
+  recommended_min_duration_days: number;
+  recommended_max_duration_days: number;
+  saving_amount_cents: number | null;
+  recommendation_text: string;
 }
 
 export interface TimeCostOption {
-  option_name?: string;
-  duration_days?: number;
-  total_cost_cents?: number;
-  total_cost?: number;
+  option_id: string;
+  duration_days: number;
+  direct_cost_cents: number;
+  rental_cost_cents: number;
+  manage_cost_cents: number;
+  machine_cost_cents: number;
+  indirect_cost_cents: number;
+  total_cost_cents: number;
+  total_crew_count: number;
+  resource_pool: Record<string, number>;
+  is_recommended: boolean;
+}
+
+export interface TimeCostCurve {
+  best_schema_id: string;
+  schema_ids: number[];
+  cost: number[];
+  direct_cost: number[];
+  indirect_cost: number[];
 }
 
 export interface StartGenerationPayload {

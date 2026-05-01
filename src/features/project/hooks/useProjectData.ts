@@ -24,19 +24,11 @@ function mapTimeCostArtifactToCostCurve(artifact?: TimeCostArtifact | null): Cos
   if (!artifact) return [];
 
   const optionPoints = artifact.options
-    .map((option, index) => {
-      const rawCost =
-        typeof option.total_cost_cents === "number"
-          ? option.total_cost_cents / 100
-          : option.total_cost;
-      if (typeof rawCost !== "number" || !Number.isFinite(rawCost)) return null;
-      const label =
-        option.option_name ??
-        (typeof option.duration_days === "number"
-          ? `方案${option.duration_days}天`
-          : `方案${index + 1}`);
+    .map((option) => {
+      const rawCost = option.total_cost_cents / 100;
+      if (!Number.isFinite(rawCost)) return null;
       return {
-        date: label,
+        date: `${option.duration_days}天`,
         总成本: Number(rawCost.toFixed(2)),
       };
     })

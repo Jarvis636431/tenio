@@ -75,6 +75,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
               planTasks={planTasks}
               costCurveData={costCurveChart.points}
               unit={costCurveChart.unit}
+              timeCostArtifact={costQuery.data}
             />
           </div>
         ) : (
@@ -82,7 +83,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         )}
       </div>
     ),
-    [costQuery.isLoading, costCurveChart, totalDurationLabel, planTasks],
+    [costQuery.isLoading, costQuery.data, costCurveChart, totalDurationLabel, planTasks],
   );
 
   const uploadsPanel = useMemo(

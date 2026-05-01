@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Clock, Coins, ListChecks, TrendingDown } from "lucide-react";
-import type { ScheduleTask } from "../types";
+import type { ScheduleTask, TimeCostArtifact } from "../types";
 import {
   LineChart,
   Line,
@@ -16,9 +16,16 @@ interface ChartTabProps {
   planTasks: ScheduleTask[];
   costCurveData: { date: string; 总成本: number }[];
   unit: string;
+  timeCostArtifact?: TimeCostArtifact;
 }
 
-export function ChartTab({ totalDurationLabel, planTasks, costCurveData, unit }: ChartTabProps) {
+export function ChartTab({
+  totalDurationLabel,
+  planTasks,
+  costCurveData,
+  unit,
+  timeCostArtifact,
+}: ChartTabProps) {
   const formatLabel = (value: string) =>
     /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(5) : value;
 
@@ -46,27 +53,38 @@ export function ChartTab({ totalDurationLabel, planTasks, costCurveData, unit }:
   }, [chartData]);
 
   const latestCost = chartData.at(-1) ?? null;
+  const recommendedOption = timeCostArtifact?.options.find((option) => option.is_recommended);
+  const recommendedCost =
+    recommendedOption?.total_cost_cents ?? timeCostArtifact?.minimum_total_cost_cents;
+  const recommendedCostLabel =
+    typeof recommendedCost === "number"
+      ? `${(recommendedCost / 100 / (unit === "亿" ? 1e8 : unit === "万" ? 1e4 : 1)).toFixed(1)}${unit}`
+      : "—";
 
   const cards = [
     {
       icon: Clock,
-      label: "计划工期",
-      value: totalDurationLabel || "—",
-      sub: "根据工序计划计算",
+      label: "合同工期",
+      value: timeCostArtifact
+        ? `${timeCostArtifact.contract_duration_days}天`
+        : totalDurationLabel || "—",
+      sub: "合同约定工期",
       color: "#00d4ff",
     },
     {
       icon: ListChecks,
-      label: "工序数量",
-      value: `${planTasks.length}`,
-      sub: "核心图工序",
+      label: "最优工期",
+      value: timeCostArtifact
+        ? `${timeCostArtifact.optimal_duration_days}天`
+        : `${planTasks.length}`,
+      sub: timeCostArtifact ? "成本搜索推荐" : "核心图工序",
       color: "#f59e0b",
     },
     {
       icon: Coins,
-      label: "最新总成本",
-      value: `${latestCost?.总成本?.toFixed?.(1) ?? "—"}${latestCost ? unit : ""}`,
-      sub: latestCost?.label ?? "暂无数据",
+      label: "推荐总成本",
+      value: recommendedCostLabel,
+      sub: recommendedOption ? `${recommendedOption.duration_days}天方案` : "暂无数据",
       color: "#10b981",
     },
     {
@@ -167,7 +185,8 @@ export function ChartTab({ totalDurationLabel, planTasks, costCurveData, unit }:
                   ，最低点出现在 {minCost.label}（{minCost.总成本.toFixed(1)} {unit}
                   ），最高点出现在 {maxCost.label}（{maxCost.总成本.toFixed(1)} {unit}）。
                   <br />
-                  这里仅展示后端返回的成本曲线摘要，未补造工期优化结论。
+                  {timeCostArtifact?.recommendation.recommendation_text ??
+                    "这里仅展示后端返回的成本曲线摘要，未补造工期优化结论。"}
                 </>
               ) : (
                 "暂无足够的成本曲线数据生成摘要。"
@@ -185,7 +204,7 @@ export function ChartTab({ totalDurationLabel, planTasks, costCurveData, unit }:
           <table className="w-full border-collapse text-[11px]">
             <thead>
               <tr className="border-b border-cyan-400/15">
-                {["日期", "总成本", "曲线位置"].map((heading) => (
+                {["工期方案", "总成本", "曲线位置"].map((heading) => (
                   <th
                     key={heading}
                     className="px-2.5 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-cyan-400/55"
