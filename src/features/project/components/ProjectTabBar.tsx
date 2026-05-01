@@ -41,7 +41,7 @@ const TABS: Array<{
 
 export function ProjectTabBar({ activeTab, onChange, onExport, onRegenerate }: ProjectTabBarProps) {
   return (
-    <div className="shrink-0 border-b border-cyan-400/15 bg-[rgba(2,12,27,0.5)]">
+    <div className="sticky top-0 z-30 shrink-0 border-b border-cyan-400/15 bg-[rgba(2,12,27,0.94)] backdrop-blur-sm">
       <div className="flex items-center gap-0 px-5">
         <div className="flex min-w-0 flex-1 items-center overflow-x-auto">
           {TABS.map((tab) => {
