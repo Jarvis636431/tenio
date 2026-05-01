@@ -156,9 +156,6 @@ importers:
       lint-staged:
         specifier: ^16.4.0
         version: 16.4.0
-      lovable-tagger:
-        specifier: ^1.1.13
-        version: 1.1.13(vite@6.4.2(@types/node@22.18.6)(jiti@1.21.7)(yaml@2.8.3))
       postcss:
         specifier: ^8.4.47
         version: 8.5.6
@@ -2332,11 +2329,6 @@ packages:
   loupe@3.2.1:
     resolution: {integrity: sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ==}
 
-  lovable-tagger@1.1.13:
-    resolution: {integrity: sha512-RBEYDxao7Xf8ya29L0cd+ocE7Gs80xPOIOwwck65Hoie8YDKViuXi3UYV14DoNWIvaJ7WVPf7SG3cc844nFqGA==}
-    peerDependencies:
-      vite: '>=5.0.0 <8.0.0'
-
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
 
@@ -3031,10 +3023,6 @@ packages:
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
-
-  tough-cookie@6.0.0:
-    resolution: {integrity: sha512-kXuRi1mtaKMrsLUxz3sQYvVl37B0Ns6MzfrtV5DvJceE9bPyspOqk9xxv7XbZWcfLWbFmm997vl83qUWVJA64w==}
-    engines: {node: '>=16'}
 
   tough-cookie@6.0.1:
     resolution: {integrity: sha512-LktZQb3IeoUWB9lqR5EWTHgW/VTITCXg4D21M+lvybRVdylLrRMnqaIONLVb5mav8vM19m44HIcGq4qASeu2Qw==}
@@ -5354,14 +5342,6 @@ snapshots:
 
   loupe@3.2.1: {}
 
-  lovable-tagger@1.1.13(vite@6.4.2(@types/node@22.18.6)(jiti@1.21.7)(yaml@2.8.3)):
-    dependencies:
-      esbuild: 0.25.10
-      tailwindcss: 3.4.17
-      vite: 6.4.2(@types/node@22.18.6)(jiti@1.21.7)(yaml@2.8.3)
-    transitivePeerDependencies:
-      - ts-node
-
   lru-cache@10.4.3: {}
 
   lru-cache@11.3.5: {}
@@ -5761,7 +5741,7 @@ snapshots:
       rettime: 0.7.0
       statuses: 2.0.2
       strict-event-emitter: 0.5.1
-      tough-cookie: 6.0.0
+      tough-cookie: 6.0.1
       type-fest: 5.4.1
       until-async: 3.0.2
       yargs: 17.7.2
@@ -6318,11 +6298,6 @@ snapshots:
   to-regex-range@5.0.1:
     dependencies:
       is-number: 7.0.0
-
-  tough-cookie@6.0.0:
-    dependencies:
-      tldts: 7.0.19
-    optional: true
 
   tough-cookie@6.0.1:
     dependencies:
