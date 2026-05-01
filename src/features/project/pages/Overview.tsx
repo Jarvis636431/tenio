@@ -33,6 +33,8 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     currentProjectName,
     totalDurationLabel,
     costQuery,
+    documentQuery,
+    documentContent,
   } = useProjectData({ projectId: propsProjectId });
 
   const costCurveChart = costQuery.chartData;
@@ -98,12 +100,20 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const docsPanel = useMemo(
     () => (
       <div className={PANEL_CLASS}>
-        <div className="h-full min-h-[520px] p-4">
-          <DocsTab content="# 施工组织设计文档" />
-        </div>
+        {documentQuery.isLoading ? (
+          <div className="flex h-[520px] items-center justify-center p-4">
+            <Skeleton className="h-full w-full" />
+          </div>
+        ) : documentContent.trim() ? (
+          <div className="h-full min-h-[520px] p-4">
+            <DocsTab content={documentContent} />
+          </div>
+        ) : (
+          <div className={EMPTY_PANEL_CLASS}>暂无施工组织设计文档</div>
+        )}
       </div>
     ),
-    [],
+    [documentQuery.isLoading, documentContent],
   );
 
   const scheduleListPanel = useMemo(

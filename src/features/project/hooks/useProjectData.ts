@@ -2,8 +2,12 @@ import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { projectQueryKeys } from "../queryKeys";
-import { getLatestGraphArtifact, getLatestTimeCostArtifact } from "../services/project-api";
-import type { TimeCostArtifact } from "../types";
+import {
+  getLatestDocumentArtifact,
+  getLatestGraphArtifact,
+  getLatestTimeCostArtifact,
+} from "../services/project-api";
+import type { DocumentArtifact, TimeCostArtifact } from "../types";
 import { useProject } from "./useProject";
 
 interface UseProjectDataOptions {
@@ -49,6 +53,17 @@ function mapTimeCostArtifactToCostCurve(artifact?: TimeCostArtifact | null): Cos
   }
 
   return [];
+}
+
+function getDocumentContent(artifact?: DocumentArtifact | null): string {
+  if (!artifact) return "";
+  return (
+    artifact.markdown_content ??
+    artifact.markdown ??
+    artifact.content ??
+    artifact.document_content ??
+    ""
+  );
 }
 
 export function useProjectData({ projectId: propsProjectId }: UseProjectDataOptions = {}) {
@@ -147,6 +162,25 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
     };
   }, [costQuery.data]);
 
+  const documentQuery = useQuery({
+    queryKey: resolvedProjectId
+      ? projectQueryKeys.documentArtifact(resolvedProjectId)
+      : ["project", "artifact", "document", "empty"],
+    queryFn: async () => {
+      if (!resolvedProjectId) {
+        throw new Error("缺少项目 ID");
+      }
+      return getLatestDocumentArtifact(resolvedProjectId);
+    },
+    enabled: Boolean(resolvedProjectId),
+    refetchOnWindowFocus: false,
+  });
+
+  const documentContent = useMemo(
+    () => getDocumentContent(documentQuery.data),
+    [documentQuery.data],
+  );
+
   return {
     resolvedProjectId,
     graphArtifact,
@@ -158,5 +192,7 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
       ...costQuery,
       chartData: costCurveChart,
     },
+    documentQuery,
+    documentContent,
   };
 }

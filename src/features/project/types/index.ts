@@ -118,7 +118,26 @@ export interface ScheduleArtifact extends ArtifactBase {
   };
 }
 
-export type DocumentArtifact = ArtifactBase & Record<string, unknown>;
+export interface DocumentTocItem {
+  title: string;
+  level?: number;
+  anchor?: string;
+  children?: DocumentTocItem[];
+}
+
+export interface DocumentArtifact extends ArtifactBase {
+  artifact_type: "document" | string;
+  title?: string;
+  content?: string;
+  markdown?: string;
+  markdown_content?: string;
+  document_content?: string;
+  word_count?: number;
+  chapter_count?: number;
+  toc?: DocumentTocItem[];
+  sections?: Array<Record<string, unknown>>;
+  [key: string]: unknown;
+}
 
 export type CrewPlanArtifact = ArtifactBase & Record<string, unknown>;
 
