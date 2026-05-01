@@ -228,6 +228,37 @@ describe("http helpers", () => {
     expect(useAuthStore.getState().refreshToken).toBeNull();
   });
 
+  it("does not refresh anonymous login failures and keeps the backend error message", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: () =>
+        Promise.resolve({
+          success: false,
+          code: "AUTH_WRONG_CREDENTIALS",
+          message: "用户名或密码错误",
+          data: null,
+        }),
+    } as Response);
+
+    await expect(
+      requestJson("http://localhost:8000/api/auth/login/password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          account: "demo",
+          password: "wrong",
+          has_agreed_terms: true,
+        }),
+      }),
+    ).rejects.toThrow("用户名或密码错误");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("requestJson surfaces detail errors from the backend", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue({

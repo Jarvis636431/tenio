@@ -77,6 +77,18 @@ function isAuthTokenExpiredError(error: unknown): boolean {
   );
 }
 
+function shouldRefreshAuthToken(error: unknown, sentAccessToken: boolean): boolean {
+  if (!(error instanceof ApiRequestError)) {
+    return false;
+  }
+
+  if (isAuthTokenExpiredPayload(error.data)) {
+    return true;
+  }
+
+  return sentAccessToken && (error.status === 401 || error.status === 403);
+}
+
 function extractErrorMessage(data: unknown): string | null {
   if (!data || typeof data !== "object") return null;
   const record = data as Record<string, unknown>;
@@ -189,16 +201,24 @@ export async function requestJson<T>(
   options: RequestOptions = {},
   allowAuthRefresh = true,
 ): Promise<T> {
+  const headers = buildRequestHeaders(options);
+  const sentAccessToken = !options.token && "Authorization" in headers;
+
   try {
     const response = await fetch(input, {
       method: options.method ?? (options.body ? "POST" : undefined),
-      headers: buildRequestHeaders(options),
+      headers,
       body: options.body ?? undefined,
     });
 
     return await parseResponse<T>(response);
   } catch (error) {
-    if (allowAuthRefresh && canRefreshRequest(input, options) && isAuthTokenExpiredError(error)) {
+    if (
+      allowAuthRefresh &&
+      canRefreshRequest(input, options) &&
+      isAuthTokenExpiredError(error) &&
+      shouldRefreshAuthToken(error, sentAccessToken)
+    ) {
       await refreshStoredSession();
       return requestJson<T>(input, options, false);
     }
