@@ -90,6 +90,18 @@ export function AppHeader({
       {/* Spacer */}
       <div className="flex-1" />
 
+      {/* Console navigation (project mode) */}
+      {variant === "project" && (
+        <button
+          type="button"
+          onClick={() => navigate("/projects")}
+          className="flex items-center gap-1.5 border border-white/[0.08] bg-[rgba(4,18,37,0.7)] px-3 py-1.5 text-xs font-medium text-apm-muted transition-all hover:border-cyan-400/40 hover:bg-cyan-400/10 hover:text-cyan-300"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          控制台
+        </button>
+      )}
+
       {/* Date/Time (project mode) */}
       {variant === "project" && (
         <div className="flex items-center gap-2 text-xs text-slate-300">
