@@ -466,6 +466,8 @@ function UploadPage() {
           <input
             type="file"
             multiple
+            aria-label={`选择${zone.title}文件`}
+            title={`选择${zone.title}文件`}
             className="hidden"
             accept={UPLOAD_ACCEPT}
             onChange={handleFileSelect(zone.category)}

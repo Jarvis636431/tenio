@@ -19,6 +19,11 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           )}
           <input
             ref={ref}
+            aria-label={
+              props["aria-label"] ??
+              label ??
+              (typeof props.placeholder === "string" ? props.placeholder : undefined)
+            }
             className={cn(
               "h-10 w-full rounded-md border border-cyan-400/20 bg-cyan-400/5",
               icon ? "pl-[38px]" : "pl-4",

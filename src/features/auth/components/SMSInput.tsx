@@ -30,6 +30,7 @@ function SMSInput({
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-[13px] w-[13px] text-apm-dim" />
           <input
             type="text"
+            aria-label={label}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}

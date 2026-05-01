@@ -98,6 +98,7 @@ export function RotationTab({ planTasks }: RotationTabProps) {
         <div className="relative mb-3">
           <input
             type="text"
+            aria-label="搜索班组"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="搜索班组..."

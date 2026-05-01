@@ -221,6 +221,7 @@ function ProjectsPage() {
             <Search className="h-3.5 w-3.5 text-apm-dim" />
             <input
               type="text"
+              aria-label="搜索项目名称"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="搜索项目名称..."

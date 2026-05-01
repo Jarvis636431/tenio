@@ -222,6 +222,8 @@ export function ProjectTable({ planTasks, isLoading }: ProjectTableProps) {
         <div className="flex items-center gap-2 text-[11px] text-apm-dim">
           <span>共 {table.getFilteredRowModel().rows.length} 条</span>
           <select
+            aria-label="每页显示条数"
+            title="每页显示条数"
             value={table.getState().pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
             className="rounded border border-cyan-400/20 bg-transparent px-1.5 py-0.5 text-[11px] text-apm-dim"

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteFile, getFileList, getFileStats, uploadFile } from "@/features/upload";
+import { getFileList, getFileStats, uploadFile } from "@/features/upload";
 
 describe("uploads-api", () => {
   beforeEach(() => {
@@ -207,26 +207,6 @@ describe("uploads-api", () => {
         source_type: "upload",
       }),
     });
-  });
-
-  it("deletes project files through the backend", async () => {
-    const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 204,
-      json: () => Promise.resolve({}),
-    } as Response);
-
-    await deleteFile({ projectId: "project-001", fileId: "file-001" });
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8000/api/projects/project-001/files/file-001",
-      {
-        method: "DELETE",
-        headers: {},
-        body: undefined,
-      },
-    );
   });
 
   it("derives file stats from the new project file list", async () => {

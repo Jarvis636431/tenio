@@ -12,7 +12,6 @@ import {
   Upload,
   Search,
   FileText,
-  Trash2,
   Download,
   Image as ImageIcon,
   File,
@@ -75,12 +74,10 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
     keyword,
     isLoading,
     isUploading,
-    isDeleting,
     setPage,
     setCategory,
     setKeyword,
     uploadFile,
-    deleteFile,
     resetFilters,
   } = useUploads({ projectId, pageSize: 10 });
 
@@ -110,19 +107,6 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
       }
     },
     [uploadFile],
-  );
-
-  // 处理删除
-  const handleDelete = useCallback(
-    async (fileId: string) => {
-      if (!confirm("确定要删除这个文件吗？")) return;
-      try {
-        await deleteFile(fileId);
-      } catch {
-        // 错误已在 hook 中处理
-      }
-    },
-    [deleteFile],
   );
 
   // 获取文件图标
@@ -273,6 +257,8 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
           ref={fileInputRef}
           type="file"
           multiple
+          aria-label="选择要上传的项目文件"
+          title="选择要上传的项目文件"
           className="hidden"
           onChange={(e) => void handleFileSelect(e)}
         />
@@ -287,6 +273,8 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
 
         <div className="flex flex-1 items-center gap-2">
           <select
+            aria-label="按文件分类筛选"
+            title="按文件分类筛选"
             value={category ?? "all"}
             onChange={(e) =>
               setCategory(e.target.value === "all" ? undefined : (e.target.value as FileCategory))
@@ -306,6 +294,7 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
           <div className="relative flex-1 max-w-[300px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <Input
+              aria-label="搜索文件名"
               placeholder="搜索文件名..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
@@ -313,6 +302,9 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
             />
             {keyword && (
               <button
+                type="button"
+                aria-label="清空文件搜索"
+                title="清空文件搜索"
                 onClick={() => setKeyword("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
               >
@@ -418,18 +410,6 @@ export function UploadsTab({ projectId, projectSummary, onViewResults }: Uploads
                     }}
                   >
                     <Download className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-slate-400 hover:text-red-400"
-                    disabled={isDeleting}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void handleDelete(file.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
