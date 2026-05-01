@@ -13,7 +13,7 @@ import {
   CheckCircle,
   CloudUpload,
   DraftingCompass,
-  File,
+  File as FileIcon,
   FileSpreadsheet,
   FileText,
   Loader2,
@@ -366,6 +366,7 @@ function UploadPage() {
         return accumulator;
       },
       {
+        core: [],
         drawing: [],
         document: [],
         contract: [],
@@ -377,9 +378,9 @@ function UploadPage() {
   }, [files]);
 
   const getFileIcon = (file: File) => {
-    if (file.type.startsWith("image/")) return File;
+    if (file.type.startsWith("image/")) return FileIcon;
     if (file.type.includes("pdf") || file.type.includes("document")) return FileText;
-    return File;
+    return FileIcon;
   };
 
   const renderFileList = (category: FileCategory) => {

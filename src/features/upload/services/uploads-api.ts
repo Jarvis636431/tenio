@@ -62,6 +62,7 @@ interface ProjectFileItem {
   character_count?: number;
   upload_status: string;
   parse_status?: string;
+  mock_dataset_code?: string | null;
   uploaded_at: string;
   parsed_at?: string | null;
   parse_error_message?: string | null;
@@ -141,12 +142,20 @@ function toFeatureFile(item: ProjectFileItem, projectId: string): ProjectFile {
     size: item.file_size_bytes,
     type: extension ? `.${extension}` : "",
     category,
+    role: item.file_role,
+    extension,
     url: "",
     uploadedAt: item.uploaded_at,
-    status: item.upload_status === "completed" ? "completed" : "pending",
+    status:
+      item.upload_status === "uploaded" || item.upload_status === "completed"
+        ? "completed"
+        : "pending",
     parseStatus: item.parse_status,
     parsedAt: item.parsed_at,
     parseErrorMessage: item.parse_error_message,
+    pageCount: item.page_count,
+    characterCount: item.character_count,
+    mockDatasetCode: item.mock_dataset_code,
   };
 }
 

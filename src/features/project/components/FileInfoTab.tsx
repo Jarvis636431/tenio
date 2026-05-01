@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, X, CheckCircle, Eye, Wand2 } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 import { formatIsoDate } from "@/lib/date";
+import type { ProjectFile } from "@/features/upload";
 
 interface FileInfoTabProps {
   projectId: string | null | undefined;
@@ -37,7 +38,9 @@ function InfoCard({ label, value, sub }: InfoCardProps) {
 
 function isParsed(status?: string) {
   const value = status?.toLowerCase() ?? "";
-  return value === "succeeded" || value === "completed" || value.includes("完成");
+  return (
+    value === "parsed" || value === "succeeded" || value === "completed" || value.includes("完成")
+  );
 }
 
 function isParseFailed(status?: string) {
@@ -45,28 +48,34 @@ function isParseFailed(status?: string) {
   return value === "failed" || value === "error" || value.includes("失败");
 }
 
-export function FileInfoTab({ projectId, projectSummary, onViewResults }: FileInfoTabProps) {
-  const { files, total, isLoading } = useUploads({ projectId, pageSize: 10 });
+function getFileRoleLabel(role?: string) {
+  const labels: Record<string, string> = {
+    bidding_document: "招标文件",
+    cad_drawing: "CAD / BIM 图纸",
+    supplementary_material: "补充资料",
+    primary_contract: "合同文件",
+    drawing: "图纸",
+    bill_or_document: "清单 / 文档",
+    supplement: "补充资料",
+  };
+  return role ? (labels[role] ?? role) : "未分类";
+}
 
-  const latestFile = files[0];
+function getFileStatus(file: ProjectFile) {
+  const parsed = isParsed(file.parseStatus);
+  const failed = isParseFailed(file.parseStatus);
+  const label = failed ? "解析失败" : parsed ? "解析成功" : file.parseStatus ? "解析中" : "已上传";
+  const className = failed ? "text-red-300" : parsed ? "text-emerald-400" : "text-cyan-300";
+  return { failed, label, className };
+}
+
+export function FileInfoTab({ projectId, projectSummary, onViewResults }: FileInfoTabProps) {
+  const { files, total, isLoading } = useUploads({ projectId, pageSize: 100 });
+
   const hasFile = files.length > 0;
   const taskCount = projectSummary?.planTaskCount ?? 0;
   const duration = projectSummary?.totalDurationLabel ?? "—";
   const hasGeneratedArtifacts = taskCount > 0 || (duration !== "—" && duration.trim() !== "");
-  const latestFileParsed = latestFile ? isParsed(latestFile.parseStatus) : false;
-  const latestFileParseFailed = latestFile ? isParseFailed(latestFile.parseStatus) : false;
-  const fileStatusLabel = latestFileParseFailed
-    ? "解析失败"
-    : latestFileParsed
-      ? "解析成功"
-      : latestFile?.parseStatus
-        ? "解析中"
-        : "已上传";
-  const fileStatusClass = latestFileParseFailed
-    ? "text-red-300"
-    : latestFileParsed
-      ? "text-emerald-400"
-      : "text-cyan-300";
   const generatedTagCount = taskCount > 0 ? taskCount : "—";
   const infoCards = useMemo(
     () => [
@@ -134,32 +143,67 @@ export function FileInfoTab({ projectId, projectSummary, onViewResults }: FileIn
           </div>
           <Skeleton className="h-[128px] w-full" />
         </div>
-      ) : !hasFile || !latestFile ? (
+      ) : !hasFile ? (
         <div className="flex h-[260px] items-center justify-center border border-white/[0.08] bg-[rgba(4,18,37,0.55)] text-sm text-slate-400">
           暂无已上传资料
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-[13px] border border-white/[0.08] bg-emerald-500/[0.06] px-4 py-[13px]">
-            <FileText className="h-[22px] w-[22px] shrink-0 text-emerald-400" />
-            <div className="min-w-0 flex-1">
-              <div className="mb-[3px] truncate text-[13px] font-semibold text-white">
-                {latestFile.name}
+          <div>
+            <div className="mb-[9px] flex items-center justify-between">
+              <div className="flex items-center text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                <FileText className="mr-[5px] h-3 w-3 text-cyan-400" />
+                已上传资料
               </div>
-              <div className="text-[11px] text-slate-400">
-                {formatFileSize(latestFile.size)} · {FILE_CATEGORY_LABELS[latestFile.category]} ·
-                上传于 {formatIsoDate(latestFile.uploadedAt)}
-              </div>
+              <div className="text-[10px] text-apm-dim">共 {total} 份</div>
             </div>
-            <div
-              className={`ml-auto flex shrink-0 items-center gap-[5px] text-[11px] font-semibold ${fileStatusClass}`}
-            >
-              {latestFileParseFailed ? (
-                <X className="h-3.5 w-3.5" />
-              ) : (
-                <CheckCircle className="h-3.5 w-3.5" />
-              )}
-              {fileStatusLabel}
+            <div className="space-y-2">
+              {files.map((file) => {
+                const status = getFileStatus(file);
+                return (
+                  <div
+                    key={file.id}
+                    className="flex items-center gap-[13px] border border-white/[0.08] bg-[rgba(4,18,37,0.72)] px-4 py-[13px]"
+                  >
+                    <FileText className="h-[22px] w-[22px] shrink-0 text-emerald-400" />
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-[3px] truncate text-[13px] font-semibold text-white">
+                        {file.name}
+                      </div>
+                      <div className="flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-slate-400">
+                        <span>{formatFileSize(file.size)}</span>
+                        <span>{FILE_CATEGORY_LABELS[file.category] ?? file.category}</span>
+                        <span>{getFileRoleLabel(file.role)}</span>
+                        <span>{file.extension?.toUpperCase() || file.type || "未知格式"}</span>
+                        <span>上传于 {formatIsoDate(file.uploadedAt)}</span>
+                        {file.parsedAt && <span>解析于 {formatIsoDate(file.parsedAt)}</span>}
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        {typeof file.pageCount === "number" && file.pageCount > 0 && (
+                          <span className="border border-white/[0.08] px-1.5 py-0.5 text-[10px] text-apm-dim">
+                            {file.pageCount} 页
+                          </span>
+                        )}
+                        {typeof file.characterCount === "number" && file.characterCount > 0 && (
+                          <span className="border border-white/[0.08] px-1.5 py-0.5 text-[10px] text-apm-dim">
+                            {file.characterCount.toLocaleString()} 字
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div
+                      className={`ml-auto flex shrink-0 items-center gap-[5px] text-[11px] font-semibold ${status.className}`}
+                    >
+                      {status.failed ? (
+                        <X className="h-3.5 w-3.5" />
+                      ) : (
+                        <CheckCircle className="h-3.5 w-3.5" />
+                      )}
+                      {status.label}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
