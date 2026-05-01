@@ -4,7 +4,6 @@ import type {
   FileUploadResponse,
   FileListResponse,
   FileListParams,
-  FileDeletePayload,
   FileStatsResponse,
   ProjectFile,
   FileCategory,
@@ -115,15 +114,6 @@ function completeProjectFileUpload(
  */
 function listProjectFiles(projectId: string): Promise<ApiListResponse<ProjectFileItem>> {
   return request<ApiListResponse<ProjectFileItem>>(`${APM_API_BASE}/projects/${projectId}/files`);
-}
-
-/**
- * 删除项目文件。
- */
-async function deleteProjectFile(projectId: string, fileId: string): Promise<void> {
-  await request<void>(`${APM_API_BASE}/projects/${projectId}/files/${fileId}`, {
-    method: "DELETE",
-  });
 }
 
 function getFileExtension(fileName: string) {
@@ -251,13 +241,6 @@ export async function uploadFile(
     size: payload.file.size,
     uploadedAt: new Date().toISOString(),
   };
-}
-
-/**
- * 删除文件
- */
-export async function deleteFile(payload: FileDeletePayload): Promise<void> {
-  await deleteProjectFile(payload.projectId, payload.fileId);
 }
 
 /**

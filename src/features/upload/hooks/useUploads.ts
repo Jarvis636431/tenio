@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getFileList, uploadFile, deleteFile, getFileStats } from "../services/uploads-api";
+import { getFileList, uploadFile, getFileStats } from "../services/uploads-api";
 import type { FileCategory, FileListParams, FileUploadResponse } from "../types/uploads";
 import { uploadQueryKeys } from "../queryKeys";
 
@@ -140,24 +140,6 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     },
   });
 
-  // 删除文件 Mutation
-  const deleteMutation = useMutation<void, Error, string>({
-    mutationFn: async (fileId) => {
-      if (!projectId) {
-        throw new Error("缺少项目 ID");
-      }
-      await deleteFile({ projectId, fileId });
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: uploadQueryKeys.files,
-      });
-      void queryClient.invalidateQueries({
-        queryKey: uploadQueryKeys.stats(projectId),
-      });
-    },
-  });
-
   // 清除已完成的进度
   const clearProgress = useCallback(() => {
     setUploadProgress((prev) =>
@@ -190,14 +172,12 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     // Loading 状态
     isLoading: fileListQuery.isLoading || statsQuery.isLoading,
     isUploading: uploadMutation.isPending,
-    isDeleting: deleteMutation.isPending,
 
     // Actions
     setPage,
     setCategory,
     setKeyword,
     uploadFile: uploadMutation.mutateAsync,
-    deleteFile: deleteMutation.mutateAsync,
     clearProgress,
     resetFilters,
     refetch: () => {

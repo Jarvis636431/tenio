@@ -60,11 +60,6 @@ export interface FileListResponse {
   pageSize: number;
 }
 
-export interface FileDeletePayload {
-  projectId: string;
-  fileId: string;
-}
-
 export interface FileCategoryStat {
   category: FileCategory;
   count: number;
