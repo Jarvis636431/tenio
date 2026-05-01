@@ -10,7 +10,7 @@ export { useProjectData } from "./hooks/useProjectData";
 export { projectQueryKeys } from "./queryKeys";
 
 export { ProjectTabBar } from "./components/ProjectTabBar";
-export { UploadsTab } from "./components/UploadsTab";
+export { FileInfoTab } from "./components/FileInfoTab";
 export { DocsTab } from "./components/DocsTab";
 export { RotationTab } from "./components/RotationTab";
 export { ChartTab } from "./components/ChartTab";

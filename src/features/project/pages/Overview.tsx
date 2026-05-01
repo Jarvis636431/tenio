@@ -7,7 +7,7 @@ import { DocsTab } from "../components/DocsTab";
 import { ProjectTabBar } from "../components/ProjectTabBar";
 import { ProjectTable } from "../components/ProjectTable";
 import { RotationTab } from "../components/RotationTab";
-import { UploadsTab } from "../components/UploadsTab";
+import { FileInfoTab } from "../components/FileInfoTab";
 import { useProjectData } from "../hooks/useProjectData";
 import { useProjectExport } from "../hooks/useProjectExport";
 
@@ -84,7 +84,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     () => (
       <div className={PANEL_CLASS}>
         <div className="h-full min-h-[520px] p-4">
-          <UploadsTab
+          <FileInfoTab
             projectId={resolvedProjectId}
             projectSummary={projectSummary}
             onViewResults={handleViewResults}

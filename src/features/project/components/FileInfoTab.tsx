@@ -6,7 +6,7 @@ import { FileText, X, CheckCircle, Eye, Wand2 } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 import { formatIsoDate } from "@/lib/date";
 
-interface UploadsTabProps {
+interface FileInfoTabProps {
   projectId: string | null | undefined;
   projectSummary?: {
     projectName: string;
@@ -45,7 +45,7 @@ function isParseFailed(status?: string) {
   return value === "failed" || value === "error" || value.includes("失败");
 }
 
-export function UploadsTab({ projectId, projectSummary, onViewResults }: UploadsTabProps) {
+export function FileInfoTab({ projectId, projectSummary, onViewResults }: FileInfoTabProps) {
   const { files, total, isLoading } = useUploads({ projectId, pageSize: 10 });
 
   const latestFile = files[0];
