@@ -72,7 +72,7 @@ export function ProjectTabBar({ activeTab, onChange, onExport, onRegenerate }: P
           <button
             type="button"
             onClick={onRegenerate}
-            className="flex items-center gap-1.5 rounded-sm border border-cyan-400/18 bg-transparent px-3 py-1.5 text-xs font-medium text-apm-muted transition-all hover:border-cyan-400 hover:text-cyan-400 hover:bg-cyan-400/10"
+            className="flex items-center gap-1.5 border border-white/[0.08] bg-[rgba(4,18,37,0.7)] px-3 py-1.5 text-xs font-medium text-apm-muted transition-all hover:border-cyan-400/40 hover:text-cyan-400 hover:bg-cyan-400/10"
           >
             <RotateCw className="h-3 w-3" />
             重新生成
@@ -80,7 +80,7 @@ export function ProjectTabBar({ activeTab, onChange, onExport, onRegenerate }: P
           <button
             type="button"
             onClick={onExport}
-            className="flex items-center gap-1.5 rounded-sm border border-cyan-400 bg-cyan-400 px-3 py-1.5 text-xs font-medium text-[#020c1b] transition hover:opacity-85"
+            className="flex items-center gap-1.5 border border-white/[0.08] bg-cyan-400 px-3 py-1.5 text-xs font-medium text-[#020c1b] transition hover:opacity-85"
           >
             导出全部
           </button>

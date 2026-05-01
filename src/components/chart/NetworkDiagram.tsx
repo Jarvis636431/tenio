@@ -59,6 +59,10 @@ const LAYOUT = {
   nodeH: 130,
   scaleX: 0.9,
   maxScale: 3,
+  maxInitialScale: 0.22,
+  initialScaleBoost: 3.2,
+  initialHeightRatio: 0.72,
+  viewportPadding: 32,
   scaleFactor: 1.1,
 } as const;
 
@@ -300,26 +304,49 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
 
     dagre.layout(graph);
 
-    const graphMeta = graph.graph();
-    const layoutWidth = (graphMeta.width ?? 0) + LAYOUT.padding * 2;
-    const layoutHeight = (graphMeta.height ?? 0) + LAYOUT.padding * 2;
-
-    const positioned = baseNodes.map((node) => {
+    const rawPositioned = baseNodes.map((node) => {
       const pos = graph.node(node.id);
       return {
         ...node,
-        x: (pos?.x ?? 0) - node.w / 2 + LAYOUT.padding,
-        y: (pos?.y ?? 0) - node.h / 2 + LAYOUT.padding,
+        x: (pos?.x ?? 0) - node.w / 2,
+        y: (pos?.y ?? 0) - node.h / 2,
       };
     });
 
-    const nodesMap = new Map(positioned.map((n) => [n.id, n]));
-
-    const edgeList: Edge[] = rawEdges.map((edge) => {
+    const rawEdgePoints = rawEdges.map((edge) => {
       const info = graph.edge(edge.from, edge.to);
       const points = (info?.points ?? []).map((point: { x: number; y: number }) => ({
-        x: point.x + LAYOUT.padding,
-        y: point.y + LAYOUT.padding,
+        x: point.x,
+        y: point.y,
+      }));
+      return { ...edge, points };
+    });
+
+    const nodeBounds = rawPositioned.flatMap((node) => [
+      { x: node.x, y: node.y },
+      { x: node.x + node.w, y: node.y + node.h },
+    ]);
+    const edgeBounds = rawEdgePoints.flatMap((edge) => edge.points);
+    const bounds = [...nodeBounds, ...edgeBounds];
+    const minX = Math.min(...bounds.map((point) => point.x));
+    const minY = Math.min(...bounds.map((point) => point.y));
+    const maxX = Math.max(...bounds.map((point) => point.x));
+    const maxY = Math.max(...bounds.map((point) => point.y));
+    const layoutWidth = maxX - minX + LAYOUT.padding * 2;
+    const layoutHeight = maxY - minY + LAYOUT.padding * 2;
+
+    const positioned = rawPositioned.map((node) => ({
+      ...node,
+      x: node.x - minX + LAYOUT.padding,
+      y: node.y - minY + LAYOUT.padding,
+    }));
+
+    const nodesMap = new Map(positioned.map((n) => [n.id, n]));
+
+    const edgeList: Edge[] = rawEdgePoints.map((edge) => {
+      const points = edge.points.map((point) => ({
+        x: point.x - minX + LAYOUT.padding,
+        y: point.y - minY + LAYOUT.padding,
       }));
       return { ...edge, points };
     });
@@ -339,11 +366,21 @@ export function NetworkDiagram({ tasks, onNodeClick }: NetworkDiagramProps) {
     const rect = svgRef.current.getBoundingClientRect();
     const scaleX = rect.width / width;
     const scaleY = rect.height / height;
-    const fitScale = Math.min(scaleX, scaleY) * LAYOUT.scaleX;
-    const offsetX = (rect.width - width * fitScale) / 2;
-    const offsetY = (rect.height - height * fitScale) / 2;
-    setView({ x: offsetX, y: offsetY, scale: fitScale });
-    setMinScale(fitScale);
+    const overviewScale = Math.min(scaleX, scaleY) * LAYOUT.scaleX;
+    const readableScale = Math.min(
+      scaleY * LAYOUT.initialHeightRatio,
+      overviewScale * LAYOUT.initialScaleBoost,
+      LAYOUT.maxInitialScale,
+    );
+    const nextScale = Math.max(overviewScale, readableScale);
+    const scaledWidth = width * nextScale;
+    const scaledHeight = height * nextScale;
+    const offsetX =
+      scaledWidth <= rect.width ? (rect.width - scaledWidth) / 2 : LAYOUT.viewportPadding;
+    const offsetY =
+      scaledHeight <= rect.height ? (rect.height - scaledHeight) / 2 : LAYOUT.viewportPadding;
+    setView({ x: offsetX, y: offsetY, scale: nextScale });
+    setMinScale(overviewScale);
   }, [width, height]);
 
   /* ── 初始自适应居中 ── */

@@ -47,7 +47,7 @@ function renderUnexpectedEvent(payload: UnexpectedEventPayload) {
           {tasks.map((task, index) => (
             <div
               key={`${task.name ?? "task"}-${index}`}
-              className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-2 text-xs text-cyan-100/80"
+              className="rounded-md border border-white/[0.08] bg-amber-500/10 px-2 py-2 text-xs text-cyan-100/80"
             >
               <div className="font-medium text-cyan-50">{task.name || "未命名任务"}</div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
@@ -155,7 +155,7 @@ function renderInterruptMessage(
           {tasks.map((task) => (
             <div
               key={`${task.name}-${task.id ?? ""}`}
-              className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-2 text-xs text-cyan-100/80"
+              className="rounded-md border border-white/[0.08] bg-amber-500/10 px-2 py-2 text-xs text-cyan-100/80"
             >
               <div className="font-medium text-cyan-50">{task.name}</div>
               {task.id && <div className="text-[11px] text-cyan-300/70">ID: {task.id}</div>}
@@ -168,7 +168,7 @@ function renderInterruptMessage(
       <div className="text-xs text-cyan-100/80">
         {detailLines.find((line) => line.startsWith("建议方案：")) ?? ""}
       </div>
-      <div className="rounded-md border border-amber-500/30 bg-amber-500/15 px-2 py-2 text-xs font-medium text-amber-100">
+      <div className="rounded-md border border-white/[0.08] bg-amber-500/15 px-2 py-2 text-xs font-medium text-amber-100">
         {detailLines.find((line) => line.startsWith("请确认是否执行此调整？")) ??
           "请确认是否执行此调整？"}
       </div>
@@ -265,7 +265,7 @@ function renderMessageContent(
           </code>
         ),
         pre: ({ children }) => (
-          <pre className="overflow-x-auto rounded-lg border border-cyan-900/50 bg-[#020d22] p-2 text-[12px] text-cyan-100">
+          <pre className="overflow-x-auto rounded-lg border border-white/[0.08] bg-[#020d22] p-2 text-[12px] text-cyan-100">
             {children}
           </pre>
         ),
@@ -273,12 +273,12 @@ function renderMessageContent(
           <table className="w-full border-collapse text-xs text-cyan-100/85">{children}</table>
         ),
         th: ({ children }) => (
-          <th className="border border-cyan-900/50 bg-cyan-950/60 px-2 py-1 text-left text-cyan-100">
+          <th className="border border-white/[0.08] bg-cyan-950/60 px-2 py-1 text-left text-cyan-100">
             {children}
           </th>
         ),
         td: ({ children }) => (
-          <td className="border border-cyan-900/40 px-2 py-1 text-cyan-100/80">{children}</td>
+          <td className="border border-white/[0.08] px-2 py-1 text-cyan-100/80">{children}</td>
         ),
       }}
     >
@@ -327,8 +327,8 @@ export function ChatMessage({
       <div className={cn("max-w-[82%]", { "text-right": isUser })}>
         <div
           className={cn("rounded-sm px-3 py-2 text-sm break-words whitespace-pre-line", {
-            "border border-violet-400/20 bg-violet-400/10 text-slate-100 text-right": isUser,
-            "border border-cyan-900/40 bg-[rgba(0,212,255,0.06)] text-cyan-100": !isUser,
+            "border border-white/[0.08] bg-violet-400/10 text-slate-100 text-right": isUser,
+            "border border-white/[0.08] bg-[rgba(0,212,255,0.06)] text-cyan-100": !isUser,
           })}
         >
           {renderMessageContent(
