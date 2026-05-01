@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { HardHat, MapPin, Clock } from "lucide-react";
-import { formatIsoDate } from "@/lib/date";
 import type { CrewPlanArtifact, CrewPlanTask } from "../types";
 
 interface RotationTabProps {
@@ -24,6 +23,9 @@ type Crew = {
   name: string;
   trade: string;
   color: string;
+  taskCount: number;
+  totalWorkDays: number;
+  status: string;
   tasks: RotationTask[];
 };
 
@@ -37,27 +39,25 @@ type RotationTask = {
   id: string;
   name: string;
   trade: string;
-  start?: string;
-  end?: string;
-  duration?: number;
-  status?: string;
+  location: string;
+  startLabel: string;
+  endLabel: string;
+  durationLabel: string;
+  startDate: string;
+  endDate: string;
 };
 
-function parseDurationDays(label: string): number {
-  const match = label.match(/^(\d+)/);
-  return match ? Number(match[1]) : 0;
-}
+function formatCrewStatus(status: string) {
+  const statusMap: Record<string, { label: string; hint: string; className: string }> = {
+    planned: { label: "待进场", hint: "按计划进场", className: "text-amber-400" },
+    active: { label: "进行中", hint: "现场作业中", className: "text-emerald-400" },
+    in_progress: { label: "进行中", hint: "现场作业中", className: "text-emerald-400" },
+    completed: { label: "已完成", hint: "任务已完成", className: "text-cyan-300" },
+  };
 
-function getTaskStart(task: CrewPlanTask) {
-  return task.start_date;
-}
-
-function getTaskEnd(task: CrewPlanTask) {
-  return task.end_date;
-}
-
-function getTaskDuration(task: CrewPlanTask) {
-  return parseDurationDays(task.duration_label);
+  return (
+    statusMap[status] ?? { label: status || "未知", hint: "接口状态", className: "text-slate-200" }
+  );
 }
 
 function mapTask(task: CrewPlanTask, trade: string): RotationTask {
@@ -65,9 +65,12 @@ function mapTask(task: CrewPlanTask, trade: string): RotationTask {
     id: task.crew_task_id,
     name: task.task_name,
     trade,
-    start: getTaskStart(task),
-    end: getTaskEnd(task),
-    duration: getTaskDuration(task),
+    location: task.work_location,
+    startLabel: task.start_label,
+    endLabel: task.end_label,
+    durationLabel: task.duration_label,
+    startDate: task.start_date,
+    endDate: task.end_date,
   };
 }
 
@@ -81,6 +84,9 @@ function buildTradeGroups(artifact?: CrewPlanArtifact): TradeGroup[] {
       name: crew.crew_name,
       trade: group.crew_type_name,
       color,
+      taskCount: crew.task_count,
+      totalWorkDays: crew.total_work_days,
+      status: crew.crew_status,
       tasks: crew.tasks.map((task) => mapTask(task, group.crew_type_name)),
     }));
 
@@ -90,15 +96,12 @@ function buildTradeGroups(artifact?: CrewPlanArtifact): TradeGroup[] {
 
 export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTabProps) {
   const [filter, setFilter] = useState("");
+  const [selectedCrewId, setSelectedCrewId] = useState<string | null>(null);
 
   const tradeGroups = useMemo<TradeGroup[]>(
     () => buildTradeGroups(crewPlanArtifact),
     [crewPlanArtifact],
   );
-
-  const [selectedCrew, setSelectedCrew] = useState<Crew | null>(() => {
-    return tradeGroups[0]?.crews[0] ?? null;
-  });
 
   const filteredGroups = useMemo(() => {
     if (!filter.trim()) return tradeGroups;
@@ -113,14 +116,12 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
       .filter((g) => g.crews.length > 0 || g.trade.toLowerCase().includes(kw));
   }, [tradeGroups, filter]);
 
-  const activeCrew =
-    selectedCrew && filteredGroups.some((g) => g.crews.some((c) => c.name === selectedCrew.name))
-      ? selectedCrew
-      : (filteredGroups[0]?.crews[0] ?? null);
+  const activeCrew = useMemo(() => {
+    const crews = filteredGroups.flatMap((group) => group.crews);
+    return crews.find((crew) => crew.id === selectedCrewId) ?? crews[0] ?? null;
+  }, [filteredGroups, selectedCrewId]);
 
-  const totalDays = activeCrew
-    ? activeCrew.tasks.reduce((sum, task) => sum + (task.duration || 0), 0)
-    : 0;
+  const activeCrewStatus = activeCrew ? formatCrewStatus(activeCrew.status) : null;
 
   if (isLoading) {
     return (
@@ -167,11 +168,11 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
               </div>
               <div className="space-y-1 pl-1">
                 {g.crews.map((c) => {
-                  const isActive = activeCrew?.name === c.name;
+                  const isActive = activeCrew?.id === c.id;
                   return (
                     <button
                       key={c.id}
-                      onClick={() => setSelectedCrew(c)}
+                      onClick={() => setSelectedCrewId(c.id)}
                       className={`flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-xs transition ${
                         isActive
                           ? "bg-cyan-400/10 text-cyan-200"
@@ -179,7 +180,7 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
                       }`}
                     >
                       <span className="truncate pr-2">{c.name}</span>
-                      <span className="shrink-0 text-[10px] text-apm-dim">{c.tasks.length} 项</span>
+                      <span className="shrink-0 text-[10px] text-apm-dim">{c.taskCount} 项</span>
                     </button>
                   );
                 })}
@@ -219,12 +220,12 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
             <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div className="border border-white/[0.08] bg-[rgba(4,18,37,0.7)] p-3">
                 <div className="text-[10px] text-apm-muted">任务数</div>
-                <div className="mt-1 text-xl font-bold text-white">{activeCrew.tasks.length}</div>
+                <div className="mt-1 text-xl font-bold text-white">{activeCrew.taskCount}</div>
                 <div className="text-[10px] text-apm-dim">项施工任务</div>
               </div>
               <div className="border border-white/[0.08] bg-[rgba(4,18,37,0.7)] p-3">
                 <div className="text-[10px] text-apm-muted">总工时</div>
-                <div className="mt-1 text-xl font-bold text-white">{totalDays}</div>
+                <div className="mt-1 text-xl font-bold text-white">{activeCrew.totalWorkDays}</div>
                 <div className="text-[10px] text-apm-dim">天</div>
               </div>
               <div className="border border-white/[0.08] bg-[rgba(4,18,37,0.7)] p-3">
@@ -234,8 +235,10 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
               </div>
               <div className="border border-white/[0.08] bg-[rgba(4,18,37,0.7)] p-3">
                 <div className="text-[10px] text-apm-muted">状态</div>
-                <div className="mt-1 text-sm font-bold text-amber-400">待进场</div>
-                <div className="text-[10px] text-apm-dim">按计划进场</div>
+                <div className={`mt-1 text-sm font-bold ${activeCrewStatus?.className}`}>
+                  {activeCrewStatus?.label}
+                </div>
+                <div className="text-[10px] text-apm-dim">{activeCrewStatus?.hint}</div>
               </div>
             </div>
 
@@ -243,7 +246,7 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
             <div>
               <div className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-slate-200">
                 <Clock className="h-3.5 w-3.5" style={{ color: activeCrew.color }} />
-                任务明细 · {activeCrew.tasks.length} 项
+                任务明细 · {activeCrew.taskCount} 项
               </div>
               <div className="space-y-2">
                 {activeCrew.tasks.map((t, i) => (
@@ -264,13 +267,15 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
                         className="h-3 w-3"
                         style={{ color: activeCrew.color, opacity: 0.6 }}
                       />
-                      {t.start && t.end
-                        ? `${formatIsoDate(t.start)} - ${formatIsoDate(t.end)}`
-                        : t.trade}
+                      {t.location || t.trade}
                     </span>
                     <span className="text-[10px] text-apm-dim">
-                      {t.duration !== undefined ? `${t.duration}天` : "—"}
+                      {t.startLabel} - {t.endLabel}
                     </span>
+                    <span className="text-[10px] text-apm-dim">
+                      {t.startDate} - {t.endDate}
+                    </span>
+                    <span className="text-[10px] text-apm-dim">{t.durationLabel}</span>
                   </div>
                 ))}
               </div>
