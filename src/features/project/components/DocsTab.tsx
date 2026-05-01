@@ -1,26 +1,44 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import type { DocumentArtifact } from "../types";
 
 interface DocsTabProps {
   /** 后端返回的施工组织设计 markdown 文档 */
   content: string;
+  /** 后端返回的 document 产物元信息 */
+  artifact?: DocumentArtifact;
   /** 是否可编辑（暂未实现） */
   editable?: boolean;
 }
 
-export function DocsTab({ content, editable = false }: DocsTabProps) {
+export function DocsTab({
+  content,
+  artifact,
+  editable = artifact?.can_edit ?? false,
+}: DocsTabProps) {
+  const title = artifact?.document_title ?? "施工组织设计文档";
+  const meta = [
+    typeof artifact?.word_count === "number"
+      ? `约 ${artifact.word_count.toLocaleString()} 字`
+      : null,
+    typeof artifact?.chapter_count === "number" ? `${artifact.chapter_count} 章节` : null,
+  ].filter(Boolean);
+
   return (
     <div className="flex h-full flex-col">
       {/* 工具栏 */}
       <div className="flex items-center gap-2 border-b border-cyan-400/18 bg-apm-card px-3 py-2">
         <span className="flex items-center gap-1.5 text-[11px] text-apm-muted">
           <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/90" />
-          施工组织设计文档
+          {title}
         </span>
         {editable && (
           <button className="flex items-center gap-1 border border-cyan-400/18 px-2 py-1 text-[11px] text-apm-muted transition hover:border-cyan-400 hover:text-cyan-400">
             编辑
           </button>
+        )}
+        {meta.length > 0 && (
+          <span className="ml-auto text-[10px] text-apm-dim">{meta.join(" · ")}</span>
         )}
       </div>
 

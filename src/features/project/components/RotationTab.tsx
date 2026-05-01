@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { HardHat, MapPin, Clock } from "lucide-react";
-import type { ScheduleTask } from "../types";
+import { formatIsoDate } from "@/lib/date";
+import type { CrewPlanArtifact, CrewPlanCrew, CrewPlanGroup, CrewPlanTask } from "../types";
 
 interface RotationTabProps {
-  planTasks: ScheduleTask[];
+  crewPlanArtifact?: CrewPlanArtifact;
+  isLoading?: boolean;
 }
 
 const TRADE_COLORS = [
@@ -18,10 +20,11 @@ const TRADE_COLORS = [
 ];
 
 type Crew = {
+  id: string;
   name: string;
   trade: string;
   color: string;
-  tasks: ScheduleTask[];
+  tasks: RotationTask[];
 };
 
 type TradeGroup = {
@@ -30,32 +33,114 @@ type TradeGroup = {
   crews: Crew[];
 };
 
-export function RotationTab({ planTasks }: RotationTabProps) {
+type RotationTask = {
+  id: string;
+  name: string;
+  trade: string;
+  start?: string;
+  end?: string;
+  duration?: number;
+  status?: string;
+};
+
+function getCrewTrade(crew: CrewPlanCrew, fallback = "其他工种") {
+  return crew.crewTypeName ?? crew.crew_type_name ?? crew.trade ?? fallback;
+}
+
+function getCrewName(crew: CrewPlanCrew, fallback: string) {
+  return crew.crewName ?? crew.crew_name ?? crew.name ?? fallback;
+}
+
+function getTaskName(task: CrewPlanTask) {
+  return task.taskName ?? task.task_name ?? "未命名任务";
+}
+
+function getTaskId(task: CrewPlanTask, index: number) {
+  return task.taskId ?? task.task_id ?? `task-${index}`;
+}
+
+function getTaskDuration(task: CrewPlanTask) {
+  return task.durationDays ?? task.duration_days;
+}
+
+function getTaskStart(task: CrewPlanTask) {
+  return task.startTime ?? task.start_time;
+}
+
+function getTaskEnd(task: CrewPlanTask) {
+  return task.endTime ?? task.end_time;
+}
+
+function hasCrewList(item: CrewPlanGroup | CrewPlanCrew): item is CrewPlanGroup {
+  return Array.isArray((item as CrewPlanGroup).crews);
+}
+
+function getCrewTasks(crew: CrewPlanCrew) {
+  return crew.tasks ?? crew.assignments ?? [];
+}
+
+function mapTask(task: CrewPlanTask, index: number, trade: string): RotationTask {
+  return {
+    id: getTaskId(task, index),
+    name: getTaskName(task),
+    trade,
+    start: getTaskStart(task),
+    end: getTaskEnd(task),
+    duration: getTaskDuration(task),
+    status: task.status,
+  };
+}
+
+function getCrewPlanItems(artifact?: CrewPlanArtifact) {
+  return artifact?.crew_plan ?? artifact?.crewPlan ?? artifact?.crew_types ?? [];
+}
+
+function buildTradeGroups(artifact?: CrewPlanArtifact): TradeGroup[] {
+  const groups = new Map<string, Crew[]>();
+
+  const addCrew = (crew: CrewPlanCrew, fallbackTrade: string, index: number) => {
+    const trade = getCrewTrade(crew, fallbackTrade);
+    const crewName = getCrewName(crew, `${trade}班组-${index + 1}`);
+    const tasks = getCrewTasks(crew).map((task, taskIndex) => mapTask(task, taskIndex, trade));
+    const list = groups.get(trade) ?? [];
+    list.push({
+      id: crew.crewId ?? crew.crew_id ?? `${trade}-${crewName}-${index}`,
+      name: crewName,
+      trade,
+      color: "",
+      tasks,
+    });
+    groups.set(trade, list);
+  };
+
+  getCrewPlanItems(artifact).forEach((item, index) => {
+    if (hasCrewList(item)) {
+      const trade = item.crewTypeName ?? item.crew_type_name ?? item.trade ?? "其他工种";
+      item.crews?.forEach((crew, crewIndex) => addCrew(crew, trade, crewIndex));
+      return;
+    }
+    addCrew(item, getCrewTrade(item), index);
+  });
+
+  artifact?.crews?.forEach((crew, index) => addCrew(crew, getCrewTrade(crew), index));
+
+  return Array.from(groups.entries()).map(([trade, crews], index) => {
+    const color = TRADE_COLORS[index % TRADE_COLORS.length];
+    return {
+      trade,
+      color,
+      crews: crews.map((crew) => ({ ...crew, color })),
+    };
+  });
+}
+
+export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTabProps) {
   const [filter, setFilter] = useState("");
 
-  const tradeGroups = useMemo<TradeGroup[]>(() => {
-    const byTrade = new Map<string, ScheduleTask[]>();
-    for (const task of planTasks) {
-      const trade = task.crewTypeName || "其他工种";
-      const list = byTrade.get(trade) ?? [];
-      list.push(task);
-      byTrade.set(trade, list);
-    }
-
-    return Array.from(byTrade.entries()).map(([trade, tasks], idx) => {
-      const color = TRADE_COLORS[idx % TRADE_COLORS.length];
-      // Split into 1-2 crews
-      const crewCount = Math.min(2, Math.max(1, Math.ceil(tasks.length / 6)));
-      const crews: Crew[] = Array.from({ length: crewCount }, (_, i) => ({
-        name: `${trade}班组-${i + 1}`,
-        trade,
-        color,
-        tasks: tasks.filter((_, ti) => ti % crewCount === i),
-      })).filter((c) => c.tasks.length > 0);
-
-      return { trade, color, crews };
-    });
-  }, [planTasks]);
+  const tradeGroups = useMemo<TradeGroup[]>(
+    () => buildTradeGroups(crewPlanArtifact),
+    [crewPlanArtifact],
+  );
 
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(() => {
     return tradeGroups[0]?.crews[0] ?? null;
@@ -80,13 +165,21 @@ export function RotationTab({ planTasks }: RotationTabProps) {
       : (filteredGroups[0]?.crews[0] ?? null);
 
   const totalDays = activeCrew
-    ? activeCrew.tasks.reduce((sum, t) => sum + (t.durationDays || 0), 0)
+    ? activeCrew.tasks.reduce((sum, task) => sum + (task.duration || 0), 0)
     : 0;
 
-  if (planTasks.length === 0) {
+  if (isLoading) {
     return (
       <div className="flex h-[360px] items-center justify-center text-sm text-apm-muted">
-        当前项目暂无施工任务数据
+        人员轮转加载中...
+      </div>
+    );
+  }
+
+  if (tradeGroups.length === 0) {
+    return (
+      <div className="flex h-[360px] items-center justify-center text-sm text-apm-muted">
+        当前项目暂无人员轮转数据
       </div>
     );
   }
@@ -123,7 +216,7 @@ export function RotationTab({ planTasks }: RotationTabProps) {
                   const isActive = activeCrew?.name === c.name;
                   return (
                     <button
-                      key={c.name}
+                      key={c.id}
                       onClick={() => setSelectedCrew(c)}
                       className={`flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-xs transition ${
                         isActive
@@ -201,7 +294,7 @@ export function RotationTab({ planTasks }: RotationTabProps) {
               <div className="space-y-2">
                 {activeCrew.tasks.map((t, i) => (
                   <div
-                    key={t.taskId}
+                    key={t.id}
                     className="flex flex-wrap items-center gap-2 rounded-sm border border-white/[0.06] bg-[rgba(2,14,30,0.5)] px-3 py-2"
                   >
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-[10px] text-slate-300">
@@ -211,18 +304,18 @@ export function RotationTab({ planTasks }: RotationTabProps) {
                       className="h-2 w-2 rounded-full"
                       style={{ background: activeCrew.color }}
                     />
-                    <span className="min-w-0 flex-1 truncate text-xs text-slate-200">
-                      {t.taskName}
-                    </span>
+                    <span className="min-w-0 flex-1 truncate text-xs text-slate-200">{t.name}</span>
                     <span className="flex items-center gap-1 text-[10px] text-apm-muted">
                       <MapPin
                         className="h-3 w-3"
                         style={{ color: activeCrew.color, opacity: 0.6 }}
                       />
-                      {t.crewTypeName || "—"}
+                      {t.start && t.end
+                        ? `${formatIsoDate(t.start)} - ${formatIsoDate(t.end)}`
+                        : t.trade}
                     </span>
                     <span className="text-[10px] text-apm-dim">
-                      {t.durationDays !== undefined ? `${t.durationDays}天` : "—"}
+                      {t.duration !== undefined ? `${t.duration}天` : "—"}
                     </span>
                   </div>
                 ))}

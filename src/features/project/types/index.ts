@@ -119,27 +119,75 @@ export interface ScheduleArtifact extends ArtifactBase {
 }
 
 export interface DocumentTocItem {
+  order_no: number;
   title: string;
-  level?: number;
-  anchor?: string;
-  children?: DocumentTocItem[];
 }
 
 export interface DocumentArtifact extends ArtifactBase {
   artifact_type: "document" | string;
-  title?: string;
-  content?: string;
-  markdown?: string;
-  markdown_content?: string;
-  document_content?: string;
-  word_count?: number;
-  chapter_count?: number;
-  toc?: DocumentTocItem[];
-  sections?: Array<Record<string, unknown>>;
+  scheme_id?: string;
+  process_version_id?: string;
+  document_title: string;
+  chapter_count: number;
+  word_count: number;
+  can_edit: boolean;
+  toc_items?: DocumentTocItem[];
+  content_markdown: string;
+}
+
+export interface CrewPlanTask {
+  taskId?: string;
+  task_id?: string;
+  taskName?: string;
+  task_name?: string;
+  startTime?: string;
+  start_time?: string;
+  endTime?: string;
+  end_time?: string;
+  durationDays?: number;
+  duration_days?: number;
+  status?: string;
   [key: string]: unknown;
 }
 
-export type CrewPlanArtifact = ArtifactBase & Record<string, unknown>;
+export interface CrewPlanCrew {
+  crewId?: string;
+  crew_id?: string;
+  crewName?: string;
+  crew_name?: string;
+  name?: string;
+  crewTypeName?: string;
+  crew_type_name?: string;
+  trade?: string;
+  task_count?: number;
+  tasks?: CrewPlanTask[];
+  assignments?: CrewPlanTask[];
+  [key: string]: unknown;
+}
+
+export interface CrewPlanGroup {
+  crewTypeName?: string;
+  crew_type_name?: string;
+  trade?: string;
+  crews?: CrewPlanCrew[];
+  [key: string]: unknown;
+}
+
+export interface CrewPlanArtifact extends ArtifactBase {
+  artifact_type: "crew_plan" | string;
+  crew_plan?: CrewPlanGroup[] | CrewPlanCrew[];
+  crewPlan?: CrewPlanGroup[] | CrewPlanCrew[];
+  crew_types?: CrewPlanGroup[];
+  crews?: CrewPlanCrew[];
+  summary?: {
+    crew_type_count?: number;
+    crew_count?: number;
+    crew_task_count?: number;
+    planned_start_date?: string;
+    planned_finish_date?: string;
+  };
+  [key: string]: unknown;
+}
 
 export interface TimeCostArtifact extends ArtifactBase {
   artifact_type: "time_cost" | string;

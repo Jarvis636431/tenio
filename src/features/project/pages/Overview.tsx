@@ -34,7 +34,10 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     totalDurationLabel,
     costQuery,
     documentQuery,
+    documentArtifact,
     documentContent,
+    crewPlanQuery,
+    crewPlanArtifact,
   } = useProjectData({ projectId: propsProjectId });
 
   const costCurveChart = costQuery.chartData;
@@ -106,14 +109,14 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
           </div>
         ) : documentContent.trim() ? (
           <div className="h-full min-h-[520px] p-4">
-            <DocsTab content={documentContent} />
+            <DocsTab content={documentContent} artifact={documentArtifact} />
           </div>
         ) : (
           <div className={EMPTY_PANEL_CLASS}>暂无施工组织设计文档</div>
         )}
       </div>
     ),
-    [documentQuery.isLoading, documentContent],
+    [documentQuery.isLoading, documentContent, documentArtifact],
   );
 
   const scheduleListPanel = useMemo(
@@ -147,11 +150,11 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     () => (
       <div className={PANEL_CLASS}>
         <div className="h-full min-h-[520px] p-4">
-          <RotationTab planTasks={planTasks} />
+          <RotationTab crewPlanArtifact={crewPlanArtifact} isLoading={crewPlanQuery.isLoading} />
         </div>
       </div>
     ),
-    [planTasks],
+    [crewPlanArtifact, crewPlanQuery.isLoading],
   );
 
   return (

@@ -143,6 +143,12 @@ export function useChat(options: ChatPanelOptions = {}) {
       queryClient.invalidateQueries({
         queryKey: projectQueryKeys.timeCostArtifact(projectId),
       }),
+      queryClient.invalidateQueries({
+        queryKey: projectQueryKeys.documentArtifact(projectId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: projectQueryKeys.crewPlanArtifact(projectId),
+      }),
     ]);
   };
 

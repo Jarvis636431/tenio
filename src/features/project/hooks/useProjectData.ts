@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { projectQueryKeys } from "../queryKeys";
 import {
+  getLatestCrewPlanArtifact,
   getLatestDocumentArtifact,
   getLatestGraphArtifact,
   getLatestTimeCostArtifact,
 } from "../services/project-api";
-import type { DocumentArtifact, TimeCostArtifact } from "../types";
+import type { CrewPlanArtifact, DocumentArtifact, TimeCostArtifact } from "../types";
 import { useProject } from "./useProject";
 
 interface UseProjectDataOptions {
@@ -57,13 +58,7 @@ function mapTimeCostArtifactToCostCurve(artifact?: TimeCostArtifact | null): Cos
 
 function getDocumentContent(artifact?: DocumentArtifact | null): string {
   if (!artifact) return "";
-  return (
-    artifact.markdown_content ??
-    artifact.markdown ??
-    artifact.content ??
-    artifact.document_content ??
-    ""
-  );
+  return artifact.content_markdown;
 }
 
 export function useProjectData({ projectId: propsProjectId }: UseProjectDataOptions = {}) {
@@ -180,6 +175,23 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
     () => getDocumentContent(documentQuery.data),
     [documentQuery.data],
   );
+  const documentArtifact: DocumentArtifact | undefined = documentQuery.data;
+
+  const crewPlanQuery = useQuery({
+    queryKey: resolvedProjectId
+      ? projectQueryKeys.crewPlanArtifact(resolvedProjectId)
+      : ["project", "artifact", "crew-plan", "empty"],
+    queryFn: async () => {
+      if (!resolvedProjectId) {
+        throw new Error("缺少项目 ID");
+      }
+      return getLatestCrewPlanArtifact(resolvedProjectId);
+    },
+    enabled: Boolean(resolvedProjectId),
+    refetchOnWindowFocus: false,
+  });
+
+  const crewPlanArtifact: CrewPlanArtifact | undefined = crewPlanQuery.data;
 
   return {
     resolvedProjectId,
@@ -193,6 +205,9 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
       chartData: costCurveChart,
     },
     documentQuery,
+    documentArtifact,
     documentContent,
+    crewPlanQuery,
+    crewPlanArtifact,
   };
 }
