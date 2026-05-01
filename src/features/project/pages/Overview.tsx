@@ -140,7 +140,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
   const networkPanel = useMemo(
     () => (
-      <div className={`${PANEL_CLASS} min-h-[640px]`}>
+      <div className={`${PANEL_CLASS} h-[calc(100vh-88px)] min-h-[640px] p-0`}>
         <NetworkDiagram tasks={planTasks} />
       </div>
     ),

@@ -1,3 +1,4 @@
+import { API_BASE } from "@/config";
 import { useAuthStore } from "@/stores/authStore";
 
 interface RequestOptions {
@@ -15,7 +16,28 @@ export type ApiResponse<T> = {
   status?: string;
   timestamp?: string;
   code?: number | string;
+  success?: boolean;
 };
+
+type AuthSessionPayload = {
+  access_token: string;
+  refresh_token: string;
+  expires_at: string;
+  user: {
+    user_id: string;
+    username: string;
+    display_name: string;
+    role: string;
+    role_name: string;
+    avatar_text: string;
+    account?: string;
+    is_profile_completed?: boolean;
+  };
+};
+
+const AUTH_TOKEN_EXPIRED_CODE = "AUTH_TOKEN_EXPIRED";
+const APM_API_BASE = `${API_BASE.backend}/api`;
+let refreshSessionPromise: Promise<AuthSessionPayload> | null = null;
 
 export class ApiRequestError extends Error {
   readonly status: number;
@@ -31,6 +53,28 @@ export class ApiRequestError extends Error {
 
 export function isUnauthorizedError(error: unknown): boolean {
   return error instanceof ApiRequestError && (error.status === 401 || error.status === 403);
+}
+
+function getRequestUrl(input: RequestInfo | URL): string {
+  if (input instanceof Request) return input.url;
+  return input.toString();
+}
+
+function isRefreshRequest(input: RequestInfo | URL): boolean {
+  return getRequestUrl(input).includes("/auth/refresh");
+}
+
+function isAuthTokenExpiredPayload(data: unknown): boolean {
+  if (!data || typeof data !== "object") return false;
+  const record = data as Record<string, unknown>;
+  return record.code === AUTH_TOKEN_EXPIRED_CODE;
+}
+
+function isAuthTokenExpiredError(error: unknown): boolean {
+  return (
+    error instanceof ApiRequestError &&
+    (error.status === 401 || error.status === 403 || isAuthTokenExpiredPayload(error.data))
+  );
 }
 
 function extractErrorMessage(data: unknown): string | null {
@@ -67,7 +111,12 @@ async function parseResponse<T>(response: Response): Promise<T> {
     if (response.status === 204) {
       return {} as T;
     }
-    return response.json() as Promise<T>;
+    const payload = (await response.json()) as T;
+    if (isAuthTokenExpiredPayload(payload)) {
+      const message = extractErrorMessage(payload) ?? "Token已过期";
+      throw new ApiRequestError(message, response.status, payload);
+    }
+    return payload;
   }
 
   const data = (await response.json().catch(() => null)) as unknown;
@@ -97,17 +146,65 @@ function buildRequestHeaders(options: RequestOptions): HeadersInit {
   };
 }
 
+function canRefreshRequest(input: RequestInfo | URL, options: RequestOptions): boolean {
+  return !options.token && !isRefreshRequest(input);
+}
+
+async function refreshStoredSession(): Promise<AuthSessionPayload> {
+  if (refreshSessionPromise) {
+    return refreshSessionPromise;
+  }
+
+  const refreshToken = useAuthStore.getState().refreshToken;
+  if (!refreshToken) {
+    throw new ApiRequestError("登录已过期，请重新登录", 401, null);
+  }
+
+  refreshSessionPromise = fetch(`${APM_API_BASE}/auth/refresh`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  })
+    .then(async (response) => {
+      const payload = await parseResponse<ApiResponse<AuthSessionPayload>>(response);
+      const session = unwrapApiResponseData(payload);
+      useAuthStore.getState().setSession(session);
+      return session;
+    })
+    .catch((error: unknown) => {
+      useAuthStore.getState().logout();
+      throw error;
+    })
+    .finally(() => {
+      refreshSessionPromise = null;
+    });
+
+  return refreshSessionPromise;
+}
+
 export async function requestJson<T>(
   input: RequestInfo | URL,
   options: RequestOptions = {},
+  allowAuthRefresh = true,
 ): Promise<T> {
-  const response = await fetch(input, {
-    method: options.method ?? (options.body ? "POST" : undefined),
-    headers: buildRequestHeaders(options),
-    body: options.body ?? undefined,
-  });
+  try {
+    const response = await fetch(input, {
+      method: options.method ?? (options.body ? "POST" : undefined),
+      headers: buildRequestHeaders(options),
+      body: options.body ?? undefined,
+    });
 
-  return parseResponse<T>(response);
+    return await parseResponse<T>(response);
+  } catch (error) {
+    if (allowAuthRefresh && canRefreshRequest(input, options) && isAuthTokenExpiredError(error)) {
+      await refreshStoredSession();
+      return requestJson<T>(input, options, false);
+    }
+
+    throw error;
+  }
 }
 
 export async function requestApiData<T>(

@@ -117,6 +117,117 @@ describe("http helpers", () => {
     expect(result).toEqual({ project_id: "p-001" });
   });
 
+  it("refreshes the stored session and retries when API envelope reports an expired token", async () => {
+    const fetchMock = vi.mocked(fetch);
+    useAuthStore.setState({
+      accessToken: "expired-access",
+      refreshToken: "refresh-token",
+      expiresAt: "2026-01-01T00:00:00Z",
+      user: null,
+    });
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            success: false,
+            code: "AUTH_TOKEN_EXPIRED",
+            message: "Token已过期",
+            data: null,
+          }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            data: {
+              access_token: "new-access",
+              refresh_token: "new-refresh",
+              expires_at: "2026-01-01T01:00:00Z",
+              user: {
+                user_id: "u-1",
+                username: "张三",
+                display_name: "张三",
+                role: "manager",
+                role_name: "项目经理",
+                avatar_text: "张",
+              },
+            },
+          }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            data: {
+              project_id: "p-001",
+            },
+          }),
+      } as Response);
+
+    const result = await requestApiData<{ project_id: string }>("https://example.com/api/projects");
+
+    expect(result).toEqual({ project_id: "p-001" });
+    expect(useAuthStore.getState().accessToken).toBe("new-access");
+    expect(useAuthStore.getState().refreshToken).toBe("new-refresh");
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "https://example.com/api/projects", {
+      method: undefined,
+      headers: {
+        Authorization: "Bearer expired-access",
+      },
+      body: undefined,
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "http://localhost:8000/api/auth/refresh", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh_token: "refresh-token" }),
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, "https://example.com/api/projects", {
+      method: undefined,
+      headers: {
+        Authorization: "Bearer new-access",
+      },
+      body: undefined,
+    });
+  });
+
+  it("clears the stored session when automatic token refresh fails", async () => {
+    const fetchMock = vi.mocked(fetch);
+    useAuthStore.setState({
+      accessToken: "expired-access",
+      refreshToken: "refresh-token",
+      expiresAt: "2026-01-01T00:00:00Z",
+      user: null,
+    });
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: () =>
+          Promise.resolve({
+            code: "AUTH_TOKEN_EXPIRED",
+            message: "Token已过期",
+          }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: () =>
+          Promise.resolve({
+            message: "刷新令牌已过期",
+          }),
+      } as Response);
+
+    await expect(requestJson("https://example.com/api/projects")).rejects.toThrow("刷新令牌已过期");
+    expect(useAuthStore.getState().accessToken).toBeNull();
+    expect(useAuthStore.getState().refreshToken).toBeNull();
+  });
+
   it("requestJson surfaces detail errors from the backend", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue({
