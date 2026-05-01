@@ -70,12 +70,14 @@ export interface ProjectListItem {
 export type ProjectDetail = ProjectListItem & Record<string, unknown>;
 
 export interface ArtifactBase {
-  artifact_id: string;
+  artifact_id?: string;
   artifact_type: string;
-  artifact_version: number;
+  artifact_version?: number;
   artifact_status: string;
   is_latest_version?: boolean;
   generated_at?: string;
+  scheme_id?: string;
+  process_version_id?: string;
 }
 
 export interface ScheduleTask {
@@ -96,8 +98,6 @@ export interface ScheduleTask {
 
 export interface ScheduleArtifact extends ArtifactBase {
   artifact_type: "graph" | string;
-  scheme_id?: string;
-  process_version_id?: string;
   graph: ScheduleTask[];
   resource_pool?: Record<string, number>;
   version_summary?: {
@@ -125,8 +125,6 @@ export interface DocumentTocItem {
 
 export interface DocumentArtifact extends ArtifactBase {
   artifact_type: "document" | string;
-  scheme_id?: string;
-  process_version_id?: string;
   document_title: string;
   chapter_count: number;
   word_count: number;
@@ -136,49 +134,39 @@ export interface DocumentArtifact extends ArtifactBase {
 }
 
 export interface CrewPlanTask {
-  taskId?: string;
-  task_id?: string;
-  taskName?: string;
-  task_name?: string;
-  startTime?: string;
-  start_time?: string;
-  endTime?: string;
-  end_time?: string;
-  durationDays?: number;
-  duration_days?: number;
-  status?: string;
+  crew_task_id: string;
+  task_name: string;
+  work_location: string;
+  start_label: string;
+  end_label: string;
+  duration_label: string;
+  start_date: string;
+  end_date: string;
   [key: string]: unknown;
 }
 
 export interface CrewPlanCrew {
-  crewId?: string;
-  crew_id?: string;
-  crewName?: string;
-  crew_name?: string;
-  name?: string;
-  crewTypeName?: string;
-  crew_type_name?: string;
-  trade?: string;
-  task_count?: number;
-  tasks?: CrewPlanTask[];
-  assignments?: CrewPlanTask[];
+  crew_id: string;
+  crew_name: string;
+  task_count: number;
+  total_work_days: number;
+  crew_status: string;
+  tasks: CrewPlanTask[];
   [key: string]: unknown;
 }
 
 export interface CrewPlanGroup {
-  crewTypeName?: string;
-  crew_type_name?: string;
-  trade?: string;
-  crews?: CrewPlanCrew[];
+  crew_type_code: string;
+  crew_type_name: string;
+  color_hex: string;
+  crew_count: number;
+  crews: CrewPlanCrew[];
   [key: string]: unknown;
 }
 
 export interface CrewPlanArtifact extends ArtifactBase {
   artifact_type: "crew_plan" | string;
-  crew_plan?: CrewPlanGroup[] | CrewPlanCrew[];
-  crewPlan?: CrewPlanGroup[] | CrewPlanCrew[];
   crew_types?: CrewPlanGroup[];
-  crews?: CrewPlanCrew[];
   summary?: {
     crew_type_count?: number;
     crew_count?: number;

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { HardHat, MapPin, Clock } from "lucide-react";
 import { formatIsoDate } from "@/lib/date";
-import type { CrewPlanArtifact, CrewPlanCrew, CrewPlanGroup, CrewPlanTask } from "../types";
+import type { CrewPlanArtifact, CrewPlanTask } from "../types";
 
 interface RotationTabProps {
   crewPlanArtifact?: CrewPlanArtifact;
@@ -43,94 +43,48 @@ type RotationTask = {
   status?: string;
 };
 
-function getCrewTrade(crew: CrewPlanCrew, fallback = "其他工种") {
-  return crew.crewTypeName ?? crew.crew_type_name ?? crew.trade ?? fallback;
-}
-
-function getCrewName(crew: CrewPlanCrew, fallback: string) {
-  return crew.crewName ?? crew.crew_name ?? crew.name ?? fallback;
-}
-
-function getTaskName(task: CrewPlanTask) {
-  return task.taskName ?? task.task_name ?? "未命名任务";
-}
-
-function getTaskId(task: CrewPlanTask, index: number) {
-  return task.taskId ?? task.task_id ?? `task-${index}`;
-}
-
-function getTaskDuration(task: CrewPlanTask) {
-  return task.durationDays ?? task.duration_days;
+function parseDurationDays(label: string): number {
+  const match = label.match(/^(\d+)/);
+  return match ? Number(match[1]) : 0;
 }
 
 function getTaskStart(task: CrewPlanTask) {
-  return task.startTime ?? task.start_time;
+  return task.start_date;
 }
 
 function getTaskEnd(task: CrewPlanTask) {
-  return task.endTime ?? task.end_time;
+  return task.end_date;
 }
 
-function hasCrewList(item: CrewPlanGroup | CrewPlanCrew): item is CrewPlanGroup {
-  return Array.isArray((item as CrewPlanGroup).crews);
+function getTaskDuration(task: CrewPlanTask) {
+  return parseDurationDays(task.duration_label);
 }
 
-function getCrewTasks(crew: CrewPlanCrew) {
-  return crew.tasks ?? crew.assignments ?? [];
-}
-
-function mapTask(task: CrewPlanTask, index: number, trade: string): RotationTask {
+function mapTask(task: CrewPlanTask, trade: string): RotationTask {
   return {
-    id: getTaskId(task, index),
-    name: getTaskName(task),
+    id: task.crew_task_id,
+    name: task.task_name,
     trade,
     start: getTaskStart(task),
     end: getTaskEnd(task),
     duration: getTaskDuration(task),
-    status: task.status,
   };
-}
-
-function getCrewPlanItems(artifact?: CrewPlanArtifact) {
-  return artifact?.crew_plan ?? artifact?.crewPlan ?? artifact?.crew_types ?? [];
 }
 
 function buildTradeGroups(artifact?: CrewPlanArtifact): TradeGroup[] {
-  const groups = new Map<string, Crew[]>();
+  const crewTypes = artifact?.crew_types ?? [];
 
-  const addCrew = (crew: CrewPlanCrew, fallbackTrade: string, index: number) => {
-    const trade = getCrewTrade(crew, fallbackTrade);
-    const crewName = getCrewName(crew, `${trade}班组-${index + 1}`);
-    const tasks = getCrewTasks(crew).map((task, taskIndex) => mapTask(task, taskIndex, trade));
-    const list = groups.get(trade) ?? [];
-    list.push({
-      id: crew.crewId ?? crew.crew_id ?? `${trade}-${crewName}-${index}`,
-      name: crewName,
-      trade,
-      color: "",
-      tasks,
-    });
-    groups.set(trade, list);
-  };
-
-  getCrewPlanItems(artifact).forEach((item, index) => {
-    if (hasCrewList(item)) {
-      const trade = item.crewTypeName ?? item.crew_type_name ?? item.trade ?? "其他工种";
-      item.crews?.forEach((crew, crewIndex) => addCrew(crew, trade, crewIndex));
-      return;
-    }
-    addCrew(item, getCrewTrade(item), index);
-  });
-
-  artifact?.crews?.forEach((crew, index) => addCrew(crew, getCrewTrade(crew), index));
-
-  return Array.from(groups.entries()).map(([trade, crews], index) => {
-    const color = TRADE_COLORS[index % TRADE_COLORS.length];
-    return {
-      trade,
+  return crewTypes.map((group) => {
+    const color = group.color_hex || TRADE_COLORS[0];
+    const crews: Crew[] = group.crews.map((crew) => ({
+      id: crew.crew_id,
+      name: crew.crew_name,
+      trade: group.crew_type_name,
       color,
-      crews: crews.map((crew) => ({ ...crew, color })),
-    };
+      tasks: crew.tasks.map((task) => mapTask(task, group.crew_type_name)),
+    }));
+
+    return { trade: group.crew_type_name, color, crews };
   });
 }
 
