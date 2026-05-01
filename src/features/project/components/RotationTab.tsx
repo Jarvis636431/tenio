@@ -142,7 +142,7 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
   return (
     <div className="flex h-full min-h-[520px] flex-col gap-4 lg:flex-row">
       {/* Left sidebar */}
-      <div className="w-full shrink-0 border border-cyan-400/18 bg-apm-card p-3 lg:w-[260px]">
+      <div className="w-full shrink-0 border border-white/[0.08] bg-apm-card p-3 lg:w-[260px]">
         <div className="relative mb-3">
           <input
             type="text"
@@ -150,7 +150,7 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="搜索班组..."
-            className="h-8 w-full rounded-sm border border-cyan-400/18 bg-transparent px-3 text-xs text-slate-100 placeholder:text-apm-dim outline-none focus:border-cyan-400/40"
+            className="h-8 w-full rounded-sm border border-white/[0.08] bg-transparent px-3 text-xs text-slate-100 placeholder:text-apm-dim outline-none focus:border-cyan-400/40"
           />
         </div>
         <div className="max-h-[420px] overflow-y-auto space-y-3 lg:max-h-none">
@@ -191,7 +191,7 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
       </div>
 
       {/* Right main */}
-      <div className="flex-1 border border-cyan-400/18 bg-apm-card p-4">
+      <div className="flex-1 border border-white/[0.08] bg-apm-card p-4">
         {!activeCrew ? (
           <div className="flex h-[200px] items-center justify-center text-sm text-apm-muted">
             请选择左侧班组查看详情
@@ -252,7 +252,7 @@ export function RotationTab({ crewPlanArtifact, isLoading = false }: RotationTab
                 {activeCrew.tasks.map((t, i) => (
                   <div
                     key={t.id}
-                    className="flex flex-wrap items-center gap-2 rounded-sm border border-white/[0.06] bg-[rgba(2,14,30,0.5)] px-3 py-2"
+                    className="flex flex-wrap items-center gap-2 rounded-sm border border-white/[0.08] bg-[rgba(2,14,30,0.5)] px-3 py-2"
                   >
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-[10px] text-slate-300">
                       {i + 1}

@@ -39,7 +39,7 @@ export function DocsTab({
   return (
     <div className="flex h-full flex-col gap-3">
       {/* 工具栏 */}
-      <div className="flex shrink-0 items-center gap-2 border border-cyan-400/18 bg-apm-card px-[13px] py-[9px]">
+      <div className="flex shrink-0 items-center gap-2 border border-white/[0.08] bg-apm-card px-[13px] py-[9px]">
         <span className="flex items-center gap-1.5 text-[11px] text-apm-muted">
           <FileText className="h-3 w-3 text-cyan-400" />
           施工组织设计文档
@@ -47,7 +47,7 @@ export function DocsTab({
         {editable && (
           <button
             type="button"
-            className="flex items-center gap-1 border border-cyan-400/18 bg-transparent px-[9px] py-1 text-[11px] text-apm-muted transition hover:border-cyan-400 hover:text-cyan-400"
+            className="flex items-center gap-1 border border-white/[0.08] bg-transparent px-[9px] py-1 text-[11px] text-apm-muted transition hover:border-cyan-400 hover:text-cyan-400"
           >
             <Edit3 className="h-3 w-3" />
             编辑
@@ -59,13 +59,13 @@ export function DocsTab({
       </div>
 
       {/* Markdown 内容 */}
-      <div className="flex-1 overflow-y-auto border border-cyan-400/18 bg-white/[0.015] px-5 py-6 text-[13px] leading-[1.95] text-[rgba(200,215,235,0.82)] lg:px-9 lg:py-7">
+      <div className="flex-1 overflow-y-auto border border-white/[0.08] bg-white/[0.015] px-5 py-6 text-[13px] leading-[1.95] text-[rgba(200,215,235,0.82)] lg:px-9 lg:py-7">
         <h1 className="mb-[18px] border-b border-cyan-400/18 pb-3 text-center text-lg font-bold text-white">
           {title}
         </h1>
 
         {tocItems.length > 0 && (
-          <div className="mb-[18px] border border-cyan-400/18 bg-[rgba(0,20,55,0.4)] px-[18px] py-3.5">
+          <div className="mb-[18px] border border-white/[0.08] bg-[rgba(0,20,55,0.4)] px-[18px] py-3.5">
             <div className="mb-2 flex items-center text-[11px] font-bold tracking-[0.1em] text-cyan-400">
               <List className="mr-1.5 h-3 w-3" />
               目录

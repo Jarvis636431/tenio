@@ -24,7 +24,7 @@ interface InfoCardProps {
 
 function InfoCard({ label, value, sub }: InfoCardProps) {
   return (
-    <div className="relative border border-cyan-400/18 bg-[rgba(4,18,37,0.85)] px-3.5 py-3">
+    <div className="relative border border-white/[0.08] bg-[rgba(4,18,37,0.85)] px-3.5 py-3">
       <span className="absolute left-0 top-0 h-full w-0.5 bg-gradient-to-b from-cyan-400 to-transparent" />
       <div className="mb-[5px] text-[9px] font-semibold uppercase tracking-[0.15em] text-cyan-400/50">
         {label}
@@ -135,12 +135,12 @@ export function FileInfoTab({ projectId, projectSummary, onViewResults }: FileIn
           <Skeleton className="h-[128px] w-full" />
         </div>
       ) : !hasFile || !latestFile ? (
-        <div className="flex h-[260px] items-center justify-center border border-cyan-400/18 bg-[rgba(4,18,37,0.55)] text-sm text-slate-400">
+        <div className="flex h-[260px] items-center justify-center border border-white/[0.08] bg-[rgba(4,18,37,0.55)] text-sm text-slate-400">
           暂无已上传资料
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-[13px] border border-emerald-400/30 bg-emerald-500/[0.06] px-4 py-[13px]">
+          <div className="flex items-center gap-[13px] border border-white/[0.08] bg-emerald-500/[0.06] px-4 py-[13px]">
             <FileText className="h-[22px] w-[22px] shrink-0 text-emerald-400" />
             <div className="min-w-0 flex-1">
               <div className="mb-[3px] truncate text-[13px] font-semibold text-white">
@@ -175,7 +175,7 @@ export function FileInfoTab({ projectId, projectSummary, onViewResults }: FileIn
             </div>
           </div>
 
-          <div className="relative flex flex-col gap-[18px] border border-cyan-400/18 bg-[linear-gradient(135deg,rgba(0,40,100,0.35),rgba(0,20,55,0.45))] px-[22px] py-[18px] sm:flex-row sm:items-center">
+          <div className="relative flex flex-col gap-[18px] border border-white/[0.08] bg-[linear-gradient(135deg,rgba(0,40,100,0.35),rgba(0,20,55,0.45))] px-[22px] py-[18px] sm:flex-row sm:items-center">
             <span className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-cyan-400 via-cyan-400/20 to-transparent" />
             <div className="min-w-0 flex-1">
               <div className="mb-1 text-[15px] font-bold text-white">
@@ -195,7 +195,7 @@ export function FileInfoTab({ projectId, projectSummary, onViewResults }: FileIn
                 ].map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 border border-cyan-400/18 px-[9px] py-[3px] text-[10px] font-medium text-slate-400"
+                    className="inline-flex items-center gap-1 border border-white/[0.08] px-[9px] py-[3px] text-[10px] font-medium text-slate-400"
                   >
                     <span className="h-[5px] w-[5px] rounded-full bg-emerald-400" />
                     {tag}
