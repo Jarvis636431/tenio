@@ -7,6 +7,7 @@ import {
   getLatestDocumentArtifact,
   getLatestGraphArtifact,
   getLatestTimeCostArtifact,
+  getWorkbenchUploadSummary,
 } from "../services/project-api";
 import type { CrewPlanArtifact, DocumentArtifact, TimeCostArtifact } from "../types";
 import { useProject } from "./useProject";
@@ -185,6 +186,20 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
 
   const crewPlanArtifact: CrewPlanArtifact | undefined = crewPlanQuery.data;
 
+  const uploadSummaryQuery = useQuery({
+    queryKey: resolvedProjectId
+      ? projectQueryKeys.uploadSummary(resolvedProjectId)
+      : ["project", "workbench", "upload-summary", "empty"],
+    queryFn: async () => {
+      if (!resolvedProjectId) {
+        throw new Error("缺少项目 ID");
+      }
+      return getWorkbenchUploadSummary(resolvedProjectId);
+    },
+    enabled: Boolean(resolvedProjectId),
+    refetchOnWindowFocus: false,
+  });
+
   return {
     resolvedProjectId,
     graphArtifact,
@@ -201,5 +216,7 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
     documentContent,
     crewPlanQuery,
     crewPlanArtifact,
+    uploadSummaryQuery,
+    projectInfo: uploadSummaryQuery.data?.project_info ?? null,
   };
 }

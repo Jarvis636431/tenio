@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, X, CheckCircle, Eye, Wand2 } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 import { formatIsoDate } from "@/lib/date";
+import type { WorkbenchProjectInfo } from "../types";
 import type { ProjectFile } from "@/features/upload";
 
 interface FileInfoTabProps {
@@ -14,6 +15,7 @@ interface FileInfoTabProps {
     planTaskCount: number;
     totalDurationLabel: string;
   };
+  projectInfo?: WorkbenchProjectInfo | null;
   onViewResults?: () => void;
 }
 
@@ -71,60 +73,107 @@ function getFileStatus(file: ProjectFile) {
   return { failed, label, className };
 }
 
-export function FileInfoTab({ projectId, projectSummary, onViewResults }: FileInfoTabProps) {
+function formatText(value?: string | null) {
+  const text = value?.trim();
+  return text || "—";
+}
+
+function formatArea(value?: number | null) {
+  if (!Number.isFinite(value ?? Number.NaN)) return "—";
+  return `${Number(value).toLocaleString("zh-CN")}㎡`;
+}
+
+function formatDurationDays(value?: number | null, fallback?: string) {
+  if (Number.isFinite(value ?? Number.NaN)) return `${value}天`;
+  return fallback || "—";
+}
+
+function formatMoney(value?: number | null) {
+  if (!Number.isFinite(value ?? Number.NaN)) return "—";
+  const yuan = Number(value) / 100;
+  if (Math.abs(yuan) >= 100000000) return `${(yuan / 100000000).toFixed(2)}亿元`;
+  if (Math.abs(yuan) >= 10000) return `${(yuan / 10000).toFixed(2)}万元`;
+  return `${yuan.toLocaleString("zh-CN", { maximumFractionDigits: 2 })}元`;
+}
+
+export function FileInfoTab({
+  projectId,
+  projectSummary,
+  projectInfo,
+  onViewResults,
+}: FileInfoTabProps) {
   const { files, total, isLoading } = useUploads({ projectId, pageSize: 100 });
 
   const hasFile = files.length > 0;
   const taskCount = projectSummary?.planTaskCount ?? 0;
-  const duration = projectSummary?.totalDurationLabel ?? "—";
-  const hasGeneratedArtifacts = taskCount > 0 || (duration !== "—" && duration.trim() !== "");
+  const generatedDuration = projectSummary?.totalDurationLabel ?? "—";
+  const duration = formatDurationDays(projectInfo?.contract_duration_days, generatedDuration);
+  const hasGeneratedArtifacts =
+    taskCount > 0 || (generatedDuration !== "—" && generatedDuration.trim() !== "");
   const generatedTagCount = taskCount > 0 ? taskCount : "—";
   const infoCards = useMemo(
     () => [
       {
         label: "项目名称",
         value: (
-          <span className="block text-xs leading-snug">{projectSummary?.projectName || "—"}</span>
+          <span className="block text-xs leading-snug">
+            {formatText(projectInfo?.project_name ?? projectSummary?.projectName)}
+          </span>
         ),
-        sub: hasGeneratedArtifacts ? "建设工程施工" : "等待 AI 提取",
+        sub: formatText(projectInfo?.project_subtitle ?? projectInfo?.location),
       },
       {
         label: "建设规模",
-        value: "—",
-        sub: "建筑面积（约）",
+        value: formatArea(projectInfo?.building_area_sqm),
+        sub: projectInfo?.building_area_sqm ? "建筑面积（约）" : "建筑面积：—",
       },
       {
         label: "合同工期",
         value: duration,
-        sub: "质量要求：—",
+        sub: `质量要求：${formatText(projectInfo?.quality_standard)}`,
       },
       {
         label: "发包价",
-        value: "—",
-        sub: "控制价 —",
+        value: formatMoney(projectInfo?.contract_amount_cents),
+        sub: `控制价 ${formatMoney(projectInfo?.control_amount_cents)}`,
       },
       {
         label: "招标人",
-        value: "—",
-        sub: "联系人：—",
+        value: formatText(projectInfo?.employer_name),
+        sub: `联系人：${formatText(projectInfo?.employer_contact_name)}`,
       },
       {
         label: "资质要求",
-        value: "—",
-        sub: "建筑工程施工",
+        value: formatText(projectInfo?.qualification_requirement_text),
+        sub: "资质要求",
       },
       {
         label: "资金来源",
-        value: "—",
-        sub: "待提取",
+        value: formatText(projectInfo?.funding_source),
+        sub: projectInfo?.funding_source ? "已提取" : "待提取",
       },
       {
         label: "评标方式",
-        value: "—",
-        sub: "资格后审",
+        value: formatText(projectInfo?.bid_evaluation_method),
+        sub: "评标办法",
       },
     ],
-    [duration, hasGeneratedArtifacts, projectSummary?.projectName],
+    [
+      duration,
+      projectInfo?.bid_evaluation_method,
+      projectInfo?.building_area_sqm,
+      projectInfo?.contract_amount_cents,
+      projectInfo?.control_amount_cents,
+      projectInfo?.employer_contact_name,
+      projectInfo?.employer_name,
+      projectInfo?.funding_source,
+      projectInfo?.location,
+      projectInfo?.project_name,
+      projectInfo?.project_subtitle,
+      projectInfo?.quality_standard,
+      projectInfo?.qualification_requirement_text,
+      projectSummary?.projectName,
+    ],
   );
 
   if (!projectId) {

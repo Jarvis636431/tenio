@@ -38,6 +38,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     documentContent,
     crewPlanQuery,
     crewPlanArtifact,
+    projectInfo,
   } = useProjectData({ projectId: propsProjectId });
 
   const costCurveChart = costQuery.chartData;
@@ -93,12 +94,13 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
           <FileInfoTab
             projectId={resolvedProjectId}
             projectSummary={projectSummary}
+            projectInfo={projectInfo}
             onViewResults={handleViewResults}
           />
         </div>
       </div>
     ),
-    [resolvedProjectId, projectSummary, handleViewResults],
+    [resolvedProjectId, projectSummary, projectInfo, handleViewResults],
   );
 
   const docsPanel = useMemo(

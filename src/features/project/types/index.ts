@@ -263,7 +263,24 @@ export interface OperationStatus {
   [key: string]: unknown;
 }
 
+export interface WorkbenchProjectInfo {
+  project_name?: string | null;
+  project_subtitle?: string | null;
+  location?: string | null;
+  building_area_sqm?: number | null;
+  contract_duration_days?: number | null;
+  quality_standard?: string | null;
+  contract_amount_cents?: number | null;
+  control_amount_cents?: number | null;
+  employer_name?: string | null;
+  employer_contact_name?: string | null;
+  qualification_requirement_text?: string | null;
+  funding_source?: string | null;
+  bid_evaluation_method?: string | null;
+}
+
 export interface WorkbenchUploadSummary {
+  project_info?: WorkbenchProjectInfo | null;
   [key: string]: unknown;
 }
 

@@ -49,7 +49,7 @@
 | AI 助手/agent-service | `GET`    | `/api/agent/sessions`                                     | 获取当前用户在当前项目下的会话列表，外部服务接口 |
 | AI 助手/agent-service | `GET`    | `/api/agent/sessions/{chat_session_id}/messages`          | 获取指定会话消息记录，外部服务接口               |
 | AI 助手/agent-service | `POST`   | `/api/agent/sessions/{chat_session_id}/messages`          | 发送 AI 消息，外部服务接口                       |
-| AI 助手/agent-service | `GET`    | `/api/agent/streams/{stream_id}/sse`                      | 订阅 AI 流式输出，外部服务接口                   |
+![1777741571925](image/apm-frontend-api-field-spec/1777741571925.png)| AI 助手/agent-service | `GET`    | `/api/agent/streams/{stream_id}/sse`                      | 订阅 AI 流式输出，外部服务接口                   |
 | 工作台/方案           | `GET`    | `/api/projects/{project_id}/schemes`                      | 获取项目施工方案列表                             |
 | 工作台/方案           | `POST`   | `/api/projects/{project_id}/schemes/{scheme_id}/activate` | 切换当前激活方案                                 |
 | 工作台/动作           | `GET`    | `/api/projects/{project_id}/operations/{operation_id}`    | 查询正式动作状态                                 |
