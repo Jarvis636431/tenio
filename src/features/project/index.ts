@@ -15,6 +15,7 @@ export { DocsTab } from "./components/DocsTab";
 export { RotationTab } from "./components/RotationTab";
 export { ChartTab } from "./components/ChartTab";
 export { ProjectTable } from "./components/ProjectTable";
+export { ProjectGenerationStatusDialog } from "./components/ProjectGenerationStatusDialog";
 
 export {
   activateProjectScheme,

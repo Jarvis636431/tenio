@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { useProject, useProjectMetrics } from "../hooks/useProject";
+import { ProjectGenerationStatusDialog } from "../components/ProjectGenerationStatusDialog";
 
 type ProjectFilter = "all" | "in_progress" | "completed" | "pending";
 
@@ -397,6 +398,7 @@ function ProjectsPage() {
           </div>
         </div>
       </main>
+      <ProjectGenerationStatusDialog />
     </div>
   );
 }

@@ -1,12 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type DragEvent,
-} from "react";
+import { useCallback, useMemo, useState, type ChangeEvent, type DragEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -24,11 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/layout/AppHeader";
-import {
-  getProjectGenerationStatus,
-  startProjectGeneration,
-  type GenerationStep,
-} from "@/features/project";
+import { startProjectGeneration } from "@/features/project";
+import { useGenerationStore } from "@/stores/generationStore";
 import { useUploads } from "../hooks/useUploads";
 import type { FileCategory, FileStatus } from "../types/uploads";
 
@@ -98,15 +87,6 @@ const OPTIONAL_ZONES: UploadZone[] = [
   },
 ];
 
-const FALLBACK_GENERATION_STEPS = [
-  "文件解析中...",
-  "提取项目信息",
-  "生成施工组织设计",
-  "生成进度计划",
-  "生成甘特图 & 网络图",
-  "工期-成本分析 & 人员轮转",
-];
-
 function createQueueItem(file: File, category: FileCategory): UploadQueueItem {
   return {
     id: `file-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -139,95 +119,16 @@ function formatFileSize(size: number) {
   return `${size} B`;
 }
 
-function isGenerationStepDone(status?: string) {
-  const value = status?.toLowerCase() ?? "";
-  return value === "succeeded" || value === "completed" || value.includes("完成");
-}
-
-function isGenerationStepRunning(status?: string) {
-  const value = status?.toLowerCase() ?? "";
-  return value === "running" || value === "processing" || value.includes("进行");
-}
-
-function createAbortError() {
-  const error = new Error("生成轮询已取消");
-  error.name = "AbortError";
-  return error;
-}
-
-function throwIfAborted(signal: AbortSignal) {
-  if (signal.aborted) {
-    throw createAbortError();
-  }
-}
-
-function waitForNextPoll(signal: AbortSignal, delayMs: number) {
-  return new Promise<void>((resolve, reject) => {
-    if (signal.aborted) {
-      reject(createAbortError());
-      return;
-    }
-
-    function handleAbort() {
-      window.clearTimeout(timeoutId);
-      reject(createAbortError());
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      signal.removeEventListener("abort", handleAbort);
-      resolve();
-    }, delayMs);
-
-    signal.addEventListener("abort", handleAbort, { once: true });
-  });
-}
-
 function UploadPage() {
   const navigate = useNavigate();
   const [files, setFiles] = useState<UploadQueueItem[]>([]);
   const [isAllUploading, setIsAllUploading] = useState(false);
   const [dragTarget, setDragTarget] = useState<FileCategory | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generationSteps, setGenerationSteps] = useState<GenerationStep[]>([]);
-  const [generationError, setGenerationError] = useState<string | null>(null);
   const [fileSelectionError, setFileSelectionError] = useState<string | null>(null);
   const [uploadedProjectId, setUploadedProjectId] = useState<string | null>(null);
-  const generationAbortRef = useRef<AbortController | null>(null);
 
   const { uploadFile, uploadProgress } = useUploads({ projectId: null });
-
-  useEffect(() => {
-    return () => {
-      generationAbortRef.current?.abort();
-    };
-  }, []);
-
-  const pollGenerationStatus = useCallback(
-    async (projectId: string, signal: AbortSignal) => {
-      const maxAttempts = 180;
-      for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-        throwIfAborted(signal);
-        const status = await getProjectGenerationStatus(projectId);
-        throwIfAborted(signal);
-        setGenerationSteps(status.steps ?? []);
-
-        const normalizedStatus = status.generation_status.toLowerCase();
-        if (normalizedStatus === "succeeded" || normalizedStatus === "completed") {
-          navigate(`/project/${projectId}`, { replace: true });
-          return;
-        }
-
-        if (normalizedStatus === "failed") {
-          throw new Error(status.error_message ?? "生成失败，请稍后重试");
-        }
-
-        await waitForNextPoll(signal, 2000);
-      }
-
-      throw new Error("生成超时，请稍后在项目工作台查看结果");
-    },
-    [navigate],
-  );
+  const startGenerationTask = useGenerationStore((state) => state.startGeneration);
 
   const progressMap = useMemo(
     () =>
@@ -374,25 +275,23 @@ function UploadPage() {
           throw new Error("缺少项目 ID，无法启动生成");
         }
 
-        setIsGenerating(true);
-        setGenerationError(null);
-        setGenerationSteps([]);
-
-        generationAbortRef.current?.abort();
-        generationAbortRef.current = new AbortController();
-
-        await startProjectGeneration(targetProjectId, { trigger_source: "upload" });
-        await pollGenerationStatus(targetProjectId, generationAbortRef.current.signal);
+        const generation = await startProjectGeneration(targetProjectId, {
+          trigger_source: "upload",
+        });
+        startGenerationTask({
+          projectId: targetProjectId,
+          generationJobId: generation.generation_job_id,
+          generationStatus: generation.generation_status,
+          startedAt: generation.started_at,
+        });
+        navigate("/projects", { replace: true });
       }
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        return;
-      }
-      setGenerationError(error instanceof Error ? error.message : "生成失败，请稍后重试");
+      setFileSelectionError(error instanceof Error ? error.message : "生成失败，请稍后重试");
     } finally {
       setIsAllUploading(false);
     }
-  }, [files, pollGenerationStatus, uploadFile, uploadedProjectId]);
+  }, [files, navigate, startGenerationTask, uploadFile, uploadedProjectId]);
 
   const handleSkip = useCallback(() => {
     navigate("/projects");
@@ -402,21 +301,6 @@ function UploadPage() {
   const allCompleted = files.length > 0 && completedCount === files.length;
   const requiredFiles = files.filter((file) => file.category === REQUIRED_ZONE.category);
   const hasRequiredFiles = requiredFiles.length > 0;
-  const displayGenerationSteps =
-    generationSteps.length > 0
-      ? generationSteps
-          .slice()
-          .sort((a, b) => a.step_order - b.step_order)
-          .map((step) => ({
-            key: step.step_code,
-            label: step.step_name,
-            status: step.step_status,
-          }))
-      : FALLBACK_GENERATION_STEPS.map((step, index) => ({
-          key: `fallback-${index}`,
-          label: step,
-          status: index === 0 ? "running" : "pending",
-        }));
   const filesByCategory = useMemo(() => {
     return files.reduce<Record<FileCategory, UploadQueueItem[]>>(
       (accumulator, item) => {
@@ -642,7 +526,7 @@ function UploadPage() {
           </button>
           <Button
             onClick={() => void uploadAll()}
-            disabled={!hasRequiredFiles || isAllUploading || isGenerating}
+            disabled={!hasRequiredFiles || isAllUploading}
             className="h-12 rounded-lg bg-cyan-400 px-10 py-3 text-base font-bold text-slate-950 shadow-lg shadow-cyan-400/30 transition-all hover:bg-cyan-300 hover:shadow-cyan-400/50 disabled:bg-slate-500 disabled:text-slate-300 disabled:shadow-none"
           >
             <Sparkles className="mr-2 h-4 w-4" />
@@ -654,66 +538,6 @@ function UploadPage() {
           </Button>
         </div>
       </div>
-
-      {/* Generating Overlay */}
-      {isGenerating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0e17]/95">
-          <div className="w-80 text-center">
-            {generationError ? (
-              <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-red-400/40 bg-red-500/10 text-red-300">
-                <X className="h-7 w-7" />
-              </div>
-            ) : (
-              <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-[3px] border-slate-700 border-t-cyan-400" />
-            )}
-            <h2 className="mb-2 text-xl font-bold text-white">
-              {generationError ? "生成失败" : "AI 正在智能生成..."}
-            </h2>
-            <p className="mb-8 text-sm text-slate-400">
-              {generationError ?? "正在解析文件并生成施工组织设计方案"}
-            </p>
-            <div className="space-y-2 text-left">
-              {displayGenerationSteps.map((step) => {
-                const isDone = isGenerationStepDone(step.status);
-                const isRunning = !generationError && isGenerationStepRunning(step.status);
-                return (
-                  <div
-                    key={step.key}
-                    className={cn(
-                      "flex items-center gap-3 text-sm",
-                      isDone ? "text-emerald-400" : isRunning ? "text-cyan-300" : "text-slate-500",
-                    )}
-                  >
-                    {isDone ? (
-                      <CheckCircle className="h-4 w-4 shrink-0" />
-                    ) : isRunning ? (
-                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                    ) : (
-                      <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600" />
-                    )}
-                    <span>{step.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-            {generationError && (
-              <div className="mt-7 flex justify-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsGenerating(false);
-                    setGenerationError(null);
-                  }}
-                  className="border-slate-600 bg-transparent text-slate-300 hover:border-cyan-400/60 hover:text-cyan-300"
-                >
-                  返回修改
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
