@@ -113,10 +113,11 @@ export function AppHeader({
       {/* Back button (upload mode) */}
       {showBackButton && (
         <button
+          type="button"
           onClick={handleBack}
-          className="rounded-md border border-slate-600 bg-transparent px-4 py-1.5 text-sm text-slate-400 transition-all hover:border-cyan-400/60 hover:text-cyan-300"
+          className="flex items-center gap-1.5 border border-white/[0.08] bg-[rgba(4,18,37,0.7)] px-3 py-1.5 text-xs font-medium text-apm-muted transition-all hover:border-cyan-400/40 hover:bg-cyan-400/10 hover:text-cyan-300"
         >
-          <ArrowLeft className="mr-1.5 inline h-3.5 w-3.5" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           返回控制台
         </button>
       )}

@@ -566,10 +566,11 @@ function UploadPage() {
         {/* Actions */}
         <div className="flex items-center justify-between pt-2">
           <button
+            type="button"
             onClick={handleSkip}
-            className="rounded-lg border border-slate-600 bg-transparent px-7 py-3 text-sm text-slate-400 transition-all hover:border-cyan-400/60 hover:text-cyan-300"
+            className="flex items-center gap-1.5 border border-white/[0.08] bg-[rgba(4,18,37,0.7)] px-7 py-3 text-sm font-medium text-apm-muted transition-all hover:border-cyan-400/40 hover:bg-cyan-400/10 hover:text-cyan-300"
           >
-            <ArrowLeft className="mr-2 inline h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
             返回控制台
           </button>
           <Button
