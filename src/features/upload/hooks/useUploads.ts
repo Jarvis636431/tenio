@@ -1,6 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getFileList, uploadFile, getFileStats } from "../services/uploads-api";
+import {
+  createUploadProject,
+  getFileList,
+  uploadFile,
+  getFileStats,
+} from "../services/uploads-api";
 import type { FileCategory, FileListParams, FileUploadResponse } from "../types/uploads";
 import { uploadQueryKeys } from "../queryKeys";
 
@@ -33,7 +38,31 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
   const [keyword, setKeyword] = useState("");
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const createdProjectIdRef = useRef<string | null>(null);
+  const createProjectPromiseRef = useRef<Promise<string> | null>(null);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
+
+  const ensureUploadProjectId = useCallback(
+    async (fileName: string) => {
+      if (projectId) return projectId;
+      if (createdProjectIdRef.current) return createdProjectIdRef.current;
+
+      if (!createProjectPromiseRef.current) {
+        const projectName = fileName.replace(/\.[^.]+$/, "");
+        createProjectPromiseRef.current = createUploadProject(projectName)
+          .then((project) => {
+            createdProjectIdRef.current = project.project_id;
+            setCreatedProjectId(project.project_id);
+            return project.project_id;
+          })
+          .finally(() => {
+            createProjectPromiseRef.current = null;
+          });
+      }
+
+      return createProjectPromiseRef.current;
+    },
+    [projectId],
+  );
 
   // 列表查询参数
   const listParams: FileListParams | null = useMemo(() => {
@@ -91,16 +120,12 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
       ]);
 
       try {
-        const targetProjectId = projectId ?? createdProjectIdRef.current;
+        const targetProjectId = await ensureUploadProjectId(payload.file.name);
         const result = await uploadFile({ ...payload, projectId: targetProjectId }, (percent) => {
           setUploadProgress((prev) =>
             prev.map((p) => (p.fileId === fileId ? { ...p, percent, status: "uploading" } : p)),
           );
         });
-        if (!projectId && result.projectId) {
-          createdProjectIdRef.current = result.projectId;
-          setCreatedProjectId(result.projectId);
-        }
 
         // 标记完成
         setUploadProgress((prev) =>

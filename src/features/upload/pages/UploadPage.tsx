@@ -40,9 +40,6 @@ interface UploadQueueItem {
   error?: string;
 }
 
-const UPLOAD_ACCEPT =
-  ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.bmp,.dwg,.dxf,.ifc,.rvt,.zip,.rar";
-
 type UploadZone = {
   category: FileCategory;
   title: string;
@@ -52,11 +49,27 @@ type UploadZone = {
   required?: boolean;
 };
 
+const MAX_FILES_PER_CATEGORY = 3;
+
+const UPLOAD_EXTENSION_RULES: Partial<Record<FileCategory, string[]>> = {
+  contract: [".doc", ".docx", ".pdf"],
+  document: [".xls", ".xlsx", ".pdf"],
+  drawing: [".dwg", ".pdf"],
+  other: [".doc", ".docx", ".pdf"],
+};
+
+const UPLOAD_CATEGORY_LABELS: Partial<Record<FileCategory, string>> = {
+  contract: "核心文件",
+  document: "工程量清单",
+  drawing: "CAD 施工图纸",
+  other: "其他补充资料",
+};
+
 const REQUIRED_ZONE: UploadZone = {
   category: "contract",
   title: "招标文件 / 施工合同",
   description: "上传招标文件或施工合同，AI 将从中提取项目信息。",
-  formats: "支持 .doc .docx .pdf 格式，单文件最大 100MB",
+  formats: "支持 .doc .docx .pdf，最多 3 个文件",
   icon: FileText,
   required: true,
 };
@@ -66,21 +79,21 @@ const OPTIONAL_ZONES: UploadZone[] = [
     category: "document",
     title: "工程量清单",
     description: "预算书或清单。",
-    formats: ".xls .xlsx .pdf",
+    formats: "支持 .xls .xlsx .pdf，最多 3 个文件",
     icon: FileSpreadsheet,
   },
   {
     category: "drawing",
     title: "CAD 施工图纸",
     description: "建筑、结构或机电施工图。",
-    formats: ".dwg .dxf .pdf",
+    formats: "支持 .dwg .pdf，最多 3 个文件",
     icon: DraftingCompass,
   },
   {
     category: "other",
     title: "其他补充资料",
     description: "地勘报告、设计说明、会议纪要等。",
-    formats: "多种文档格式",
+    formats: "支持 .doc .docx .pdf，最多 3 个文件",
     icon: FileText,
   },
 ];
@@ -101,6 +114,19 @@ function createQueueItem(file: File, category: FileCategory): UploadQueueItem {
     category,
     status: "pending",
   };
+}
+
+function getFileExtension(fileName: string) {
+  const dotIndex = fileName.lastIndexOf(".");
+  return dotIndex >= 0 ? fileName.slice(dotIndex).toLowerCase() : "";
+}
+
+function getAllowedExtensions(category: FileCategory) {
+  return UPLOAD_EXTENSION_RULES[category] ?? [];
+}
+
+function getUploadAccept(category: FileCategory) {
+  return getAllowedExtensions(category).join(",");
 }
 
 function formatFileSize(size: number) {
@@ -164,6 +190,7 @@ function UploadPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationSteps, setGenerationSteps] = useState<GenerationStep[]>([]);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [fileSelectionError, setFileSelectionError] = useState<string | null>(null);
   const [uploadedProjectId, setUploadedProjectId] = useState<string | null>(null);
   const generationAbortRef = useRef<AbortController | null>(null);
 
@@ -212,13 +239,44 @@ function UploadPage() {
     [uploadProgress],
   );
 
-  const appendFiles = useCallback((selectedFiles: File[], category: FileCategory) => {
-    if (selectedFiles.length === 0) {
-      return;
-    }
+  const appendFiles = useCallback(
+    (selectedFiles: File[], category: FileCategory) => {
+      if (selectedFiles.length === 0) {
+        return;
+      }
 
-    setFiles((prev) => [...prev, ...selectedFiles.map((file) => createQueueItem(file, category))]);
-  }, []);
+      const allowedExtensions = getAllowedExtensions(category);
+      const categoryLabel = UPLOAD_CATEGORY_LABELS[category] ?? "该分类";
+      let remainingSlots =
+        MAX_FILES_PER_CATEGORY - files.filter((file) => file.category === category).length;
+      const nextFiles: UploadQueueItem[] = [];
+      const errors: string[] = [];
+
+      selectedFiles.forEach((file) => {
+        const extension = getFileExtension(file.name);
+        if (!allowedExtensions.includes(extension)) {
+          errors.push(
+            `${file.name} 格式不支持，${categoryLabel}仅支持 ${allowedExtensions.join(" ")}`,
+          );
+          return;
+        }
+
+        if (remainingSlots <= 0) {
+          errors.push(`${categoryLabel}最多上传 ${MAX_FILES_PER_CATEGORY} 个文件`);
+          return;
+        }
+
+        nextFiles.push(createQueueItem(file, category));
+        remainingSlots -= 1;
+      });
+
+      if (nextFiles.length > 0) {
+        setFiles((prev) => [...prev, ...nextFiles]);
+      }
+      setFileSelectionError(errors.length > 0 ? Array.from(new Set(errors)).join("；") : null);
+    },
+    [files],
+  );
 
   const handleFileSelect = useCallback(
     (category: FileCategory) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -449,6 +507,7 @@ function UploadPage() {
     const zoneFiles = filesByCategory[zone.category];
     const isActive = dragTarget === zone.category;
     const hasCompleted = zoneFiles.some((file) => file.status === "completed");
+    const isFull = zoneFiles.length >= MAX_FILES_PER_CATEGORY;
 
     return (
       <div key={zone.category}>
@@ -457,8 +516,9 @@ function UploadPage() {
           onDragOver={handleDragOver(zone.category)}
           onDragLeave={handleDragLeave(zone.category)}
           className={cn(
-            "block cursor-pointer rounded-xl border-2 border-dashed px-6 py-10 text-center transition-all duration-300",
+            "block rounded-xl border-2 border-dashed px-6 py-10 text-center transition-all duration-300",
             compact ? "h-full min-h-[224px]" : "min-h-[256px]",
+            isFull ? "cursor-not-allowed opacity-70" : "cursor-pointer",
             isActive || hasCompleted
               ? "border-emerald-400/60 bg-emerald-500/6"
               : "border-slate-600 bg-slate-800/50 hover:border-cyan-400/60 hover:bg-slate-800",
@@ -470,7 +530,8 @@ function UploadPage() {
             aria-label={`选择${zone.title}文件`}
             title={`选择${zone.title}文件`}
             className="hidden"
-            accept={UPLOAD_ACCEPT}
+            accept={getUploadAccept(zone.category)}
+            disabled={isFull}
             onChange={handleFileSelect(zone.category)}
           />
 
@@ -488,7 +549,7 @@ function UploadPage() {
             <p className="mt-2 text-xs text-slate-500">{zone.formats}</p>
             {zoneFiles.length > 0 && !hasCompleted && (
               <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-200">
-                已选择 {zoneFiles.length} 个文件
+                已选择 {zoneFiles.length}/{MAX_FILES_PER_CATEGORY} 个文件
               </div>
             )}
             {hasCompleted && (
@@ -562,6 +623,12 @@ function UploadPage() {
           将自动从中提取项目名称、建设单位、工期、造价等关键信息。 补充上传工程量清单和 CAD
           图纸可显著提升生成方案的精度和完整度。
         </div>
+
+        {fileSelectionError && (
+          <div className="mb-6 border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {fileSelectionError}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-2">

@@ -83,7 +83,7 @@ function jsonRequest<T>(path: string, payload?: unknown) {
 /**
  * 创建上传入口使用的项目。
  */
-async function createUploadProject(projectName: string): Promise<CreateProjectResponse> {
+export async function createUploadProject(projectName: string): Promise<CreateProjectResponse> {
   return jsonRequest<CreateProjectResponse>("/projects", {
     project_name: projectName,
     source_type: "upload",
