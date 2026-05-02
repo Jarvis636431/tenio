@@ -12,7 +12,8 @@ import { extractChatMessageContent } from "../services/ai-service";
 import { useVoice } from "./useVoice";
 import { createMessageId } from "@/lib/utils";
 import { logSilentError } from "@/lib/log";
-import { useChatStore, type ChatMessage } from "@/stores/chatStore";
+import { ApiRequestError } from "@/services/http";
+import { useChatStore, type AgentTicketInfo, type ChatMessage } from "@/stores/chatStore";
 
 type ChatPanelOptions = {
   projectId?: string;
@@ -35,6 +36,7 @@ export function useChat(options: ChatPanelOptions = {}) {
   const abortRef = useRef<AbortController | null>(null);
   const lastContentRef = useRef<string>("");
   const pollingOperationIdsRef = useRef<Set<string>>(new Set());
+  const agentTicketRefreshPromiseRef = useRef<Promise<AgentTicketInfo> | null>(null);
 
   const defaultWelcomeMessage = useMemo<ChatMessage>(
     () => ({
@@ -71,6 +73,7 @@ export function useChat(options: ChatPanelOptions = {}) {
   const setAgentBaseUrl = useChatStore((state) => state.setAgentBaseUrl);
   const setAgentTicket = useChatStore((state) => state.setAgentTicket);
   const getAgentTicket = useChatStore((state) => state.getAgentTicket);
+  const getAgentTicketInfo = useChatStore((state) => state.getAgentTicketInfo);
 
   const {
     state: { isRecording, isRecognizing },
@@ -159,6 +162,18 @@ export function useChat(options: ChatPanelOptions = {}) {
     return resolveProjectId(projectRef);
   };
 
+  const isAgentTicketExpiredError = (error: unknown) => {
+    if (!(error instanceof ApiRequestError)) {
+      return false;
+    }
+    const data = error.data;
+    if (!data || typeof data !== "object") {
+      return false;
+    }
+    const code = (data as Record<string, unknown>).code;
+    return error.status === 401 && code === "AGENT_TICKET_EXPIRED";
+  };
+
   const pollOperationStatus = async (projectId: string, operationId: string) => {
     if (pollingOperationIdsRef.current.has(operationId)) {
       return;
@@ -197,42 +212,86 @@ export function useChat(options: ChatPanelOptions = {}) {
     }
   };
 
-  const issueProjectAgentTicket = async (projectId: string) => {
+  const issueProjectAgentTicket = async (projectId: string): Promise<AgentTicketInfo> => {
     const ticket = await issueAgentTicket({
       product_code: "apm",
       project_id: projectId,
       grant_type: "project_agent_access",
     });
+    const refreshAt = new Date(
+      Date.now() + Math.max(ticket.refresh_after_seconds, 0) * 1000,
+    ).toISOString();
+    const ticketInfo = {
+      agentTicket: ticket.agent_ticket,
+      expiresAt: ticket.expires_at,
+      refreshAt,
+      projectId,
+    };
     setAgentBaseUrl(activeProjectKey, null);
-    setAgentTicket(activeProjectKey, ticket.agent_ticket);
-    return ticket;
+    setAgentTicket(activeProjectKey, ticket.agent_ticket, ticketInfo);
+    return ticketInfo;
+  };
+
+  const ensureFreshAgentTicket = async (projectId: string, forceRefresh = false) => {
+    const existingTicket = getAgentTicketInfo(activeProjectKey);
+    const refreshTime = existingTicket ? Date.parse(existingTicket.refreshAt) : Number.NaN;
+    if (
+      !forceRefresh &&
+      existingTicket &&
+      existingTicket.projectId === projectId &&
+      Number.isFinite(refreshTime) &&
+      refreshTime > Date.now()
+    ) {
+      return existingTicket;
+    }
+
+    if (!forceRefresh && agentTicketRefreshPromiseRef.current) {
+      return agentTicketRefreshPromiseRef.current;
+    }
+
+    agentTicketRefreshPromiseRef.current = issueProjectAgentTicket(projectId).finally(() => {
+      agentTicketRefreshPromiseRef.current = null;
+    });
+    return agentTicketRefreshPromiseRef.current;
+  };
+
+  const runWithAgentTicketRetry = async <T>(
+    projectId: string,
+    operation: (agentTicket: string) => Promise<T>,
+  ) => {
+    const ticket = await ensureFreshAgentTicket(projectId);
+    try {
+      return await operation(ticket.agentTicket);
+    } catch (error) {
+      if (!isAgentTicketExpiredError(error)) {
+        throw error;
+      }
+      const refreshedTicket = await ensureFreshAgentTicket(projectId, true);
+      return operation(refreshedTicket.agentTicket);
+    }
   };
 
   const ensureAgentSession = async (projectId: string) => {
     const existingSessionId = getThreadId(activeProjectKey);
-    const existingAgentTicket = getAgentTicket(activeProjectKey) ?? undefined;
     if (existingSessionId) {
-      const ticket = existingAgentTicket
-        ? {
-            agent_ticket: existingAgentTicket,
-          }
-        : await issueProjectAgentTicket(projectId);
+      const ticket = await ensureFreshAgentTicket(projectId);
 
       return {
         chatSessionId: existingSessionId,
         agentBaseUrl: undefined,
-        agentTicket: ticket.agent_ticket,
+        agentTicket: ticket.agentTicket,
       };
     }
 
-    const ticket = await issueProjectAgentTicket(projectId);
-    const session = await initAgentSession(
-      {
-        product_code: "apm",
-        project_id: projectId,
-        agent_ticket: ticket.agent_ticket,
-      },
-      { agentTicket: ticket.agent_ticket },
+    const session = await runWithAgentTicketRetry(projectId, (agentTicket) =>
+      initAgentSession(
+        {
+          product_code: "apm",
+          project_id: projectId,
+          agent_ticket: agentTicket,
+        },
+        { agentTicket },
+      ),
     );
 
     setThreadId(activeProjectKey, session.chat_session_id);
@@ -240,56 +299,60 @@ export function useChat(options: ChatPanelOptions = {}) {
     return {
       chatSessionId: session.chat_session_id,
       agentBaseUrl: undefined,
-      agentTicket: ticket.agent_ticket,
+      agentTicket: getAgentTicket(activeProjectKey) ?? undefined,
     };
   };
 
   const streamAgentReply = async (
+    projectId: string,
     chatSessionId: string,
     messageText: string,
     signal: AbortSignal,
     agentBaseUrl?: string,
-    agentTicket?: string,
   ) => {
-    const message = await sendAgentSessionMessage(
-      chatSessionId,
-      { content_text: messageText },
-      { agentBaseUrl, agentTicket },
+    const message = await runWithAgentTicketRetry(projectId, (agentTicket) =>
+      sendAgentSessionMessage(
+        chatSessionId,
+        { content_text: messageText },
+        { agentBaseUrl, agentTicket },
+      ),
     );
 
     if (!message.stream_id) {
       throw new Error("发送 AI 消息失败：缺少 stream_id");
     }
 
-    await subscribeAgentStreamSse(message.stream_id, {
-      agentBaseUrl,
-      agentTicket,
-      signal,
-      onMessage: (payload) => {
-        const { content, shouldRefetch, operationId } = extractChatMessageContent(payload);
-        const projectId = resolveActiveProjectId();
+    await runWithAgentTicketRetry(projectId, (agentTicket) =>
+      subscribeAgentStreamSse(message.stream_id, {
+        agentBaseUrl,
+        agentTicket,
+        signal,
+        onMessage: (payload) => {
+          const { content, shouldRefetch, operationId } = extractChatMessageContent(payload);
+          const activeProjectId = resolveActiveProjectId();
 
-        if (operationId && projectId) {
-          void pollOperationStatus(projectId, operationId);
-        }
-
-        if (shouldRefetch) {
-          if (projectId) {
-            void refreshOverviewArtifacts(projectId);
+          if (operationId && activeProjectId) {
+            void pollOperationStatus(activeProjectId, operationId);
           }
-          return;
-        }
 
-        if (content && content.length >= lastContentRef.current.length) {
-          lastContentRef.current = content;
-          updateLastAIMessage(activeProjectKey, content);
-        }
-      },
-      onDone: () => {
-        setIsThinking(activeProjectKey, false);
-      },
-      onError: handleStreamError,
-    });
+          if (shouldRefetch) {
+            if (activeProjectId) {
+              void refreshOverviewArtifacts(activeProjectId);
+            }
+            return;
+          }
+
+          if (content && content.length >= lastContentRef.current.length) {
+            lastContentRef.current = content;
+            updateLastAIMessage(activeProjectKey, content);
+          }
+        },
+        onDone: () => {
+          setIsThinking(activeProjectKey, false);
+        },
+        onError: handleStreamError,
+      }),
+    );
   };
 
   /**
@@ -323,11 +386,11 @@ export function useChat(options: ChatPanelOptions = {}) {
       }
       const session = await ensureAgentSession(projectId);
       await streamAgentReply(
+        projectId,
         session.chatSessionId,
         `${approved ? "同意" : "拒绝"}：${message}`,
         abortRef.current.signal,
         session.agentBaseUrl,
-        session.agentTicket,
       );
     } catch (error) {
       handleStreamError(error as Error);
@@ -374,11 +437,11 @@ export function useChat(options: ChatPanelOptions = {}) {
       }
       const session = await ensureAgentSession(projectId);
       await streamAgentReply(
+        projectId,
         session.chatSessionId,
         messageText,
         abortRef.current.signal,
         session.agentBaseUrl,
-        session.agentTicket,
       );
     } catch (error) {
       handleStreamError(error as Error);

@@ -54,7 +54,8 @@ describe("uploads-api", () => {
           Promise.resolve({
             data: {
               file_id: "file-001",
-              upload_url: "https://upload.example.com/contract.pdf",
+              upload_url:
+                "http://host.docker.internal:18000/internal/files/upload/projects/project-001/contract.pdf",
               storage_key: "projects/project-001/contract.pdf",
               expire_at: "2026-04-24T01:00:00.000Z",
             },
@@ -126,7 +127,9 @@ describe("uploads-api", () => {
       },
     );
     const [uploadUrl, uploadInit] = fetchMock.mock.calls[1];
-    expect(uploadUrl).toBe("https://upload.example.com/contract.pdf");
+    expect(uploadUrl).toBe(
+      "http://localhost:8000/internal/files/upload/projects/project-001/contract.pdf",
+    );
     expect(uploadInit?.method).toBe("PUT");
     expect(uploadInit?.body).toBeInstanceOf(File);
     expect(fetchMock).toHaveBeenNthCalledWith(

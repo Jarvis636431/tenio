@@ -15,6 +15,9 @@ describe("chatStore", () => {
       sessionIdByProject: {},
       agentBaseUrlByProject: {},
       agentTicketByProject: {},
+      agentTicketExpiresAtByProject: {},
+      agentTicketRefreshAtByProject: {},
+      agentTicketProjectIdByProject: {},
       activeProjectKey: "__default__",
       inputMessageByProject: {},
       thinkingByProject: {},
@@ -44,12 +47,23 @@ describe("chatStore", () => {
   it("keeps agent tickets isolated by project", () => {
     const store = useChatStore.getState();
 
-    store.setAgentTicket("project-a", "ticket-a");
+    store.setAgentTicket("project-a", "ticket-a", {
+      expiresAt: "2026-01-01T00:15:00.000Z",
+      refreshAt: "2026-01-01T00:12:00.000Z",
+      projectId: "project-a",
+    });
     store.setAgentTicket("project-b", "ticket-b");
 
     expect(useChatStore.getState().getAgentTicket("project-a")).toBe("ticket-a");
     expect(useChatStore.getState().getAgentTicket("project-b")).toBe("ticket-b");
     expect(useChatStore.getState().getAgentTicket("project-c")).toBeNull();
+    expect(useChatStore.getState().getAgentTicketInfo("project-a")).toEqual({
+      agentTicket: "ticket-a",
+      expiresAt: "2026-01-01T00:15:00.000Z",
+      refreshAt: "2026-01-01T00:12:00.000Z",
+      projectId: "project-a",
+    });
+    expect(useChatStore.getState().getAgentTicketInfo("project-b")).toBeNull();
   });
 
   it("resetProjectChat clears only the selected project's input and thinking state", () => {
@@ -71,6 +85,7 @@ describe("chatStore", () => {
     expect(state.getIsThinking("project-b")).toBe(true);
     expect(state.getAgentTicket("project-a")).toBeNull();
     expect(state.getAgentTicket("project-b")).toBe("ticket-b");
+    expect(state.getAgentTicketInfo("project-a")).toBeNull();
     expect(state.getMessages("project-a")).toEqual([welcomeMessage]);
   });
 });

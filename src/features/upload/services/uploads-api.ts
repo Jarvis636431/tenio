@@ -80,6 +80,12 @@ function jsonRequest<T>(path: string, payload?: unknown) {
   });
 }
 
+function toBackendUrl(url: string) {
+  const backendBase = API_BASE.backend.replace(/\/$/, "");
+  const parsedUrl = new URL(url, backendBase);
+  return `${backendBase}${parsedUrl.pathname}${parsedUrl.search}`;
+}
+
 /**
  * 创建上传入口使用的项目。
  */
@@ -238,7 +244,7 @@ export async function uploadFile(
   });
   onProgress?.(40);
 
-  const uploadResponse = await fetch(init.upload_url, {
+  const uploadResponse = await fetch(toBackendUrl(init.upload_url), {
     method: "PUT",
     body: payload.file,
   });

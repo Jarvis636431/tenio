@@ -310,7 +310,13 @@ export async function requestSse(
   });
 
   if (!response.ok || !response.body) {
-    throw new Error(`SSE 请求失败 (${response.status})`);
+    const data = (await response.json().catch(() => null)) as unknown;
+    const message = extractErrorMessage(data);
+    throw new ApiRequestError(
+      message ?? `SSE 请求失败 (${response.status})`,
+      response.status,
+      data,
+    );
   }
 
   // 如果提供了回调，自动处理流

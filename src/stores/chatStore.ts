@@ -7,6 +7,13 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
+export interface AgentTicketInfo {
+  agentTicket: string;
+  expiresAt: string;
+  refreshAt: string;
+  projectId: string;
+}
+
 interface ChatState {
   /** 按项目隔离的消息列表 */
   messagesByProject: Record<string, ChatMessage[]>;
@@ -16,6 +23,12 @@ interface ChatState {
   agentBaseUrlByProject: Record<string, string | null>;
   /** 按项目的 agent 短期访问票据 */
   agentTicketByProject: Record<string, string | null>;
+  /** 按项目的 agent 票据过期时间 */
+  agentTicketExpiresAtByProject: Record<string, string | null>;
+  /** 按项目的 agent 票据建议刷新时间 */
+  agentTicketRefreshAtByProject: Record<string, string | null>;
+  /** 按项目的 agent 票据绑定项目 ID */
+  agentTicketProjectIdByProject: Record<string, string | null>;
   /** 当前活跃的项目 key */
   activeProjectKey: string;
   /** 按项目隔离的输入框文本 */
@@ -45,9 +58,15 @@ interface ChatState {
   /** 获取指定项目的 agent 服务地址 */
   getAgentBaseUrl: (projectKey: string) => string | null;
   /** 设置指定项目的 agent 短期访问票据 */
-  setAgentTicket: (projectKey: string, agentTicket: string | null) => void;
+  setAgentTicket: (
+    projectKey: string,
+    agentTicket: string | null,
+    metadata?: Omit<AgentTicketInfo, "agentTicket">,
+  ) => void;
   /** 获取指定项目的 agent 短期访问票据 */
   getAgentTicket: (projectKey: string) => string | null;
+  /** 获取指定项目的 agent 票据信息 */
+  getAgentTicketInfo: (projectKey: string) => AgentTicketInfo | null;
   /** 获取指定项目输入框文本 */
   getInputMessage: (projectKey: string) => string;
   /** 设置输入框文本 */
@@ -65,6 +84,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   sessionIdByProject: {},
   agentBaseUrlByProject: {},
   agentTicketByProject: {},
+  agentTicketExpiresAtByProject: {},
+  agentTicketRefreshAtByProject: {},
+  agentTicketProjectIdByProject: {},
   activeProjectKey: "__default__",
   inputMessageByProject: {},
   thinkingByProject: {},
@@ -156,16 +178,39 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     return get().agentBaseUrlByProject[projectKey] ?? null;
   },
 
-  setAgentTicket: (projectKey, agentTicket) =>
+  setAgentTicket: (projectKey, agentTicket, metadata) =>
     set((state) => ({
       agentTicketByProject: {
         ...state.agentTicketByProject,
         [projectKey]: agentTicket,
       },
+      agentTicketExpiresAtByProject: {
+        ...state.agentTicketExpiresAtByProject,
+        [projectKey]: agentTicket ? (metadata?.expiresAt ?? null) : null,
+      },
+      agentTicketRefreshAtByProject: {
+        ...state.agentTicketRefreshAtByProject,
+        [projectKey]: agentTicket ? (metadata?.refreshAt ?? null) : null,
+      },
+      agentTicketProjectIdByProject: {
+        ...state.agentTicketProjectIdByProject,
+        [projectKey]: agentTicket ? (metadata?.projectId ?? null) : null,
+      },
     })),
 
   getAgentTicket: (projectKey) => {
     return get().agentTicketByProject[projectKey] ?? null;
+  },
+
+  getAgentTicketInfo: (projectKey) => {
+    const agentTicket = get().agentTicketByProject[projectKey];
+    const expiresAt = get().agentTicketExpiresAtByProject[projectKey];
+    const refreshAt = get().agentTicketRefreshAtByProject[projectKey];
+    const projectId = get().agentTicketProjectIdByProject[projectKey];
+    if (!agentTicket || !expiresAt || !refreshAt || !projectId) {
+      return null;
+    }
+    return { agentTicket, expiresAt, refreshAt, projectId };
   },
 
   getInputMessage: (projectKey) => {
@@ -208,6 +253,18 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       },
       agentTicketByProject: {
         ...state.agentTicketByProject,
+        [projectKey]: null,
+      },
+      agentTicketExpiresAtByProject: {
+        ...state.agentTicketExpiresAtByProject,
+        [projectKey]: null,
+      },
+      agentTicketRefreshAtByProject: {
+        ...state.agentTicketRefreshAtByProject,
+        [projectKey]: null,
+      },
+      agentTicketProjectIdByProject: {
+        ...state.agentTicketProjectIdByProject,
         [projectKey]: null,
       },
       inputMessageByProject: {
