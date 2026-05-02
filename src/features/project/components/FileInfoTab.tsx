@@ -1,6 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useUploads, FILE_CATEGORY_LABELS } from "@/features/upload";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, X, CheckCircle, Eye, Wand2 } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
@@ -21,20 +28,37 @@ interface FileInfoTabProps {
 
 interface InfoCardProps {
   label: string;
-  value: React.ReactNode;
+  value: string;
   sub: string;
+  onOpen: () => void;
 }
 
-function InfoCard({ label, value, sub }: InfoCardProps) {
+function InfoCard({ label, value, sub, onOpen }: InfoCardProps) {
   return (
-    <div className="relative border border-white/[0.08] bg-[rgba(4,18,37,0.85)] px-3.5 py-3">
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group relative min-h-[86px] w-full border border-white/[0.08] bg-[rgba(4,18,37,0.85)] px-3.5 py-3 text-left transition-colors hover:border-cyan-400/35 hover:bg-cyan-400/[0.08]"
+    >
       <span className="absolute left-0 top-0 h-full w-0.5 bg-gradient-to-b from-cyan-400 to-transparent" />
       <div className="mb-[5px] text-[9px] font-semibold uppercase tracking-[0.15em] text-cyan-400/50">
         {label}
       </div>
-      <div className="mb-0.5 text-sm font-bold text-white">{value}</div>
-      <div className="text-[10px] text-slate-400">{sub}</div>
-    </div>
+      <div
+        className="mb-0.5 overflow-hidden break-words text-sm font-bold leading-5 text-white"
+        style={{
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical",
+        }}
+      >
+        {value}
+      </div>
+      <div className="truncate text-[10px] text-slate-400">{sub}</div>
+      <div className="mt-1 text-[10px] font-medium text-cyan-300/0 transition-colors group-hover:text-cyan-300/80">
+        查看完整信息
+      </div>
+    </button>
   );
 }
 
@@ -103,6 +127,11 @@ export function FileInfoTab({
   onViewResults,
 }: FileInfoTabProps) {
   const { files, total, isLoading } = useUploads({ projectId, pageSize: 100 });
+  const [selectedInfoCard, setSelectedInfoCard] = useState<{
+    label: string;
+    value: string;
+    sub: string;
+  } | null>(null);
 
   const hasFile = files.length > 0;
   const taskCount = projectSummary?.planTaskCount ?? 0;
@@ -115,11 +144,7 @@ export function FileInfoTab({
     () => [
       {
         label: "项目名称",
-        value: (
-          <span className="block text-xs leading-snug">
-            {formatText(projectInfo?.project_name ?? projectSummary?.projectName)}
-          </span>
-        ),
+        value: formatText(projectInfo?.project_name ?? projectSummary?.projectName),
         sub: formatText(projectInfo?.project_subtitle ?? projectInfo?.location),
       },
       {
@@ -265,7 +290,13 @@ export function FileInfoTab({
             </div>
             <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               {infoCards.map((card) => (
-                <InfoCard key={card.label} label={card.label} value={card.value} sub={card.sub} />
+                <InfoCard
+                  key={card.label}
+                  label={card.label}
+                  value={card.value}
+                  sub={card.sub}
+                  onOpen={() => setSelectedInfoCard(card)}
+                />
               ))}
             </div>
           </div>
@@ -307,6 +338,42 @@ export function FileInfoTab({
               查看生成结果
             </Button>
           </div>
+
+          <Dialog
+            open={Boolean(selectedInfoCard)}
+            onOpenChange={(open) => {
+              if (!open) setSelectedInfoCard(null);
+            }}
+          >
+            <DialogContent className="max-w-[560px] rounded-none border border-cyan-400/25 bg-[rgba(4,18,37,0.98)] text-white shadow-2xl shadow-cyan-950/40">
+              <DialogHeader className="text-left">
+                <DialogTitle className="font-display text-xl font-bold">
+                  {selectedInfoCard?.label}
+                </DialogTitle>
+                <DialogDescription className="text-sm text-apm-muted">
+                  AI 自动提取字段详情
+                </DialogDescription>
+              </DialogHeader>
+              <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+                <div>
+                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-400/70">
+                    主要内容
+                  </div>
+                  <div className="whitespace-pre-wrap break-words border border-white/[0.08] bg-cyan-400/[0.04] px-4 py-3 text-sm leading-7 text-slate-100">
+                    {selectedInfoCard?.value}
+                  </div>
+                </div>
+                <div>
+                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-400/70">
+                    补充信息
+                  </div>
+                  <div className="whitespace-pre-wrap break-words border border-white/[0.08] bg-cyan-400/[0.04] px-4 py-3 text-sm leading-7 text-slate-300">
+                    {selectedInfoCard?.sub}
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>
