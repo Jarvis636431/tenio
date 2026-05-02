@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   Building2,
   Calendar,
   CalendarCheck,
@@ -9,13 +11,24 @@ import {
   HardHat,
   PlayCircle,
   Search,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { useProject, useProjectMetrics } from "../hooks/useProject";
 import { ProjectGenerationStatusDialog } from "../components/ProjectGenerationStatusDialog";
+import { deleteProject } from "../services/project-api";
+import { projectQueryKeys } from "../queryKeys";
+import type { ProjectListItem } from "../types";
 
 type ProjectFilter = "all" | "in_progress" | "completed" | "pending";
 
@@ -88,9 +101,13 @@ function getAccentStyle(index: number) {
 
 function ProjectsPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const auth = useAuth();
   const [activeFilter, setActiveFilter] = useState<ProjectFilter>("all");
   const [query, setQuery] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<ProjectListItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const projectListParams = useMemo(
     () => ({
       status: activeFilter === "all" ? undefined : activeFilter,
@@ -113,6 +130,33 @@ function ProjectsPage() {
 
   const openProject = (project: { project_id: string }) => {
     navigate(`/project/${project.project_id}`);
+  };
+
+  const closeDeleteDialog = (open: boolean) => {
+    if (isDeleting) return;
+    if (!open) {
+      setDeleteTarget(null);
+      setDeleteError(null);
+    }
+  };
+
+  const confirmDeleteProject = async () => {
+    if (!deleteTarget || isDeleting) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteProject(deleteTarget.project_id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: projectQueryKeys.list(projectListParams) }),
+        queryClient.invalidateQueries({ queryKey: projectQueryKeys.metrics }),
+      ]);
+      setDeleteTarget(null);
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : "项目删除失败，请稍后重试");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -257,8 +301,21 @@ function ProjectsPage() {
               <article
                 key={project.project_id}
                 onClick={() => openProject(project)}
-                className="flex cursor-pointer flex-col border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] transition-all hover:border-cyan-400 hover:bg-cyan-400/5"
+                className="group relative flex cursor-pointer flex-col border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] transition-all hover:border-cyan-400 hover:bg-cyan-400/5"
               >
+                <button
+                  type="button"
+                  aria-label={`删除项目 ${project.project_name}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setDeleteTarget(project);
+                    setDeleteError(null);
+                  }}
+                  className="absolute right-3 top-3 z-10 inline-flex h-7 w-7 items-center justify-center border border-red-400/25 bg-red-500/10 text-red-300 opacity-0 transition-all hover:border-red-400/70 hover:bg-red-500/20 hover:text-red-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-400/50 group-hover:opacity-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+
                 {/* Header */}
                 <div className="flex items-start gap-3 border-b border-cyan-400/10 px-5 pt-5 pb-3">
                   <div
@@ -398,6 +455,57 @@ function ProjectsPage() {
           </div>
         </div>
       </main>
+      <Dialog open={Boolean(deleteTarget)} onOpenChange={closeDeleteDialog}>
+        <DialogContent className="max-w-[420px] rounded-none border border-red-400/25 bg-[rgba(4,18,37,0.98)] p-0 text-white shadow-2xl shadow-red-950/30">
+          <div className="border-b border-red-400/15 px-6 py-5">
+            <DialogHeader className="space-y-2 text-left">
+              <DialogTitle className="flex items-center gap-2 font-display text-xl font-bold">
+                <span className="inline-flex h-8 w-8 items-center justify-center border border-red-400/30 bg-red-500/10 text-red-300">
+                  <AlertTriangle className="h-4 w-4" />
+                </span>
+                确认删除项目
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-6 text-apm-muted">
+                删除后将清理该项目的业务数据和相关对话域数据，此操作不可撤销。
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <div className="space-y-4 px-6 py-5">
+            <div className="border border-cyan-400/15 bg-cyan-400/5 px-4 py-3">
+              <div className="text-xs text-apm-muted">将删除项目</div>
+              <div className="mt-1 truncate text-sm font-semibold text-white">
+                {deleteTarget?.project_name}
+              </div>
+            </div>
+            {deleteError && (
+              <div className="border border-red-400/25 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                {deleteError}
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-3 border-t border-red-400/15 px-6 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeleting}
+              onClick={() => closeDeleteDialog(false)}
+              className="border-cyan-400/25 bg-transparent text-cyan-100 hover:border-cyan-400/60 hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              disabled={isDeleting}
+              onClick={() => {
+                void confirmDeleteProject();
+              }}
+              className="bg-red-500 text-white hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isDeleting ? "删除中..." : "确认删除"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <ProjectGenerationStatusDialog />
     </div>
   );
