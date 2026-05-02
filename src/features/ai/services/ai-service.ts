@@ -8,6 +8,7 @@ export function extractChatMessageContent(payload: unknown): {
   content: string | null;
   type?: string;
   shouldRefetch?: boolean;
+  operationId?: string;
 } {
   const parsed = parseAiStreamPayload(payload);
   if (!parsed.success) {
@@ -16,18 +17,19 @@ export function extractChatMessageContent(payload: unknown): {
 
   const obj = parsed.data;
   const messageType = obj.type;
+  const operationId = extractOperationId(obj);
 
   if (obj.content_text) {
-    return { content: obj.content_text, type: obj.message_type ?? messageType };
+    return { content: obj.content_text, type: obj.message_type ?? messageType, operationId };
   }
 
   if (obj.content) {
-    return { content: obj.content, type: obj.message_type ?? messageType };
+    return { content: obj.content, type: obj.message_type ?? messageType, operationId };
   }
 
   // refetch 类型：触发数据刷新
   if (messageType === "refetch") {
-    return { content: null, type: "refetch", shouldRefetch: true };
+    return { content: null, type: "refetch", shouldRefetch: true, operationId };
   }
 
   // verify 类型：验证消息
@@ -35,6 +37,7 @@ export function extractChatMessageContent(payload: unknown): {
     return {
       content: buildVerifyMessage(obj.data),
       type: "verify",
+      operationId,
     };
   }
 
@@ -43,6 +46,7 @@ export function extractChatMessageContent(payload: unknown): {
     return {
       content: extractUpdateContent(obj),
       type: "update",
+      operationId,
     };
   }
 
@@ -51,6 +55,7 @@ export function extractChatMessageContent(payload: unknown): {
     return {
       content: (obj.message as string) ?? (obj.data as string) ?? null,
       type: "interrupt",
+      operationId,
     };
   }
 
@@ -61,16 +66,34 @@ export function extractChatMessageContent(payload: unknown): {
     extractFromRoute(obj, "conversation");
 
   if (routedContent) {
-    return { content: routedContent, type: "routed" };
+    return { content: routedContent, type: "routed", operationId };
   }
 
   // 尝试提取 __interrupt__
   const interruptContent = extractInterrupt(obj);
   if (interruptContent) {
-    return { content: interruptContent, type: "interrupt" };
+    return { content: interruptContent, type: "interrupt", operationId };
   }
 
-  return { content: null };
+  return {
+    content: null,
+    type: operationId ? (messageType ?? "operation") : undefined,
+    operationId,
+  };
+}
+
+function extractOperationId(obj: Record<string, unknown>): string | undefined {
+  if (typeof obj.operation_id === "string") return obj.operation_id;
+  if (typeof obj.operationId === "string") return obj.operationId;
+
+  const data = obj.data;
+  if (data && typeof data === "object") {
+    const record = data as Record<string, unknown>;
+    if (typeof record.operation_id === "string") return record.operation_id;
+    if (typeof record.operationId === "string") return record.operationId;
+  }
+
+  return undefined;
 }
 
 /**

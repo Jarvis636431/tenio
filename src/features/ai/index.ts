@@ -11,3 +11,8 @@ export {
 } from "./hooks/useVoice";
 
 export { extractChatMessageContent } from "./services/ai-service";
+export {
+  initAgentSession,
+  sendAgentSessionMessage,
+  subscribeAgentSessionSse,
+} from "./services/ai-api";

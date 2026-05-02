@@ -14,6 +14,8 @@ interface ChatState {
   sessionIdByProject: Record<string, string | null>;
   /** 按项目的 agent 服务地址 */
   agentBaseUrlByProject: Record<string, string | null>;
+  /** 按项目的 agent 短期访问票据 */
+  agentTicketByProject: Record<string, string | null>;
   /** 当前活跃的项目 key */
   activeProjectKey: string;
   /** 按项目隔离的输入框文本 */
@@ -42,6 +44,10 @@ interface ChatState {
   setAgentBaseUrl: (projectKey: string, agentBaseUrl: string | null) => void;
   /** 获取指定项目的 agent 服务地址 */
   getAgentBaseUrl: (projectKey: string) => string | null;
+  /** 设置指定项目的 agent 短期访问票据 */
+  setAgentTicket: (projectKey: string, agentTicket: string | null) => void;
+  /** 获取指定项目的 agent 短期访问票据 */
+  getAgentTicket: (projectKey: string) => string | null;
   /** 获取指定项目输入框文本 */
   getInputMessage: (projectKey: string) => string;
   /** 设置输入框文本 */
@@ -58,6 +64,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   messagesByProject: {},
   sessionIdByProject: {},
   agentBaseUrlByProject: {},
+  agentTicketByProject: {},
   activeProjectKey: "__default__",
   inputMessageByProject: {},
   thinkingByProject: {},
@@ -149,6 +156,18 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     return get().agentBaseUrlByProject[projectKey] ?? null;
   },
 
+  setAgentTicket: (projectKey, agentTicket) =>
+    set((state) => ({
+      agentTicketByProject: {
+        ...state.agentTicketByProject,
+        [projectKey]: agentTicket,
+      },
+    })),
+
+  getAgentTicket: (projectKey) => {
+    return get().agentTicketByProject[projectKey] ?? null;
+  },
+
   getInputMessage: (projectKey) => {
     return get().inputMessageByProject[projectKey] ?? "";
   },
@@ -185,6 +204,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       },
       agentBaseUrlByProject: {
         ...state.agentBaseUrlByProject,
+        [projectKey]: null,
+      },
+      agentTicketByProject: {
+        ...state.agentTicketByProject,
         [projectKey]: null,
       },
       inputMessageByProject: {

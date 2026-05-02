@@ -11,6 +11,30 @@ describe("ai-service extractChatMessageContent", () => {
     });
   });
 
+  describe("operation status events", () => {
+    it("extracts operation_id from top-level payload", () => {
+      const result = extractChatMessageContent({
+        type: "operation",
+        operation_id: "op-001",
+      });
+
+      expect(result.type).toBe("operation");
+      expect(result.operationId).toBe("op-001");
+    });
+
+    it("extracts operation_id from data payload", () => {
+      const result = extractChatMessageContent({
+        type: "update",
+        data: {
+          operation_id: "op-002",
+        },
+      });
+
+      expect(result.type).toBe("update");
+      expect(result.operationId).toBe("op-002");
+    });
+  });
+
   describe("verify type", () => {
     it("builds verify message for adjust_project", () => {
       const result = extractChatMessageContent({

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { projectQueryKeys, useProject } from "@/features/project";
+import { getProjectOperationStatus, projectQueryKeys, useProject } from "@/features/project";
 import {
   initAgentSession,
   issueAgentTicket,
@@ -34,6 +34,7 @@ export function useChat(options: ChatPanelOptions = {}) {
   const queryClient = useQueryClient();
   const abortRef = useRef<AbortController | null>(null);
   const lastContentRef = useRef<string>("");
+  const pollingOperationIdsRef = useRef<Set<string>>(new Set());
 
   const defaultWelcomeMessage = useMemo<ChatMessage>(
     () => ({
@@ -68,7 +69,8 @@ export function useChat(options: ChatPanelOptions = {}) {
   const setThreadId = useChatStore((state) => state.setThreadId);
   const getThreadId = useChatStore((state) => state.getThreadId);
   const setAgentBaseUrl = useChatStore((state) => state.setAgentBaseUrl);
-  const getAgentBaseUrl = useChatStore((state) => state.getAgentBaseUrl);
+  const setAgentTicket = useChatStore((state) => state.setAgentTicket);
+  const getAgentTicket = useChatStore((state) => state.getAgentTicket);
 
   const {
     state: { isRecording, isRecognizing },
@@ -157,36 +159,88 @@ export function useChat(options: ChatPanelOptions = {}) {
     return resolveProjectId(projectRef);
   };
 
-  const ensureAgentSession = async (projectId: string) => {
-    const existingSessionId = getThreadId(activeProjectKey);
-    const existingAgentBaseUrl = getAgentBaseUrl(activeProjectKey) ?? undefined;
-    if (existingSessionId) {
-      return {
-        chatSessionId: existingSessionId,
-        agentBaseUrl: existingAgentBaseUrl,
-      };
+  const pollOperationStatus = async (projectId: string, operationId: string) => {
+    if (pollingOperationIdsRef.current.has(operationId)) {
+      return;
     }
+    pollingOperationIdsRef.current.add(operationId);
 
+    try {
+      const maxAttempts = 90;
+      for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+        const status = await getProjectOperationStatus(projectId, operationId);
+        const normalizedStatus = status.operation_status?.toLowerCase() ?? "";
+
+        if (normalizedStatus === "succeeded" || normalizedStatus === "completed") {
+          await refreshOverviewArtifacts(projectId);
+          return;
+        }
+
+        if (normalizedStatus === "failed" || normalizedStatus === "error") {
+          throw new Error(status.error_message ?? "AI 操作执行失败");
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, 2000));
+      }
+
+      throw new Error("AI 操作执行超时，请稍后刷新查看结果");
+    } catch (error) {
+      addMessage(activeProjectKey, {
+        id: createMessageId(),
+        content: error instanceof Error ? error.message : "AI 操作状态查询失败",
+        sender: "ai",
+        timestamp: new Date(),
+      });
+      setIsThinking(activeProjectKey, false);
+    } finally {
+      pollingOperationIdsRef.current.delete(operationId);
+    }
+  };
+
+  const issueProjectAgentTicket = async (projectId: string) => {
     const ticket = await issueAgentTicket({
       product_code: "apm",
       project_id: projectId,
       grant_type: "project_agent_access",
     });
+    setAgentBaseUrl(activeProjectKey, null);
+    setAgentTicket(activeProjectKey, ticket.agent_ticket);
+    return ticket;
+  };
+
+  const ensureAgentSession = async (projectId: string) => {
+    const existingSessionId = getThreadId(activeProjectKey);
+    const existingAgentTicket = getAgentTicket(activeProjectKey) ?? undefined;
+    if (existingSessionId) {
+      const ticket = existingAgentTicket
+        ? {
+            agent_ticket: existingAgentTicket,
+          }
+        : await issueProjectAgentTicket(projectId);
+
+      return {
+        chatSessionId: existingSessionId,
+        agentBaseUrl: undefined,
+        agentTicket: ticket.agent_ticket,
+      };
+    }
+
+    const ticket = await issueProjectAgentTicket(projectId);
     const session = await initAgentSession(
       {
         product_code: "apm",
         project_id: projectId,
         agent_ticket: ticket.agent_ticket,
       },
-      { agentBaseUrl: ticket.agent_base_url },
+      { agentTicket: ticket.agent_ticket },
     );
 
     setThreadId(activeProjectKey, session.chat_session_id);
-    setAgentBaseUrl(activeProjectKey, ticket.agent_base_url);
 
     return {
       chatSessionId: session.chat_session_id,
-      agentBaseUrl: ticket.agent_base_url,
+      agentBaseUrl: undefined,
+      agentTicket: ticket.agent_ticket,
     };
   };
 
@@ -195,15 +249,21 @@ export function useChat(options: ChatPanelOptions = {}) {
     messageText: string,
     signal: AbortSignal,
     agentBaseUrl?: string,
+    agentTicket?: string,
   ) => {
     const streamPromise = subscribeAgentSessionSse(chatSessionId, {
       agentBaseUrl,
+      agentTicket,
       signal,
       onMessage: (payload) => {
-        const { content, shouldRefetch } = extractChatMessageContent(payload);
+        const { content, shouldRefetch, operationId } = extractChatMessageContent(payload);
+        const projectId = resolveActiveProjectId();
+
+        if (operationId && projectId) {
+          void pollOperationStatus(projectId, operationId);
+        }
 
         if (shouldRefetch) {
-          const projectId = resolveActiveProjectId();
           if (projectId) {
             void refreshOverviewArtifacts(projectId);
           }
@@ -221,7 +281,11 @@ export function useChat(options: ChatPanelOptions = {}) {
       onError: handleStreamError,
     });
 
-    await sendAgentSessionMessage(chatSessionId, { content_text: messageText }, { agentBaseUrl });
+    await sendAgentSessionMessage(
+      chatSessionId,
+      { content_text: messageText },
+      { agentBaseUrl, agentTicket },
+    );
     await streamPromise;
   };
 
@@ -260,6 +324,7 @@ export function useChat(options: ChatPanelOptions = {}) {
         `${approved ? "同意" : "拒绝"}：${message}`,
         abortRef.current.signal,
         session.agentBaseUrl,
+        session.agentTicket,
       );
     } catch (error) {
       handleStreamError(error as Error);
@@ -310,6 +375,7 @@ export function useChat(options: ChatPanelOptions = {}) {
         messageText,
         abortRef.current.signal,
         session.agentBaseUrl,
+        session.agentTicket,
       );
     } catch (error) {
       handleStreamError(error as Error);

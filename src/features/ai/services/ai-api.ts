@@ -62,6 +62,11 @@ export interface SendAgentMessagePayload {
   content_text: string;
 }
 
+interface AgentRequestOptions {
+  agentBaseUrl?: string;
+  agentTicket?: string;
+}
+
 const APM_API_BASE = `${API_BASE.backend}/api`;
 
 function jsonRequest<T>(path: string, payload?: unknown) {
@@ -78,6 +83,13 @@ function agentApiBase(agentBaseUrl?: string) {
   return `${(agentBaseUrl ?? API_BASE.aiService).replace(/\/$/, "")}/api`;
 }
 
+function buildAgentHeaders(agentTicket?: string): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+    ...(agentTicket ? { Authorization: `Bearer ${agentTicket}` } : {}),
+  };
+}
+
 /**
  * 从 APM 后端签发 agent-service 访问票据。
  */
@@ -90,13 +102,11 @@ export function issueAgentTicket(payload: AgentTicketPayload): Promise<AgentTick
  */
 export function initAgentSession(
   payload: AgentInitPayload,
-  options: { agentBaseUrl?: string } = {},
+  options: AgentRequestOptions = {},
 ): Promise<AgentInitResponse> {
   return request<AgentInitResponse>(`${agentApiBase(options.agentBaseUrl)}/agent/init`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildAgentHeaders(options.agentTicket),
     body: JSON.stringify(payload),
   });
 }
@@ -106,13 +116,15 @@ export function initAgentSession(
  */
 export function listAgentSessions(
   params: AgentSessionListParams,
-  options: { agentBaseUrl?: string } = {},
+  options: AgentRequestOptions = {},
 ): Promise<ApiListResponse<AgentSessionItem>> {
   const url = buildUrl(agentApiBase(options.agentBaseUrl), "/agent/sessions", {
     product_code: params.product_code,
     project_id: params.project_id,
   });
-  return request<ApiListResponse<AgentSessionItem>>(url);
+  return request<ApiListResponse<AgentSessionItem>>(url, {
+    headers: options.agentTicket ? { Authorization: `Bearer ${options.agentTicket}` } : undefined,
+  });
 }
 
 /**
@@ -120,10 +132,13 @@ export function listAgentSessions(
  */
 export function getAgentSessionMessages(
   chatSessionId: string,
-  options: { agentBaseUrl?: string } = {},
+  options: AgentRequestOptions = {},
 ): Promise<AgentSessionMessages> {
   return request<AgentSessionMessages>(
     `${agentApiBase(options.agentBaseUrl)}/agent/sessions/${chatSessionId}/messages`,
+    {
+      headers: options.agentTicket ? { Authorization: `Bearer ${options.agentTicket}` } : undefined,
+    },
   );
 }
 
@@ -133,15 +148,13 @@ export function getAgentSessionMessages(
 export function sendAgentSessionMessage(
   chatSessionId: string,
   payload: SendAgentMessagePayload,
-  options: { agentBaseUrl?: string } = {},
+  options: AgentRequestOptions = {},
 ): Promise<AgentMessageItem> {
   return request<AgentMessageItem>(
     `${agentApiBase(options.agentBaseUrl)}/agent/sessions/${chatSessionId}/messages`,
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: buildAgentHeaders(options.agentTicket),
       body: JSON.stringify(payload),
     },
   );
@@ -154,10 +167,12 @@ export function subscribeAgentSessionSse(
   chatSessionId: string,
   options: Pick<SseRequestOptions, "signal" | "onMessage" | "onDone" | "onError"> & {
     agentBaseUrl?: string;
+    agentTicket?: string;
   } = {},
 ): Promise<Response> {
   return requestSse(`${agentApiBase(options.agentBaseUrl)}/agent/sessions/${chatSessionId}/sse`, {
     method: "GET",
+    headers: options.agentTicket ? { Authorization: `Bearer ${options.agentTicket}` } : undefined,
     signal: options.signal,
     onMessage: options.onMessage,
     onDone: options.onDone,

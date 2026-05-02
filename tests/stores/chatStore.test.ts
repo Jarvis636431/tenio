@@ -14,6 +14,7 @@ describe("chatStore", () => {
       messagesByProject: {},
       sessionIdByProject: {},
       agentBaseUrlByProject: {},
+      agentTicketByProject: {},
       activeProjectKey: "__default__",
       inputMessageByProject: {},
       thinkingByProject: {},
@@ -40,6 +41,17 @@ describe("chatStore", () => {
     expect(useChatStore.getState().getIsThinking("project-b")).toBe(false);
   });
 
+  it("keeps agent tickets isolated by project", () => {
+    const store = useChatStore.getState();
+
+    store.setAgentTicket("project-a", "ticket-a");
+    store.setAgentTicket("project-b", "ticket-b");
+
+    expect(useChatStore.getState().getAgentTicket("project-a")).toBe("ticket-a");
+    expect(useChatStore.getState().getAgentTicket("project-b")).toBe("ticket-b");
+    expect(useChatStore.getState().getAgentTicket("project-c")).toBeNull();
+  });
+
   it("resetProjectChat clears only the selected project's input and thinking state", () => {
     const store = useChatStore.getState();
 
@@ -47,6 +59,8 @@ describe("chatStore", () => {
     store.setInputMessage("project-b", "保留");
     store.setIsThinking("project-a", true);
     store.setIsThinking("project-b", true);
+    store.setAgentTicket("project-a", "ticket-a");
+    store.setAgentTicket("project-b", "ticket-b");
 
     store.resetProjectChat("project-a", welcomeMessage);
 
@@ -55,6 +69,8 @@ describe("chatStore", () => {
     expect(state.getInputMessage("project-b")).toBe("保留");
     expect(state.getIsThinking("project-a")).toBe(false);
     expect(state.getIsThinking("project-b")).toBe(true);
+    expect(state.getAgentTicket("project-a")).toBeNull();
+    expect(state.getAgentTicket("project-b")).toBe("ticket-b");
     expect(state.getMessages("project-a")).toEqual([welcomeMessage]);
   });
 });
