@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activateProjectScheme,
+  cancelProjectGeneration,
   createMockProject,
   createProject,
+  deleteProject,
   getLatestCrewPlanArtifact,
   getLatestDocumentArtifact,
   getLatestGraphArtifact,
@@ -193,6 +195,33 @@ describe("project api", () => {
       "http://localhost:8000/api/projects/p-001/workbench/console-logs",
       { method: undefined, headers: {}, body: undefined },
     );
+  });
+
+  it("cancels generation and deletes pending projects through documented endpoints", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: null }),
+    } as Response);
+
+    await cancelProjectGeneration("p-001");
+    await deleteProject("p-001");
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://localhost:8000/api/projects/p-001/generation/cancel",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: undefined,
+      },
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "http://localhost:8000/api/projects/p-001", {
+      method: "DELETE",
+      headers: {},
+      body: undefined,
+    });
   });
 
   it("calls project schemes endpoints", async () => {

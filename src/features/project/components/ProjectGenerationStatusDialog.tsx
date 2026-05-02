@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, Loader2, XCircle } from "lucide-react";
+import { CheckCircle, Loader2, X, XCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useGenerationStore } from "@/stores/generationStore";
-import { getProjectGenerationStatus } from "../services/project-api";
+import {
+  cancelProjectGeneration,
+  deleteProject,
+  getProjectGenerationStatus,
+} from "../services/project-api";
 import { projectQueryKeys } from "../queryKeys";
 
 const POLL_INTERVAL_MS = 2000;
@@ -82,6 +86,7 @@ export function ProjectGenerationStatusDialog() {
   const updateGeneration = useGenerationStore((state) => state.updateGeneration);
   const failGeneration = useGenerationStore((state) => state.failGeneration);
   const clearGeneration = useGenerationStore((state) => state.clearGeneration);
+  const [isCanceling, setIsCanceling] = useState(false);
 
   const isRunning = Boolean(task && !isGenerationDone(task.generationStatus) && !task.errorMessage);
   const pollingProjectId = isRunning ? task?.projectId : undefined;
@@ -163,6 +168,22 @@ export function ProjectGenerationStatusDialog() {
   const hasError = Boolean(task.errorMessage) || isGenerationFailed(task.generationStatus);
   const isDone = isGenerationDone(task.generationStatus);
 
+  const handleCancelGeneration = async () => {
+    if (!task || isCanceling) return;
+
+    setIsCanceling(true);
+    try {
+      await cancelProjectGeneration(task.projectId);
+      await deleteProject(task.projectId);
+      clearGeneration();
+      await queryClient.invalidateQueries({ queryKey: ["projects"] });
+    } catch (error) {
+      failGeneration(error instanceof Error ? error.message : "取消生成失败，请稍后重试");
+    } finally {
+      setIsCanceling(false);
+    }
+  };
+
   return (
     <Dialog open>
       <DialogContent
@@ -235,6 +256,27 @@ export function ProjectGenerationStatusDialog() {
             })}
           </div>
         </div>
+
+        {isRunning && (
+          <div className="flex justify-end border-t border-cyan-400/15 px-6 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isCanceling}
+              onClick={() => {
+                void handleCancelGeneration();
+              }}
+              className="border-red-400/30 bg-red-500/5 text-red-100 hover:border-red-400/60 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isCanceling ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <X className="mr-2 h-4 w-4" />
+              )}
+              取消生成
+            </Button>
+          </div>
+        )}
 
         {!isRunning && (
           <div className="flex justify-end gap-3 border-t border-cyan-400/15 px-6 py-4">

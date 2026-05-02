@@ -19,8 +19,10 @@ export { ProjectGenerationStatusDialog } from "./components/ProjectGenerationSta
 
 export {
   activateProjectScheme,
+  cancelProjectGeneration,
   createMockProject,
   createProject,
+  deleteProject,
   getLatestCrewPlanArtifact,
   getLatestDocumentArtifact,
   getLatestGraphArtifact,

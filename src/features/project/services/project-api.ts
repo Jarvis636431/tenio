@@ -159,6 +159,26 @@ export function startProjectGeneration(
 }
 
 /**
+ * 取消项目生成任务。
+ *
+ * @param projectId - 项目 ID
+ */
+export function cancelProjectGeneration(projectId: string): Promise<void> {
+  return jsonRequest<unknown>(`/projects/${projectId}/generation/cancel`).then(() => undefined);
+}
+
+/**
+ * 删除项目。
+ *
+ * @param projectId - 项目 ID
+ */
+export function deleteProject(projectId: string): Promise<void> {
+  return request<unknown>(`${APM_API_BASE}/projects/${projectId}`, {
+    method: "DELETE",
+  }).then(() => undefined);
+}
+
+/**
  * 重新生成指定项目产物。
  *
  * @param projectId - 项目 ID
