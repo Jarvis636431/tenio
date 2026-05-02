@@ -42,7 +42,7 @@ const MAX_FILES_PER_CATEGORY = 3;
 
 const UPLOAD_EXTENSION_RULES: Partial<Record<FileCategory, string[]>> = {
   contract: [".doc", ".docx", ".pdf"],
-  document: [".xls", ".xlsx", ".pdf"],
+  document: [".xls", ".xlsx", ".doc", ".docx", ".pdf"],
   drawing: [".dwg", ".pdf"],
   other: [".doc", ".docx", ".pdf"],
 };
@@ -68,7 +68,7 @@ const OPTIONAL_ZONES: UploadZone[] = [
     category: "document",
     title: "工程量清单",
     description: "预算书或清单。",
-    formats: "支持 .xls .xlsx .pdf，最多 3 个文件",
+    formats: "支持 .xls .xlsx .doc .docx .pdf，最多 3 个文件",
     icon: FileSpreadsheet,
   },
   {
