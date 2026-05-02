@@ -6,7 +6,7 @@ import {
   initAgentSession,
   issueAgentTicket,
   sendAgentSessionMessage,
-  subscribeAgentSessionSse,
+  subscribeAgentStreamSse,
 } from "../services/ai-api";
 import { extractChatMessageContent } from "../services/ai-service";
 import { useVoice } from "./useVoice";
@@ -251,7 +251,17 @@ export function useChat(options: ChatPanelOptions = {}) {
     agentBaseUrl?: string,
     agentTicket?: string,
   ) => {
-    const streamPromise = subscribeAgentSessionSse(chatSessionId, {
+    const message = await sendAgentSessionMessage(
+      chatSessionId,
+      { content_text: messageText },
+      { agentBaseUrl, agentTicket },
+    );
+
+    if (!message.stream_id) {
+      throw new Error("发送 AI 消息失败：缺少 stream_id");
+    }
+
+    await subscribeAgentStreamSse(message.stream_id, {
       agentBaseUrl,
       agentTicket,
       signal,
@@ -280,13 +290,6 @@ export function useChat(options: ChatPanelOptions = {}) {
       },
       onError: handleStreamError,
     });
-
-    await sendAgentSessionMessage(
-      chatSessionId,
-      { content_text: messageText },
-      { agentBaseUrl, agentTicket },
-    );
-    await streamPromise;
   };
 
   /**

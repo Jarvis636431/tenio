@@ -14,5 +14,5 @@ export { extractChatMessageContent } from "./services/ai-service";
 export {
   initAgentSession,
   sendAgentSessionMessage,
-  subscribeAgentSessionSse,
+  subscribeAgentStreamSse,
 } from "./services/ai-api";

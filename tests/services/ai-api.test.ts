@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { initAgentSession, sendAgentSessionMessage, subscribeAgentSessionSse } from "@/features/ai";
+import { initAgentSession, sendAgentSessionMessage, subscribeAgentStreamSse } from "@/features/ai";
 
 describe("ai-api", () => {
   beforeEach(() => {
@@ -19,8 +19,12 @@ describe("ai-api", () => {
       json: () =>
         Promise.resolve({
           data: {
-            chat_session_id: "session-001",
-            is_new_session: true,
+            current_session: {
+              chat_session_id: "session-001",
+              session_title: "新会话",
+              session_status: "active",
+              last_message_at: null,
+            },
           },
         }),
     } as Response);
@@ -51,6 +55,51 @@ describe("ai-api", () => {
     });
   });
 
+  it("normalizes current_session from init response", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          data: {
+            product_code: "apm",
+            project_id: "project-001",
+            user_id: "user-001",
+            current_session: {
+              chat_session_id: "chat-001",
+              session_title: "新会话",
+              session_status: "active",
+              last_message_at: null,
+            },
+            capabilities: {
+              can_chat: true,
+              can_read_session: true,
+              can_read_kb: true,
+              can_invoke_action: true,
+            },
+            client_type: "web",
+          },
+        }),
+    } as Response);
+
+    const session = await initAgentSession(
+      {
+        product_code: "apm",
+        project_id: "project-001",
+        agent_ticket: "agent-ticket-001",
+      },
+      {
+        agentBaseUrl: "https://agent.example.com",
+        agentTicket: "agent-ticket-001",
+      },
+    );
+
+    expect(session).toEqual({
+      chat_session_id: "chat-001",
+    });
+  });
+
   it("sends agent ticket when posting a session message", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue({
@@ -64,6 +113,7 @@ describe("ai-api", () => {
             message_type: "text",
             content_text: "压缩工期",
             sent_at: "2026-05-01T00:00:00.000Z",
+            stream_id: "stream-001",
           },
         }),
     } as Response);
@@ -90,17 +140,17 @@ describe("ai-api", () => {
     );
   });
 
-  it("sends agent ticket when subscribing to session SSE", async () => {
+  it("sends agent ticket when subscribing to stream SSE", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(new Response("data: [DONE]\n\n", { status: 200 }));
 
-    await subscribeAgentSessionSse("session-001", {
+    await subscribeAgentStreamSse("stream-001", {
       agentBaseUrl: "https://agent.example.com",
       agentTicket: "agent-ticket-001",
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://agent.example.com/api/agent/sessions/session-001/sse",
+      "https://agent.example.com/api/agent/streams/stream-001/sse",
       {
         method: "GET",
         headers: {

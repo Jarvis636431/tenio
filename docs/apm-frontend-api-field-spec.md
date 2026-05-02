@@ -49,7 +49,7 @@
 | AI 助手/agent-service | `GET`    | `/api/agent/sessions`                                     | 获取当前用户在当前项目下的会话列表，外部服务接口 |
 | AI 助手/agent-service | `GET`    | `/api/agent/sessions/{chat_session_id}/messages`          | 获取指定会话消息记录，外部服务接口               |
 | AI 助手/agent-service | `POST`   | `/api/agent/sessions/{chat_session_id}/messages`          | 发送 AI 消息，外部服务接口                       |
-| AI 助手/agent-service | `GET`    | `/api/agent/sessions/{chat_session_id}/sse`               | 订阅 AI 流式输出，外部服务接口                   |
+| AI 助手/agent-service | `GET`    | `/api/agent/streams/{stream_id}/sse`                      | 订阅 AI 流式输出，外部服务接口                   |
 | 工作台/方案           | `GET`    | `/api/projects/{project_id}/schemes`                      | 获取项目施工方案列表                             |
 | 工作台/方案           | `POST`   | `/api/projects/{project_id}/schemes/{scheme_id}/activate` | 切换当前激活方案                                 |
 | 工作台/动作           | `GET`    | `/api/projects/{project_id}/operations/{operation_id}`    | 查询正式动作状态                                 |
@@ -89,7 +89,7 @@ flowchart TD
     J2[获取历史会话\nGET /api/agent/sessions]
     J3[获取会话消息\nGET /api/agent/sessions/:chat_session_id/messages]
     J4[发送 AI 消息\nPOST /api/agent/sessions/:chat_session_id/messages]
-    J5[订阅流式输出\nGET /api/agent/sessions/:chat_session_id/sse]
+    J5[订阅流式输出\nGET /api/agent/streams/:stream_id/sse]
     J6[获取方案列表\nGET /api/projects/:project_id/schemes]
     J7[切换方案\nPOST /api/projects/:project_id/schemes/:scheme_id/activate]
     J8[查询正式动作状态\nGET /api/projects/:project_id/operations/:operation_id]
@@ -219,7 +219,7 @@ flowchart TD
     C2[获取会话列表\nGET /api/agent/sessions]
     C3[获取会话消息\nGET /api/agent/sessions/:chat_session_id/messages]
     C4[发送 AI 消息\nPOST /api/agent/sessions/:chat_session_id/messages]
-    C5[订阅 SSE\nGET /api/agent/sessions/:chat_session_id/sse]
+    C5[订阅 SSE\nGET /api/agent/streams/:stream_id/sse]
     C6[获取方案列表\nGET /api/projects/:project_id/schemes]
     C7[切换方案\nPOST /api/projects/:project_id/schemes/:scheme_id/activate]
     C8[查询正式动作状态\nGET /api/projects/:project_id/operations/:operation_id]
@@ -376,12 +376,12 @@ sequenceDiagram
     alt 普通问答
         U->>FE: 输入问题
         FE->>AS: POST /api/agent/sessions/:chat_session_id/messages
-        FE->>AS: GET /api/agent/sessions/:chat_session_id/sse
+        FE->>AS: GET /api/agent/streams/:stream_id/sse
         AS-->>FE: assistant message stream
     else 快捷操作或动作指令
         U->>FE: 点击快捷操作/发送动作指令
         FE->>AS: POST /api/agent/sessions/:chat_session_id/messages
-        FE->>AS: GET /api/agent/sessions/:chat_session_id/sse
+        FE->>AS: GET /api/agent/streams/:stream_id/sse
         AS-->>FE: action intent / assistant explanation
         FE->>AS: 等待 action_confirmed / operation_id
         AS->>BE: POST /internal/agent/actions
@@ -441,7 +441,7 @@ sequenceDiagram
 | 23       | 获取当前项目下的会话列表       | `GET /api/agent/sessions`                                      |
 | 24       | 查看指定会话的消息记录         | `GET /api/agent/sessions/{chat_session_id}/messages`           |
 | 25       | 发送对话消息                   | `POST /api/agent/sessions/{chat_session_id}/messages`          |
-| 26       | 订阅 AI 流式输出               | `GET /api/agent/sessions/{chat_session_id}/sse`                |
+| 26       | 订阅 AI 流式输出               | `GET /api/agent/streams/{stream_id}/sse`                       |
 | 27       | 获取施工方案列表               | `GET /api/projects/{project_id}/schemes`                       |
 | 28       | 切换激活施工方案               | `POST /api/projects/{project_id}/schemes/{scheme_id}/activate` |
 | 29       | 查询正式动作状态               | `GET /api/projects/{project_id}/operations/{operation_id}`     |
@@ -1086,9 +1086,11 @@ sequenceDiagram
 | -------------- | ------ | ---- | ------------ |
 | `content_text` | string | 是   | 用户输入内容 |
 
+响应 `data` 字段包含用于订阅流式输出的 `stream_id`。
+
 流式输出接口：
 
-`GET /api/agent/sessions/{chat_session_id}/sse`
+`GET /api/agent/streams/{stream_id}/sse`
 
 ### 15.2 APM 后端项目动作域
 

@@ -31,7 +31,15 @@ export interface AgentInitPayload {
 
 export interface AgentInitResponse {
   chat_session_id: string;
-  is_new_session: boolean;
+}
+
+interface AgentInitRawResponse {
+  current_session: {
+    chat_session_id: string;
+    session_title: string;
+    session_status: string;
+    last_message_at: string | null;
+  };
 }
 
 export interface AgentSessionListParams {
@@ -51,6 +59,10 @@ export interface AgentMessageItem {
   message_type: string;
   content_text: string;
   sent_at: string;
+}
+
+export interface SendAgentMessageResponse extends AgentMessageItem {
+  stream_id: string;
 }
 
 export interface AgentSessionMessages {
@@ -100,15 +112,27 @@ export function issueAgentTicket(payload: AgentTicketPayload): Promise<AgentTick
 /**
  * 初始化 agent-service 会话。
  */
-export function initAgentSession(
+export async function initAgentSession(
   payload: AgentInitPayload,
   options: AgentRequestOptions = {},
 ): Promise<AgentInitResponse> {
-  return request<AgentInitResponse>(`${agentApiBase(options.agentBaseUrl)}/agent/init`, {
-    method: "POST",
-    headers: buildAgentHeaders(options.agentTicket),
-    body: JSON.stringify(payload),
-  });
+  const response = await request<AgentInitRawResponse>(
+    `${agentApiBase(options.agentBaseUrl)}/agent/init`,
+    {
+      method: "POST",
+      headers: buildAgentHeaders(options.agentTicket),
+      body: JSON.stringify(payload),
+    },
+  );
+
+  const chatSessionId = response.current_session?.chat_session_id;
+  if (!chatSessionId) {
+    throw new Error("初始化 AI 会话失败：缺少 current_session.chat_session_id");
+  }
+
+  return {
+    chat_session_id: chatSessionId,
+  };
 }
 
 /**
@@ -149,8 +173,8 @@ export function sendAgentSessionMessage(
   chatSessionId: string,
   payload: SendAgentMessagePayload,
   options: AgentRequestOptions = {},
-): Promise<AgentMessageItem> {
-  return request<AgentMessageItem>(
+): Promise<SendAgentMessageResponse> {
+  return request<SendAgentMessageResponse>(
     `${agentApiBase(options.agentBaseUrl)}/agent/sessions/${chatSessionId}/messages`,
     {
       method: "POST",
@@ -161,16 +185,16 @@ export function sendAgentSessionMessage(
 }
 
 /**
- * 订阅 agent-service 会话 SSE 输出。
+ * 订阅 agent-service 流式输出。
  */
-export function subscribeAgentSessionSse(
-  chatSessionId: string,
+export function subscribeAgentStreamSse(
+  streamId: string,
   options: Pick<SseRequestOptions, "signal" | "onMessage" | "onDone" | "onError"> & {
     agentBaseUrl?: string;
     agentTicket?: string;
   } = {},
 ): Promise<Response> {
-  return requestSse(`${agentApiBase(options.agentBaseUrl)}/agent/sessions/${chatSessionId}/sse`, {
+  return requestSse(`${agentApiBase(options.agentBaseUrl)}/agent/streams/${streamId}/sse`, {
     method: "GET",
     headers: options.agentTicket ? { Authorization: `Bearer ${options.agentTicket}` } : undefined,
     signal: options.signal,
