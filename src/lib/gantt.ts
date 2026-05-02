@@ -77,7 +77,16 @@ export const calculateStartOffset = (start: Date, startAnchor: Date, scale: Time
   return Math.max(0, Math.floor(diff / step));
 };
 
-export const calculateSpanUnits = (start: Date, end: Date, scale: TimelineScale) => {
+export const calculateSpanUnits = (
+  start: Date,
+  end: Date,
+  scale: TimelineScale,
+  durationUnits?: number,
+) => {
+  if (scale === "day" && Number.isFinite(durationUnits) && durationUnits > 0) {
+    return Math.max(1, Math.ceil(durationUnits));
+  }
+
   if (scale === "month") {
     const startAligned = alignDateToScaleStart(start, "month");
     const endAligned = alignDateToScaleStart(end, "month");

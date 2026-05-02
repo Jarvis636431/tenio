@@ -63,7 +63,7 @@ export function GanttChart({ data, scale = "day" }: GanttChartProps) {
       .map(({ item, start, end }) => {
         if (!start || !end) return null;
         const startOffset = calculateStartOffset(start, startAnchor, scale);
-        const spanUnits = calculateSpanUnits(start, end, scale);
+        const spanUnits = calculateSpanUnits(start, end, scale, item.durationDays);
 
         return {
           ...item,
