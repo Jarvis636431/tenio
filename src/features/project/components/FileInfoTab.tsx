@@ -51,6 +51,8 @@ function isParseFailed(status?: string) {
 function getFileRoleLabel(role?: string) {
   const labels: Record<string, string> = {
     bidding_document: "招标文件",
+    construction_contract: "施工合同",
+    bill_of_quantities: "工程量清单",
     cad_drawing: "CAD / BIM 图纸",
     supplementary_material: "补充资料",
     primary_contract: "合同文件",

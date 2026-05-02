@@ -79,8 +79,8 @@ describe("uploads-api", () => {
               items: [
                 {
                   file_id: "file-001",
-                  file_category: "contract",
-                  file_role: "primary_contract",
+                  file_category: "core",
+                  file_role: "construction_contract",
                   original_file_name: "contract.pdf",
                   file_extension: "pdf",
                   file_size_bytes: 1200,
@@ -120,8 +120,8 @@ describe("uploads-api", () => {
         body: JSON.stringify({
           original_file_name: "contract.pdf",
           file_size_bytes: 7,
-          file_category: "contract",
-          file_role: "primary_contract",
+          file_category: "core",
+          file_role: "construction_contract",
         }),
       },
     );
@@ -140,7 +140,63 @@ describe("uploads-api", () => {
         body: JSON.stringify({
           file_id: "file-001",
           storage_key: "projects/project-001/contract.pdf",
-          upload_status: "completed",
+          upload_status: "uploaded",
+        }),
+      },
+    );
+  });
+
+  it("uses bidding_document role for uploaded bidding documents", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            data: {
+              file_id: "file-bid",
+              upload_url: "https://upload.example.com/bid.doc",
+              storage_key: "projects/project-001/bid.doc",
+              expire_at: "2026-04-24T01:00:00.000Z",
+            },
+          }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ data: null }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ data: { items: [] } }),
+      } as Response);
+
+    await uploadFile({
+      projectId: "project-001",
+      file: new File(["content"], "招标文件.doc", { type: "application/msword" }),
+      category: "contract",
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://localhost:8000/api/projects/project-001/files/upload-init",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          original_file_name: "招标文件.doc",
+          file_size_bytes: 7,
+          file_category: "core",
+          file_role: "bidding_document",
         }),
       },
     );
@@ -220,8 +276,8 @@ describe("uploads-api", () => {
             items: [
               {
                 file_id: "file-001",
-                file_category: "contract",
-                file_role: "primary_contract",
+                file_category: "core",
+                file_role: "construction_contract",
                 original_file_name: "contract.pdf",
                 file_size_bytes: 1200,
                 upload_status: "completed",
@@ -235,7 +291,7 @@ describe("uploads-api", () => {
     await expect(getFileStats("project-001")).resolves.toEqual({
       totalFiles: 1,
       totalSize: 1200,
-      categories: [{ category: "contract", count: 1, totalSize: 1200 }],
+      categories: [{ category: "core", count: 1, totalSize: 1200 }],
     });
 
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/projects/project-001/files", {

@@ -122,11 +122,30 @@ function getFileExtension(fileName: string) {
   return index >= 0 ? fileName.slice(index + 1).toLowerCase() : "";
 }
 
-function toUploadRole(category: FileCategory) {
-  if (category === "contract") return "primary_contract";
-  if (category === "drawing") return "drawing";
-  if (category === "document") return "bill_or_document";
-  return "supplement";
+function toBackendFileCategory(category: FileCategory) {
+  if (
+    category === "contract" ||
+    category === "drawing" ||
+    category === "document" ||
+    category === "bim" ||
+    category === "other"
+  ) {
+    return "core";
+  }
+  return category;
+}
+
+function toUploadRole(category: FileCategory, fileName: string) {
+  const normalizedName = fileName.toLowerCase();
+
+  if (category === "contract") {
+    return normalizedName.includes("合同") || normalizedName.includes("contract")
+      ? "construction_contract"
+      : "bidding_document";
+  }
+  if (category === "drawing" || category === "bim") return "cad_drawing";
+  if (category === "document") return "bill_of_quantities";
+  return "supplementary_material";
 }
 
 function toFeatureFile(item: ProjectFileItem, projectId: string): ProjectFile {
@@ -214,8 +233,8 @@ export async function uploadFile(
   const init = await initProjectFileUpload(projectId, {
     original_file_name: payload.file.name,
     file_size_bytes: payload.file.size,
-    file_category: payload.category,
-    file_role: toUploadRole(payload.category),
+    file_category: toBackendFileCategory(payload.category),
+    file_role: toUploadRole(payload.category, payload.file.name),
   });
   onProgress?.(40);
 
@@ -231,7 +250,7 @@ export async function uploadFile(
   await completeProjectFileUpload(projectId, {
     file_id: init.file_id,
     storage_key: init.storage_key,
-    upload_status: "completed",
+    upload_status: "uploaded",
   });
 
   const files = await listProjectFiles(projectId);
