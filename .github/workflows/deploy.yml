@@ -1,0 +1,141 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+    branches:
+      - main
+      - tenio-lite
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success'
+    environment:
+      name: ${{ github.event.workflow_run.head_branch == 'tenio-lite' && 'tenio-lite' || 'production' }}
+
+    steps:
+      - name: Check deployment gate
+        id: deploy-gate
+        env:
+          ENABLE_DEPLOY: ${{ vars.ENABLE_DEPLOY }}
+        run: |
+          if [ "$ENABLE_DEPLOY" = "true" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Deployment disabled. Set ENABLE_DEPLOY=true in this GitHub Environment to enable it."
+          fi
+
+      - name: Checkout
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup pnpm
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+
+      - name: Setup Node.js
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        run: pnpm build
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_AI_SERVICE_URL: ${{ vars.VITE_AI_SERVICE_URL }}
+          VITE_RESOURCE_BASE_URL: ${{ vars.VITE_RESOURCE_BASE_URL }}
+          VITE_VOLC_APP_ID: ${{ secrets.VITE_VOLC_APP_ID }}
+          VITE_VOLC_ACCESS_TOKEN: ${{ secrets.VITE_VOLC_ACCESS_TOKEN }}
+          VITE_VOLC_SECRET_KEY: ${{ secrets.VITE_VOLC_SECRET_KEY }}
+          VITE_ANALYTICS_ENABLED: ${{ vars.VITE_ANALYTICS_ENABLED }}
+          VITE_ANALYTICS_DEBUG: ${{ vars.VITE_ANALYTICS_DEBUG }}
+          VITE_ANALYTICS_ENDPOINT: ${{ vars.VITE_ANALYTICS_ENDPOINT }}
+          VITE_ANALYTICS_PROVIDER: ${{ vars.VITE_ANALYTICS_PROVIDER }}
+
+      - name: Upload build artifact
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist-${{ github.event.workflow_run.head_branch }}
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Validate deployment configuration
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        run: |
+          test -n "$DEPLOY_HOST"
+          test -n "$DEPLOY_USER"
+          test -n "$DEPLOY_PATH"
+          test -n "$DEPLOY_SSH_PRIVATE_KEY"
+
+      - name: Install rsync
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        run: sudo apt-get update && sudo apt-get install -y rsync
+
+      - name: Configure SSH
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$DEPLOY_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync dist to server
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p $DEPLOY_PORT" \
+            dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+
+      - name: Reload server
+        if: steps.deploy-gate.outputs.enabled == 'true'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_RELOAD_COMMAND: ${{ secrets.DEPLOY_RELOAD_COMMAND }}
+        run: |
+          if [ -n "$DEPLOY_RELOAD_COMMAND" ]; then
+            ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "$DEPLOY_RELOAD_COMMAND"
+          else
+            echo "No reload command configured."
+          fi
