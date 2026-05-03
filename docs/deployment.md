@@ -30,17 +30,19 @@
 - `tenio-lite`：运行校验，校验通过后发布到 `tenio-lite` Environment。
 - `main` 分支由 main 分支自己的 workflow 维护，本分支不关心 main 的部署方式。
 
-如果服务器上还有其他产品服务，可以用不同目录区分：
+当前 lite 服务的部署目录为：
 
 ```text
-/var/www/tenio-lite
+/usr/share/nginx/tenio-lite
 ```
 
-并配置 lite 服务自己的 Nginx server_name，例如：
+部署时会执行：
 
 ```text
-lite.example.com
+rsync -az --delete dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
 ```
+
+所以 `DEPLOY_PATH` 目录下会直接出现 `index.html`、`assets/` 等构建产物，不会再嵌套一层 `dist`。
 
 ## 关键配置原则
 
@@ -72,22 +74,30 @@ lite.example.com
 | --- | --- | --- |
 | `DEPLOY_HOST` | 必需 | 服务器 IP 或域名 |
 | `DEPLOY_USER` | 必需 | SSH 登录用户 |
-| `DEPLOY_PATH` | 必需 | 服务器上的静态文件目录，例如 `/var/www/apm` |
+| `DEPLOY_PATH` | 必需 | 服务器上的静态文件目录，例如 `/usr/share/nginx/tenio-lite` |
 | `DEPLOY_SSH_PRIVATE_KEY` | 必需 | 对应部署用户的 SSH 私钥 |
 | `DEPLOY_PORT` | 可选 | SSH 端口，默认 `22` |
-| `DEPLOY_RELOAD_COMMAND` | 可选 | 部署后执行的重载命令，例如 `sudo systemctl reload nginx` |
+| `DEPLOY_RELOAD_COMMAND` | 可选 | 部署后执行的重载命令，例如 `sudo systemctl reload nginx`；不配置时会跳过 reload |
 | `VITE_VOLC_APP_ID` | 可选 | 火山语音 App ID |
 | `VITE_VOLC_ACCESS_TOKEN` | 可选 | 火山语音 Access Token |
 
-示例：`DEPLOY_PATH` 可以是 `/var/www/tenio-lite`。
+当前 lite 服务示例：
+
+```text
+DEPLOY_HOST=47.93.156.146
+DEPLOY_PORT=22
+DEPLOY_USER=root
+DEPLOY_PATH=/usr/share/nginx/tenio-lite
+```
 
 ## 服务器侧要求
 
 - 部署用户可以通过 SSH 登录服务器。
 - 部署用户对 `DEPLOY_PATH` 有写权限。
+- GitHub runner 和服务器都需要安装 `rsync`；workflow 会安装 runner 侧 `rsync`，服务器侧需要提前安装。
 - 服务器已配置 Nginx 或其他静态服务指向 `DEPLOY_PATH`。
 - React Router 需要 SPA fallback，Nginx 应将不存在的路径回退到 `index.html`。
-- 如果需要自动 reload，部署用户需要有权限执行 `DEPLOY_RELOAD_COMMAND`。
+- 如果配置自动 reload，部署用户需要有权限执行 `DEPLOY_RELOAD_COMMAND`。
 - 后端和 AI 服务需要允许对应前端域名跨域访问。
 
 ## Nginx 示例
@@ -95,9 +105,9 @@ lite.example.com
 ```nginx
 server {
   listen 80;
-  server_name example.com;
+  server_name lite.example.com;
 
-  root /var/www/apm;
+  root /usr/share/nginx/tenio-lite;
   index index.html;
 
   location / {
