@@ -4,10 +4,12 @@
 
 ## GitHub Actions 流程
 
-- `CI/CD` workflow：PR、`tenio-lite` 推送都会运行校验。
-- 校验步骤：`format:check`、`lint`、`typecheck`、`test`、`build`。
+- `Tenio Lite CI/CD` workflow：PR、`tenio-lite` 推送都会运行校验。
+- 校验步骤：`format:check`、`lint`、`typecheck`、`test`。
+- PR 会额外运行一次普通构建，验证前端可以正常打包。
+- `tenio-lite` 推送会在部署 job 中使用 `tenio-lite` Environment 的变量构建一次发布产物。
 - `tenio-lite` 推送会在校验通过后触发 lite 产品服务部署流程。
-- 部署 job 通过 `needs: verify` 等待校验成功后运行，并使用 `tenio-lite` Environment 的变量重新构建发布产物。
+- 部署 job 通过 `needs: verify` 等待校验成功后运行；发布构建只在部署 job 内执行一次，不再重复 build。
 - `tenio-lite` Environment 需要设置 `ENABLE_DEPLOY=true`，否则不会部署。
 
 `main` 和 `tenio-lite` 是两条独立业务路线，本分支的 workflow 只维护 lite 产品服务，不包含 main 产品服务的 CI/CD 逻辑。

@@ -1,4 +1,4 @@
-name: CI/CD
+name: Tenio Lite CI/CD
 
 on:
   push:
@@ -48,6 +48,30 @@ jobs:
       - name: Test
         run: pnpm test
 
+  build-pr:
+    name: Build PR
+    needs: verify
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Build
         run: pnpm build
         env:
@@ -63,7 +87,7 @@ jobs:
           VITE_ANALYTICS_PROVIDER: ${{ vars.VITE_ANALYTICS_PROVIDER }}
 
   deploy:
-    name: Deploy
+    name: Build and deploy
     needs: verify
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
