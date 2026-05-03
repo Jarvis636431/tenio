@@ -81,7 +81,7 @@ VITE_VOLC_SECRET_KEY=your_volc_secret_key
 
 ## 配置入口
 
-运行时配置统一在 `src/config/index.ts` 管理（API Base、AI 地址、地图 Key、语音识别配置、环境标志等）。
+运行时配置统一在 `src/config/index.ts` 管理（后端 API Base、AI 服务地址、资源地址、语音识别配置、环境标志等）。前端请求后端、AI 服务和上传地址时都应以这里的配置为准，不直接信任后端返回 URL 的 origin。
 
 ## 目录结构
 
@@ -118,20 +118,24 @@ AI 能力由常驻左侧聊天面板提供，入口位于 `src/components/layout
 - 语音录制与识别：`src/features/ai/hooks/useVoice.ts`
 - AI 服务封装：`src/features/ai/services/ai-service.ts`
 
-### AI Agent 初始化
+### AI Agent 会话
 
-- 接口：`POST ${API_BASE.aiService}/api/agent/init`
-- 封装位置：`src/features/ai/services/ai-service.ts` 中 `initAgent(payload)`
-- 入参：`project_id`、`base_date`、`solution_id`、`access_token`
-- `project_id` 由页面上下文传入，不做前端写死：
-  - 项目总览页 `src/features/project/pages/Overview.tsx` 使用 `resolvedProjectId`
+AI 对话链路由 APM 后端签发短期 `agent_ticket`，前端再直连 agent-service：
 
-### AI 对话与流式返回
+1. `POST ${API_BASE.backend}/api/agent/tickets`
+   - 使用 APM 登录态向后端申请 `agent_ticket`
+   - 响应包含 `expires_at` 和 `refresh_after_seconds`
+   - 前端按项目缓存在内存中，到刷新时间后重新申请
+2. `POST ${API_BASE.aiService}/api/agent/init`
+   - 初始化当前项目的 agent 会话
+   - 当前响应从 `data.current_session.chat_session_id` 读取会话 ID
+3. `POST ${API_BASE.aiService}/api/agent/sessions/{chat_session_id}/messages`
+   - 发送用户消息
+   - 响应包含 `stream_id`
+4. `GET ${API_BASE.aiService}/api/agent/streams/{stream_id}/sse`
+   - 订阅本次消息的流式输出
 
-- 新对话接口：`POST ${API_BASE.aiService}/api/agent/chat/sse`
-- 中断恢复接口：`POST ${API_BASE.aiService}/api/agent/chat/resume`
-- 前端通过 SSE 增量消费 AI 返回内容，主要逻辑在 `src/features/ai/hooks/useChat.ts`
-- AI 返回 `refetch` 事件时，前端会刷新项目图谱、成本曲线和人数曲线缓存
+前端遇到 `401 + AGENT_TICKET_EXPIRED` 时会重新申请 ticket 并重试当前 agent 请求一次。AI 返回 `refetch` 事件时，会刷新项目图谱、成本曲线、文档和人员轮转等工作台缓存。
 
 ### 语音输入
 
@@ -146,15 +150,18 @@ AI 能力由常驻左侧聊天面板提供，入口位于 `src/components/layout
 
 - AI 面板消息和线程状态当前保存在内存中，按项目维度切换，不持久化到本地存储
 - AI SSE 请求已统一接入 `src/services/http.ts` 中的 `requestSse`
+- AI 面板当前按项目维护会话 ID 和短期 `agent_ticket`，刷新浏览器后需要重新初始化会话上下文
 
 ## 上传流程
 
 - 上传入口页位于 `src/features/upload/pages/UploadPage.tsx`
 - 上传能力由 `src/features/upload/hooks/useUploads.ts` 和 `src/features/upload/services/uploads-api.ts` 提供
-- 当前上传能力仍基于前端 mock store 实现，主要用于演示上传流程与状态
+- 上传能力已接入后端项目文件接口：先获取上传凭证，再 `PUT` 文件内容，最后通知后端完成上传
+- 后端返回的 `upload_url` 只使用 path/query，origin 会被替换为 `VITE_API_BASE_URL`，避免浏览器访问 `host.docker.internal` 等内部地址
 - 文件分类常量统一来自 `src/features/upload/types/uploads.ts`
 - 页面结构已对齐“必传核心资料 + 选传补充资料”的原型
-- 上传全部成功后会进入生成中状态，并在结束后返回 `/projects`
+- 上传全部成功后会启动项目生成任务并返回 `/projects`
+- 项目控制台常显生成状态弹窗，最长轮询 30 分钟；用户可取消生成，取消后会调用后端取消接口并删除该待生成项目
 
 ## Mock
 
