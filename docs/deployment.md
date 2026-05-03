@@ -4,44 +4,39 @@
 
 ## GitHub Actions 流程
 
-- `CI` workflow：PR、`main`、`tenio-lite` 推送都会运行校验。
-- CI 校验步骤：`format:check`、`lint`、`typecheck`、`test`、`build`。
-- `Deploy` workflow：`main`、`tenio-lite` 推送的 CI 成功后触发部署流程。
-- `main` 的 CI 成功后可部署 main 产品服务。
-- `tenio-lite` 的 CI 成功后可部署 lite 产品服务。
-- 每个 GitHub Environment 都需要设置 `ENABLE_DEPLOY=true`，否则对应服务不会部署。
+- `CI/CD` workflow：PR、`tenio-lite` 推送都会运行校验。
+- 校验步骤：`format:check`、`lint`、`typecheck`、`test`、`build`。
+- `tenio-lite` 推送会在校验通过后触发 lite 产品服务部署流程。
+- 部署 job 通过 `needs: verify` 等待校验成功后运行，并使用 `tenio-lite` Environment 的变量重新构建发布产物。
+- `tenio-lite` Environment 需要设置 `ENABLE_DEPLOY=true`，否则不会部署。
 
-`main` 和 `tenio-lite` 是两条独立业务路线，不按 staging/production 主从关系处理。它们使用同一套 Deploy workflow 逻辑，但通过 GitHub Environment 注入各自的构建变量和部署密钥。
+`main` 和 `tenio-lite` 是两条独立业务路线，本分支的 workflow 只维护 lite 产品服务，不包含 main 产品服务的 CI/CD 逻辑。
 
 ## 产品服务分层
 
-当前推荐配置两个 GitHub Environments：
+当前分支只需要配置 lite 产品服务的 GitHub Environment：
 
 | GitHub Environment | 触发分支 | 用途 | 后端/AI 地址 | 部署目标 |
 | --- | --- | --- | --- | --- |
-| `production` | `main` | main 产品服务 | main 服务对应的后端和 AI 服务 | main 前端服务器目录 |
 | `tenio-lite` | `tenio-lite` | lite 产品服务 | lite 服务对应的后端和 AI 服务 | lite 前端服务器目录 |
 
-两个 Environment 里使用同名变量和密钥，但值不同。这样前端代码仍只读取 `VITE_API_BASE_URL`、`VITE_AI_SERVICE_URL` 等标准变量，不需要引入 `LITE_` 前缀。
+前端代码仍只读取 `VITE_API_BASE_URL`、`VITE_AI_SERVICE_URL` 等标准变量，不需要引入 `LITE_` 前缀。
 
 建议分支策略：
 
 - PR：只运行校验，不部署。
-- `main`：校验通过后部署到 `production` Environment。
-- `tenio-lite`：校验通过后部署到 `tenio-lite` Environment。
-- 两个产品服务可以部署到不同服务器，也可以部署到同一服务器的不同目录和域名。
+- `tenio-lite`：运行校验，校验通过后发布到 `tenio-lite` Environment。
+- `main` 分支由 main 分支自己的 workflow 维护，本分支不关心 main 的部署方式。
 
-如果暂时只有一台服务器，可以用两个目录区分：
+如果服务器上还有其他产品服务，可以用不同目录区分：
 
 ```text
-/var/www/apm
 /var/www/tenio-lite
 ```
 
-并分别配置两个 Nginx server_name，例如：
+并配置 lite 服务自己的 Nginx server_name，例如：
 
 ```text
-apm.example.com
 lite.example.com
 ```
 
@@ -51,11 +46,11 @@ lite.example.com
 - `VITE_AI_SERVICE_URL` 必须指向当前环境对应的 agent-service。
 - 上传文件时，前端会用 `VITE_API_BASE_URL` 重建后端返回的上传地址 origin。
 - AI 会话请求会用 `VITE_AI_SERVICE_URL`，不使用 ticket 响应里的 `agent_base_url` 作为前端请求 base。
-- `production` 和 `tenio-lite` 不应共用错误的后端或数据库。即使部署在同一服务器，也要通过不同 API 地址、部署目录和域名隔离。
+- `tenio-lite` 不应误连 main 产品服务的后端或数据库。即使部署在同一服务器，也要通过独立 API 地址、部署目录和域名隔离。
 
 ## 需要配置的 GitHub Variables
 
-在 GitHub 仓库的 `Settings -> Environments` 中分别创建 `production` 和 `tenio-lite`，然后在每个 Environment 的 Variables 中配置：
+在 GitHub 仓库的 `Settings -> Environments` 中创建 `tenio-lite`，然后在该 Environment 的 Variables 中配置：
 
 | 名称 | 是否必需 | 说明 |
 | --- | --- | --- |
@@ -67,11 +62,6 @@ lite.example.com
 | `VITE_ANALYTICS_DEBUG` | 可选 | 是否启用埋点调试 |
 | `VITE_ANALYTICS_ENDPOINT` | 可选 | 埋点上报地址 |
 | `VITE_ANALYTICS_PROVIDER` | 可选 | 埋点 provider |
-
-示例：
-
-- `production` 的 `VITE_API_BASE_URL` 指向 main 后端。
-- `tenio-lite` 的 `VITE_API_BASE_URL` 指向 lite 后端。
 
 ## 需要配置的 GitHub Secrets
 
@@ -89,10 +79,7 @@ lite.example.com
 | `VITE_VOLC_ACCESS_TOKEN` | 可选 | 火山语音 Access Token |
 | `VITE_VOLC_SECRET_KEY` | 可选 | 火山语音 Secret Key |
 
-示例：
-
-- `production` 的 `DEPLOY_PATH` 可以是 `/var/www/apm`。
-- `tenio-lite` 的 `DEPLOY_PATH` 可以是 `/var/www/tenio-lite`。
+示例：`DEPLOY_PATH` 可以是 `/var/www/tenio-lite`。
 
 ## 服务器侧要求
 
