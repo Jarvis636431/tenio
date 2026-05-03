@@ -59,7 +59,6 @@ lite.example.com
 | `ENABLE_DEPLOY` | 必需 | 设置为 `true` 后启用当前 Environment 对应服务的自动部署 |
 | `VITE_API_BASE_URL` | 必需 | 当前产品服务的后端 API 地址，例如 `https://api.example.com` |
 | `VITE_AI_SERVICE_URL` | 必需 | 当前产品服务的 AI 服务地址 |
-| `VITE_RESOURCE_BASE_URL` | 可选 | 资源文件基础地址 |
 | `VITE_ANALYTICS_ENABLED` | 可选 | 是否启用埋点 |
 | `VITE_ANALYTICS_DEBUG` | 可选 | 是否启用埋点调试 |
 | `VITE_ANALYTICS_ENDPOINT` | 可选 | 埋点上报地址 |
@@ -79,7 +78,6 @@ lite.example.com
 | `DEPLOY_RELOAD_COMMAND` | 可选 | 部署后执行的重载命令，例如 `sudo systemctl reload nginx` |
 | `VITE_VOLC_APP_ID` | 可选 | 火山语音 App ID |
 | `VITE_VOLC_ACCESS_TOKEN` | 可选 | 火山语音 Access Token |
-| `VITE_VOLC_SECRET_KEY` | 可选 | 火山语音 Secret Key |
 
 示例：`DEPLOY_PATH` 可以是 `/var/www/tenio-lite`。
 

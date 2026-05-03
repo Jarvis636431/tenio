@@ -13,13 +13,9 @@ export const API_BASE = {
   aiService: aiServiceUrl,
 };
 
-export const RESOURCE_BASE_URL =
-  trimTrailingSlash(appEnv.VITE_RESOURCE_BASE_URL) ?? "https://apmoss.emio.cn/public/resources";
-
 export const VOLC_SPEECH = {
   apiUrl: "https://openspeech.bytedance.com/api/v3/auc/bigmodel/recognize/flash",
   resourceId: "volc.bigasr.auc_turbo",
   appId: appEnv.VITE_VOLC_APP_ID ?? "",
   accessToken: appEnv.VITE_VOLC_ACCESS_TOKEN ?? "",
-  secretKey: appEnv.VITE_VOLC_SECRET_KEY ?? "",
 };

@@ -73,10 +73,8 @@ pnpm preview
 ```bash
 VITE_API_BASE_URL=http://localhost:8000
 VITE_AI_SERVICE_URL=http://127.0.0.1:8123
-VITE_RESOURCE_BASE_URL=https://apmoss.emio.cn/public/resources
 VITE_VOLC_APP_ID=your_volc_app_id
 VITE_VOLC_ACCESS_TOKEN=your_volc_access_token
-VITE_VOLC_SECRET_KEY=your_volc_secret_key
 ```
 
 ## 配置入口
@@ -144,7 +142,6 @@ AI 对话链路由 APM 后端签发短期 `agent_ticket`，前端再直连 agent
 - 当前实际依赖的关键环境变量：
   - `VITE_VOLC_APP_ID`
   - `VITE_VOLC_ACCESS_TOKEN`
-- `VITE_VOLC_SECRET_KEY` 已保留在配置中，但当前前端录音识别流程未直接使用
 
 ### 当前限制
 
