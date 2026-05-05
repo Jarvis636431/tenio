@@ -8,6 +8,7 @@ import { ProjectTabBar } from "../components/ProjectTabBar";
 import { ProjectTable } from "../components/ProjectTable";
 import { RotationTab } from "../components/RotationTab";
 import { FileInfoTab } from "../components/FileInfoTab";
+import type { ProjectTabKey } from "../projectTabs";
 import { useProjectData } from "../hooks/useProjectData";
 import { useProjectExport } from "../hooks/useProjectExport";
 
@@ -15,15 +16,13 @@ interface OverviewProps {
   projectId?: string;
 }
 
-type OverviewTab = "chart" | "uploads" | "docs" | "scheduleList" | "gantt" | "network" | "rotation";
-
 const PANEL_CLASS =
   "min-h-[360px] overflow-hidden border border-none bg-[rgba(2,12,27,0.6)] shadow-apm-panel px-4";
 const EMPTY_PANEL_CLASS =
   "flex h-full min-h-[360px] items-center justify-center text-sm text-apm-muted";
 
 export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
-  const [activeTab, setActiveTab] = useState<OverviewTab>("chart");
+  const [activeTab, setActiveTab] = useState<ProjectTabKey>("chart");
 
   const {
     resolvedProjectId,

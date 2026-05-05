@@ -1,22 +1,5 @@
-import type { ComponentType } from "react";
-import {
-  BarChart3,
-  CloudUpload,
-  FileText,
-  GitBranch,
-  LayoutGrid,
-  List,
-  RotateCw,
-} from "lucide-react";
-
-type ProjectTabKey =
-  | "chart"
-  | "uploads"
-  | "docs"
-  | "scheduleList"
-  | "gantt"
-  | "network"
-  | "rotation";
+import { RotateCw } from "lucide-react";
+import { PROJECT_TABS, type ProjectTabKey } from "../projectTabs";
 
 interface ProjectTabBarProps {
   activeTab: ProjectTabKey;
@@ -25,26 +8,12 @@ interface ProjectTabBarProps {
   onRegenerate?: () => void;
 }
 
-const TABS: Array<{
-  key: ProjectTabKey;
-  label: string;
-  icon: ComponentType<{ className?: string }>;
-}> = [
-  { key: "chart", label: "工期-成本分析", icon: BarChart3 },
-  { key: "uploads", label: "上传文件", icon: CloudUpload },
-  { key: "docs", label: "施工组织设计", icon: FileText },
-  { key: "scheduleList", label: "进度计划列表", icon: List },
-  { key: "gantt", label: "甘特图", icon: LayoutGrid },
-  { key: "network", label: "网络图", icon: GitBranch },
-  { key: "rotation", label: "人员轮转", icon: RotateCw },
-];
-
 export function ProjectTabBar({ activeTab, onChange, onExport, onRegenerate }: ProjectTabBarProps) {
   return (
     <div className="sticky top-0 z-30 shrink-0 border-b border-cyan-400/15 bg-[rgba(2,12,27,0.94)] backdrop-blur-sm">
       <div className="flex items-center gap-0 px-5">
         <div className="flex min-w-0 flex-1 items-center overflow-x-auto">
-          {TABS.map((tab) => {
+          {PROJECT_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
 
