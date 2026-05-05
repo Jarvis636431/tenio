@@ -1,7 +1,8 @@
-import React, { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectGenerationStatusDialog } from "@/features/project";
 import { useGenerationStore } from "@/stores/generationStore";
@@ -15,20 +16,13 @@ const projectApiMocks = vi.hoisted(() => ({
 vi.mock("@/features/project/services/project-api", () => projectApiMocks);
 
 describe("ProjectGenerationStatusDialog", () => {
-  let container: HTMLDivElement;
-  let root: Root;
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-    vi.useFakeTimers();
     projectApiMocks.cancelProjectGeneration.mockResolvedValue(undefined);
     projectApiMocks.deleteProject.mockResolvedValue(undefined);
     projectApiMocks.getProjectGenerationStatus.mockImplementation(() => new Promise(() => {}));
     useGenerationStore.setState({ task: null });
-    container = document.createElement("div");
-    document.body.appendChild(container);
-    root = createRoot(container);
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
@@ -38,18 +32,14 @@ describe("ProjectGenerationStatusDialog", () => {
   });
 
   afterEach(() => {
-    act(() => {
-      root.unmount();
-    });
     queryClient.clear();
-    container.remove();
-    document.body.innerHTML = "";
     useGenerationStore.setState({ task: null });
-    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
   it("cancels active generation and deletes the pending project", async () => {
+    const user = userEvent.setup();
+
     useGenerationStore.getState().startGeneration({
       projectId: "project-001",
       generationJobId: "job-001",
@@ -57,26 +47,15 @@ describe("ProjectGenerationStatusDialog", () => {
       startedAt: "2026-05-03T00:00:00.000Z",
     });
 
-    act(() => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
-            <ProjectGenerationStatusDialog />
-          </MemoryRouter>
-        </QueryClientProvider>,
-      );
-    });
-
-    const cancelButton = Array.from(document.body.querySelectorAll("button")).find(
-      (button) => button.textContent?.trim() === "取消生成",
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+          <ProjectGenerationStatusDialog />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
-    expect(cancelButton).toBeDefined();
-
-    await act(async () => {
-      cancelButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
+    await user.click(screen.getByRole("button", { name: "取消生成" }));
 
     expect(projectApiMocks.cancelProjectGeneration).toHaveBeenCalledWith("project-001");
     expect(projectApiMocks.deleteProject).toHaveBeenCalledWith("project-001");
