@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import dagre from "dagre";
 import { formatDateString } from "@/lib/date";
 import { isLagTask, formatDurationDays } from "@/lib/task";
-import type { ScheduleTask } from "@/features/project";
+import type { ScheduleTask } from "../types";
 
 interface NetworkDiagramProps {
   tasks: ScheduleTask[];

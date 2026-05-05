@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
-import { GanttChart } from "@/components/chart/GanttChart";
-import { NetworkDiagram } from "@/components/chart/NetworkDiagram";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartTab } from "../components/ChartTab";
 import { DocsTab } from "../components/DocsTab";
+import { GanttChart } from "../components/GanttChart";
+import { NetworkDiagram } from "../components/NetworkDiagram";
 import { ProjectTabBar } from "../components/ProjectTabBar";
 import { ProjectTable } from "../components/ProjectTable";
 import { RotationTab } from "../components/RotationTab";
