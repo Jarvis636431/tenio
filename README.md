@@ -70,16 +70,27 @@ pnpm preview
 
 在项目根目录配置 `.env`（或 `.env.local`）：
 
+必需：
+
 ```bash
 VITE_API_BASE_URL=http://localhost:8000
 VITE_AI_SERVICE_URL=http://127.0.0.1:8123
+```
+
+可选：
+
+```bash
 VITE_VOLC_APP_ID=your_volc_app_id
 VITE_VOLC_ACCESS_TOKEN=your_volc_access_token
+VITE_ANALYTICS_ENABLED=false
+VITE_ANALYTICS_DEBUG=false
+VITE_ANALYTICS_ENDPOINT=
+VITE_ANALYTICS_PROVIDER=noop
 ```
 
 ## 配置入口
 
-运行时配置统一在 `src/config/index.ts` 管理（后端 API Base、AI 服务地址、资源地址、语音识别配置、环境标志等）。前端请求后端、AI 服务和上传地址时都应以这里的配置为准，不直接信任后端返回 URL 的 origin。
+运行时配置统一在 `src/config/index.ts` 管理（后端 API Base、AI 服务地址、语音识别配置、埋点配置、环境标志等）。前端请求后端、AI 服务和上传地址时都应以这里的配置为准，不直接信任后端返回 URL 的 origin。
 
 ## 目录结构
 

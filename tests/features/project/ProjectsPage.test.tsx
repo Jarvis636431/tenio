@@ -1,7 +1,8 @@
-import React, { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectsPage } from "@/features/project";
 import type { ProjectListItem, ProjectMetrics } from "@/features/project";
@@ -62,12 +63,9 @@ const metrics: ProjectMetrics = {
 };
 
 describe("ProjectsPage", () => {
-  let container: HTMLDivElement;
-  let root: Root;
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    globalThis.IS_REACT_ACT_ENVIRONMENT = true;
     projectApiMocks.getProjectList.mockResolvedValue({
       items: [project],
       total: 1,
@@ -77,9 +75,6 @@ describe("ProjectsPage", () => {
     projectApiMocks.getProjectMetrics.mockResolvedValue(metrics);
     projectApiMocks.deleteProject.mockResolvedValue(undefined);
     useGenerationStore.setState({ task: null });
-    container = document.createElement("div");
-    document.body.appendChild(container);
-    root = createRoot(container);
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
@@ -89,61 +84,37 @@ describe("ProjectsPage", () => {
   });
 
   afterEach(() => {
-    act(() => {
-      root.unmount();
-    });
     queryClient.clear();
-    container.remove();
-    document.body.innerHTML = "";
     useGenerationStore.setState({ task: null });
     vi.clearAllMocks();
   });
 
   it("confirms and deletes a project from the project card action", async () => {
-    act(() => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <MemoryRouter>
-            <ProjectsPage />
-          </MemoryRouter>
-        </QueryClientProvider>,
-      );
-    });
-    await act(async () => {
-      await Promise.resolve();
-    });
+    const user = userEvent.setup();
 
-    await vi.waitFor(() => {
-      expect(document.body).toHaveTextContent("城南综合体");
-    });
-
-    const deleteButton = document.body.querySelector<HTMLButtonElement>(
-      'button[aria-label="删除项目 城南综合体"]',
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+          <ProjectsPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
-    expect(deleteButton).not.toBeNull();
+    expect(await screen.findByText("城南综合体")).toBeInTheDocument();
 
-    await act(async () => {
-      deleteButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
+    await user.click(screen.getByRole("button", { name: "删除项目 城南综合体" }));
 
-    expect(document.body).toHaveTextContent("确认删除项目");
-    expect(document.body).toHaveTextContent("城南综合体");
+    expect(screen.getByText("确认删除项目")).toBeInTheDocument();
+    expect(screen.getAllByText("城南综合体").length).toBeGreaterThan(0);
 
-    const confirmButton = Array.from(document.body.querySelectorAll("button")).find(
-      (button) => button.textContent?.trim() === "确认删除",
-    );
+    await user.click(screen.getByRole("button", { name: "确认删除" }));
 
-    await act(async () => {
-      confirmButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await vi.waitFor(() => {
-        expect(projectApiMocks.getProjectList).toHaveBeenCalledTimes(2);
-        expect(projectApiMocks.getProjectMetrics).toHaveBeenCalledTimes(2);
-      });
+    await waitFor(() => {
+      expect(projectApiMocks.getProjectList).toHaveBeenCalledTimes(2);
+      expect(projectApiMocks.getProjectMetrics).toHaveBeenCalledTimes(2);
     });
 
     expect(projectApiMocks.deleteProject).toHaveBeenCalledWith("project-001");
-    expect(document.body).not.toHaveTextContent("确认删除项目");
+    expect(screen.queryByText("确认删除项目")).not.toBeInTheDocument();
   });
 });

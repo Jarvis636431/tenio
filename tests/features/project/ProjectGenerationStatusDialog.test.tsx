@@ -60,7 +60,7 @@ describe("ProjectGenerationStatusDialog", () => {
     act(() => {
       root.render(
         <QueryClientProvider client={queryClient}>
-          <MemoryRouter>
+          <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
             <ProjectGenerationStatusDialog />
           </MemoryRouter>
         </QueryClientProvider>,

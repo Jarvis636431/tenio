@@ -144,16 +144,23 @@ Required in `.env` or `.env.local`:
 ```bash
 VITE_API_BASE_URL=http://localhost:8000
 VITE_AI_SERVICE_URL=http://127.0.0.1:8123
-VITE_RESOURCE_BASE_URL=https://apmoss.emio.cn/public/resources
+```
+
+Optional:
+
+```bash
 VITE_VOLC_APP_ID=your_volc_app_id
 VITE_VOLC_ACCESS_TOKEN=your_volc_access_token
-VITE_VOLC_SECRET_KEY=your_volc_secret_key
+VITE_ANALYTICS_ENABLED=false
+VITE_ANALYTICS_DEBUG=false
+VITE_ANALYTICS_ENDPOINT=
+VITE_ANALYTICS_PROVIDER=noop
 ```
 
 Notes:
 
 - `src/config/index.ts` is the single source of truth for runtime config
-- Volc speech recognition requires `VITE_VOLC_APP_ID` and `VITE_VOLC_ACCESS_TOKEN`
+- Volc speech recognition uses `VITE_VOLC_APP_ID` and `VITE_VOLC_ACCESS_TOKEN` when configured
 
 ### Route Structure
 
