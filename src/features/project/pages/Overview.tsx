@@ -26,7 +26,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
   const {
     resolvedProjectId,
-    graphArtifact,
     isLoadingGraph,
     planTasks,
     currentProjectName,
@@ -42,7 +41,9 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
 
   const costCurveChart = costQuery.chartData;
 
-  const { handleExport } = useProjectExport(graphArtifact);
+  const { canExport, handleExport } = useProjectExport(documentArtifact, {
+    projectName: currentProjectName,
+  });
 
   const handleRegenerate = useCallback(() => {
     alert("重新生成功能即将上线");
@@ -165,6 +166,7 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         activeTab={activeTab}
         onChange={setActiveTab}
         onExport={handleExport}
+        canExport={canExport}
         onRegenerate={handleRegenerate}
       />
 

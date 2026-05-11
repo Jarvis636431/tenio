@@ -5,10 +5,17 @@ interface ProjectTabBarProps {
   activeTab: ProjectTabKey;
   onChange: (tab: ProjectTabKey) => void;
   onExport?: () => void;
+  canExport?: boolean;
   onRegenerate?: () => void;
 }
 
-export function ProjectTabBar({ activeTab, onChange, onExport, onRegenerate }: ProjectTabBarProps) {
+export function ProjectTabBar({
+  activeTab,
+  onChange,
+  onExport,
+  canExport = true,
+  onRegenerate,
+}: ProjectTabBarProps) {
   return (
     <div className="sticky top-0 z-30 shrink-0 border-b border-cyan-400/15 bg-[rgba(2,12,27,0.94)] backdrop-blur-sm">
       <div className="flex items-center gap-0 px-5">
@@ -49,7 +56,8 @@ export function ProjectTabBar({ activeTab, onChange, onExport, onRegenerate }: P
           <button
             type="button"
             onClick={onExport}
-            className="flex items-center gap-1.5 border border-white/[0.08] bg-cyan-400 px-3 py-1.5 text-xs font-medium text-[#020c1b] transition hover:opacity-85"
+            disabled={!onExport || !canExport}
+            className="flex items-center gap-1.5 border border-white/[0.08] bg-cyan-400 px-3 py-1.5 text-xs font-medium text-[#020c1b] transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-45"
           >
             导出全部
           </button>
