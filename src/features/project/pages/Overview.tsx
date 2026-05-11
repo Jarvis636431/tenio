@@ -45,10 +45,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     projectName: currentProjectName,
   });
 
-  const handleRegenerate = useCallback(() => {
-    alert("重新生成功能即将上线");
-  }, []);
-
   const handleViewResults = useCallback(() => {
     setActiveTab("docs");
   }, []);
@@ -167,7 +163,6 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         onChange={setActiveTab}
         onExport={handleExport}
         canExport={canExport}
-        onRegenerate={handleRegenerate}
       />
 
       {activeTab === "chart" && chartPanel}

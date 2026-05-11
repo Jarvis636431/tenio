@@ -1,14 +1,7 @@
-import { Link, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Radar } from "lucide-react";
 
 const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error("404 错误：用户访问了不存在的路由:", location.pathname);
-  }, [location.pathname]);
-
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[hsl(var(--apm-bg))]">
       {/* ambient background */}
