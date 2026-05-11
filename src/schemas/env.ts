@@ -19,8 +19,6 @@ export const envSchema = z.object({
   MODE: z.string().default("development"),
   VITE_API_BASE_URL: optionalUrl,
   VITE_AI_SERVICE_URL: optionalUrl,
-  VITE_VOLC_APP_ID: optionalString,
-  VITE_VOLC_ACCESS_TOKEN: optionalString,
   VITE_ANALYTICS_ENABLED: booleanFlag,
   VITE_ANALYTICS_DEBUG: booleanFlag,
   VITE_ANALYTICS_ENDPOINT: optionalUrl,

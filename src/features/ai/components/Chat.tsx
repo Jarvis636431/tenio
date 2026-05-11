@@ -17,13 +17,10 @@ export function Chat({ state, className }: ChatProps) {
     inputMessage,
     setInputMessage,
     isThinking,
-    isRecording,
-    isRecognizing,
     handleSendMessage,
     sendQuickMessage,
     resumeInterrupt,
     handleInputEnter,
-    toggleRecording,
     scrollAreaRef,
   } = state;
   const [interruptDecisions, setInterruptDecisions] = useState<Record<string, "yes" | "no">>({});
@@ -87,12 +84,9 @@ export function Chat({ state, className }: ChatProps) {
       <ChatInput
         inputMessage={inputMessage}
         setInputMessage={setInputMessage}
-        isRecording={isRecording}
-        isRecognizing={isRecognizing}
         isThinking={isThinking}
         handleSendMessage={() => void handleSendMessage()}
         handleInputEnter={handleInputEnter}
-        toggleRecording={() => void toggleRecording()}
         sendQuickMessage={(msg) => void sendQuickMessage(msg)}
         quickQueries={quickQueries}
       />

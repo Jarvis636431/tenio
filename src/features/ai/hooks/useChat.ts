@@ -9,7 +9,6 @@ import {
   subscribeAgentStreamSse,
 } from "../services/ai-api";
 import { extractChatMessageContent } from "../services/ai-service";
-import { useVoice } from "./useVoice";
 import { createMessageId } from "@/lib/utils";
 import { logSilentError } from "@/lib/log";
 import { ApiRequestError } from "@/services/http";
@@ -22,7 +21,7 @@ type ChatPanelOptions = {
 const EMPTY_CHAT_MESSAGES: ChatMessage[] = [];
 
 /**
- * 协调 AI 面板的聊天状态、SSE 流和语音输入。
+ * 协调 AI 面板的聊天状态和 SSE 流。
  * 为每个项目维护独立的 agent 会话，支持中断确认消息续写。
  *
  * @param options - 配置选项
@@ -75,13 +74,6 @@ export function useChat(options: ChatPanelOptions = {}) {
   const getAgentTicket = useChatStore((state) => state.getAgentTicket);
   const getAgentTicketInfo = useChatStore((state) => state.getAgentTicketInfo);
 
-  const {
-    state: { isRecording, isRecognizing },
-    actions: { toggleRecording },
-    recognizedText,
-    clearRecognizedText,
-  } = useVoice();
-
   /**
    * 统一处理 SSE 流或会话中的错误。
    * 忽略 AbortError，其余错误记录日志并清理最后一条 AI 消息。
@@ -116,14 +108,6 @@ export function useChat(options: ChatPanelOptions = {}) {
       setMessages(activeProjectKey, [{ ...defaultWelcomeMessage }]);
     }
   }, [activeProjectKey, defaultWelcomeMessage, setMessages]);
-
-  // 同步语音识别结果到输入框
-  useEffect(() => {
-    if (recognizedText) {
-      setInputMessage(activeProjectKey, recognizedText);
-      clearRecognizedText();
-    }
-  }, [activeProjectKey, recognizedText, clearRecognizedText, setInputMessage]);
 
   // 清理 AbortController
   useEffect(() => {
@@ -464,8 +448,6 @@ export function useChat(options: ChatPanelOptions = {}) {
     inputMessage,
     setInputMessage: (value: string) => setInputMessage(activeProjectKey, value),
     isThinking,
-    isRecording,
-    isRecognizing,
     handleSendMessage,
     sendQuickMessage: sendMessage,
     resumeInterrupt,
@@ -474,7 +456,6 @@ export function useChat(options: ChatPanelOptions = {}) {
         void handleSendMessage();
       }
     },
-    toggleRecording,
     scrollAreaRef: useRef<HTMLDivElement | null>(null),
   };
 }

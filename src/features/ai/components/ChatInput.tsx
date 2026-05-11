@@ -1,6 +1,5 @@
 import type { ComponentType, KeyboardEvent } from "react";
-import { Loader2, Mic, Paperclip, Send, Square } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Paperclip, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -12,12 +11,9 @@ interface QuickQuery {
 interface ChatInputProps {
   inputMessage: string;
   setInputMessage: (value: string) => void;
-  isRecording: boolean;
-  isRecognizing: boolean;
   isThinking: boolean;
   handleSendMessage: () => Promise<void> | void;
   handleInputEnter: (e: KeyboardEvent<HTMLInputElement>) => void;
-  toggleRecording: () => Promise<void> | void;
   sendQuickMessage: (message: string) => Promise<void> | void;
   quickQueries: QuickQuery[];
 }
@@ -25,12 +21,9 @@ interface ChatInputProps {
 export function ChatInput({
   inputMessage,
   setInputMessage,
-  isRecording,
-  isRecognizing,
   isThinking,
   handleSendMessage,
   handleInputEnter,
-  toggleRecording,
   sendQuickMessage,
   quickQueries,
 }: ChatInputProps) {
@@ -82,22 +75,6 @@ export function ChatInput({
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
-              <Button
-                onClick={() => {
-                  void toggleRecording();
-                }}
-                size="icon"
-                variant="ghost"
-                disabled={isRecognizing && !isRecording}
-                aria-label={isRecording ? "结束录音" : "开始录音"}
-                className={cn(
-                  "h-9 w-9 rounded-sm border border-white/[0.08] bg-[#051a3d] text-slate-200 hover:bg-[#0a2a5c]",
-                  isRecording ? "border-red-400/70 bg-red-900/30 text-red-100 animate-pulse" : "",
-                )}
-                style={isRecording ? { animationDuration: "1.6s" } : undefined}
-              >
-                {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </Button>
             </div>
             <Button
               onClick={() => {
@@ -112,15 +89,6 @@ export function ChatInput({
           </div>
         </div>
       </div>
-
-      {isRecognizing && (
-        <div className="px-4 pb-3">
-          <div className="flex items-center gap-2 text-xs text-cyan-300/70">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            正在识别语音，识别结果会填入输入框
-          </div>
-        </div>
-      )}
     </div>
   );
 }

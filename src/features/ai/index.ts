@@ -3,12 +3,6 @@
 
 export { Chat } from "./components/Chat";
 export { useChat, type ChatMessage, type ChatState } from "./hooks/useChat";
-export {
-  useVoice,
-  type VoiceRecorderState,
-  type VoiceRecorderActions,
-  type VoiceRecorderResult,
-} from "./hooks/useVoice";
 
 export { extractChatMessageContent } from "./services/ai-service";
 export {
