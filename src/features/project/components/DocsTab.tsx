@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Edit3, FileText, List } from "lucide-react";
+import { stripDocumentPrelude } from "@/lib/project-document";
 import type { DocumentArtifact } from "../types";
 
 interface DocsTabProps {
@@ -10,15 +11,6 @@ interface DocsTabProps {
   artifact?: DocumentArtifact;
   /** 是否可编辑（暂未实现） */
   editable?: boolean;
-}
-
-function stripDocumentPrelude(content: string) {
-  return content
-    .trimStart()
-    .replace(/^#\s+.*(?:\r?\n)+/, "")
-    .replace(/^##\s*目录[\s\S]*?(?=\r?\n---\r?\n|\r?\n#\s+)/, "")
-    .replace(/^\s*---\s*/, "")
-    .trimStart();
 }
 
 export function DocsTab({

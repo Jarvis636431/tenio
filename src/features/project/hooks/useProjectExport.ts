@@ -1,14 +1,9 @@
+import { parseProjectDocumentBlocks, type ProjectDocumentBlock } from "@/lib/project-document";
 import type { DocumentArtifact } from "../types";
 
 interface UseProjectExportOptions {
   projectName?: string;
 }
-
-type DocxBlock =
-  | { type: "heading"; level: 1 | 2 | 3 | 4; text: string }
-  | { type: "paragraph"; text: string }
-  | { type: "listItem"; text: string }
-  | { type: "table"; rows: string[][] };
 
 const DOCX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
@@ -25,102 +20,6 @@ function escapeXml(value: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
-}
-
-function stripInlineMarkdown(value: string) {
-  return value
-    .replace(/\*\*(.+?)\*\*/g, "$1")
-    .replace(/`(.+?)`/g, "$1")
-    .trim();
-}
-
-function stripDocumentPrelude(content: string) {
-  return content
-    .trimStart()
-    .replace(/^#\s+.*(?:\r?\n)+/, "")
-    .replace(/^##\s*目录[\s\S]*?(?=\r?\n---\r?\n|\r?\n#\s+)/, "")
-    .replace(/^\s*---\s*/, "")
-    .trimStart();
-}
-
-function parseMarkdownTable(lines: string[]) {
-  return lines.map((line) =>
-    line
-      .trim()
-      .replace(/^\|/, "")
-      .replace(/\|$/, "")
-      .split("|")
-      .map((cell) => stripInlineMarkdown(cell)),
-  );
-}
-
-function flushTable(buffer: string[], blocks: DocxBlock[]) {
-  if (buffer.length === 0) return;
-  if (buffer.length >= 2 && /^\s*\|?\s*:?-{3,}:?\s*\|/.test(buffer[1])) {
-    blocks.push({ type: "table", rows: parseMarkdownTable([buffer[0], ...buffer.slice(2)]) });
-  } else {
-    buffer.forEach((line) => blocks.push({ type: "paragraph", text: stripInlineMarkdown(line) }));
-  }
-  buffer.length = 0;
-}
-
-function markdownToBlocks(content: string): DocxBlock[] {
-  const blocks: DocxBlock[] = [];
-  const tableBuffer: string[] = [];
-  const lines = stripDocumentPrelude(content).split(/\r?\n/);
-
-  lines.forEach((line) => {
-    const trimmed = line.trim();
-
-    if (tableBuffer.length > 0 && !trimmed.includes("|")) {
-      flushTable(tableBuffer, blocks);
-    }
-
-    if (!trimmed) {
-      flushTable(tableBuffer, blocks);
-      return;
-    }
-
-    if (trimmed.includes("|") && /^\|?(.+\|)+.+\|?$/.test(trimmed)) {
-      tableBuffer.push(trimmed);
-      return;
-    }
-
-    const headingMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
-    if (headingMatch) {
-      flushTable(tableBuffer, blocks);
-      blocks.push({
-        type: "heading",
-        level: Math.min(headingMatch[1].length, 4) as 1 | 2 | 3 | 4,
-        text: stripInlineMarkdown(headingMatch[2]),
-      });
-      return;
-    }
-
-    const unorderedMatch = trimmed.match(/^[-*]\s+(.+)$/);
-    if (unorderedMatch) {
-      flushTable(tableBuffer, blocks);
-      blocks.push({ type: "listItem", text: stripInlineMarkdown(unorderedMatch[1]) });
-      return;
-    }
-
-    const orderedMatch = trimmed.match(/^\d+\.\s+(.+)$/);
-    if (orderedMatch) {
-      flushTable(tableBuffer, blocks);
-      blocks.push({ type: "listItem", text: stripInlineMarkdown(orderedMatch[1]) });
-      return;
-    }
-
-    if (/^---+$/.test(trimmed)) {
-      flushTable(tableBuffer, blocks);
-      return;
-    }
-
-    blocks.push({ type: "paragraph", text: stripInlineMarkdown(trimmed) });
-  });
-
-  flushTable(tableBuffer, blocks);
-  return blocks;
 }
 
 function createTextRun(text: string, options: { bold?: boolean } = {}) {
@@ -157,12 +56,12 @@ function createTable(rows: string[][]) {
 
 function buildDocumentXml(title: string, content: string, artifact?: DocumentArtifact) {
   const tocItems = artifact?.toc_items ?? [];
-  const blocks = markdownToBlocks(content);
+  const blocks = parseProjectDocumentBlocks(content);
   const body = [
     createParagraph(title, "Title"),
     tocItems.length > 0 ? createParagraph("目录", "Heading1") : "",
     ...tocItems.map((item) => createParagraph(item.title, "TocItem")),
-    ...blocks.map((block) => {
+    ...blocks.map((block: ProjectDocumentBlock) => {
       if (block.type === "heading") return createParagraph(block.text, `Heading${block.level}`);
       if (block.type === "listItem") return createListItem(block.text);
       if (block.type === "table") return createTable(block.rows);
