@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import { Chat, useChat } from "@/features/ai";
-import { useProject } from "@/features/project";
+import { ProjectGenerationStatusDialog, useProject } from "@/features/project";
 
 interface LayoutProps {
   children: ReactNode;
@@ -35,6 +35,7 @@ export function AppLayout({ children }: LayoutProps) {
   return (
     <ErrorBoundary>
       <LayoutContent>{children}</LayoutContent>
+      <ProjectGenerationStatusDialog />
     </ErrorBoundary>
   );
 }

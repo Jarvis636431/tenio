@@ -134,10 +134,27 @@ export function ProjectGenerationStatusDialog() {
           });
 
           if (isGenerationDone(status.generation_status)) {
-            await queryClient.invalidateQueries({ queryKey: ["projects"] });
-            await queryClient.invalidateQueries({
-              queryKey: projectQueryKeys.generationStatus(pollingProjectId),
-            });
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ["projects"] }),
+              queryClient.invalidateQueries({
+                queryKey: projectQueryKeys.generationStatus(pollingProjectId),
+              }),
+              queryClient.invalidateQueries({
+                queryKey: projectQueryKeys.graphArtifact(pollingProjectId),
+              }),
+              queryClient.invalidateQueries({
+                queryKey: projectQueryKeys.documentArtifact(pollingProjectId),
+              }),
+              queryClient.invalidateQueries({
+                queryKey: projectQueryKeys.timeCostArtifact(pollingProjectId),
+              }),
+              queryClient.invalidateQueries({
+                queryKey: projectQueryKeys.crewPlanArtifact(pollingProjectId),
+              }),
+              queryClient.invalidateQueries({
+                queryKey: projectQueryKeys.uploadSummary(pollingProjectId),
+              }),
+            ]);
             return;
           }
 
@@ -174,7 +191,9 @@ export function ProjectGenerationStatusDialog() {
     setIsCanceling(true);
     try {
       await cancelProjectGeneration(task.projectId);
-      await deleteProject(task.projectId);
+      if (task.deleteProjectOnCancel !== false) {
+        await deleteProject(task.projectId);
+      }
       clearGeneration();
       await queryClient.invalidateQueries({ queryKey: ["projects"] });
     } catch (error) {

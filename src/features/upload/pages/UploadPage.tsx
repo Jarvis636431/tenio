@@ -283,6 +283,7 @@ function UploadPage() {
           generationJobId: generation.generation_job_id,
           generationStatus: generation.generation_status,
           startedAt: generation.started_at,
+          deleteProjectOnCancel: true,
         });
         navigate("/projects", { replace: true });
       }

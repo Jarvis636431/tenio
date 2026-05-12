@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGenerationStore } from "@/stores/generationStore";
 import { ChartTab } from "../components/ChartTab";
 import { DocsTab } from "../components/DocsTab";
 import { GanttChart } from "../components/GanttChart";
@@ -11,6 +12,7 @@ import { FileInfoTab } from "../components/FileInfoTab";
 import type { ProjectTabKey } from "../projectTabs";
 import { useProjectData } from "../hooks/useProjectData";
 import { useProjectExport } from "../hooks/useProjectExport";
+import { regenerateProjectArtifacts } from "../services/project-api";
 
 interface OverviewProps {
   projectId?: string;
@@ -23,6 +25,9 @@ const EMPTY_PANEL_CLASS =
 
 export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const [activeTab, setActiveTab] = useState<ProjectTabKey>("chart");
+  const [regenerateError, setRegenerateError] = useState<string | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const startGenerationTask = useGenerationStore((state) => state.startGeneration);
 
   const {
     resolvedProjectId,
@@ -49,6 +54,29 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
     setActiveTab("docs");
   }, []);
 
+  const handleRegenerate = useCallback(async () => {
+    if (!resolvedProjectId || isRegenerating) return;
+
+    setRegenerateError(null);
+    setIsRegenerating(true);
+    try {
+      const generation = await regenerateProjectArtifacts(resolvedProjectId, {
+        reason: "工作台手动重新生成",
+      });
+      startGenerationTask({
+        projectId: resolvedProjectId,
+        generationJobId: generation.generation_job_id,
+        generationStatus: generation.generation_status,
+        startedAt: generation.started_at,
+        deleteProjectOnCancel: false,
+      });
+    } catch (error) {
+      setRegenerateError(error instanceof Error ? error.message : "重新生成提交失败，请稍后重试");
+    } finally {
+      setIsRegenerating(false);
+    }
+  }, [isRegenerating, resolvedProjectId, startGenerationTask]);
+
   const projectSummary = useMemo(
     () => ({
       projectName: currentProjectName,
@@ -61,6 +89,11 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
   const chartPanel = useMemo(
     () => (
       <div className={PANEL_CLASS}>
+        {regenerateError && (
+          <div className="mx-4 mt-4 border border-red-400/25 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+            {regenerateError}
+          </div>
+        )}
         {costQuery.isLoading ? (
           <div className="flex h-[360px] items-center justify-center">
             <Skeleton className="h-full w-full" />
@@ -80,7 +113,14 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         )}
       </div>
     ),
-    [costQuery.isLoading, costQuery.data, costCurveChart, totalDurationLabel, planTasks],
+    [
+      costQuery.isLoading,
+      costQuery.data,
+      costCurveChart,
+      totalDurationLabel,
+      planTasks,
+      regenerateError,
+    ],
   );
 
   const uploadsPanel = useMemo(
@@ -163,6 +203,8 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
         onChange={setActiveTab}
         onExport={handleExport}
         canExport={canExport}
+        onRegenerate={resolvedProjectId ? () => void handleRegenerate() : undefined}
+        isRegenerating={isRegenerating}
       />
 
       {activeTab === "chart" && chartPanel}
