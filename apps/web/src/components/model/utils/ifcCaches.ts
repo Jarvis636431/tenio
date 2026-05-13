@@ -79,7 +79,7 @@ export async function buildIdCaches({
       expressID,
       false,
     );
-    const gid = props?.GlobalId?.value as string | undefined;
+    const gid = props?.GlobalId?.value;
     if (gid) {
       globalIdToExpressId.set(gid, expressID);
     }
@@ -143,7 +143,7 @@ export async function buildGlobalIdMap(
       expressID,
       false,
     );
-    const gid = props?.GlobalId?.value as string | undefined;
+    const gid = props?.GlobalId?.value;
     if (gid) {
       globalIdToExpressId.set(gid, expressID);
     }
@@ -192,7 +192,7 @@ export async function buildTagMap(
   for (const expressID of allProductIds) {
     const props: { GlobalId?: { value?: string }; Tag?: { value?: string } | string } =
       await ifcLoader.ifcManager.getItemProperties(modelID, expressID, false);
-    const gid = props?.GlobalId?.value as string | undefined;
+    const gid = props?.GlobalId?.value;
     const rawTag =
       typeof props?.Tag === "string"
         ? props.Tag

@@ -164,12 +164,9 @@ export function useHighlight({
             });
 
             if (subset) {
-              (subset as THREE.Mesh & { renderOrder: number }).renderOrder = index + 1;
+              subset.renderOrder = index + 1;
               model.add(subset);
-              highlightSubsetsRef.current.set(
-                group.customID,
-                subset as THREE.Mesh & { renderOrder: number },
-              );
+              highlightSubsetsRef.current.set(group.customID, subset);
               console.log(
                 `[ModelViewer] 创建高亮组 ${group.customID} 成功，数量:`,
                 idsToHighlight.length,
@@ -240,9 +237,9 @@ export function useHighlight({
         });
 
         if (subset) {
-          (subset as THREE.Mesh & { renderOrder: number }).renderOrder = 1;
+          subset.renderOrder = 1;
           model.add(subset);
-          highlightSubsetRef.current = subset as THREE.Mesh & { renderOrder: number };
+          highlightSubsetRef.current = subset;
           console.log("[ModelViewer] 创建高亮子集成功，数量:", idsToHighlight.length);
         } else {
           console.warn("[ModelViewer] 创建高亮子集失败");

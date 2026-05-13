@@ -202,7 +202,7 @@ export function ModelViewer({
 
   const resolveColor = useCallback((value: string | number | undefined, fallback: string) => {
     if (value === undefined || value === null) return new THREE.Color(fallback);
-    return new THREE.Color(value as string | number);
+    return new THREE.Color(value);
   }, []);
 
   const ensureHighlightMaterial = useCallback(() => {
@@ -343,12 +343,9 @@ export function ModelViewer({
           });
 
           if (subset) {
-            (subset as THREE.Mesh & { renderOrder: number }).renderOrder = 1;
+            subset.renderOrder = 1;
             entry.model.add(subset);
-            highlightSubsetsRef.current.set(
-              group.customID,
-              subset as THREE.Mesh & { renderOrder: number },
-            );
+            highlightSubsetsRef.current.set(group.customID, subset);
           }
         });
         needsRenderRef.current = true;
@@ -427,7 +424,7 @@ export function ModelViewer({
           }
 
           idsToHighlight.forEach((id) => {
-            expressToMaterial.set(id, material!);
+            expressToMaterial.set(id, material);
           });
         });
       } else {
@@ -472,11 +469,9 @@ export function ModelViewer({
               customID: string;
             });
             if (subset) {
-              (subset as THREE.Mesh & { renderOrder: number }).renderOrder = 1;
+              subset.renderOrder = 1;
               entry.model.add(subset);
-              highlightSubsetRef.current = subset as THREE.Mesh & {
-                renderOrder: number;
-              };
+              highlightSubsetRef.current = subset;
             }
           }
 
@@ -730,9 +725,7 @@ export function ModelViewer({
             const ifcLoader = new IFCLoader();
             void ifcLoader.ifcManager.setWasmPath("/wasm/");
             ifcLoaderRef.current = ifcLoader;
-            const model = (await ifcLoader.parse(buffers[index])) as THREE.Object3D & {
-              modelID: number;
-            };
+            const model = await ifcLoader.parse(buffers[index]);
             const cachedMetadata = modelMetadataCache.get(item.src);
             const idMap = cachedMetadata
               ? cloneGlobalIdMap(cachedMetadata.globalIdMap)
