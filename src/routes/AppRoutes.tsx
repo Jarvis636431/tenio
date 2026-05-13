@@ -1,13 +1,25 @@
 import { lazy, Suspense, useEffect } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
-import { AutoProjectRoute } from "@/routes/AutoProjectRoute";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { Overview } from "@/pages/project/Overview";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { APP_DEFAULT_TITLE } from "@/config";
+import { PublicOnlyRoute, RequireAuth } from "./guards";
 
-// Lazy loaded pages
+// Lazy loaded pages / layouts
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const TITLE_RULES: Array<{ prefix: string; title: string }> = [];
+const LoginPage = lazy(() => import("@/features/auth").then((m) => ({ default: m.Login })));
+const ProjectsPage = lazy(() =>
+  import("@/features/project").then((m) => ({ default: m.ProjectsPage })),
+);
+const UploadPage = lazy(() => import("@/features/upload").then((m) => ({ default: m.UploadPage })));
+const AppLayout = lazy(() =>
+  import("@/components/layout/AppLayout").then((m) => ({ default: m.AppLayout })),
+);
+const Overview = lazy(() => import("@/features/project").then((m) => ({ default: m.Overview })));
+const TITLE_RULES: Array<{ prefix: string; title: string }> = [
+  { prefix: "/login", title: "A.PM 智管 · 登录" },
+  { prefix: "/projects", title: "A.PM 智管 · 项目控制台" },
+  { prefix: "/upload", title: "A.PM 智管 · 新建项目" },
+  { prefix: "/project/", title: "A.PM 智管 · 项目工作台" },
+];
 
 export function AppRoutes() {
   const location = useLocation();
@@ -21,13 +33,46 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-screen">加载中...</div>}>
       <Routes>
-        <Route path="/" element={<AutoProjectRoute />} />
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute>
+              <LoginPage />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/projects"
+          element={
+            <RequireAuth>
+              <ProjectsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/upload"
+          element={
+            <RequireAuth>
+              <UploadPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <RequireAuth>
+              <Navigate to="/projects" replace />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/project/:id"
           element={
-            <AppLayout>
-              <Overview />
-            </AppLayout>
+            <RequireAuth>
+              <AppLayout>
+                <Overview />
+              </AppLayout>
+            </RequireAuth>
           }
         />
         <Route path="*" element={<NotFound />} />

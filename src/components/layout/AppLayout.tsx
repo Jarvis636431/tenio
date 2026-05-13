@@ -1,24 +1,41 @@
-import { AppSidebar } from "@/components/layout/AppSidebar";
-import { Chat } from "@/components/ai/Chat";
-import { useChatPanel } from "@/components/ai/hooks/useChatPanel";
+import type { ReactNode } from "react";
+import { AppHeader } from "@/components/layout/AppHeader";
+import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
+import { Chat, useChat } from "@/features/ai";
+import { ProjectGenerationStatusDialog, useProject } from "@/features/project";
+
 interface LayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 function LayoutContent({ children }: LayoutProps) {
-  const chatPanel = useChatPanel();
+  const chatState = useChat();
+  const { currentProject } = useProject();
 
   return (
-    <div className="grid h-screen w-full grid-cols-[56px_minmax(0,2fr)_minmax(0,7fr)] overflow-hidden bg-gradient-to-b from-[#020a1d] to-[#041332]">
-      <AppSidebar />
+    <div className="relative flex h-screen w-full flex-col overflow-hidden bg-[hsl(var(--apm-bg))] text-slate-100">
+      <div className="pointer-events-none absolute inset-0 bg-apm-grid opacity-90" />
+      <div className="pointer-events-none absolute inset-0 bg-apm-ambient" />
+      <AppHeader variant="project" projectName={currentProject?.project_name} showUser />
 
-      <Chat state={chatPanel} />
+      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[280px_minmax(0,1fr)]">
+        <div className="min-h-0 border-r border-apm bg-[hsl(var(--apm-bg-overlay))/0.72] backdrop-blur-sm">
+          <Chat state={chatState} className="h-full" />
+        </div>
 
-      <main className="flex-1 overflow-hidden bg-transparent px-3 pt-2 pb-3">{children}</main>
+        <main className="min-h-0 overflow-hidden">
+          <div className="h-full overflow-x-hidden overflow-y-auto overscroll-none">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }
 
 export function AppLayout({ children }: LayoutProps) {
-  return <LayoutContent>{children}</LayoutContent>;
+  return (
+    <ErrorBoundary>
+      <LayoutContent>{children}</LayoutContent>
+      <ProjectGenerationStatusDialog />
+    </ErrorBoundary>
+  );
 }

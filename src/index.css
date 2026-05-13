@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +10,57 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* A.PM workspace design tokens */
+    --font-display: "Space Grotesk", "Noto Sans SC", sans-serif;
+    --font-body: "Noto Sans SC", "Space Grotesk", sans-serif;
+
+    --apm-bg: 214 86% 6%;
+    --apm-bg-panel: 214 81% 8%;
+    --apm-bg-card: 214 81% 8%;
+    --apm-bg-overlay: 214 78% 10%;
+    --apm-surface-grid: 193 100% 50%;
+
+    --apm-accent: 190 100% 50%;
+    --apm-accent-strong: 204 100% 50%;
+    --apm-accent-soft: 193 100% 91%;
+    --apm-accent-border: 193 100% 50%;
+
+    --apm-text: 215 78% 95%;
+    --apm-text-muted: 214 28% 71%;
+    --apm-text-dim: 214 24% 53%;
+
+    --apm-success: 160 84% 39%;
+    --apm-warning: 38 92% 50%;
+    --apm-danger: 0 84% 60%;
+
+    --apm-radius-sm: 0.25rem;
+    --apm-radius-md: 0.5rem;
+    --apm-radius-lg: 0.875rem;
+
+    --apm-space-1: 0.25rem;
+    --apm-space-2: 0.5rem;
+    --apm-space-3: 0.75rem;
+    --apm-space-4: 1rem;
+    --apm-space-5: 1.25rem;
+    --apm-space-6: 1.5rem;
+    --apm-space-7: 1.75rem;
+    --apm-space-8: 2rem;
+
+    --apm-gradient-accent: linear-gradient(
+      135deg,
+      hsl(var(--apm-accent)),
+      hsl(var(--apm-accent-strong))
+    );
+    --apm-gradient-panel-topline: linear-gradient(
+      90deg,
+      hsl(var(--apm-accent)),
+      hsl(var(--apm-accent) / 0.2),
+      transparent
+    );
+    --apm-shadow-soft: 0 4px 12px hsl(214 86% 6% / 0.15);
+    --apm-shadow-panel: 0 8px 24px hsl(214 86% 6% / 0.2);
+    --apm-shadow-glow: 0 0 12px hsl(var(--apm-accent) / 0.25);
+
     --background: 210 20% 98%;
     --foreground: 0 0% 13%;
 
@@ -167,11 +220,97 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    background-color: hsl(var(--apm-bg));
+    color: hsl(var(--apm-text));
+    font-family: var(--font-body);
+    background-image:
+      linear-gradient(hsl(var(--apm-surface-grid) / 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--apm-surface-grid) / 0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    min-height: 100vh;
   }
 }
 
 /* Font weight adjustments for large text only (text-lg and above) */
 @layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  .text-apm {
+    color: hsl(var(--apm-text));
+  }
+
+  .text-apm-muted {
+    color: hsl(var(--apm-text-muted));
+  }
+
+  .text-apm-dim {
+    color: hsl(var(--apm-text-dim));
+  }
+
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: hsl(var(--apm-text-muted));
+    letter-spacing: 0.08em;
+    margin-bottom: 7px;
+    text-transform: uppercase;
+  }
+
+  .bg-apm-grid {
+    background-image:
+      linear-gradient(hsl(var(--apm-surface-grid) / 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--apm-surface-grid) / 0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .bg-apm-ambient {
+    background: radial-gradient(
+      circle at 50% 50%,
+      hsl(var(--apm-accent) / 0.06) 0%,
+      transparent 70%
+    );
+  }
+
+  .bg-apm-panel {
+    background: hsl(var(--apm-bg-panel) / 0.94);
+  }
+
+  .bg-apm-card {
+    background: hsl(var(--apm-bg-card) / 0.85);
+  }
+
+  .border-apm {
+    border-color: hsl(var(--apm-accent-border) / 0.18);
+  }
+
+  .shadow-apm-panel {
+    box-shadow: var(--apm-shadow-panel);
+  }
+
+  .shadow-apm-glow {
+    box-shadow: var(--apm-shadow-glow);
+  }
+
+  .apm-topline {
+    position: relative;
+  }
+
+  .apm-topline::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: var(--apm-gradient-panel-topline);
+    pointer-events: none;
+  }
+
   /* text-lg adjustments */
   .text-lg.font-light {
     font-weight: 200; /* extralight - reduced from light(300) */
@@ -285,5 +424,22 @@ All colors MUST be HSL.
   .text-5xl.font-bold,
   .text-6xl.font-bold {
     font-weight: 600;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(214 86% 6% / 0.15);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--apm-accent-border) / 0.18);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--apm-accent-border) / 0.35);
   }
 }

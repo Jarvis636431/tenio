@@ -1,0 +1,12 @@
+// AI Feature Module
+// 统一导出所有 AI 相关功能
+
+export { Chat } from "./components/Chat";
+export { useChat, type ChatMessage, type ChatState } from "./hooks/useChat";
+
+export { extractChatMessageContent } from "./services/ai-service";
+export {
+  initAgentSession,
+  sendAgentSessionMessage,
+  subscribeAgentStreamSse,
+} from "./services/ai-api";

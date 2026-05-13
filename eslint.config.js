@@ -30,23 +30,79 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/consistent-type-imports": [
         "warn",
         { prefer: "type-imports", fixStyle: "inline-type-imports" },
       ],
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/no-unsafe-member-access": "off",
-      "@typescript-eslint/no-unsafe-call": "off",
-      "@typescript-eslint/no-unsafe-return": "off",
-      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "error",
+      "@typescript-eslint/no-unsafe-member-access": "error",
+      "@typescript-eslint/no-unsafe-call": "error",
+      "@typescript-eslint/no-unsafe-return": "error",
+      "@typescript-eslint/no-unsafe-argument": "error",
       "@typescript-eslint/no-base-to-string": "error",
-      "@typescript-eslint/restrict-template-expressions": "off",
-      "@typescript-eslint/require-await": "off",
-      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/restrict-template-expressions": "error",
+      "@typescript-eslint/require-await": "warn",
+      "@typescript-eslint/no-unnecessary-type-assertion": "warn",
       "@typescript-eslint/no-redundant-type-constituents": "off",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/features/*/components/*",
+                "@/features/*/hooks/*",
+                "@/features/*/services/*",
+                "@/features/*/types/*",
+                "@/features/*/pages/*",
+              ],
+              message:
+                "Do not import a feature's internal modules from outside that feature. Use the feature barrel or a documented public entry.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/features/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/features/*/components/*",
+                "@/features/*/hooks/*",
+                "@/features/*/services/*",
+                "@/features/*/types/*",
+                "@/features/*/pages/*",
+              ],
+              message:
+                "Do not deep-import another feature's internals. Import from that feature's barrel or public entry.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["tests/**/*.{ts,tsx}"],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        afterEach: "readonly",
+        beforeEach: "readonly",
+        describe: "readonly",
+        expect: "readonly",
+        it: "readonly",
+        vi: "readonly",
+      },
     },
   },
   {

@@ -1,0 +1,2709 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "A.PM Backend API",
+    "description": "A.PM 后端 API。当前已接入 B-service 标书/排期解析、C-service v1 初始施工方案生成、agent-service 对话与动作链路。",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/auth/login/password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "账号密码登录",
+        "description": "使用账号（手机号）配合密码登录系统，校验通过后返回访问令牌、刷新令牌和当前用户信息。首次短信登录后需先设置用户名和密码。",
+        "operationId": "password_login_api_auth_login_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordLoginRequest",
+                "description": "账号密码登录请求参数"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login/sms": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "短信验证码登录",
+        "description": "使用手机号和短信验证码登录系统，适用于免密登录场景。",
+        "operationId": "sms_login_api_auth_login_sms_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmsLoginRequest",
+                "description": "短信验证码登录请求参数"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sms/send": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "发送登录验证码",
+        "description": "向指定手机号发送登录验证码，并执行发送频控校验。",
+        "operationId": "send_sms_api_auth_sms_send_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendSmsRequest",
+                "description": "发送短信验证码请求参数"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "刷新访问令牌",
+        "description": "使用刷新令牌换取新的访问令牌和刷新令牌，延长登录态有效期。",
+        "operationId": "refresh_api_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest",
+                "description": "刷新令牌请求参数"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "退出登录",
+        "description": "注销当前访问令牌对应的登录会话，使后续请求需要重新登录。",
+        "operationId": "logout_api_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/setup-profile": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "设置用户资料",
+        "description": "首次登录后设置用户名和密码，用户名用于显示，账号（手机号）用于登录。",
+        "operationId": "setup_profile_api_auth_setup_profile_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupProfileRequest",
+                "description": "设置用户资料请求参数"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/agent/tickets": {
+      "post": {
+        "tags": ["Agent Bridge"],
+        "summary": "签发 agent_ticket",
+        "description": "前端进入 AI 对话区前调用本接口。APM-backend 会校验当前登录用户是否有项目访问权限，然后签发仅对该 project_id 有效的短期 agent_ticket。\n\n调用方式：前端先用 APM 登录态访问本接口，拿到 data.agent_ticket 和 data.agent_base_url；随后访问 agent-service 的 /api/agent/init、/sessions、/messages、/streams/{stream_id}/sse 时，在请求头中携带 Authorization: Bearer {agent_ticket}。\n\n请求参数：product_code 当前固定 apm；grant_type 固定 project_agent_access；project_id 为当前工作台项目。",
+        "operationId": "issue_agent_ticket_api_agent_tickets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentTicketRequest",
+                "description": "agent_ticket 申请参数，绑定当前项目和产品"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": ["User"],
+        "summary": "获取当前用户信息",
+        "description": "根据当前访问令牌返回登录用户的基础资料，用于页面初始化和身份展示。",
+        "operationId": "get_me_api_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/projects/metrics": {
+      "get": {
+        "tags": ["Projects", "Projects"],
+        "summary": "获取项目统计",
+        "description": "返回当前登录用户可访问项目的汇总指标，用于项目控制台顶部统计卡片展示。",
+        "operationId": "get_metrics_api_projects_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "tags": ["Projects", "Projects"],
+        "summary": "获取项目列表",
+        "description": "根据项目状态、关键词和分页参数查询当前用户可访问的项目列表。",
+        "operationId": "list_projects_api_projects_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "项目状态筛选条件，例如 pending、in_progress、completed",
+              "title": "Status"
+            },
+            "description": "项目状态筛选条件，例如 pending、in_progress、completed"
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "项目名称关键词，支持模糊搜索",
+              "title": "Keyword"
+            },
+            "description": "项目名称关键词，支持模糊搜索"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "分页页码，从 1 开始",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "分页页码，从 1 开始"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页返回的数据条数，最大 100",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页返回的数据条数，最大 100"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Projects", "Projects"],
+        "summary": "创建项目",
+        "description": "创建一个新的项目容器，并将当前登录用户自动加入为该项目的拥有者。",
+        "operationId": "create_project_api_projects_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreateRequest",
+                "description": "创建项目请求参数"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/mock": {
+      "post": {
+        "tags": ["Projects", "Projects"],
+        "summary": "创建 mock 数据集项目",
+        "description": "使用内置 mock 数据集创建联调项目，并登记基础工序信息表，不经过真实上传文件角色和扩展名校验。",
+        "operationId": "create_mock_project_api_projects_mock_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MockProjectCreateRequest",
+                "description": "mock 项目创建请求参数"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/projects/{project_id}": {
+      "delete": {
+        "tags": ["Projects", "Projects"],
+        "summary": "删除项目",
+        "description": "同步通知 agent-service 清理项目对话域数据后，再删除 APM 本地项目业务数据。",
+        "operationId": "delete_project_api_projects__project_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Projects", "Projects"],
+        "summary": "获取项目详情",
+        "description": "根据项目 ID 获取单个项目的基础信息，仅允许项目成员访问。",
+        "operationId": "get_project_api_projects__project_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/files/upload-init": {
+      "post": {
+        "tags": ["Projects", "Project Files"],
+        "summary": "获取上传凭证",
+        "description": "为当前项目创建文件记录并返回上传地址。当前本地实现会生成 APM 内部上传地址和下游可拉取的 download_url；部署到对象存储后前端路由保持不变。",
+        "operationId": "init_project_file_upload_api_projects__project_id__files_upload_init_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadInitRequest",
+                "description": "上传初始化请求参数"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/files/complete": {
+      "post": {
+        "tags": ["Projects", "Project Files"],
+        "summary": "上传完成回执",
+        "description": "确认文件上传完成并更新文件状态。生成链路启动前应保证 schedule、ifc、doc/docx 等资料已完成登记。",
+        "operationId": "complete_project_files_api_projects__project_id__files_complete_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileCompleteRequest",
+                "description": "已上传文件列表"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/files": {
+      "get": {
+        "tags": ["Projects", "Project Files"],
+        "summary": "获取文件列表",
+        "description": "返回当前项目已登记的文件记录，供上传页和工作台读取。",
+        "operationId": "list_project_files_api_projects__project_id__files_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/files/{file_id}": {
+      "delete": {
+        "tags": ["Projects", "Project Files"],
+        "summary": "删除项目文件",
+        "description": "软删除当前项目下的一条文件记录，便于重新整理上传资料。",
+        "operationId": "delete_project_file_api_projects__project_id__files__file_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "文件 ID，例如 file_001",
+              "title": "File Id"
+            },
+            "description": "文件 ID，例如 file_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/generation/start": {
+      "post": {
+        "tags": ["Projects", "Project Generation"],
+        "summary": "启动生成",
+        "description": "创建生成任务并启动真实下游链路：按已上传文件调用 B-service 标书解析和 schedule parse-service 排期解析；parse-result 回调会先写入 project_parse_versions，排期 base_process_table 可用后再转换为 C-service v1 参数，同步调用 /v1/replan_scheme_by_actions 获取一个或多个初始施工方案，并落库各方案的 graph、crew_plan、version_summary；如 C-service 返回工期成本曲线，还会同步生成 time_cost 产物。",
+        "operationId": "start_generation_api_projects__project_id__generation_start_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/generation/regenerate": {
+      "post": {
+        "tags": ["Projects", "Project Generation"],
+        "summary": "重新生成产物",
+        "description": "在已有项目资料基础上重新发起一轮生成链路，可按 artifact_types 指定需要重算的产物类型。",
+        "operationId": "regenerate_generation_api_projects__project_id__generation_regenerate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RegenerateRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "重新生成请求参数",
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/generation/status": {
+      "get": {
+        "tags": ["Projects", "Project Generation"],
+        "summary": "查询生成状态",
+        "description": "前端在用户点击开始生成或重新生成后轮询本接口，直到 generation_status 变为 succeeded 或 failed。\n\n返回 data.steps 可直接渲染生成进度条，当前步骤包括解析项目文件、生成施工组织设计、生成工序图、生成工期成本分析、生成施工人员轮转等。",
+        "operationId": "get_generation_status_api_projects__project_id__generation_status_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/operations/{operation_id}": {
+      "get": {
+        "tags": ["Projects", "Project Generation"],
+        "summary": "查询正式动作状态",
+        "description": "供前端轮询展示 Agent 正式动作执行进度。当前用于全局压缩、局部压缩、突发事件处理、撤销等动作。\n\n前端通常从 agent-service SSE 的 verify/update/refetch 数据或对话结果中拿到 operation_id，再调用本接口读取最终状态。status 可能为 accepted、running、succeeded、failed；成功时会返回 result_process_version_id、generation_job_id、result_summary 等字段，失败时返回 error_code 和 error_message。",
+        "operationId": "get_operation_status_api_projects__project_id__operations__operation_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          },
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "操作 ID，例如 op_001",
+              "title": "Operation Id"
+            },
+            "description": "操作 ID，例如 op_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/workbench/upload-summary": {
+      "get": {
+        "tags": ["Projects", "Project Generation"],
+        "summary": "获取上传文件页签数据",
+        "description": "上传资料页和工作台概览使用的聚合接口。返回已上传文件列表、主文件摘要、AI 提取项目信息、当前 active 方案以及已生成产物的小统计。\n\n前端可直接使用 data.files 回显文件列表；data.project_info 展示项目名称、地点、合同工期等；data.artifact_summary 展示小卡片指标，包括章节数、网络图节点数、总工期、工序数、关键工序数、计划开始/完成日期、人员轮转班组和任务数。time_cost 已支持真实产物摘要，可读取 time_cost_status、time_cost_contract_duration_days、time_cost_optimal_duration_days、time_cost_minimum_total_cost_cents、time_cost_recommendation、time_cost_option_count、time_cost_resource_type_count 等字段。",
+        "operationId": "get_upload_summary_api_projects__project_id__workbench_upload_summary_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/workbench/console-logs": {
+      "get": {
+        "tags": ["Projects", "Project Generation"],
+        "summary": "获取工作台控制台日志",
+        "description": "返回工作台 AI 控制台可直接渲染的时间线日志，包含生成链路、产物落库和 Agent 动作结果。\n\n每条日志包含 type、status、severity、source、message、occurred_at、related_artifacts 和 metadata。message 是可直接展示的中文文案，occurred_at 用于排序和显示时间。\n\n当前 type 包括：bidding-parse-completed、document-generated、graph-generated、schedule-list-generated、gantt-generated、network-generated、crew-plan-generated、global-compression-completed、task-compression-completed、unexpected-event-completed、revert-action-completed。",
+        "operationId": "get_workbench_console_logs_api_projects__project_id__workbench_console_logs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/schemes": {
+      "get": {
+        "tags": ["Projects", "Project Schemes"],
+        "summary": "获取项目方案列表",
+        "description": "返回当前项目下的施工方案列表、active 状态及各方案当前版本信息。初始生成支持 C-service 返回多个方案；每个方案会保留自己的 current_process_version_id、总工期、计划开始/完成日期和 resource_pool，前端可据此展示方案切换入口。",
+        "operationId": "list_project_schemes_api_projects__project_id__schemes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/schemes/{scheme_id}/activate": {
+      "post": {
+        "tags": ["Projects", "Project Schemes"],
+        "summary": "激活施工方案",
+        "description": "切换当前项目的 active 施工方案。切换后 latest graph 和 latest crew_plan 接口会返回新 active 方案当前版本对应的产物；非 active 方案的 graph、crew_plan 仍会保留，便于后续再次切换。",
+        "operationId": "activate_project_scheme_api_projects__project_id__schemes__scheme_id__activate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          },
+          {
+            "name": "scheme_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "方案 ID，例如 scheme_001",
+              "title": "Scheme Id"
+            },
+            "description": "方案 ID，例如 scheme_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/artifacts/document/latest": {
+      "get": {
+        "tags": ["Projects", "Project Artifacts"],
+        "summary": "获取最新施工组织设计",
+        "description": "返回当前项目最新施工组织设计 document 产物。前端用于施工组织设计 Tab 渲染正文、目录、章节数和字数等信息。",
+        "operationId": "get_latest_document_artifact_api_projects__project_id__artifacts_document_latest_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/artifacts/graph/latest": {
+      "get": {
+        "tags": ["Projects", "Project Artifacts"],
+        "summary": "获取最新 graph",
+        "description": "返回当前 active 施工方案当前版本的最新 graph 产物。多初始方案场景下，每个方案都会保存自己的 graph；本接口始终跟随 active 方案，进度计划列表、甘特图、网络图三种前端视图都使用这一个接口。\n\ndata.graph 中单个工序对象包含开始时间、完成时间、工序名称、工种、持续时间、工种人数、是否关键路径、seqNo、依赖工序等字段。data.summary 提供可直接展示的小统计：task_count、critical_task_count、planned_start_date、planned_finish_date、total_duration_days。\n\nAgent 动作成功落库后也会生成新的 graph 版本，前端收到 agent-service 的 refetch 事件后应重新调用本接口。",
+        "operationId": "get_latest_graph_artifact_api_projects__project_id__artifacts_graph_latest_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/artifacts/time-cost/latest": {
+      "get": {
+        "tags": ["Projects", "Project Artifacts"],
+        "summary": "获取最新工期成本分析",
+        "description": "返回当前项目最新 time_cost 产物，用于工期-成本曲线和推荐方案展示。生成链路会从 C-service 返回的多方案结果或成本曲线中归一化并落库 options。\n\ndata.time_cost 包含 contract_duration_days、optimal_duration_days、minimum_total_cost_cents、recommendation、curve 和 options。options[] 包含 option_id、duration_days、direct_cost_cents、rental_cost_cents、manage_cost_cents、machine_cost_cents、indirect_cost_cents、total_cost_cents、total_crew_count、resource_pool、is_recommended。curve 包含 schema_ids、cost、direct_cost、indirect_cost、best_schema_id。",
+        "operationId": "get_latest_time_cost_artifact_api_projects__project_id__artifacts_time_cost_latest_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/artifacts/crew-plan/latest": {
+      "get": {
+        "tags": ["Projects", "Project Artifacts"],
+        "summary": "获取最新人员轮转",
+        "description": "返回当前 active 施工方案当前版本的最新人员轮转 crew_plan 产物。多初始方案场景下，每个方案都会保存自己的 crew_plan；本接口始终跟随 active 方案。前端用于人员轮转 Tab 展示班组类型、班组、任务安排和日期范围。\n\ndata.summary 提供可直接展示的小统计：crew_type_count、crew_count、crew_task_count、planned_start_date、planned_finish_date。",
+        "operationId": "get_latest_crew_plan_artifact_api_projects__project_id__artifacts_crew_plan_latest_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID，例如 proj_001",
+              "title": "Project Id"
+            },
+            "description": "项目 ID，例如 proj_001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/callbacks/parse-result": {
+      "post": {
+        "tags": ["Internal Callbacks"],
+        "summary": "接收 B 服务解析结果回调",
+        "description": "接收 B-service 标书解析或 schedule parse-service 排期解析结果。回调会先写入 project_parse_versions；当 schedule base_process_table 可用时，后端继续转换参数并调用 C-service v1 生成初始施工方案。",
+        "operationId": "receive_parse_result_internal_callbacks_parse_result_post",
+        "parameters": [
+          {
+            "name": "X-Internal-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallbackEnvelope",
+                "description": "解析结果回调请求体"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/callbacks/document-result": {
+      "post": {
+        "tags": ["Internal Callbacks"],
+        "summary": "接收 B 服务文档结果回调",
+        "description": "接收 B-service 返回的施工组织设计 document-result，落库为 document 产物，并可同步写入 agent-service 知识库。",
+        "operationId": "receive_document_result_internal_callbacks_document_result_post",
+        "parameters": [
+          {
+            "name": "X-Internal-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallbackEnvelope",
+                "description": "文档结果回调请求体"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/callbacks/graph-result": {
+      "post": {
+        "tags": ["Internal Callbacks"],
+        "summary": "接收 C 服务 graph 回调",
+        "description": "兼容旧异步 C-service graph 回调。真实 C-service v1 当前由后端同步调用并直接落库 graph。",
+        "operationId": "receive_graph_result_internal_callbacks_graph_result_post",
+        "parameters": [
+          {
+            "name": "X-Internal-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallbackEnvelope",
+                "description": "graph 结果回调请求体"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/callbacks/time-cost-result": {
+      "post": {
+        "tags": ["Internal Callbacks"],
+        "summary": "接收 C 服务工期成本回调",
+        "description": "兼容旧异步 C-service time_cost 回调。真实 C-service v1 暂未实现 time_cost，初始方案阶段可能为空占位。",
+        "operationId": "receive_time_cost_result_internal_callbacks_time_cost_result_post",
+        "parameters": [
+          {
+            "name": "X-Internal-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallbackEnvelope",
+                "description": "工期成本结果回调请求体"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/callbacks/crew-plan-result": {
+      "post": {
+        "tags": ["Internal Callbacks"],
+        "summary": "接收 C 服务人员轮转回调",
+        "description": "兼容旧异步 C-service crew_plan 回调。真实 C-service v1 当前由后端同步调用并直接落库 crew_plan。",
+        "operationId": "receive_crew_plan_result_internal_callbacks_crew_plan_result_post",
+        "parameters": [
+          {
+            "name": "X-Internal-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallbackEnvelope",
+                "description": "人员轮转结果回调请求体"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/files/upload/{storage_key}": {
+      "put": {
+        "tags": ["Internal Files"],
+        "summary": "本地静态存储上传",
+        "description": "联调阶段将文件内容写入后端本地 data 目录，部署阶段可替换为对象存储。",
+        "operationId": "upload_local_file_internal_files_upload__storage_key__put",
+        "parameters": [
+          {
+            "name": "storage_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "相对存储路径，如 projects/proj_x/file_x.docx",
+              "title": "Storage Key"
+            },
+            "description": "相对存储路径，如 projects/proj_x/file_x.docx"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/files/{file_id}/download": {
+      "get": {
+        "tags": ["Internal Files"],
+        "summary": "按 file_id 下载文件",
+        "description": "供 B 服务按 APM 下发的 download_url 拉取文件。",
+        "operationId": "download_file_by_id_internal_files__file_id__download_get",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "文件 ID",
+              "title": "File Id"
+            },
+            "description": "文件 ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/agent/projects/{project_id}/context": {
+      "get": {
+        "tags": ["Internal Agent"],
+        "summary": "获取 agent 项目上下文",
+        "description": "给 agent-service 读取项目摘要、正式产物摘要和用户权限范围。",
+        "operationId": "get_project_context_internal_agent_projects__project_id__context_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID",
+              "title": "Project Id"
+            },
+            "description": "项目 ID"
+          },
+          {
+            "name": "X-Agent-Ticket",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Agent-Ticket"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/agent/projects/{project_id}/artifacts/{artifact_type}/latest": {
+      "get": {
+        "tags": ["Internal Agent"],
+        "summary": "获取 agent 可读的最新产物",
+        "description": "给 agent-service 读取项目当前方案下的最新产物快照，当前重点用于 graph 等结构化查询。",
+        "operationId": "get_project_artifact_internal_agent_projects__project_id__artifacts__artifact_type__latest_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "项目 ID",
+              "title": "Project Id"
+            },
+            "description": "项目 ID"
+          },
+          {
+            "name": "artifact_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "产物类型，例如 graph",
+              "title": "Artifact Type"
+            },
+            "description": "产物类型，例如 graph"
+          },
+          {
+            "name": "X-Agent-Ticket",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Agent-Ticket"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/agent/actions": {
+      "post": {
+        "tags": ["Internal Agent"],
+        "summary": "提交 agent 正式动作",
+        "description": "agent-service 在用户确认后向 APM 提交正式动作。",
+        "operationId": "create_action_internal_agent_actions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Agent-Ticket",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Agent-Ticket"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentActionRequest",
+                "description": "正式动作请求体"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/agent/actions/{operation_id}": {
+      "get": {
+        "tags": ["Internal Agent"],
+        "summary": "查询 agent 正式动作状态",
+        "description": "供 agent-service 查询动作执行状态并在对话中展示。",
+        "operationId": "get_action_status_internal_agent_actions__operation_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "操作 ID",
+              "title": "Operation Id"
+            },
+            "description": "操作 ID"
+          },
+          {
+            "name": "X-Agent-Ticket",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Agent-Ticket"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "健康检查",
+        "description": "返回 APM backend 进程是否可用。",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readiness": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "就绪检查",
+        "description": "检查数据库和 Redis 是否可连接。",
+        "operationId": "readiness_check_readiness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentActionRequest": {
+        "properties": {
+          "product_code": {
+            "type": "string",
+            "title": "Product Code",
+            "default": "apm"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id"
+          },
+          "scheme_id": {
+            "type": "string",
+            "title": "Scheme Id"
+          },
+          "action_type": {
+            "type": "string",
+            "title": "Action Type"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "title": "Idempotency Key"
+          },
+          "action_display_text": {
+            "type": "string",
+            "title": "Action Display Text"
+          },
+          "action_payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Action Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "scheme_id",
+          "action_type",
+          "idempotency_key",
+          "action_display_text"
+        ],
+        "title": "AgentActionRequest"
+      },
+      "AgentTicketRequest": {
+        "properties": {
+          "product_code": {
+            "type": "string",
+            "title": "Product Code",
+            "description": "产品编码，目前仅支持 apm",
+            "default": "apm"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id",
+            "description": "当前工作台项目 ID，ticket 只允许访问该项目的 agent 会话"
+          },
+          "grant_type": {
+            "type": "string",
+            "title": "Grant Type",
+            "description": "授权类型，固定传 project_agent_access",
+            "default": "project_agent_access"
+          }
+        },
+        "type": "object",
+        "required": ["project_id"],
+        "title": "AgentTicketRequest"
+      },
+      "CallbackEnvelope": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "callback_source": {
+            "type": "string",
+            "title": "Callback Source"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id"
+          },
+          "generation_job_id": {
+            "type": "string",
+            "title": "Generation Job Id"
+          },
+          "artifact_type": {
+            "type": "string",
+            "title": "Artifact Type"
+          },
+          "artifact_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Version"
+          },
+          "callback_status": {
+            "type": "string",
+            "title": "Callback Status"
+          },
+          "callback_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Callback Time"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "callback_source",
+          "project_id",
+          "generation_job_id",
+          "artifact_type",
+          "callback_status",
+          "callback_time",
+          "payload"
+        ],
+        "title": "CallbackEnvelope"
+      },
+      "CompletedFileItem": {
+        "properties": {
+          "file_category": {
+            "type": "string",
+            "title": "File Category",
+            "default": "core"
+          },
+          "file_role": {
+            "type": "string",
+            "title": "File Role"
+          },
+          "original_file_name": {
+            "type": "string",
+            "title": "Original File Name"
+          },
+          "file_extension": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Extension"
+          },
+          "file_size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Size Bytes"
+          },
+          "storage_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storage Key"
+          },
+          "mock_dataset_code": {
+            "type": "string",
+            "title": "Mock Dataset Code"
+          }
+        },
+        "type": "object",
+        "required": ["file_role", "original_file_name", "mock_dataset_code"],
+        "title": "CompletedFileItem"
+      },
+      "FileCompleteRequest": {
+        "properties": {
+          "files": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CompletedFileItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Files"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "storage_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storage Key"
+          },
+          "upload_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upload Status"
+          },
+          "mock_dataset_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mock Dataset Code"
+          }
+        },
+        "type": "object",
+        "title": "FileCompleteRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MockProjectCreateRequest": {
+        "properties": {
+          "project_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Name",
+            "description": "mock 项目名称，可为空",
+            "examples": ["前端创建项目联调演示"]
+          },
+          "mock_dataset_code": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Mock Dataset Code",
+            "description": "mock C 服务数据集编码",
+            "examples": ["jiuan-001"]
+          },
+          "original_file_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original File Name",
+            "description": "mock 数据集对应的基础工序信息表文件名",
+            "examples": ["九安完整0207_001.xlsx"]
+          },
+          "file_extension": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Extension",
+            "description": "mock 数据集文件扩展名",
+            "examples": ["xlsx"]
+          },
+          "file_size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Size Bytes",
+            "description": "mock 数据集文件大小",
+            "default": 1024
+          }
+        },
+        "type": "object",
+        "required": ["mock_dataset_code"],
+        "title": "MockProjectCreateRequest"
+      },
+      "PasswordLoginRequest": {
+        "properties": {
+          "account": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Account",
+            "description": "登录账号（手机号）",
+            "examples": ["13800138000"]
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "title": "Password",
+            "description": "登录密码",
+            "examples": ["Test1234!"]
+          },
+          "has_agreed_terms": {
+            "type": "boolean",
+            "title": "Has Agreed Terms",
+            "description": "是否已同意服务协议"
+          }
+        },
+        "type": "object",
+        "required": ["account", "password", "has_agreed_terms"],
+        "title": "PasswordLoginRequest"
+      },
+      "ProjectCreateRequest": {
+        "properties": {
+          "project_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Name",
+            "description": "项目名称，可先为空，后续由上传资料解析补全",
+            "examples": ["孙园镇中洼居党群服务中心办公楼建设工程"]
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type",
+            "description": "项目创建来源，默认为 manual_create",
+            "default": "manual_create",
+            "examples": ["manual_create"]
+          }
+        },
+        "type": "object",
+        "title": "ProjectCreateRequest"
+      },
+      "RefreshTokenRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "用于换取新访问令牌的刷新令牌"
+          }
+        },
+        "type": "object",
+        "required": ["refresh_token"],
+        "title": "RefreshTokenRequest"
+      },
+      "RegenerateRequest": {
+        "properties": {
+          "artifact_types": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Types"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "RegenerateRequest"
+      },
+      "SendSmsRequest": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "title": "Phone",
+            "description": "需要接收登录验证码的手机号",
+            "examples": ["13800138000"]
+          }
+        },
+        "type": "object",
+        "required": ["phone"],
+        "title": "SendSmsRequest"
+      },
+      "SetupProfileRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
+            "description": "用户名，用于显示，不能用于登录",
+            "examples": ["zhangwei"]
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "title": "Password",
+            "description": "登录密码",
+            "examples": ["Test1234!"]
+          }
+        },
+        "type": "object",
+        "required": ["username", "password"],
+        "title": "SetupProfileRequest"
+      },
+      "SmsLoginRequest": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "title": "Phone",
+            "description": "中国大陆手机号",
+            "examples": ["13800138000"]
+          },
+          "sms_code": {
+            "type": "string",
+            "title": "Sms Code",
+            "description": "短信验证码",
+            "examples": ["123456"]
+          },
+          "has_agreed_terms": {
+            "type": "boolean",
+            "title": "Has Agreed Terms",
+            "description": "是否已同意服务协议",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["phone", "sms_code"],
+        "title": "SmsLoginRequest"
+      },
+      "UploadInitRequest": {
+        "properties": {
+          "original_file_name": {
+            "type": "string",
+            "title": "Original File Name"
+          },
+          "file_size_bytes": {
+            "type": "integer",
+            "title": "File Size Bytes"
+          },
+          "file_category": {
+            "type": "string",
+            "title": "File Category"
+          },
+          "file_role": {
+            "type": "string",
+            "title": "File Role"
+          },
+          "mock_dataset_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mock Dataset Code"
+          }
+        },
+        "type": "object",
+        "required": ["original_file_name", "file_size_bytes", "file_category", "file_role"],
+        "title": "UploadInitRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health",
+      "description": "后端健康检查和依赖就绪检查。"
+    },
+    {
+      "name": "Auth",
+      "description": "登录、短信验证码、刷新令牌、退出登录和首次设置资料。"
+    },
+    {
+      "name": "User",
+      "description": "当前登录用户资料。"
+    },
+    {
+      "name": "Projects",
+      "description": "项目列表、详情、统计、创建和删除。"
+    },
+    {
+      "name": "Project Files",
+      "description": "项目资料上传登记、上传完成回执、文件列表和删除。"
+    },
+    {
+      "name": "Project Generation",
+      "description": "项目生成链路：触发 B-service 标书/排期解析，接收回调落库，并在排期 base process table 可用后调用 C-service v1 生成初始施工方案。"
+    },
+    {
+      "name": "Project Schemes",
+      "description": "施工方案列表、active scheme 切换和当前版本管理。"
+    },
+    {
+      "name": "Project Artifacts",
+      "description": "读取当前 active scheme 下最新 document、graph、time_cost、crew_plan 产物。"
+    },
+    {
+      "name": "Agent Bridge",
+      "description": "为前端签发 agent_ticket，供 agent-service 访问项目上下文。"
+    },
+    {
+      "name": "Internal Agent",
+      "description": "agent-service 调 APM 的内部接口：上下文、产物读取、动作提交和状态查询。"
+    },
+    {
+      "name": "Internal Callbacks",
+      "description": "B-service / schedule parse-service 内部回调入口。"
+    },
+    {
+      "name": "Internal Files",
+      "description": "下游服务拉取或写入项目文件的内部接口。"
+    }
+  ]
+}

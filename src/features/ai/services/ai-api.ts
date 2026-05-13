@@ -1,0 +1,205 @@
+import { API_BASE } from "@/config";
+import { buildUrl, request, requestSse, type SseRequestOptions } from "@/services/http";
+
+type ApiListResponse<T> = {
+  items: T[];
+  total?: number;
+  page?: number;
+  page_size?: number;
+};
+
+export interface AgentTicketPayload {
+  project_id: string;
+  product_code?: "apm" | string;
+  grant_type?: "project_agent_access" | string;
+}
+
+export interface AgentTicketResponse {
+  agent_ticket: string;
+  ticket_type: string;
+  expires_at: string;
+  refresh_after_seconds: number;
+  scopes: string[];
+  agent_base_url: string;
+}
+
+export interface AgentInitPayload {
+  product_code: "apm" | string;
+  project_id: string;
+  agent_ticket: string;
+}
+
+export interface AgentInitResponse {
+  chat_session_id: string;
+}
+
+interface AgentInitRawResponse {
+  current_session: {
+    chat_session_id: string;
+    session_title: string;
+    session_status: string;
+    last_message_at: string | null;
+  };
+}
+
+export interface AgentSessionListParams {
+  product_code: "apm" | string;
+  project_id: string;
+}
+
+export interface AgentSessionItem {
+  chat_session_id: string;
+  session_title: string;
+  last_message_at: string;
+}
+
+export interface AgentMessageItem {
+  message_id: string;
+  message_role: string;
+  message_type: string;
+  content_text: string;
+  sent_at: string;
+}
+
+export interface SendAgentMessageResponse extends AgentMessageItem {
+  stream_id: string;
+}
+
+export interface AgentSessionMessages {
+  chat_session_id: string;
+  messages: AgentMessageItem[];
+}
+
+export interface SendAgentMessagePayload {
+  content_text: string;
+}
+
+interface AgentRequestOptions {
+  agentBaseUrl?: string;
+  agentTicket?: string;
+}
+
+const APM_API_BASE = `${API_BASE.backend}/api`;
+
+function jsonRequest<T>(path: string, payload?: unknown) {
+  return request<T>(`${APM_API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: payload == null ? undefined : JSON.stringify(payload),
+  });
+}
+
+function agentApiBase(agentBaseUrl?: string) {
+  return `${(agentBaseUrl ?? API_BASE.aiService).replace(/\/$/, "")}/api`;
+}
+
+function buildAgentHeaders(agentTicket?: string): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+    ...(agentTicket ? { Authorization: `Bearer ${agentTicket}` } : {}),
+  };
+}
+
+/**
+ * 从 APM 后端签发 agent-service 访问票据。
+ */
+export function issueAgentTicket(payload: AgentTicketPayload): Promise<AgentTicketResponse> {
+  return jsonRequest<AgentTicketResponse>("/agent/tickets", payload);
+}
+
+/**
+ * 初始化 agent-service 会话。
+ */
+export async function initAgentSession(
+  payload: AgentInitPayload,
+  options: AgentRequestOptions = {},
+): Promise<AgentInitResponse> {
+  const response = await request<AgentInitRawResponse>(
+    `${agentApiBase(options.agentBaseUrl)}/agent/init`,
+    {
+      method: "POST",
+      headers: buildAgentHeaders(options.agentTicket),
+      body: JSON.stringify(payload),
+    },
+  );
+
+  const chatSessionId = response.current_session?.chat_session_id;
+  if (!chatSessionId) {
+    throw new Error("初始化 AI 会话失败：缺少 current_session.chat_session_id");
+  }
+
+  return {
+    chat_session_id: chatSessionId,
+  };
+}
+
+/**
+ * 获取 agent-service 会话列表。
+ */
+export function listAgentSessions(
+  params: AgentSessionListParams,
+  options: AgentRequestOptions = {},
+): Promise<ApiListResponse<AgentSessionItem>> {
+  const url = buildUrl(agentApiBase(options.agentBaseUrl), "/agent/sessions", {
+    product_code: params.product_code,
+    project_id: params.project_id,
+  });
+  return request<ApiListResponse<AgentSessionItem>>(url, {
+    headers: options.agentTicket ? { Authorization: `Bearer ${options.agentTicket}` } : undefined,
+  });
+}
+
+/**
+ * 获取 agent-service 会话消息。
+ */
+export function getAgentSessionMessages(
+  chatSessionId: string,
+  options: AgentRequestOptions = {},
+): Promise<AgentSessionMessages> {
+  return request<AgentSessionMessages>(
+    `${agentApiBase(options.agentBaseUrl)}/agent/sessions/${chatSessionId}/messages`,
+    {
+      headers: options.agentTicket ? { Authorization: `Bearer ${options.agentTicket}` } : undefined,
+    },
+  );
+}
+
+/**
+ * 向 agent-service 发送用户消息。
+ */
+export function sendAgentSessionMessage(
+  chatSessionId: string,
+  payload: SendAgentMessagePayload,
+  options: AgentRequestOptions = {},
+): Promise<SendAgentMessageResponse> {
+  return request<SendAgentMessageResponse>(
+    `${agentApiBase(options.agentBaseUrl)}/agent/sessions/${chatSessionId}/messages`,
+    {
+      method: "POST",
+      headers: buildAgentHeaders(options.agentTicket),
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+/**
+ * 订阅 agent-service 流式输出。
+ */
+export function subscribeAgentStreamSse(
+  streamId: string,
+  options: Pick<SseRequestOptions, "signal" | "onMessage" | "onDone" | "onError"> & {
+    agentBaseUrl?: string;
+    agentTicket?: string;
+  } = {},
+): Promise<Response> {
+  return requestSse(`${agentApiBase(options.agentBaseUrl)}/agent/streams/${streamId}/sse`, {
+    method: "GET",
+    headers: options.agentTicket ? { Authorization: `Bearer ${options.agentTicket}` } : undefined,
+    signal: options.signal,
+    onMessage: options.onMessage,
+    onDone: options.onDone,
+    onError: options.onError,
+  });
+}
