@@ -86,44 +86,48 @@ src/
         uploads.ts    # Upload feature types
       queryKeys.ts
       index.ts
-  hooks/              # Global shared hooks (useTime, useWeather)
-  lib/                # Utility functions (date, array, task)
+  hooks/              # Global hooks (useTime)
+  lib/                # Utility functions (date, array, task, gantt)
+  schemas/            # Zod schemas (env validation)
+  analytics/          # Usage analytics abstraction (with console/noop providers)
   routes/             # React Router configuration
   stores/             # Zustand stores (client state only)
   services/           # Core infrastructure (http.ts)
-  types/domain/       # Shared domain types (schedulepro, plan)
+  pages/              # Top-level entry pages (NotFound)
 ```
 
 ### Key Architecture Patterns
 
-1. **Feature Module Organization**: Each feature in `src/features/` is self-contained with its own `components`, `hooks`, `services`, `types`, and optional `pages`/`queryKeys`. Cross-feature imports should go through feature index files: `import { useProject } from "@/features/project";`
+1. **Feature Module Organization**: Each feature in `src/features/` is self-contained with its own `components`, `hooks`, `services`, `types`, and optional `pages`/`queryKeys`. Cross-feature imports must go through feature barrel (`index.ts`) — enforced by ESLint's `no-restricted-imports` rule.
 
-2. **Project Resolution**: Project pages resolve the active project from the route param or selected project state. URL format: `/project/:id`.
+2. **Project Resolution**: Project pages resolve the active project from the route param (`:id`) or selected project state via `useProject` + `useProjectData`.
 
-3. **API Service Layer**: HTTP requests use a custom wrapper around `fetch` in `src/services/http.ts`. Feature-specific services are in `features/{feature}/services/`. API base URLs are configured in `src/config/index.ts` via environment variables.
+3. **API Service Layer**: HTTP requests use a custom wrapper around `fetch` in `src/services/http.ts`. This wrapper handles auth headers, automatic token refresh (with retry), API response unwrapping, and SSE streaming. Feature-specific services are in `features/{feature}/services/`. API base URLs are configured in `src/config/index.ts` via environment variables and validated with Zod schema at runtime.
 
 4. **State Management**:
-   - **Client State**: Zustand store in `src/stores/projectStore.ts` stores client-owned UI state such as `currentProjectId`
-   - **Server State**: React Query owns project list, core graph, and chart data
+   - **Client State (Zustand)**: Multiple stores in `src/stores/` — `authStore` (token/user with persist), `projectStore` (currentProjectId with persist), `chatStore` (per-project message threads, agent tickets, input state), `generationStore` (generation task progress)
+   - **Server State (React Query)**: Queries in `src/features/*/hooks/` manage project list, core graph, cost curve, document, crew plan artifacts, and upload data. Query keys are defined per-feature in `queryKeys.ts`.
 
 5. **AI Chat Flow**:
-   - `src/components/layout/AppLayout.tsx` mounts a persistent chat panel in the left sidebar
-   - `src/features/ai/hooks/useChat.ts` manages message state, SSE streaming, interrupt resume, voice input, and cross-project thread switching
-   - Feature cross-imports should use `@/features/project` public exports, not deep imports
+   - `src/components/layout/AppLayout.tsx` mounts a persistent chat panel in the left sidebar (visible only on `/project/:id`)
+   - `src/features/ai/hooks/useChat.ts` manages per-project message threads, SSE streaming with agent ticket auth, interrupt resume, and refetch triggers
+   - Agent auth uses a two-layer ticket system: session-level ticket with automatic refresh (tracked in chatStore per project)
 
-6. **Feature Architecture Rules**: Detailed rules for feature structure, layer separation, and import restrictions are in [.rules/feature-architecture.md](.rules/feature-architecture.md). Key principles:
+6. **Auth Flow**: `/login` page (in `src/features/auth/`) supports password and SMS login. The `http.ts` service layer automatically attaches Bearer tokens, detects 401/403 responses, attempts token refresh via `/auth/refresh`, and retries the original request. Failed refresh triggers logout.
+
+7. **Feature Architecture Rules**: Detailed rules for feature structure, layer separation, and import restrictions are in [.rules/feature-architecture.md](.rules/feature-architecture.md). Key principles:
    - Features own their layers (components/hooks/services/types/pages)
    - Cross-feature imports must use feature barrel (`@/features/ai`)
    - Shared utilities go in `src/lib`, shared infrastructure in `src/services`
    - All exported hooks, services, and utility functions require JSDoc comments in Chinese (中文)
 
-7. **Design Evolution Rules**:
+8. **Design Evolution Rules**:
    - `templete/` contains design references only, not production code
    - `templete/apm_react_template` is historical reference only, not the implementation baseline
    - `docs/frontend-evolution-guide.md` is the working guide for page mapping and agent constraints
    - Prefer A.PM token utilities over ad-hoc colors when touching page-level UI
 
-8. **Definition of Done**: A page refactor is considered aligned when:
+9. **Definition of Done**: A page refactor is considered aligned when:
    - It uses the shared A.PM token system
    - Its structure matches the intended reference hierarchy
    - Repeated visual patterns are extracted into reusable components
