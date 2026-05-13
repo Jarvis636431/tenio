@@ -68,7 +68,6 @@ src/
   components/          # Shared UI components
     ui/               # shadcn/ui primitives (Button, Dialog, etc.)
     layout/           # App layout components
-    chart/            # Chart components (GanttChart, NetworkDiagram)
   features/            # Feature modules
     ai/               # AI Chat feature
       components/     # Chat, ChatInput, ChatHeader, ChatMessage
@@ -175,8 +174,8 @@ Current intended user flow:
 - `src/features/project/hooks/useProject.ts` - Selected project state + project list query adapter
 - `src/stores/projectStore.ts` - Client-side project selection state
 - `src/features/ai/hooks/useChat.ts` - AI panel state, SSE parsing, voice input
-- `src/pages/Projects.tsx` - Project dashboard / project list page
-- `src/pages/Upload.tsx` - New-project intake flow
+- `src/features/project/pages/Projects.tsx` - Project dashboard / project list page
+- `src/features/upload/pages/UploadPage.tsx` - New-project intake flow
 - `src/features/project/pages/Overview.tsx` - Main dashboard page
 
 ### Utility Libraries
@@ -186,6 +185,22 @@ Shared utilities in `src/lib/`:
 - `date.ts` - Date parsing, formatting, normalization functions
 - `array.ts` - Array utilities (sortBySeqNo, groupBy)
 - `task.ts` - Task utilities (isLagTask, formatDurationDays)
+- `gantt.ts` - Gantt chart data helpers
+- `log.ts` - Silent error logging utility
+- `project-document.ts` - Project document content extraction helpers
+- `utils.ts` - General utilities (cn class merging, createMessageId)
+
+### ESLint Configuration
+
+ESLint is configured in `eslint.config.js` with TypeScript strict mode, React Hooks, and React Refresh rules.
+
+Key rules:
+
+- `@typescript-eslint/no-unused-vars` — **error** (prefix with `_` to opt out)
+- `@typescript-eslint/consistent-type-imports` — **warn** with `inline-type-imports` fix style
+- `@typescript-eslint/no-unsafe-assignment/member-access/call/return/argument` — **error** (full unsafe type safety)
+- `@typescript-eslint/require-await` — **warn**
+- `no-restricted-imports` — **error**: cross-feature deep imports prohibited (use feature barrels instead)
 
 ### Test Layout
 
