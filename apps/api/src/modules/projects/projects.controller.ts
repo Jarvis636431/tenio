@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Param, Post, Query } from "@nestjs/common";
 import type { CreateProjectResponse, ListProjectsResponse, Project } from "@tenio/shared";
 import { CreateProjectDto } from "./dto/create-project.dto.js";
 import { ListProjectsDto } from "./dto/list-projects.dto.js";
@@ -6,7 +6,7 @@ import { ProjectsService } from "./projects.service.js";
 
 @Controller("projects")
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(@Inject(ProjectsService) private readonly projectsService: ProjectsService) {}
 
   @Get()
   listProjects(@Query() query: ListProjectsDto): ListProjectsResponse {
