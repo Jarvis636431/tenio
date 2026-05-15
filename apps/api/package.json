@@ -9,15 +9,22 @@
     "start:dev": "nest start --watch",
     "build": "nest build",
     "typecheck": "tsc --noEmit",
-    "test": "node -e \"console.log('api tests not configured yet')\""
+    "test": "node -e \"console.log('api tests not configured yet')\"",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",
+    "@nestjs/jwt": "^11.0.1",
     "@nestjs/platform-express": "^11.1.6",
     "@tenio/shared": "workspace:*",
+    "@prisma/client": "^6.8.2",
+    "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "dotenv": "^16.5.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
@@ -25,6 +32,7 @@
     "@nestjs/cli": "^11.0.10",
     "@nestjs/schematics": "^11.0.7",
     "@types/node": "^24.0.1",
+    "prisma": "^6.8.2",
     "typescript": "^5.8.3"
   }
 }

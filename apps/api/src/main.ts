@@ -1,10 +1,13 @@
+import "dotenv/config";
 import "reflect-metadata";
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module.js";
+import { getApiEnv } from "./config/env.js";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const env = getApiEnv();
 
   app.setGlobalPrefix("api");
   app.useGlobalPipes(
@@ -15,9 +18,8 @@ async function bootstrap() {
     }),
   );
 
-  const port = Number(process.env.PORT ?? 3001);
-  await app.listen(port);
-  console.log(`API listening on http://localhost:${port}`);
+  await app.listen(env.port);
+  console.log(`API listening on http://localhost:${env.port}`);
 }
 
 void bootstrap();
