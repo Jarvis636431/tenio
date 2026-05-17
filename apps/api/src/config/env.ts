@@ -7,6 +7,13 @@ export interface ApiEnv {
   jwtRefreshExpiresIn: string;
   smsCodeTtlSeconds: number;
   smsCodeCooldownSeconds: number;
+  storageEndpoint: string;
+  storageRegion: string;
+  storageAccessKey: string;
+  storageSecretKey: string;
+  storageBucket: string;
+  storageForcePathStyle: boolean;
+  storagePresignExpiresInSeconds: number;
 }
 
 function requireEnv(name: string, fallback?: string) {
@@ -27,5 +34,14 @@ export function getApiEnv(): ApiEnv {
     jwtRefreshExpiresIn: requireEnv("JWT_REFRESH_EXPIRES_IN", "30d"),
     smsCodeTtlSeconds: Number(process.env.SMS_CODE_TTL_SECONDS ?? 300),
     smsCodeCooldownSeconds: Number(process.env.SMS_CODE_COOLDOWN_SECONDS ?? 60),
+    storageEndpoint: requireEnv("STORAGE_ENDPOINT", "http://127.0.0.1:9000"),
+    storageRegion: requireEnv("STORAGE_REGION", "us-east-1"),
+    storageAccessKey: requireEnv("STORAGE_ACCESS_KEY", "minioadmin"),
+    storageSecretKey: requireEnv("STORAGE_SECRET_KEY", "minioadmin"),
+    storageBucket: requireEnv("STORAGE_BUCKET", "tenio-dev"),
+    storageForcePathStyle: (process.env.STORAGE_FORCE_PATH_STYLE ?? "true") === "true",
+    storagePresignExpiresInSeconds: Number(
+      process.env.STORAGE_PRESIGN_EXPIRES_IN_SECONDS ?? 900,
+    ),
   };
 }
