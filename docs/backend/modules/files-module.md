@@ -32,6 +32,13 @@
 2. 上传动作和文件实体不是一回事
 3. 后端应该管理文件状态，而不是充当大文件中转层
 
+当前接口形态：
+
+- `POST /api/projects/:projectId/uploads/init`
+- `POST /api/projects/:projectId/uploads/complete`
+- `GET /api/projects/:projectId/files`
+- `GET /api/projects/:projectId/files/stats`
+
 ## 优点
 
 - 上传协议更适合大文件和多文件

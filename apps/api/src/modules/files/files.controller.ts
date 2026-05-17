@@ -12,12 +12,12 @@ import { UploadCompleteDto } from "./dto/upload-complete.dto.js";
 import { UploadInitDto } from "./dto/upload-init.dto.js";
 import { FilesService } from "./files.service.js";
 
-@Controller("projects/:projectId/files")
+@Controller("projects/:projectId")
 @UseGuards(JwtAuthGuard)
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
-  @Post("upload-init")
+  @Post("uploads/init")
   initUpload(
     @CurrentUser() currentUser: AuthenticatedRequestUser,
     @Param("projectId") projectId: string,
@@ -26,7 +26,7 @@ export class FilesController {
     return this.filesService.initUpload(currentUser, projectId, payload);
   }
 
-  @Post("complete")
+  @Post("uploads/complete")
   completeUpload(
     @CurrentUser() currentUser: AuthenticatedRequestUser,
     @Param("projectId") projectId: string,
@@ -35,7 +35,7 @@ export class FilesController {
     return this.filesService.completeUpload(currentUser, projectId, payload);
   }
 
-  @Get()
+  @Get("files")
   listFiles(
     @CurrentUser() currentUser: AuthenticatedRequestUser,
     @Param("projectId") projectId: string,
@@ -43,7 +43,7 @@ export class FilesController {
     return this.filesService.listProjectFiles(currentUser, projectId);
   }
 
-  @Get("stats")
+  @Get("files/stats")
   getFileStats(
     @CurrentUser() currentUser: AuthenticatedRequestUser,
     @Param("projectId") projectId: string,
