@@ -9,6 +9,11 @@ export interface PresignedUploadResult {
   headers: Record<string, string>;
 }
 
+export interface PresignedDownloadResult {
+  url: string;
+  expires_at: string;
+}
+
 export interface HeadObjectResult {
   exists: boolean;
   content_type?: string;

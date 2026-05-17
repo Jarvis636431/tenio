@@ -4,8 +4,11 @@ import {
   ProjectFileStatus as PrismaProjectFileStatus,
 } from "@prisma/client";
 import type {
+  DeleteProjectFileResponse,
+  GetProjectFileResponse,
   ListProjectFilesResponse,
   ProjectFile,
+  ProjectFileDownloadUrlResponse,
   ProjectFileStatsResponse,
   UploadCompleteResponse,
   UploadInitResponse,
@@ -124,6 +127,15 @@ export class FilesService {
     };
   }
 
+  async getProjectFile(
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
+    fileId: string,
+  ): Promise<GetProjectFileResponse> {
+    const file = await this.findOwnedFile(currentUser, projectId, fileId);
+    return { file: this.toProjectFile(file) };
+  }
+
   async getProjectFileStats(
     currentUser: AuthenticatedRequestUser,
     projectId: string,
@@ -149,6 +161,39 @@ export class FilesService {
     };
   }
 
+  async deleteProjectFile(
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
+    fileId: string,
+  ): Promise<DeleteProjectFileResponse> {
+    const file = await this.findOwnedFile(currentUser, projectId, fileId);
+
+    await this.storageService.deleteObject(file.storageKey);
+    await this.prisma.projectFile.delete({
+      where: { id: file.id },
+    });
+
+    return {
+      file_id: file.id,
+      deleted_at: new Date().toISOString(),
+    };
+  }
+
+  async getProjectFileDownloadUrl(
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
+    fileId: string,
+  ): Promise<ProjectFileDownloadUrlResponse> {
+    const file = await this.findOwnedFile(currentUser, projectId, fileId);
+    const download = await this.storageService.createPresignedDownloadUrl(file.storageKey);
+
+    return {
+      file_id: file.id,
+      download_url: download.url,
+      expires_at: download.expires_at,
+    };
+  }
+
   private async ensureProjectOwner(
     currentUser: AuthenticatedRequestUser,
     projectId: string,
@@ -164,6 +209,22 @@ export class FilesService {
     if (!project) {
       throw new NotFoundException(`Project ${projectId} not found`);
     }
+  }
+
+  private async findOwnedFile(currentUser: AuthenticatedRequestUser, projectId: string, fileId: string) {
+    const file = await this.prisma.projectFile.findFirst({
+      where: {
+        id: fileId,
+        projectId,
+        project: { ownerId: currentUser.id },
+      },
+    });
+
+    if (!file) {
+      throw new NotFoundException(`File ${fileId} not found`);
+    }
+
+    return file;
   }
 
   private toProjectFile(file: {

@@ -1,10 +1,17 @@
-import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Injectable } from "@nestjs/common";
 import { getApiEnv } from "../config/env.js";
 import type {
   CreatePresignedUploadUrlInput,
   HeadObjectResult,
+  PresignedDownloadResult,
   PresignedUploadResult,
 } from "./storage.types.js";
 
@@ -43,6 +50,20 @@ export class StorageService {
     };
   }
 
+  async createPresignedDownloadUrl(key: string): Promise<PresignedDownloadResult> {
+    const expiresIn = this.env.storagePresignExpiresInSeconds;
+    const command = new GetObjectCommand({
+      Bucket: this.env.storageBucket,
+      Key: key,
+    });
+    const url = await getSignedUrl(this.client, command, { expiresIn });
+
+    return {
+      url,
+      expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
+    };
+  }
+
   async headObject(key: string): Promise<HeadObjectResult> {
     try {
       const result = await this.client.send(
@@ -60,5 +81,14 @@ export class StorageService {
     } catch {
       return { exists: false };
     }
+  }
+
+  async deleteObject(key: string): Promise<void> {
+    await this.client.send(
+      new DeleteObjectCommand({
+        Bucket: this.env.storageBucket,
+        Key: key,
+      }),
+    );
   }
 }

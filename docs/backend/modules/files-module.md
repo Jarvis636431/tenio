@@ -13,7 +13,10 @@
 - 上传初始化
 - 上传完成确认
 - 项目文件列表
+- 项目文件详情
 - 文件统计
+- 文件删除
+- 文件下载地址签发
 - `ProjectFile` 记录与项目归属管理
 
 ## 为什么这样设计
@@ -37,7 +40,10 @@
 - `POST /api/projects/:projectId/uploads/init`
 - `POST /api/projects/:projectId/uploads/complete`
 - `GET /api/projects/:projectId/files`
+- `GET /api/projects/:projectId/files/:fileId`
 - `GET /api/projects/:projectId/files/stats`
+- `GET /api/projects/:projectId/files/:fileId/download-url`
+- `DELETE /api/projects/:projectId/files/:fileId`
 
 ## 优点
 
@@ -45,6 +51,7 @@
 - 文件记录可以独立追踪状态
 - 与对象存储天然兼容
 - 后续生成链路可以直接消费 `ProjectFile`
+- 文件删除、重新选择、重新下载这些日常操作也有明确边界
 
 ## 缺点
 

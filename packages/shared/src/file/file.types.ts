@@ -58,10 +58,25 @@ export interface UploadCompleteResponse {
 
 export interface ListProjectFilesResponse extends PaginatedResponse<ProjectFile> {}
 
+export interface GetProjectFileResponse {
+  file: ProjectFile;
+}
+
 export interface ProjectFileStatsResponse {
   total_files: number;
   pending_files: number;
   uploaded_files: number;
   ready_files: number;
   failed_files: number;
+}
+
+export interface DeleteProjectFileResponse {
+  file_id: string;
+  deleted_at: string;
+}
+
+export interface ProjectFileDownloadUrlResponse {
+  file_id: string;
+  download_url: string;
+  expires_at: string;
 }

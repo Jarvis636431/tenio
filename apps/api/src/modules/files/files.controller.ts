@@ -1,6 +1,9 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from "@nestjs/common";
 import type {
+  DeleteProjectFileResponse,
+  GetProjectFileResponse,
   ListProjectFilesResponse,
+  ProjectFileDownloadUrlResponse,
   ProjectFileStatsResponse,
   UploadCompleteResponse,
   UploadInitResponse,
@@ -43,11 +46,38 @@ export class FilesController {
     return this.filesService.listProjectFiles(currentUser, projectId);
   }
 
+  @Get("files/:fileId")
+  getFile(
+    @CurrentUser() currentUser: AuthenticatedRequestUser,
+    @Param("projectId") projectId: string,
+    @Param("fileId") fileId: string,
+  ): Promise<GetProjectFileResponse> {
+    return this.filesService.getProjectFile(currentUser, projectId, fileId);
+  }
+
   @Get("files/stats")
   getFileStats(
     @CurrentUser() currentUser: AuthenticatedRequestUser,
     @Param("projectId") projectId: string,
   ): Promise<ProjectFileStatsResponse> {
     return this.filesService.getProjectFileStats(currentUser, projectId);
+  }
+
+  @Get("files/:fileId/download-url")
+  getFileDownloadUrl(
+    @CurrentUser() currentUser: AuthenticatedRequestUser,
+    @Param("projectId") projectId: string,
+    @Param("fileId") fileId: string,
+  ): Promise<ProjectFileDownloadUrlResponse> {
+    return this.filesService.getProjectFileDownloadUrl(currentUser, projectId, fileId);
+  }
+
+  @Delete("files/:fileId")
+  deleteFile(
+    @CurrentUser() currentUser: AuthenticatedRequestUser,
+    @Param("projectId") projectId: string,
+    @Param("fileId") fileId: string,
+  ): Promise<DeleteProjectFileResponse> {
+    return this.filesService.deleteProjectFile(currentUser, projectId, fileId);
   }
 }
