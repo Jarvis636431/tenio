@@ -235,17 +235,25 @@ export class AgentService {
   }
 
   private createStreamEvents(content: string, operationId?: string) {
+    const events: Array<{
+      type: string;
+      content_text?: string;
+      message_type?: string;
+      operation_id?: string;
+    }> = [];
     const segments = content
       .split("\n")
       .map((item) => item.trim())
       .filter(Boolean);
 
-    const events = segments.map((segment) => ({
-      type: "update",
-      content_text: segment,
-      message_type: "text",
-      ...(operationId ? { operation_id: operationId } : {}),
-    }));
+    for (const segment of segments) {
+      events.push({
+        type: "update",
+        content_text: segment,
+        message_type: "text",
+        ...(operationId ? { operation_id: operationId } : {}),
+      });
+    }
 
     if (operationId) {
       events.push({

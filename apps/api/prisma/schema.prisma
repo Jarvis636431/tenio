@@ -65,6 +65,20 @@ enum AgentOperationStatus {
   CANCELED
 }
 
+enum ArtifactType {
+  DOCUMENT
+  GRAPH
+  TIME_COST
+  CREW_PLAN
+}
+
+enum ArtifactStatus {
+  PROCESSING
+  READY
+  FAILED
+  ARCHIVED
+}
+
 model User {
   id                   String         @id @default(cuid())
   phone                String?        @unique
@@ -96,13 +110,35 @@ model Project {
   updatedAt   DateTime      @updatedAt
   owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   files       ProjectFile[]
+  artifacts   ProjectArtifact[]
   agentTickets AgentTicket[]
   agentSessions AgentSession[]
+  agentMessages AgentMessage[]
   agentOperations AgentOperation[]
 
   @@index([ownerId])
   @@index([status])
   @@index([createdAt])
+}
+
+model ProjectArtifact {
+  id              String         @id @default(cuid())
+  projectId       String
+  artifactType    ArtifactType
+  artifactVersion Int
+  artifactStatus  ArtifactStatus @default(READY)
+  title           String?
+  payloadJson     Json
+  summaryJson     Json?
+  source          String?
+  generatedAt     DateTime       @default(now())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  project         Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, artifactType, artifactVersion])
+  @@index([projectId, artifactType, generatedAt])
+  @@index([projectId, artifactType, artifactStatus])
 }
 
 model ProjectFile {

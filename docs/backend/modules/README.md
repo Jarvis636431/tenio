@@ -7,6 +7,7 @@
 - `agent`
 - `auth`
 - `projects`
+- `artifacts`
 - `files`
 - `storage`
 - `prisma`
@@ -18,9 +19,10 @@
 2. [Auth Module](./auth-module.md)
 3. [Projects Module](./projects-module.md)
 4. [Storage Module](./storage-module.md)
-5. [Files Module](./files-module.md)
-6. [Agent Module](./agent-module.md)
-7. [Shared Package](./shared-package.md)
+5. [Artifacts Module](./artifacts-module.md)
+6. [Files Module](./files-module.md)
+7. [Agent Module](./agent-module.md)
+8. [Shared Package](./shared-package.md)
 
 这些文档关注的是：
 

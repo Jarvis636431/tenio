@@ -18,6 +18,8 @@ export class AuthTokenService {
   ) {}
 
   async issueSession(user: User): Promise<AuthSession> {
+    const accessExpiresIn = this.env.jwtAccessExpiresIn as `${number}${"ms" | "s" | "m" | "h" | "d"}`;
+    const refreshExpiresIn = this.env.jwtRefreshExpiresIn as `${number}${"ms" | "s" | "m" | "h" | "d"}`;
     const accessPayload: AccessTokenPayload = {
       sub: user.id,
       account: user.account,
@@ -35,11 +37,11 @@ export class AuthTokenService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(accessPayload, {
         secret: this.env.jwtAccessSecret,
-        expiresIn: this.env.jwtAccessExpiresIn,
+        expiresIn: accessExpiresIn,
       }),
       this.jwtService.signAsync(refreshPayload, {
         secret: this.env.jwtRefreshSecret,
-        expiresIn: this.env.jwtRefreshExpiresIn,
+        expiresIn: refreshExpiresIn,
       }),
     ]);
 
