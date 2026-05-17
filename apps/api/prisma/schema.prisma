@@ -12,6 +12,12 @@ enum UserRole {
   MEMBER
 }
 
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
 model User {
   id                   String         @id @default(cuid())
   phone                String?        @unique
@@ -24,8 +30,23 @@ model User {
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
   refreshTokens        RefreshToken[]
+  projects             Project[]
 
   @@index([phone])
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  ownerId     String
+  name        String
+  status      ProjectStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model RefreshToken {

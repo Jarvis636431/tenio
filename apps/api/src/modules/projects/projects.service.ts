@@ -1,66 +1,117 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { ProjectStatus as PrismaProjectStatus } from "@prisma/client";
 import type {
   CreateProjectRequest,
   ListProjectsResponse,
   Project,
-  ProjectStatus,
 } from "@tenio/shared";
-import { mockProjects } from "../../mock/projects.js";
+import { PrismaService } from "../../prisma/prisma.service.js";
+import type { AuthenticatedRequestUser } from "../auth/auth.types.js";
 import type { ListProjectsDto } from "./dto/list-projects.dto.js";
 
 @Injectable()
 export class ProjectsService {
-  private readonly projects = new Map<string, Project>(
-    mockProjects.map((project) => [project.project_id, project]),
-  );
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll(query: ListProjectsDto): ListProjectsResponse {
+  async findAll(
+    currentUser: AuthenticatedRequestUser,
+    query: ListProjectsDto,
+  ): Promise<ListProjectsResponse> {
     const page = query.page ?? 1;
     const pageSize = query.page_size ?? 20;
     const keyword = query.q?.trim().toLowerCase();
     const status = query.status;
 
-    let items = Array.from(this.projects.values());
-
-    if (keyword) {
-      items = items.filter((item) => item.project_name.toLowerCase().includes(keyword));
-    }
-
-    if (status) {
-      items = items.filter((item) => item.project_status === status);
-    }
-
     const start = (page - 1) * pageSize;
-    const pagedItems = items.slice(start, start + pageSize);
+    const where = {
+      ownerId: currentUser.id,
+      ...(keyword
+        ? {
+            name: {
+              contains: keyword,
+              mode: "insensitive" as const,
+            },
+          }
+        : {}),
+      ...(status
+        ? {
+            status: this.toPrismaStatus(status),
+          }
+        : {}),
+    };
+
+    const [total, items] = await Promise.all([
+      this.prisma.project.count({ where }),
+      this.prisma.project.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: start,
+        take: pageSize,
+      }),
+    ]);
 
     return {
-      items: pagedItems,
-      total: items.length,
+      items: items.map((item) => this.toProject(item)),
+      total,
       page,
       page_size: pageSize,
     };
   }
 
-  findOne(projectId: string): Project {
-    const project = this.projects.get(projectId);
+  async findOne(currentUser: AuthenticatedRequestUser, projectId: string): Promise<Project> {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        ownerId: currentUser.id,
+      },
+    });
+
     if (!project) {
       throw new NotFoundException(`Project ${projectId} not found`);
     }
-    return project;
+
+    return this.toProject(project);
   }
 
-  create(payload: CreateProjectRequest): Project {
-    const now = new Date().toISOString();
-    const projectId = `p_${String(this.projects.size + 1).padStart(3, "0")}`;
-    const project: Project = {
-      project_id: projectId,
-      project_name: payload.project_name,
-      project_status: "draft" satisfies ProjectStatus,
-      created_at: now,
-      updated_at: now,
-    };
+  async create(
+    currentUser: AuthenticatedRequestUser,
+    payload: CreateProjectRequest,
+  ): Promise<Project> {
+    const project = await this.prisma.project.create({
+      data: {
+        ownerId: currentUser.id,
+        name: payload.project_name,
+        status: PrismaProjectStatus.DRAFT,
+      },
+    });
 
-    this.projects.set(projectId, project);
-    return project;
+    return this.toProject(project);
+  }
+
+  private toProject(project: {
+    id: string;
+    name: string;
+    status: PrismaProjectStatus;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Project {
+    return {
+      project_id: project.id,
+      project_name: project.name,
+      project_status: project.status.toLowerCase() as Project["project_status"],
+      created_at: project.createdAt.toISOString(),
+      updated_at: project.updatedAt.toISOString(),
+    };
+  }
+
+  private toPrismaStatus(status: Project["project_status"]): PrismaProjectStatus {
+    switch (status) {
+      case "draft":
+        return PrismaProjectStatus.DRAFT;
+      case "active":
+        return PrismaProjectStatus.ACTIVE;
+      case "archived":
+        return PrismaProjectStatus.ARCHIVED;
+    }
   }
 }
