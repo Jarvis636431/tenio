@@ -36,6 +36,35 @@ enum ProjectFileStatus {
   FAILED
 }
 
+enum AgentSessionStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum AgentMessageRole {
+  USER
+  ASSISTANT
+  TOOL
+  SYSTEM
+}
+
+enum AgentMessageType {
+  TEXT
+  VERIFY
+  UPDATE
+  INTERRUPT
+  EVENT
+}
+
+enum AgentOperationStatus {
+  PENDING
+  RUNNING
+  WAITING_APPROVAL
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
 model User {
   id                   String         @id @default(cuid())
   phone                String?        @unique
@@ -50,6 +79,10 @@ model User {
   refreshTokens        RefreshToken[]
   projects             Project[]
   uploadedFiles        ProjectFile[]   @relation("UploadedFiles")
+  agentTickets         AgentTicket[]
+  agentSessions        AgentSession[]
+  agentMessages        AgentMessage[]
+  agentOperations      AgentOperation[]
 
   @@index([phone])
 }
@@ -63,6 +96,9 @@ model Project {
   updatedAt   DateTime      @updatedAt
   owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   files       ProjectFile[]
+  agentTickets AgentTicket[]
+  agentSessions AgentSession[]
+  agentOperations AgentOperation[]
 
   @@index([ownerId])
   @@index([status])
@@ -90,6 +126,90 @@ model ProjectFile {
   @@index([uploadedById])
   @@index([status])
   @@index([category])
+}
+
+model AgentTicket {
+  id                  String   @id @default(cuid())
+  userId              String
+  projectId           String
+  ticketHash          String
+  ticketType          String
+  grantType           String
+  scopesJson          Json
+  refreshAfterSeconds Int
+  expiresAt           DateTime
+  createdAt           DateTime @default(now())
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([expiresAt])
+}
+
+model AgentSession {
+  id            String             @id @default(cuid())
+  projectId     String
+  userId        String
+  sessionTitle  String
+  sessionStatus AgentSessionStatus @default(ACTIVE)
+  lastMessageAt DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  project       Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      AgentMessage[]
+  operations    AgentOperation[]
+
+  @@index([projectId])
+  @@index([userId])
+  @@index([lastMessageAt])
+}
+
+model AgentMessage {
+  id            String           @id @default(cuid())
+  sessionId     String
+  projectId     String
+  userId        String?
+  messageRole   AgentMessageRole
+  messageType   AgentMessageType @default(TEXT)
+  contentText   String
+  payloadJson   Json?
+  sentAt        DateTime         @default(now())
+  session       AgentSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user          User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  operations    AgentOperation[]
+
+  @@index([sessionId])
+  @@index([projectId])
+  @@index([sentAt])
+}
+
+model AgentOperation {
+  id               String               @id @default(cuid())
+  projectId        String
+  sessionId        String
+  messageId        String?
+  createdByUserId  String?
+  operationType    String
+  operationStatus  AgentOperationStatus @default(PENDING)
+  requiresApproval Boolean              @default(false)
+  inputPayloadJson Json?
+  resultPayloadJson Json?
+  errorCode        String?
+  errorMessage     String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  project          Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  session          AgentSession         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  message          AgentMessage?        @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  createdByUser    User?                @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([sessionId])
+  @@index([operationStatus])
+  @@index([createdAt])
 }
 
 model RefreshToken {

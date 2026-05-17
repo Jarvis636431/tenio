@@ -4,6 +4,7 @@
 
 当前范围：
 
+- `agent`
 - `auth`
 - `projects`
 - `files`
@@ -18,7 +19,8 @@
 3. [Projects Module](./projects-module.md)
 4. [Storage Module](./storage-module.md)
 5. [Files Module](./files-module.md)
-6. [Shared Package](./shared-package.md)
+6. [Agent Module](./agent-module.md)
+7. [Shared Package](./shared-package.md)
 
 这些文档关注的是：
 

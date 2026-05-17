@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { AgentModule } from "./modules/agent/agent.module.js";
 import { AuthModule } from "./modules/auth/auth.module.js";
 import { FilesModule } from "./modules/files/files.module.js";
 import { HealthModule } from "./modules/health/health.module.js";
@@ -7,6 +8,14 @@ import { ProjectsModule } from "./modules/projects/projects.module.js";
 import { StorageModule } from "./storage/storage.module.js";
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuthModule, HealthModule, ProjectsModule, FilesModule],
+  imports: [
+    PrismaModule,
+    StorageModule,
+    AuthModule,
+    HealthModule,
+    ProjectsModule,
+    FilesModule,
+    AgentModule,
+  ],
 })
 export class AppModule {}
