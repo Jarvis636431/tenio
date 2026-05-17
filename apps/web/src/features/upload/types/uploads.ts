@@ -73,8 +73,10 @@ export interface FileCategoryStat {
 
 export interface FileStatsResponse {
   totalFiles: number;
-  totalSize: number;
-  categories: FileCategoryStat[];
+  pendingFiles: number;
+  uploadedFiles: number;
+  readyFiles: number;
+  failedFiles: number;
 }
 
 export const FILE_CATEGORY_LABELS: Record<FileCategory, string> = {

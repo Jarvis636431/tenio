@@ -31,6 +31,9 @@ interface UploadMutationPayload {
   clientId?: string;
 }
 
+/**
+ * 管理项目资料上传、文件列表与上传进度。
+ */
 export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -157,10 +160,7 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
     onSuccess: () => {
       // 刷新列表和统计
       void queryClient.invalidateQueries({
-        queryKey: uploadQueryKeys.files,
-      });
-      void queryClient.invalidateQueries({
-        queryKey: uploadQueryKeys.stats(projectId),
+        queryKey: uploadQueryKeys.all,
       });
     },
   });

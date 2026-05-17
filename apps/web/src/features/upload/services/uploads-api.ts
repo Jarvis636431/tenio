@@ -17,55 +17,70 @@ interface UploadFilePayload {
   tags?: string[];
 }
 
-type ApiListResponse<T> = {
-  items: T[];
-  total?: number;
-  page?: number;
-  page_size?: number;
-};
+type BackendFileCategory = "model" | "drawing" | "schedule" | "cost" | "contract" | "other";
+type BackendFileStatus = "pending" | "uploading" | "uploaded" | "processing" | "ready" | "failed";
 
-interface CreateProjectResponse {
+interface BackendCreateProjectResponse {
   project_id: string;
   project_name: string;
-  status: string;
+  project_status: "draft" | "active" | "archived";
   created_at: string;
+  updated_at: string;
 }
 
-interface UploadInitPayload {
-  original_file_name: string;
-  file_size_bytes: number;
-  file_category: string;
-  file_role: string;
-}
-
-interface UploadInitResponse {
+interface BackendProjectFile {
   file_id: string;
+  project_id: string;
+  original_file_name: string;
+  stored_file_name: string;
+  mime_type?: string;
+  file_size: number;
+  storage_bucket: string;
+  storage_key: string;
+  category: BackendFileCategory;
+  status: BackendFileStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+interface BackendListProjectFilesResponse {
+  items: BackendProjectFile[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+interface BackendProjectFileStatsResponse {
+  total_files: number;
+  pending_files: number;
+  uploaded_files: number;
+  ready_files: number;
+  failed_files: number;
+}
+
+interface BackendUploadInitRequest {
+  original_file_name: string;
+  file_size: number;
+  mime_type?: string;
+  category: BackendFileCategory;
+}
+
+interface BackendUploadInitResponse {
+  file_id: string;
+  project_id: string;
+  storage_bucket: string;
+  storage_key: string;
   upload_url: string;
-  storage_key: string;
-  expire_at: string;
+  expires_at: string;
+  headers: Record<string, string>;
 }
 
-interface CompleteUploadPayload {
+interface BackendUploadCompleteRequest {
   file_id: string;
-  storage_key: string;
-  upload_status: string;
 }
 
-interface ProjectFileItem {
-  file_id: string;
-  file_category: string;
-  file_role: string;
-  original_file_name: string;
-  file_extension?: string;
-  file_size_bytes: number;
-  page_count?: number;
-  character_count?: number;
-  upload_status: string;
-  parse_status?: string;
-  mock_dataset_code?: string | null;
-  uploaded_at: string;
-  parsed_at?: string | null;
-  parse_error_message?: string | null;
+interface BackendUploadCompleteResponse {
+  file: BackendProjectFile;
 }
 
 const APM_API_BASE = `${API_BASE.backend}/api`;
@@ -80,19 +95,14 @@ function jsonRequest<T>(path: string, payload?: unknown) {
   });
 }
 
-function toBackendUrl(url: string) {
-  const backendBase = API_BASE.backend.replace(/\/$/, "");
-  const parsedUrl = new URL(url, backendBase);
-  return `${backendBase}${parsedUrl.pathname}${parsedUrl.search}`;
-}
-
 /**
  * 创建上传入口使用的项目。
  */
-export async function createUploadProject(projectName: string): Promise<CreateProjectResponse> {
-  return jsonRequest<CreateProjectResponse>("/projects", {
+export async function createUploadProject(
+  projectName: string,
+): Promise<BackendCreateProjectResponse> {
+  return jsonRequest<BackendCreateProjectResponse>("/projects", {
     project_name: projectName,
-    source_type: "upload",
   });
 }
 
@@ -101,9 +111,9 @@ export async function createUploadProject(projectName: string): Promise<CreatePr
  */
 function initProjectFileUpload(
   projectId: string,
-  payload: UploadInitPayload,
-): Promise<UploadInitResponse> {
-  return jsonRequest<UploadInitResponse>(`/projects/${projectId}/files/upload-init`, payload);
+  payload: BackendUploadInitRequest,
+): Promise<BackendUploadInitResponse> {
+  return jsonRequest<BackendUploadInitResponse>(`/projects/${projectId}/uploads/init`, payload);
 }
 
 /**
@@ -111,16 +121,28 @@ function initProjectFileUpload(
  */
 function completeProjectFileUpload(
   projectId: string,
-  payload: CompleteUploadPayload,
-): Promise<void> {
-  return jsonRequest<void>(`/projects/${projectId}/files/complete`, payload);
+  payload: BackendUploadCompleteRequest,
+): Promise<BackendUploadCompleteResponse> {
+  return jsonRequest<BackendUploadCompleteResponse>(
+    `/projects/${projectId}/uploads/complete`,
+    payload,
+  );
 }
 
 /**
  * 获取项目文件列表。
  */
-function listProjectFiles(projectId: string): Promise<ApiListResponse<ProjectFileItem>> {
-  return request<ApiListResponse<ProjectFileItem>>(`${APM_API_BASE}/projects/${projectId}/files`);
+function listProjectFiles(projectId: string): Promise<BackendListProjectFilesResponse> {
+  return request<BackendListProjectFilesResponse>(`${APM_API_BASE}/projects/${projectId}/files`);
+}
+
+/**
+ * 获取项目文件统计。
+ */
+function getProjectFileStats(projectId: string): Promise<BackendProjectFileStatsResponse> {
+  return request<BackendProjectFileStatsResponse>(
+    `${APM_API_BASE}/projects/${projectId}/files/stats`,
+  );
 }
 
 function getFileExtension(fileName: string) {
@@ -129,63 +151,75 @@ function getFileExtension(fileName: string) {
 }
 
 function toBackendFileCategory(category: FileCategory) {
-  if (
-    category === "contract" ||
-    category === "drawing" ||
-    category === "document" ||
-    category === "bim" ||
-    category === "other"
-  ) {
-    return "core";
+  switch (category) {
+    case "contract":
+      return "contract";
+    case "drawing":
+      return "drawing";
+    case "document":
+      return "cost";
+    case "bim":
+      return "model";
+    case "core":
+    case "photo":
+    case "other":
+      return "other";
   }
-  return category;
 }
 
-function toUploadRole(category: FileCategory, fileName: string) {
-  const normalizedName = fileName.toLowerCase();
-
-  if (category === "contract") {
-    return normalizedName.includes("合同") || normalizedName.includes("contract")
-      ? "construction_contract"
-      : "bidding_document";
+function toFrontendFileCategory(category: BackendFileCategory): FileCategory {
+  switch (category) {
+    case "contract":
+      return "contract";
+    case "drawing":
+      return "drawing";
+    case "cost":
+      return "document";
+    case "model":
+      return "bim";
+    case "schedule":
+    case "other":
+      return "other";
   }
-  if (category === "drawing" || category === "bim") return "cad_drawing";
-  if (category === "document") return "bill_of_quantities";
-  return "supplementary_material";
 }
 
-function toFeatureFile(item: ProjectFileItem, projectId: string): ProjectFile {
-  const category = (item.file_category || "other") as FileCategory;
+function toFrontendFileStatus(status: BackendFileStatus): ProjectFile["status"] {
+  switch (status) {
+    case "ready":
+    case "uploaded":
+      return "completed";
+    case "failed":
+      return "error";
+    case "uploading":
+    case "processing":
+      return "uploading";
+    case "pending":
+      return "pending";
+  }
+}
+
+function toFeatureFile(item: BackendProjectFile): ProjectFile {
+  const category = toFrontendFileCategory(item.category);
   const fileName = item.original_file_name;
-  const extension = item.file_extension ?? getFileExtension(fileName);
+  const extension = getFileExtension(fileName);
 
   return {
     id: item.file_id,
-    projectId,
+    projectId: item.project_id,
     name: fileName,
     originalName: fileName,
-    size: item.file_size_bytes,
+    size: item.file_size,
     type: extension ? `.${extension}` : "",
     category,
-    role: item.file_role,
     extension,
     url: "",
-    uploadedAt: item.uploaded_at,
-    status:
-      item.upload_status === "uploaded" || item.upload_status === "completed"
-        ? "completed"
-        : "pending",
-    parseStatus: item.parse_status,
-    parsedAt: item.parsed_at,
-    parseErrorMessage: item.parse_error_message,
-    pageCount: item.page_count,
-    characterCount: item.character_count,
-    mockDatasetCode: item.mock_dataset_code,
+    uploadedAt: item.created_at,
+    status: toFrontendFileStatus(item.status),
   };
 }
 
-function toFileUploadResponse(item: ProjectFileItem, projectId: string): FileUploadResponse {
-  const file = toFeatureFile(item, projectId);
+function toFileUploadResponse(item: BackendProjectFile): FileUploadResponse {
+  const file = toFeatureFile(item);
   return {
     fileId: file.id,
     projectId: file.projectId,
@@ -210,7 +244,7 @@ function filterFiles(files: ProjectFile[], params: FileListParams) {
  */
 export async function getFileList(params: FileListParams): Promise<FileListResponse> {
   const response = await listProjectFiles(params.projectId);
-  const files = response.items.map((item) => toFeatureFile(item, params.projectId));
+  const files = response.items.map((item) => toFeatureFile(item));
   const filteredFiles = filterFiles(files, params);
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? filteredFiles.length;
@@ -238,14 +272,15 @@ export async function uploadFile(
 
   const init = await initProjectFileUpload(projectId, {
     original_file_name: payload.file.name,
-    file_size_bytes: payload.file.size,
-    file_category: toBackendFileCategory(payload.category),
-    file_role: toUploadRole(payload.category, payload.file.name),
+    file_size: payload.file.size,
+    mime_type: payload.file.type || undefined,
+    category: toBackendFileCategory(payload.category),
   });
   onProgress?.(40);
 
-  const uploadResponse = await fetch(toBackendUrl(init.upload_url), {
+  const uploadResponse = await fetch(init.upload_url, {
     method: "PUT",
+    headers: init.headers,
     body: payload.file,
   });
   if (!uploadResponse.ok) {
@@ -253,55 +288,25 @@ export async function uploadFile(
   }
   onProgress?.(80);
 
-  await completeProjectFileUpload(projectId, {
+  const completed = await completeProjectFileUpload(projectId, {
     file_id: init.file_id,
-    storage_key: init.storage_key,
-    upload_status: "uploaded",
   });
-
-  const files = await listProjectFiles(projectId);
-  const uploadedFile = files.items.find((item) => item.file_id === init.file_id);
   onProgress?.(100);
 
-  if (uploadedFile) {
-    return toFileUploadResponse(uploadedFile, projectId);
-  }
-
-  return {
-    fileId: init.file_id,
-    projectId,
-    name: payload.file.name,
-    url: "",
-    size: payload.file.size,
-    uploadedAt: new Date().toISOString(),
-  };
+  return toFileUploadResponse(completed.file);
 }
 
 /**
  * 获取文件统计
  */
 export async function getFileStats(projectId: string): Promise<FileStatsResponse> {
-  const response = await listProjectFiles(projectId);
-  const categories = new Map<FileCategory, { count: number; totalSize: number }>();
-  let totalSize = 0;
-
-  response.items.forEach((item) => {
-    const category = (item.file_category || "other") as FileCategory;
-    totalSize += item.file_size_bytes;
-    const previous = categories.get(category) ?? { count: 0, totalSize: 0 };
-    categories.set(category, {
-      count: previous.count + 1,
-      totalSize: previous.totalSize + item.file_size_bytes,
-    });
-  });
+  const response = await getProjectFileStats(projectId);
 
   return {
-    totalFiles: response.items.length,
-    totalSize,
-    categories: Array.from(categories.entries()).map(([category, stats]) => ({
-      category,
-      count: stats.count,
-      totalSize: stats.totalSize,
-    })),
+    totalFiles: response.total_files,
+    pendingFiles: response.pending_files,
+    uploadedFiles: response.uploaded_files,
+    readyFiles: response.ready_files,
+    failedFiles: response.failed_files,
   };
 }
