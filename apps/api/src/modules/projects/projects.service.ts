@@ -88,6 +88,28 @@ export class ProjectsService {
     return this.toProject(project);
   }
 
+  async archive(currentUser: AuthenticatedRequestUser, projectId: string): Promise<Project> {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        ownerId: currentUser.id,
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`);
+    }
+
+    const updated = await this.prisma.project.update({
+      where: { id: project.id },
+      data: {
+        status: PrismaProjectStatus.ARCHIVED,
+      },
+    });
+
+    return this.toProject(updated);
+  }
+
   private toProject(project: {
     id: string;
     name: string;

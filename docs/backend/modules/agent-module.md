@@ -15,6 +15,7 @@
 - session message 存储
 - SSE 流式输出
 - agent operation 状态查询与审批前边界
+- tool registry 与只读/写入工具分层
 
 ## 为什么这样设计
 
@@ -33,6 +34,7 @@
 3. 流式输出怎么发
 4. 有副作用的动作如何建模
 5. 哪些动作需要显式确认
+6. 哪些能力是 tool，哪些只是普通对话
 
 ## 优点
 
@@ -40,13 +42,14 @@
 - 会话、消息、操作都有数据库承载
 - 去掉 ticket / product_code / baseUrl 后，前后端 contract 更短
 - SSE 协议可以先跑通，再逐步增强
+- 读工具可以直接执行，写工具必须先经过 operation + approval
 - 以后接工具调用、审批、审计都有落点
 
 ## 缺点
 
 - 当前流式输出还是单机内存 registry，不适合多实例部署
 - 第一版回复逻辑仍是占位实现，不是完整模型编排
-- operation 目前只到 `WAITING_APPROVAL / COMPLETED / CANCELED` 骨架，不包含真实工具执行
+- 写工具目前只实现了 `archive_project`，能力还很窄
 
 ## 可选方案
 
@@ -90,6 +93,33 @@
 - 先把 session / message / stream / operation 骨架做出来
 - 直接基于 JWT 和项目归属做访问控制
 - 把会影响项目数据的请求先收口为 `WAITING_APPROVAL`
-- 再往里填模型调用、tool registry 和真实执行边界
+- 先用 tool registry 落三类只读工具和一个受控写工具
+- 再往里填模型调用与更完整的执行边界
 
 这比反过来先做复杂 AI 编排更稳。
+
+## 当前已落地的 tools
+
+当前注册了 4 个工具：
+
+- `get_project_context`
+- `list_project_files`
+- `get_latest_artifacts`
+- `archive_project`
+
+其中：
+
+- 前 3 个是只读工具，可直接执行
+- `archive_project` 是写工具，必须先经过 approval
+
+## 当前 executor 行为
+
+当前 `AgentOperationExecutor` 的规则是：
+
+1. 用户消息命中写工具时，先创建 `WAITING_APPROVAL` operation
+2. 用户回复“同意”后，operation 进入 `RUNNING`
+3. executor 根据原始消息选择写工具
+4. 成功则写回 `COMPLETED`
+5. 未识别到可执行写工具，则写回 `FAILED`
+
+这保证了系统不会再把“识别出动作”误判成“动作已经执行完成”。

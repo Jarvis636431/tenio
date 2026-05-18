@@ -12,6 +12,7 @@ import type {
   AgentOperationStatusResponse,
   AgentSessionMessagesResponse,
   AgentSessionListResponse,
+  AgentToolListResponse,
   CreateAgentSessionResponse,
   SendAgentMessageResponse,
 } from "@tenio/shared";
@@ -56,6 +57,15 @@ export class AgentController {
     @Query() query: ListAgentSessionsDto,
   ): Promise<AgentSessionListResponse> {
     return this.agentService.listSessions(currentUser, projectId, query);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("projects/:projectId/agent/tools")
+  listAgentTools(
+    @CurrentUser() currentUser: AuthenticatedRequestUser,
+    @Param("projectId") projectId: string,
+  ): Promise<AgentToolListResponse> {
+    return this.agentService.listTools(currentUser, projectId);
   }
 
   @UseGuards(JwtAuthGuard)
