@@ -36,6 +36,7 @@ export function useChat(options: ChatPanelOptions = {}) {
   const lastContentRef = useRef<string>("");
   const pollingOperationIdsRef = useRef<Set<string>>(new Set());
   const agentTicketRefreshPromiseRef = useRef<Promise<AgentTicketInfo> | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
 
   const defaultWelcomeMessage = useMemo<ChatMessage>(
     () => ({
@@ -458,7 +459,7 @@ export function useChat(options: ChatPanelOptions = {}) {
         void handleSendMessage();
       }
     },
-    scrollAreaRef: useRef<HTMLDivElement | null>(null),
+    scrollAreaRef,
   };
 }
 
