@@ -1,51 +1,21 @@
-export interface AuthUser {
-  user_id: string;
-  username: string;
-  display_name: string;
-  role: string;
-  role_name: string;
-  avatar_text: string;
-  account?: string;
-  is_profile_completed?: boolean;
-}
+/**
+ * 认证相关类型继承自 @tenio/shared 共享包，
+ * 确保前端和后端的 API 契约一致。
+ */
+export type { AuthUser, AuthSession, SendSmsResponse, SetupProfileResponse } from "@tenio/shared";
 
-export interface AuthSession {
-  access_token: string;
-  refresh_token: string;
-  expires_at: string;
-  user: AuthUser;
-}
+import type {
+  PasswordLoginRequest,
+  SmsLoginRequest,
+  SetupProfileRequest,
+  RefreshTokenRequest,
+} from "@tenio/shared";
 
-export interface RefreshTokenPayload {
-  refresh_token: string;
-}
-
-export interface SendSmsResponse {
-  phone: string;
-  cooldown_seconds: number;
-  sent_at: string;
-}
-
-export interface SmsLoginPayload {
-  phone: string;
-  sms_code: string;
-  has_agreed_terms: boolean;
-}
-
-export interface PasswordLoginPayload {
-  account: string;
-  password: string;
-  has_agreed_terms: boolean;
-}
-
-export interface SetupProfilePayload {
-  username: string;
-  password: string;
-}
-
-export interface SetupProfileResponse {
-  user_id: string;
-  username: string;
-  account: string;
-  is_profile_completed: boolean;
-}
+/** 账号密码登录请求体 */
+export type PasswordLoginPayload = PasswordLoginRequest;
+/** 短信验证码登录请求体 */
+export type SmsLoginPayload = SmsLoginRequest;
+/** 首次登录用户资料设置请求体 */
+export type SetupProfilePayload = SetupProfileRequest;
+/** Token 刷新请求体 */
+export type RefreshTokenPayload = RefreshTokenRequest;

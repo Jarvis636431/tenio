@@ -1,5 +1,6 @@
 import { API_BASE } from "@/config";
 import { useAuthStore } from "@/stores/authStore";
+import type { ApiResponse } from "@tenio/shared";
 
 interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -10,14 +11,7 @@ interface RequestOptions {
   unwrap?: boolean;
 }
 
-export type ApiResponse<T> = {
-  data: T;
-  message?: string;
-  status?: string;
-  timestamp?: string;
-  code?: number | string;
-  success?: boolean;
-};
+export type { ApiResponse } from "@tenio/shared";
 
 type AuthSessionPayload = {
   access_token: string;
