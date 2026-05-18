@@ -4,212 +4,275 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A.PM 智能管理平台 - 智慧工地/项目管理前端。当前产品结构已经拆分为登录、项目控制台、上传入口和单项目工作台四层。
+A.PM 智能管理平台 — 智慧工地/项目管理平台。pnpm monorepo 结构，包含前端 (React)、后端 (NestJS)、共享类型包。
 
 ## Tech Stack
 
-- **Build Tool**: Vite + React SWC plugin
-- **Framework**: React 18 + TypeScript
-- **Styling**: Tailwind CSS + A.PM design tokens in `src/index.css` + shadcn-ui (Radix primitives)
-- **Routing**: React Router v6
-- **State Management**: Zustand (persist middleware)
-- **Data Fetching**: React Query (TanStack Query)
-- **Package Manager**: pnpm (10.14.0)
+- **Monorepo**: pnpm workspace (v10.14.0)
+- **Frontend**: React 18 + TypeScript + Vite (SWC plugin)
+- **Backend**: NestJS 11 + Prisma ORM + PostgreSQL
+- **Frontend Styling**: Tailwind CSS + A.PM design tokens + shadcn-ui (Radix primitives)
+- **Frontend State**: Zustand (client state) + TanStack Query (server state)
+- **Shared**: `@tenio/shared` types package for cross-app type sharing
+- **Testing**: Vitest (web) + Jest / ts-jest (api)
+- **Linting**: ESLint 9 flat config + Prettier
 
 ## Commands
 
 ```bash
-# Install dependencies
+# Install all workspace dependencies
 pnpm i
 
-# Development server (runs on port 8080)
-pnpm dev
+# Development servers
+pnpm dev         # web frontend (port 8080)
+pnpm dev:web     # web frontend explicitly
+pnpm dev:api     # NestJS API backend
 
-# Build for production
-pnpm build
+# Build
+pnpm build         # web production build
+pnpm build:web     # web production build explicitly
+pnpm build:dev     # web dev-mode build
 
-# Build for development mode
-pnpm build:dev
-
-# Run ESLint
-pnpm lint
-
-# Run all tests
-pnpm test
-
-# Run a single test file
-pnpm test tests/services/http.test.ts
-
-# Run tests in watch mode
-pnpm test:watch
+# Lint (per app)
+pnpm lint          # web only (default)
+pnpm lint:web      # web ESLint
+pnpm --filter api lint   # API ESLint
 
 # Type checking
-pnpm typecheck
+pnpm typecheck        # web
+pnpm typecheck:web    # web
+pnpm --filter api typecheck   # API
+pnpm --filter @tenio/shared typecheck  # shared package
 
-# Full check (lint + typecheck + test + build)
-pnpm check
+# Testing
+pnpm test          # web (Vitest)
+pnpm test:web      # web
+pnpm --filter api test     # API (Jest)
+pnpm --filter api test -- tests/health.controller.test.ts  # single API test
 
-# Format code
-pnpm format
+# Full checks
+pnpm check         # web: lint → typecheck → test → build
+pnpm --filter api check    # API: lint → typecheck → test → build
 
-# Check formatting without writing
-pnpm format:check
+# Format
+pnpm format       # Prettier all files
+pnpm format:check # Check formatting only
 
-# Preview production build
-pnpm preview
+# Bundle analysis (web)
+ANALYZE=true pnpm build   # generates dist/stats.html
+
+# Prepare Husky hooks
+pnpm prepare
 ```
 
-## Project Architecture
-
-### Feature-Based Directory Structure
+## Monorepo Structure
 
 ```
-src/
-  components/          # Shared UI components
-    ui/               # shadcn/ui primitives (Button, Dialog, etc.)
-    layout/           # App layout components
-  features/            # Feature modules
-    ai/               # AI Chat feature
-      components/     # Chat, ChatInput, ChatHeader, ChatMessage
-      hooks/          # useChat, useVoice
-      services/       # ai-service
-      types/
-        index.ts
-      index.ts
-    project/          # Project management feature
-      components/     # Project UI pieces, tabs, local widgets
-      pages/          # Overview page
-      hooks/          # useProject, useProjectData, useProjectCharts
-      services/       # project-api, project-bootstrap, uploads-api
-      types/
-        index.ts      # Project types
-        uploads.ts    # Upload feature types
-      queryKeys.ts
-      index.ts
-  hooks/              # Global hooks (useTime)
-  lib/                # Utility functions (date, array, task, gantt)
-  schemas/            # Zod schemas (env validation)
-  analytics/          # Usage analytics abstraction (with console/noop providers)
-  routes/             # React Router configuration
-  stores/             # Zustand stores (client state only)
-  services/           # Core infrastructure (http.ts)
-  pages/              # Top-level entry pages (NotFound)
+tenio/
+  apps/
+    web/          # React frontend (Vite)
+    api/          # NestJS backend (Prisma)
+  packages/
+    shared/       # @tenio/shared — shared types
 ```
 
-### Key Architecture Patterns
+### Root package.json scripts
 
-1. **Feature Module Organization**: Each feature in `src/features/` is self-contained with its own `components`, `hooks`, `services`, `types`, and optional `pages`/`queryKeys`. Cross-feature imports must go through feature barrel (`index.ts`) — enforced by ESLint's `no-restricted-imports` rule.
+Root scripts target `web` by default (`pnpm dev` = `pnpm --filter web dev`).
+Use `--filter api` to run API-specific commands:
 
-2. **Project Resolution**: Project pages resolve the active project from the route param (`:id`) or selected project state via `useProject` + `useProjectData`.
+- `pnpm --filter api dev` — start NestJS dev server
+- `pnpm --filter api lint` — API ESLint
+- `pnpm --filter api test` — API Jest tests
+- `pnpm --filter api typecheck` — API TypeScript check
+- `pnpm --filter api check` — full API toolchain
 
-3. **API Service Layer**: HTTP requests use a custom wrapper around `fetch` in `src/services/http.ts`. This wrapper handles auth headers, automatic token refresh (with retry), API response unwrapping, and SSE streaming. Feature-specific services are in `features/{feature}/services/`. API base URLs are configured in `src/config/index.ts` via environment variables and validated with Zod schema at runtime.
+## apps/web — Frontend
 
-4. **State Management**:
-   - **Client State (Zustand)**: Multiple stores in `src/stores/` — `authStore` (token/user with persist), `projectStore` (currentProjectId with persist), `chatStore` (per-project message threads, agent tickets, input state), `generationStore` (generation task progress)
-   - **Server State (React Query)**: Queries in `src/features/*/hooks/` manage project list, core graph, cost curve, document, crew plan artifacts, and upload data. Query keys are defined per-feature in `queryKeys.ts`.
+Refer to `apps/web` for the complete frontend codebase.
 
-5. **AI Chat Flow**:
-   - `src/components/layout/AppLayout.tsx` mounts a persistent chat panel in the left sidebar (visible only on `/project/:id`)
-   - `src/features/ai/hooks/useChat.ts` manages per-project message threads, SSE streaming with agent ticket auth, interrupt resume, and refetch triggers
-   - Agent auth uses a two-layer ticket system: session-level ticket with automatic refresh (tracked in chatStore per project)
+### Config
 
-6. **Auth Flow**: `/login` page (in `src/features/auth/`) supports password and SMS login. The `http.ts` service layer automatically attaches Bearer tokens, detects 401/403 responses, attempts token refresh via `/auth/refresh`, and retries the original request. Failed refresh triggers logout.
+- `apps/web/vite.config.ts` — Vite config with `@/` alias, manual vendor chunk splitting, conditional bundle analyzer (ANALYZE env)
+- `apps/web/vitest.config.ts` — jsdom environment, tests in `tests/`, globals enabled
+- `apps/web/eslint.config.js` — ESLint 9 flat config with TypeScript strict rules, React Hooks plugin
+- `apps/web/tailwind.config.js` — Tailwind with A.PM tokens
+- `apps/web/tsconfig.json` — Path alias `@/` → `src/`
 
-7. **Feature Architecture Rules**: Detailed rules for feature structure, layer separation, and import restrictions are in [.rules/feature-architecture.md](.rules/feature-architecture.md). Key principles:
-   - Features own their layers (components/hooks/services/types/pages)
-   - Cross-feature imports must use feature barrel (`@/features/ai`)
-   - Shared utilities go in `src/lib`, shared infrastructure in `src/services`
-   - All exported hooks, services, and utility functions require JSDoc comments in Chinese (中文)
+### ESLint rules (web)
 
-8. **Design Evolution Rules**:
-   - `templete/` contains design references only, not production code
-   - `templete/apm_react_template` is historical reference only, not the implementation baseline
-   - `docs/frontend-evolution-guide.md` is the working guide for page mapping and agent constraints
-   - Prefer A.PM token utilities over ad-hoc colors when touching page-level UI
-
-9. **Definition of Done**: A page refactor is considered aligned when:
-   - It uses the shared A.PM token system
-   - Its structure matches the intended reference hierarchy
-   - Repeated visual patterns are extracted into reusable components
-   - No prototype HTML or inline CSS is copied verbatim
-   - Existing lint and typecheck pass
-
-### Environment Variables
-
-Required in `.env` or `.env.local`:
-
-```bash
-VITE_API_BASE_URL=http://localhost:8000
-VITE_AI_SERVICE_URL=http://127.0.0.1:8123
-VITE_RESOURCE_BASE_URL=https://apmoss.emio.cn/public/resources
-VITE_VOLC_APP_ID=your_volc_app_id
-VITE_VOLC_ACCESS_TOKEN=your_volc_access_token
-VITE_VOLC_SECRET_KEY=your_volc_secret_key
-```
-
-Notes:
-
-- `src/config/index.ts` is the single source of truth for runtime config
-- Volc speech recognition requires `VITE_VOLC_APP_ID` and `VITE_VOLC_ACCESS_TOKEN`
+- `no-unused-vars` — **error** (prefix `_` to ignore)
+- `consistent-type-imports` — **warn** with `inline-type-imports` fix style
+- `no-unsafe-*` (assignment/member-access/call/return/argument) — **error**
+- `require-await` — **warn**
+- `no-restricted-imports` — **error**: cross-feature deep imports prohibited (use feature barrels)
 
 ### Route Structure
 
-- `/login` - Login page
-- `/projects` - Project dashboard / project list entry
-- `/upload` - New project intake and document upload
-- `/` - Redirects to `/projects`
-- `/project/:id` - Main project dashboard (Overview component)
+- `/login` — Login page (password + SMS)
+- `/projects` — Project dashboard / list
+- `/upload` — New project intake and document upload
+- `/` → redirects to `/projects`
+- `/project/:id` — Main project dashboard (Overview)
 
-Current intended user flow:
+User flow: `/login` → `/projects` → `/upload` → `/project/:id`
+
+### Key Files
+
+- `src/services/http.ts` — Fetch wrapper with auth headers, token refresh, SSE streaming, ApiResponse unwrapping
+- `src/config/index.ts` — Single source of truth for env-based runtime config
+- `src/features/ai/hooks/useChat.ts` — AI chat state, SSE streaming, agent ticket auth, voice input
+- `src/features/project/hooks/useProjectData.ts` — Project overview data derivation and graph query binding
+- `src/stores/chatStore.ts` — Zustand store with per-project message thread isolation pattern using `Record<string, ProjectChatState>`
+- `src/stores/authStore.ts` — Auth token/user with persist middleware
+- `src/components/layout/AppLayout.tsx` — Main layout: left AI sidebar + right project workspace
+
+### Feature Architecture
+
+Each feature in `src/features/` is self-contained:
 
 ```text
-/login -> /projects -> /upload -> /project/:id
+features/{feature}/
+  components/  # Feature UI pieces
+  hooks/       # State, orchestration, queries
+  services/    # API calls and business flows
+  types/       # Feature-local types
+  pages/       # Route-level page components
+  index.ts     # Public barrel (single cross-feature import point)
+  queryKeys.ts # React Query keys (if feature uses RQ)
 ```
 
-### Key Files to Understand
+Rules (enforced by ESLint `no-restricted-imports`):
 
-- `docs/frontend-evolution-guide.md` - Current UI evolution constraints and page mapping
-- `src/config/index.ts` - All environment-based configuration
-- `src/services/http.ts` - HTTP request wrapper with auth headers
-- `src/features/project/services/project-api.ts` - Main project API calls (core graph, curves)
-- `src/features/project/services/project-bootstrap.ts` - Project creation and bootstrap flow
-- `src/features/ai/services/ai-service.ts` - Agent init and interrupt-resume API calls
-- `src/features/project/hooks/useProjectData.ts` - Project overview data derivation and graph query binding
-- `src/features/project/hooks/useProject.ts` - Selected project state + project list query adapter
-- `src/stores/projectStore.ts` - Client-side project selection state
-- `src/features/ai/hooks/useChat.ts` - AI panel state, SSE parsing, voice input
-- `src/features/project/pages/Projects.tsx` - Project dashboard / project list page
-- `src/features/upload/pages/UploadPage.tsx` - New-project intake flow
-- `src/features/project/pages/Overview.tsx` - Main dashboard page
+- Cross-feature imports MUST use the feature barrel (`@/features/ai`)
+- Feature internal imports MUST use relative paths
+- All exported hooks, services, utilities need Chinese JSDoc
+- Full rules at `.rules/feature-architecture.md`
 
-### Utility Libraries
+### AI Chat Flow
 
-Shared utilities in `src/lib/`:
+1. Frontend requests `agent_ticket` from backend API: `POST /api/agent/tickets`
+2. Initiates agent session: `POST {aiService}/api/agent/init`
+3. Sends messages: `POST {aiService}/api/agent/sessions/{id}/messages`
+4. Reads SSE stream: `GET {aiService}/api/agent/streams/{stream_id}/sse`
+5. On `401 + AGENT_TICKET_EXPIRED`: re-request ticket and retry once
+6. SSE `refetch` event triggers React Query invalidation for core graph, curves, documents, crew plan
 
-- `date.ts` - Date parsing, formatting, normalization functions
-- `array.ts` - Array utilities (sortBySeqNo, groupBy)
-- `task.ts` - Task utilities (isLagTask, formatDurationDays)
-- `gantt.ts` - Gantt chart data helpers
-- `log.ts` - Silent error logging utility
-- `project-document.ts` - Project document content extraction helpers
-- `utils.ts` - General utilities (cn class merging, createMessageId)
+### Upload Flow
 
-### ESLint Configuration
+- Upload page at `src/features/upload/pages/UploadPage.tsx`
+- Flow: get upload credentials → `PUT` file content → notify backend → start generation task
+- File categories in `src/features/upload/types/uploads.ts`
+- Generation progress polled up to 30 min; user can cancel (triggers backend cancel + project deletion)
+- `upload_url` origin replaced with `VITE_API_BASE_URL` to avoid internal addresses
 
-ESLint is configured in `eslint.config.js` with TypeScript strict mode, React Hooks, and React Refresh rules.
+## apps/api — NestJS Backend
 
-Key rules:
+### Prisma
 
-- `@typescript-eslint/no-unused-vars` — **error** (prefix with `_` to opt out)
-- `@typescript-eslint/consistent-type-imports` — **warn** with `inline-type-imports` fix style
-- `@typescript-eslint/no-unsafe-assignment/member-access/call/return/argument` — **error** (full unsafe type safety)
-- `@typescript-eslint/require-await` — **warn**
-- `no-restricted-imports` — **error**: cross-feature deep imports prohibited (use feature barrels instead)
+```bash
+pnpm --filter api prisma:generate   # Generate Prisma client
+pnpm --filter api prisma:migrate:dev # Run migrations
+pnpm --filter api prisma:studio     # Open Prisma Studio
+```
 
-### Test Layout
+Prisma client must be generated before typecheck or dev will work. The API uses Prisma as its ORM layer with PostgreSQL.
 
-All test files are centralized under `tests/` rather than colocated beside source files.
+### Modules
 
-- `tests/services` - HTTP service and API wrapper tests
-- `tests/stores` - Zustand store tests
-- `tests/utils` - pure utility tests (date, array, task, queryKeys)
+```text
+src/modules/
+  auth/       # JWT-based authentication (password + SMS login, refresh, profile setup)
+  agent/      # AI agent ticket management and session orchestration
+  artifacts/  # Artifact CRUD (crew plan artifacts)
+  files/      # File upload with S3 presigned URLs
+  projects/   # Project management
+  health/     # Health check endpoint (GET /health)
+```
+
+### Common Infrastructure
+
+- `src/common/auth/jwt-auth.guard.ts` — JWT guard for protected routes
+- `src/common/auth/current-user.decorator.ts` — `@CurrentUser()` param decorator
+- `src/common/dto/pagination-query.dto.ts` — Pagination query params
+- `src/config/env.ts` — Environment config via Zod validation
+- `src/prisma/` — Prisma module and service
+
+### Agent Auth
+
+Two-layer ticket system:
+
+1. JWT login → `POST /api/agent/tickets` → short-lived `agent_ticket` (with `expires_at` + `refresh_after_seconds`)
+2. `agent_ticket` used for agent service calls; guard at `agent-ticket.guard.ts`
+
+### Testing (Jest)
+
+- Config: `apps/api/jest.config.ts` — ts-jest with NodeNext module resolution, `.js` extension mapping
+- Tests in `tests/` directory, `*.test.ts` pattern
+- `moduleNameMapper` resolves `@tenio/shared` to the shared package source
+
+### ESLint (API)
+
+- `apps/api/eslint.config.js` — ESLint 9 flat config
+- `no-unsafe-*` rules at **warn** level (NestJS/Prisma patterns trigger many false positives)
+- `require-await` — **warn**
+- `no-unnecessary-type-assertion` — **warn**
+
+## packages/shared — @tenio/shared
+
+### Exports
+
+```typescript
+export * from "./agent/agent.types.js";
+export * from "./artifact/artifact.types.js";
+export * from "./auth/auth.types.js";
+export * from "./common/api-response.js";
+export * from "./common/pagination.js";
+export * from "./file/file.types.js";
+export * from "./project/project.types.js";
+```
+
+Used by both `apps/web` (via `moduleNameMapper` in vitest + vite alias) and `apps/api` (via `moduleNameMapper` in jest). Resolution configured per-app since the shared package is a raw TypeScript source (no build step).
+
+## Environment Variables
+
+Root `.env` file (shared by all apps, `envDir: "../.."` in vite config):
+
+```bash
+# Required
+VITE_API_BASE_URL=http://localhost:8000
+VITE_AI_SERVICE_URL=http://127.0.0.1:8123
+VITE_RESOURCE_BASE_URL=https://apmoss.emio.cn/public/resources
+
+# Volc speech recognition (optional)
+VITE_VOLC_APP_ID=your_volc_app_id
+VITE_VOLC_ACCESS_TOKEN=your_volc_access_token
+
+# Analytics (optional)
+VITE_ANALYTICS_ENABLED=false
+VITE_ANALYTICS_DEBUG=false
+VITE_ANALYTICS_ENDPOINT=
+VITE_ANALYTICS_PROVIDER=noop
+```
+
+## Design System
+
+- A.PM design tokens in `apps/web/src/index.css`
+- Prototype references in `templete/` (not production code)
+- UI evolution guide at `docs/frontend-evolution-guide.md`
+- Prefer A.PM token utilities over ad-hoc colors
+
+## Documentation
+
+- `docs/frontend-evolution-guide.md` — UI evolution constraints and page mapping
+- `docs/backend/` — API backend module documentation
+- `docs/REST_API_IMPLEMENTATION_SUMMARY.md` — REST API overview
+- `docs/deployment.md` — Deployment guide
+
+## Git Hooks
+
+Husky + lint-staged configured. Pre-commit runs ESLint + Prettier on staged `apps/web/**/*.{ts,tsx}` files.
+
+## Prettier
+
+Config in `.prettierrc.json`: semicolons, double quotes, trailing commas, 100 print width.
