@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ProjectsService } from "../../../projects/projects.service.js";
+import type { AgentIntent } from "../../intent/agent-intent.types.js";
 import type {
   AgentTool,
   AgentToolExecutionContext,
@@ -9,6 +10,7 @@ import type {
 @Injectable()
 export class UpdateProjectNameTool implements AgentTool {
   readonly toolId = "update_project_name";
+  readonly intentType = "update_project_name" as const;
   readonly displayName = "修改项目名称";
   readonly description = "将当前项目重命名为新的名称。";
   readonly capability = "write" as const;
@@ -16,14 +18,14 @@ export class UpdateProjectNameTool implements AgentTool {
 
   constructor(private readonly projectsService: ProjectsService) {}
 
-  matches(content: string): boolean {
-    return /(项目名称|项目名|项目).*(改成|改为|改名为|重命名为|命名为)/.test(content);
+  canHandle(intent: AgentIntent): boolean {
+    return intent.intentType === this.intentType;
   }
 
   async execute(context: AgentToolExecutionContext): Promise<AgentToolExecutionResult> {
-    const projectName = this.extractProjectName(context.content);
+    const projectName = context.intent.intentType === this.intentType ? context.intent.projectName : null;
     if (!projectName) {
-      throw new Error("未能从消息中提取目标项目名称");
+      throw new Error("当前 intent 缺少目标项目名称");
     }
 
     const project = await this.projectsService.rename(
@@ -37,20 +39,5 @@ export class UpdateProjectNameTool implements AgentTool {
       data: { project },
       artifactTypesToRefresh: ["project_context"],
     };
-  }
-
-  private extractProjectName(content: string): string | null {
-    const normalized = content.trim();
-    const quotedMatch = normalized.match(/[“"'「](.+?)[”"'」]\s*$/);
-    if (quotedMatch?.[1]) {
-      return quotedMatch[1].trim();
-    }
-
-    const match = normalized.match(/(?:改成|改为|改名为|重命名为|命名为)\s*(.+)$/);
-    if (!match?.[1]) {
-      return null;
-    }
-
-    return match[1].trim().replace(/[。！!]+$/u, "");
   }
 }

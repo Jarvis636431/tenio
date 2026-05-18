@@ -4,6 +4,7 @@ import {
   AgentMessageType,
   AgentOperationStatus,
   AgentSessionStatus,
+  type Prisma,
 } from "@prisma/client";
 import type {
   AgentMessage,
@@ -18,6 +19,8 @@ import type {
 import { PrismaService } from "../../prisma/prisma.service.js";
 import type { AuthenticatedRequestUser } from "../auth/auth.types.js";
 import { AgentOperationExecutor } from "./agent-operation.executor.js";
+import { AgentIntentResolver } from "./intent/agent-intent.resolver.js";
+import type { AgentIntent } from "./intent/agent-intent.types.js";
 import { AgentStreamService } from "./agent-stream.service.js";
 import {
   toMessageRoleValue,
@@ -54,6 +57,7 @@ export class AgentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly streamService: AgentStreamService,
+    private readonly intentResolver: AgentIntentResolver,
     private readonly toolRegistry: AgentToolRegistry,
     private readonly operationExecutor: AgentOperationExecutor,
   ) {}
@@ -174,10 +178,17 @@ export class AgentService {
       },
     });
 
-    const readTool = this.toolRegistry.resolveReadTool(normalizedContent);
+    const intent = this.intentResolver.resolve(normalizedContent);
+    const readTool = intent ? this.toolRegistry.resolveReadTool(intent) : null;
     const decision = readTool
-      ? await this.executeReadTool(currentUser, session.projectId, readTool.toolId, normalizedContent)
-      : await this.resolveOperationIntent(currentUser, session, userMessage.id, normalizedContent);
+      ? await this.executeReadTool(currentUser, session.projectId, intent!, readTool.toolId)
+      : await this.resolveOperationIntent(
+          currentUser,
+          session,
+          userMessage.id,
+          normalizedContent,
+          intent,
+        );
 
     const assistantReply = this.buildAssistantReply(normalizedContent, decision);
     const assistantMessage = await this.prisma.agentMessage.create({
@@ -267,10 +278,10 @@ export class AgentService {
   private async executeReadTool(
     currentUser: AuthenticatedRequestUser,
     projectId: string,
+    intent: AgentIntent,
     toolId: string,
-    content: string,
   ): Promise<AgentDecision> {
-    const tool = this.toolRegistry.resolveReadTool(content);
+    const tool = this.toolRegistry.resolveReadTool(intent);
     if (!tool || tool.toolId !== toolId) {
       return { kind: "none" };
     }
@@ -278,7 +289,7 @@ export class AgentService {
     const result = await tool.execute({
       currentUser,
       projectId,
-      content,
+      intent,
     });
 
     return {
@@ -292,6 +303,7 @@ export class AgentService {
     session: OwnedSession,
     messageId: string,
     content: string,
+    intent: AgentIntent | null,
   ): Promise<AgentDecision> {
     const pendingOperation = await this.prisma.agentOperation.findFirst({
       where: {
@@ -340,7 +352,7 @@ export class AgentService {
       };
     }
 
-    const writeTool = this.toolRegistry.resolveWriteTool(content);
+    const writeTool = intent ? this.toolRegistry.resolveWriteTool(intent) : null;
     if (!writeTool && !this.shouldCreateOperation(content)) {
       return { kind: "none" };
     }
@@ -354,7 +366,10 @@ export class AgentService {
         operationType: writeTool?.toolId ?? "project_update",
         operationStatus: AgentOperationStatus.WAITING_APPROVAL,
         requiresApproval: true,
-        inputPayloadJson: { content_text: content },
+        inputPayloadJson: {
+          content_text: content,
+          intent: intent ? (JSON.parse(JSON.stringify(intent)) as Prisma.InputJsonValue) : null,
+        },
       },
     });
 

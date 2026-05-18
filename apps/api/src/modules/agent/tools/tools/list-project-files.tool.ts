@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { FilesService } from "../../../files/files.service.js";
+import type { AgentIntent } from "../../intent/agent-intent.types.js";
 import type {
   AgentTool,
   AgentToolExecutionContext,
@@ -9,6 +10,7 @@ import type {
 @Injectable()
 export class ListProjectFilesTool implements AgentTool {
   readonly toolId = "list_project_files";
+  readonly intentType = "list_project_files" as const;
   readonly displayName = "列出项目文件";
   readonly description = "读取项目下的文件列表、分类和状态。";
   readonly capability = "read" as const;
@@ -16,8 +18,8 @@ export class ListProjectFilesTool implements AgentTool {
 
   constructor(private readonly filesService: FilesService) {}
 
-  matches(content: string): boolean {
-    return /(文件列表|项目文件|上传文件|有哪些文件|列出文件)/.test(content);
+  canHandle(intent: AgentIntent): boolean {
+    return intent.intentType === this.intentType;
   }
 
   async execute(context: AgentToolExecutionContext): Promise<AgentToolExecutionResult> {

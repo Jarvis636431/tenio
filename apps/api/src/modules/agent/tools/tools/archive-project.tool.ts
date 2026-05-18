@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ProjectsService } from "../../../projects/projects.service.js";
+import type { AgentIntent } from "../../intent/agent-intent.types.js";
 import type {
   AgentTool,
   AgentToolExecutionContext,
@@ -9,6 +10,7 @@ import type {
 @Injectable()
 export class ArchiveProjectTool implements AgentTool {
   readonly toolId = "archive_project";
+  readonly intentType = "archive_project" as const;
   readonly displayName = "归档项目";
   readonly description = "将当前项目归档。";
   readonly capability = "write" as const;
@@ -16,8 +18,8 @@ export class ArchiveProjectTool implements AgentTool {
 
   constructor(private readonly projectsService: ProjectsService) {}
 
-  matches(content: string): boolean {
-    return /(归档项目|归档当前项目|archive project)/i.test(content);
+  canHandle(intent: AgentIntent): boolean {
+    return intent.intentType === this.intentType;
   }
 
   async execute(context: AgentToolExecutionContext): Promise<AgentToolExecutionResult> {

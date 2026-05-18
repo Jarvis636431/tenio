@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ArtifactsService } from "../../../artifacts/artifacts.service.js";
+import type { AgentIntent } from "../../intent/agent-intent.types.js";
 import type {
   AgentTool,
   AgentToolExecutionContext,
@@ -9,6 +10,7 @@ import type {
 @Injectable()
 export class GetTimeCostArtifactTool implements AgentTool {
   readonly toolId = "get_time_cost_artifact";
+  readonly intentType = "get_time_cost_artifact" as const;
   readonly displayName = "获取时长成本分析";
   readonly description = "读取最新时长成本产物与推荐方案摘要。";
   readonly capability = "read" as const;
@@ -16,8 +18,8 @@ export class GetTimeCostArtifactTool implements AgentTool {
 
   constructor(private readonly artifactsService: ArtifactsService) {}
 
-  matches(content: string): boolean {
-    return /(时长成本|工期成本|time[\s_-]?cost|成本分析|推荐工期)/i.test(content);
+  canHandle(intent: AgentIntent): boolean {
+    return intent.intentType === this.intentType;
   }
 
   async execute(context: AgentToolExecutionContext): Promise<AgentToolExecutionResult> {

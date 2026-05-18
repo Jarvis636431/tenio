@@ -5,6 +5,7 @@ import { ProjectsModule } from "../projects/projects.module.js";
 import { PrismaModule } from "../../prisma/prisma.module.js";
 import { AgentOperationExecutor } from "./agent-operation.executor.js";
 import { AgentController } from "./agent.controller.js";
+import { AgentIntentResolver } from "./intent/agent-intent.resolver.js";
 import { AgentStreamService } from "./agent-stream.service.js";
 import { AgentService } from "./agent.service.js";
 import { ActivateProjectTool } from "./tools/tools/activate-project.tool.js";
@@ -27,6 +28,7 @@ import { UpdateProjectNameTool } from "./tools/tools/update-project-name.tool.js
     AgentService,
     AgentStreamService,
     AgentOperationExecutor,
+    AgentIntentResolver,
     AgentToolRegistry,
     GetProjectContextTool,
     ListProjectFilesTool,

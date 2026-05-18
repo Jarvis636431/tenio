@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { AgentOperationStatus } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import type { AuthenticatedRequestUser } from "../auth/auth.types.js";
+import type { AgentIntent } from "./intent/agent-intent.types.js";
 import { AgentToolRegistry } from "./tools/agent-tool.registry.js";
 import type { AgentToolExecutionResult } from "./tools/agent-tool.types.js";
 
@@ -43,8 +44,12 @@ export class AgentOperationExecutor {
 
     try {
       const inputRecord = this.asRecord(operation.inputPayloadJson);
-      const content = this.getString(inputRecord, "content_text") ?? "";
-      const tool = this.toolRegistry.resolveWriteTool(content);
+      const intent = inputRecord.intent as AgentIntent | undefined;
+      if (!intent) {
+        throw new Error("当前操作缺少结构化 intent");
+      }
+
+      const tool = this.toolRegistry.resolveWriteTool(intent);
 
       if (!tool) {
         throw new Error("当前未识别到可执行的写操作工具");
@@ -53,7 +58,7 @@ export class AgentOperationExecutor {
       const result = await tool.execute({
         currentUser,
         projectId: operation.projectId,
-        content,
+        intent,
       });
 
       await this.prisma.agentOperation.update({
@@ -94,8 +99,4 @@ export class AgentOperationExecutor {
       : {};
   }
 
-  private getString(record: Record<string, unknown>, key: string): string | undefined {
-    const value = record[key];
-    return typeof value === "string" ? value : undefined;
-  }
 }

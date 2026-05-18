@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ArtifactsService } from "../../../artifacts/artifacts.service.js";
+import type { AgentIntent } from "../../intent/agent-intent.types.js";
 import type {
   AgentTool,
   AgentToolExecutionContext,
@@ -9,6 +10,7 @@ import type {
 @Injectable()
 export class GetGraphArtifactTool implements AgentTool {
   readonly toolId = "get_graph_artifact";
+  readonly intentType = "get_graph_artifact" as const;
   readonly displayName = "获取网络图";
   readonly description = "读取最新网络图产物及关键任务摘要。";
   readonly capability = "read" as const;
@@ -16,8 +18,8 @@ export class GetGraphArtifactTool implements AgentTool {
 
   constructor(private readonly artifactsService: ArtifactsService) {}
 
-  matches(content: string): boolean {
-    return /(网络图|关键路径|graph|计划图)/i.test(content);
+  canHandle(intent: AgentIntent): boolean {
+    return intent.intentType === this.intentType;
   }
 
   async execute(context: AgentToolExecutionContext): Promise<AgentToolExecutionResult> {

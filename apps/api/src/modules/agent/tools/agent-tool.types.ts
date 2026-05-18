@@ -1,4 +1,9 @@
 import type { AuthenticatedRequestUser } from "../../auth/auth.types.js";
+import type {
+  AgentIntent,
+  AgentReadIntentType,
+  AgentWriteIntentType,
+} from "../intent/agent-intent.types.js";
 
 export type AgentToolCapability = "read" | "write";
 
@@ -13,7 +18,7 @@ export interface AgentToolDescriptor {
 export interface AgentToolExecutionContext {
   currentUser: AuthenticatedRequestUser;
   projectId: string;
-  content: string;
+  intent: AgentIntent;
 }
 
 export interface AgentToolExecutionResult {
@@ -23,6 +28,7 @@ export interface AgentToolExecutionResult {
 }
 
 export interface AgentTool extends AgentToolDescriptor {
-  matches(content: string): boolean;
+  intentType: AgentReadIntentType | AgentWriteIntentType;
+  canHandle(intent: AgentIntent): boolean;
   execute(context: AgentToolExecutionContext): Promise<AgentToolExecutionResult>;
 }

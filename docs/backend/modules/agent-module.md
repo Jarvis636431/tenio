@@ -49,7 +49,7 @@
 
 - 当前流式输出还是单机内存 registry，不适合多实例部署
 - 第一版回复逻辑仍是占位实现，不是完整模型编排
-- 写工具目前只实现了 `archive_project`，能力还很窄
+- intent 已经独立成单独一层，但当前 resolver 仍然是规则式解析
 
 ## 可选方案
 
@@ -93,7 +93,8 @@
 - 先把 session / message / stream / operation 骨架做出来
 - 直接基于 JWT 和项目归属做访问控制
 - 把会影响项目数据的请求先收口为 `WAITING_APPROVAL`
-- 先用 tool registry 落三类只读工具和一个受控写工具
+- 先把自然语言解析收口到独立的 intent resolver
+- 先用 tool registry 落只读工具与一组受控写工具
 - 再往里填模型调用与更完整的执行边界
 
 这比反过来先做复杂 AI 编排更稳。
@@ -135,3 +136,13 @@
 5. 未识别到可执行写工具，则写回 `FAILED`
 
 这保证了系统不会再把“识别出动作”误判成“动作已经执行完成”。
+
+## 当前 intent 行为
+
+当前 `AgentIntentResolver` 已经独立存在：
+
+- 负责把自然语言解析成结构化 `AgentIntent`
+- tool registry 不再直接吃原始文本
+- 写 operation 会把 `intent` 一并落库，供后续 executor 使用
+
+当前仍然是规则式解析，但识别逻辑已经不再散落在各个 tool 内部。

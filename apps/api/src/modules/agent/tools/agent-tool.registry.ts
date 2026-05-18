@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import type { AgentTool, AgentToolDescriptor } from "./agent-tool.types.js";
+import type { AgentIntent } from "../intent/agent-intent.types.js";
 import { ActivateProjectTool } from "./tools/activate-project.tool.js";
 import { ArchiveProjectTool } from "./tools/archive-project.tool.js";
 import { DeleteProjectFileTool } from "./tools/delete-project-file.tool.js";
@@ -54,11 +55,15 @@ export class AgentToolRegistry {
     }));
   }
 
-  resolveReadTool(content: string): AgentTool | null {
-    return this.tools.find((tool) => tool.capability === "read" && tool.matches(content)) ?? null;
+  resolveReadTool(intent: AgentIntent): AgentTool | null {
+    return (
+      this.tools.find((tool) => tool.capability === "read" && tool.canHandle(intent)) ?? null
+    );
   }
 
-  resolveWriteTool(content: string): AgentTool | null {
-    return this.tools.find((tool) => tool.capability === "write" && tool.matches(content)) ?? null;
+  resolveWriteTool(intent: AgentIntent): AgentTool | null {
+    return (
+      this.tools.find((tool) => tool.capability === "write" && tool.canHandle(intent)) ?? null
+    );
   }
 }

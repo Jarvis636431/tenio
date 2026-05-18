@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { FilesService } from "../../../files/files.service.js";
+import type { AgentIntent } from "../../intent/agent-intent.types.js";
 import type {
   AgentTool,
   AgentToolExecutionContext,
@@ -9,6 +10,7 @@ import type {
 @Injectable()
 export class DeleteProjectFileTool implements AgentTool {
   readonly toolId = "delete_project_file";
+  readonly intentType = "delete_project_file" as const;
   readonly displayName = "删除项目文件";
   readonly description = "删除当前项目中的指定文件。";
   readonly capability = "write" as const;
@@ -16,14 +18,15 @@ export class DeleteProjectFileTool implements AgentTool {
 
   constructor(private readonly filesService: FilesService) {}
 
-  matches(content: string): boolean {
-    return /(删除文件|删除项目文件|移除文件|删掉文件)/.test(content);
+  canHandle(intent: AgentIntent): boolean {
+    return intent.intentType === this.intentType;
   }
 
   async execute(context: AgentToolExecutionContext): Promise<AgentToolExecutionResult> {
-    const targetName = this.extractTargetFileName(context.content);
+    const targetName =
+      context.intent.intentType === this.intentType ? context.intent.fileName : null;
     if (!targetName) {
-      throw new Error("未能从消息中提取要删除的文件名");
+      throw new Error("当前 intent 缺少要删除的文件名");
     }
 
     const files = await this.filesService.listProjectFiles(context.currentUser, context.projectId);
@@ -55,21 +58,6 @@ export class DeleteProjectFileTool implements AgentTool {
       },
       artifactTypesToRefresh: ["upload_summary"],
     };
-  }
-
-  private extractTargetFileName(content: string): string | null {
-    const normalized = content.trim();
-    const quotedMatch = normalized.match(/[“"'「](.+?)[”"'」]/);
-    if (quotedMatch?.[1]) {
-      return quotedMatch[1].trim();
-    }
-
-    const match = normalized.match(/(?:删除文件|删除项目文件|移除文件|删掉文件)\s*(.+)$/);
-    if (!match?.[1]) {
-      return null;
-    }
-
-    return match[1].trim().replace(/[。！!]+$/u, "");
   }
 
   private resolveSingleFuzzyMatch<

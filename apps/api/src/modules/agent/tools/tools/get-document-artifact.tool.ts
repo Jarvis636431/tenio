@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ArtifactsService } from "../../../artifacts/artifacts.service.js";
+import type { AgentIntent } from "../../intent/agent-intent.types.js";
 import type {
   AgentTool,
   AgentToolExecutionContext,
@@ -9,6 +10,7 @@ import type {
 @Injectable()
 export class GetDocumentArtifactTool implements AgentTool {
   readonly toolId = "get_document_artifact";
+  readonly intentType = "get_document_artifact" as const;
   readonly displayName = "获取施工文档";
   readonly description = "读取最新文档产物的标题、目录和正文摘要。";
   readonly capability = "read" as const;
@@ -16,8 +18,8 @@ export class GetDocumentArtifactTool implements AgentTool {
 
   constructor(private readonly artifactsService: ArtifactsService) {}
 
-  matches(content: string): boolean {
-    return /(文档|施工组织设计|目录|章节|markdown)/i.test(content);
+  canHandle(intent: AgentIntent): boolean {
+    return intent.intentType === this.intentType;
   }
 
   async execute(context: AgentToolExecutionContext): Promise<AgentToolExecutionResult> {
