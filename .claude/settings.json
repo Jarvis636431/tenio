@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"exit: $?\")",
+      "Bash(grep -n '```' AGENTS.md README.md)",
+      "Bash(sed -n '98,132p' AGENTS.md)",
+      "Bash(sed -n '18,24p' README.md)",
+      "Bash(sed -n '82,90p' README.md)",
+      "Bash(npx markdownlint-cli2 *)",
+      "Bash(sed -n '19,23p' README.md)",
+      "Bash(sed -n '84,88p' README.md)",
+      "Bash(sed -n '68,72p' AGENTS.md)",
+      "Bash(sed -n '81,85p' AGENTS.md)",
+      "Bash(sed -n '100,106p' AGENTS.md)",
+      "Bash(sed -n '108,115p' AGENTS.md)",
+      "Bash(sed -n '118,132p' AGENTS.md)",
+      "Bash(sed -n '80,86p' AGENTS.md)",
+      "Bash(sed -n '108,114p' AGENTS.md)",
+      "Bash(sed -n '119,126p' AGENTS.md)",
+      "Bash(sed -n '127,134p' AGENTS.md)",
+      "Bash(npx -y markdownlint-cli2 AGENTS.md README.md)",
+      "Bash(grep -v \"^$\")",
+      "Bash(sed -n '3p' AGENTS.md)",
+      "Bash(sed -n '76p' AGENTS.md)",
+      "Bash(sed -n '104p' AGENTS.md)",
+      "Bash(sed -n '139p' AGENTS.md)"
+    ]
+  }
+}
