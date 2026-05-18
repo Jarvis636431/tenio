@@ -89,6 +89,18 @@ export class ProjectsService {
   }
 
   async archive(currentUser: AuthenticatedRequestUser, projectId: string): Promise<Project> {
+    return this.updateStatus(currentUser, projectId, PrismaProjectStatus.ARCHIVED);
+  }
+
+  async activate(currentUser: AuthenticatedRequestUser, projectId: string): Promise<Project> {
+    return this.updateStatus(currentUser, projectId, PrismaProjectStatus.ACTIVE);
+  }
+
+  async rename(
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
+    projectName: string,
+  ): Promise<Project> {
     const project = await this.prisma.project.findFirst({
       where: {
         id: projectId,
@@ -103,8 +115,32 @@ export class ProjectsService {
     const updated = await this.prisma.project.update({
       where: { id: project.id },
       data: {
-        status: PrismaProjectStatus.ARCHIVED,
+        name: projectName,
       },
+    });
+
+    return this.toProject(updated);
+  }
+
+  private async updateStatus(
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
+    status: PrismaProjectStatus,
+  ): Promise<Project> {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        ownerId: currentUser.id,
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`);
+    }
+
+    const updated = await this.prisma.project.update({
+      where: { id: project.id },
+      data: { status },
     });
 
     return this.toProject(updated);
