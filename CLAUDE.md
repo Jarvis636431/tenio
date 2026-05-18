@@ -259,14 +259,11 @@ VITE_ANALYTICS_PROVIDER=noop
 
 - A.PM design tokens in `apps/web/src/index.css`
 - Prototype references in `templete/` (not production code)
-- UI evolution guide at `docs/frontend-evolution-guide.md`
 - Prefer A.PM token utilities over ad-hoc colors
 
 ## Documentation
 
-- `docs/frontend-evolution-guide.md` — UI evolution constraints and page mapping
 - `docs/backend/` — API backend module documentation
-- `docs/REST_API_IMPLEMENTATION_SUMMARY.md` — REST API overview
 - `docs/deployment.md` — Deployment guide
 
 ## Git Hooks
