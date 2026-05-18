@@ -54,10 +54,12 @@ export function useChat(options: ChatPanelOptions = {}) {
 
   // Store 状态（读取值，会触发重渲染）
   const messages = useChatStore(
-    (state) => state.messagesByProject[activeProjectKey] ?? EMPTY_CHAT_MESSAGES,
+    (state) => state.projects[activeProjectKey]?.messages ?? EMPTY_CHAT_MESSAGES,
   );
-  const inputMessage = useChatStore((state) => state.inputMessageByProject[activeProjectKey] ?? "");
-  const isThinking = useChatStore((state) => state.thinkingByProject[activeProjectKey] ?? false);
+  const inputMessage = useChatStore(
+    (state) => state.projects[activeProjectKey]?.inputMessage ?? "",
+  );
+  const isThinking = useChatStore((state) => state.projects[activeProjectKey]?.isThinking ?? false);
 
   // Store actions（引用稳定，单独选择器不会触发额外重渲染）
   const setActiveProjectKey = useChatStore((state) => state.setActiveProjectKey);

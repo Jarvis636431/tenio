@@ -14,266 +14,199 @@ export interface AgentTicketInfo {
   projectId: string;
 }
 
+interface ProjectChatState {
+  messages: ChatMessage[];
+  sessionId: string | null;
+  agentBaseUrl: string | null;
+  agentTicket: string | null;
+  agentTicketExpiresAt: string | null;
+  agentTicketRefreshAt: string | null;
+  agentTicketProjectId: string | null;
+  inputMessage: string;
+  isThinking: boolean;
+}
+
+const createDefaultProjectState = (): ProjectChatState => ({
+  messages: [],
+  sessionId: null,
+  agentBaseUrl: null,
+  agentTicket: null,
+  agentTicketExpiresAt: null,
+  agentTicketRefreshAt: null,
+  agentTicketProjectId: null,
+  inputMessage: "",
+  isThinking: false,
+});
+
 interface ChatState {
-  /** 按项目隔离的消息列表 */
-  messagesByProject: Record<string, ChatMessage[]>;
-  /** 按项目的 agent 会话 ID */
-  sessionIdByProject: Record<string, string | null>;
-  /** 按项目的 agent 服务地址 */
-  agentBaseUrlByProject: Record<string, string | null>;
-  /** 按项目的 agent 短期访问票据 */
-  agentTicketByProject: Record<string, string | null>;
-  /** 按项目的 agent 票据过期时间 */
-  agentTicketExpiresAtByProject: Record<string, string | null>;
-  /** 按项目的 agent 票据建议刷新时间 */
-  agentTicketRefreshAtByProject: Record<string, string | null>;
-  /** 按项目的 agent 票据绑定项目 ID */
-  agentTicketProjectIdByProject: Record<string, string | null>;
-  /** 当前活跃的项目 key */
+  /** 以 projectKey 为 key 聚合所有 per-project 状态 */
+  projects: Record<string, ProjectChatState>;
   activeProjectKey: string;
-  /** 按项目隔离的输入框文本 */
-  inputMessageByProject: Record<string, string>;
-  /** 按项目隔离的 AI 思考状态 */
-  thinkingByProject: Record<string, boolean>;
 
   // Actions
-  /** 设置当前活跃项目 */
   setActiveProjectKey: (key: string) => void;
-  /** 获取当前项目消息 */
   getMessages: (projectKey: string) => ChatMessage[];
-  /** 设置项目消息 */
   setMessages: (projectKey: string, messages: ChatMessage[]) => void;
-  /** 添加消息到指定项目 */
   addMessage: (projectKey: string, message: ChatMessage) => void;
-  /** 更新指定项目的最后一条 AI 消息内容 */
   updateLastAIMessage: (projectKey: string, content: string) => void;
-  /** 移除指定项目的最后一条消息 */
   removeLastAIMessage: (projectKey: string) => void;
-  /** 设置指定项目的会话 ID */
   setThreadId: (projectKey: string, threadId: string | null) => void;
-  /** 获取指定项目的会话 ID */
   getThreadId: (projectKey: string) => string | null;
-  /** 设置指定项目的 agent 服务地址 */
   setAgentBaseUrl: (projectKey: string, agentBaseUrl: string | null) => void;
-  /** 获取指定项目的 agent 服务地址 */
   getAgentBaseUrl: (projectKey: string) => string | null;
-  /** 设置指定项目的 agent 短期访问票据 */
   setAgentTicket: (
     projectKey: string,
     agentTicket: string | null,
     metadata?: Omit<AgentTicketInfo, "agentTicket">,
   ) => void;
-  /** 获取指定项目的 agent 短期访问票据 */
   getAgentTicket: (projectKey: string) => string | null;
-  /** 获取指定项目的 agent 票据信息 */
   getAgentTicketInfo: (projectKey: string) => AgentTicketInfo | null;
-  /** 获取指定项目输入框文本 */
   getInputMessage: (projectKey: string) => string;
-  /** 设置输入框文本 */
   setInputMessage: (projectKey: string, text: string) => void;
-  /** 获取指定项目思考状态 */
   getIsThinking: (projectKey: string) => boolean;
-  /** 设置思考状态 */
   setIsThinking: (projectKey: string, thinking: boolean) => void;
-  /** 重置指定项目的聊天状态 */
   resetProjectChat: (projectKey: string, welcomeMessage: ChatMessage) => void;
 }
 
+/** 返回将变更合并到单个 project 条目后的 partial state */
+function updateProject(
+  state: ChatState,
+  projectKey: string,
+  partial: Partial<ProjectChatState>,
+): Pick<ChatState, "projects"> {
+  return {
+    projects: {
+      ...state.projects,
+      [projectKey]: {
+        ...(state.projects[projectKey] ?? createDefaultProjectState()),
+        ...partial,
+      },
+    },
+  };
+}
+
 export const useChatStore = create<ChatState>()((set, get) => ({
-  messagesByProject: {},
-  sessionIdByProject: {},
-  agentBaseUrlByProject: {},
-  agentTicketByProject: {},
-  agentTicketExpiresAtByProject: {},
-  agentTicketRefreshAtByProject: {},
-  agentTicketProjectIdByProject: {},
+  projects: {},
   activeProjectKey: "__default__",
-  inputMessageByProject: {},
-  thinkingByProject: {},
 
   setActiveProjectKey: (key) => set({ activeProjectKey: key }),
 
   getMessages: (projectKey) => {
-    return get().messagesByProject[projectKey] || [];
+    return get().projects[projectKey]?.messages ?? [];
   },
 
   setMessages: (projectKey, messages) =>
-    set((state) => ({
-      messagesByProject: {
-        ...state.messagesByProject,
-        [projectKey]: messages,
-      },
-    })),
+    set((state) => updateProject(state, projectKey, { messages })),
 
   addMessage: (projectKey, message) =>
     set((state) => ({
-      messagesByProject: {
-        ...state.messagesByProject,
-        [projectKey]: [...(state.messagesByProject[projectKey] || []), message],
+      projects: {
+        ...state.projects,
+        [projectKey]: {
+          ...(state.projects[projectKey] ?? createDefaultProjectState()),
+          messages: [...(state.projects[projectKey]?.messages ?? []), message],
+        },
       },
     })),
 
   updateLastAIMessage: (projectKey, content) =>
     set((state) => {
-      const messages = state.messagesByProject[projectKey];
-      if (!messages || messages.length === 0) return state;
+      const project = state.projects[projectKey];
+      if (!project || project.messages.length === 0) return state;
 
-      // 找到最后一条 AI 消息并更新
-      const lastAIMessageIndex = [...messages].reverse().findIndex((m) => m.sender === "ai");
+      const lastAIMessageIndex = [...project.messages]
+        .reverse()
+        .findIndex((m) => m.sender === "ai");
       if (lastAIMessageIndex === -1) return state;
 
-      const actualIndex = messages.length - 1 - lastAIMessageIndex;
-      const updatedMessages = [...messages];
+      const actualIndex = project.messages.length - 1 - lastAIMessageIndex;
+      const updatedMessages = [...project.messages];
       updatedMessages[actualIndex] = { ...updatedMessages[actualIndex], content };
 
-      return {
-        messagesByProject: {
-          ...state.messagesByProject,
-          [projectKey]: updatedMessages,
-        },
-      };
+      return updateProject(state, projectKey, { messages: updatedMessages });
     }),
 
   removeLastAIMessage: (projectKey) =>
     set((state) => {
-      const messages = state.messagesByProject[projectKey];
-      if (!messages || messages.length === 0) return state;
+      const project = state.projects[projectKey];
+      if (!project || project.messages.length === 0) return state;
 
-      // 移除最后一条 AI 消息
-      const lastAIMessageIndex = [...messages].reverse().findIndex((m) => m.sender === "ai");
+      const lastAIMessageIndex = [...project.messages]
+        .reverse()
+        .findIndex((m) => m.sender === "ai");
       if (lastAIMessageIndex === -1) return state;
 
-      const actualIndex = messages.length - 1 - lastAIMessageIndex;
-      const updatedMessages = messages.filter((_, i) => i !== actualIndex);
+      const actualIndex = project.messages.length - 1 - lastAIMessageIndex;
+      const updatedMessages = project.messages.filter((_, i) => i !== actualIndex);
 
-      return {
-        messagesByProject: {
-          ...state.messagesByProject,
-          [projectKey]: updatedMessages,
-        },
-      };
+      return updateProject(state, projectKey, { messages: updatedMessages });
     }),
 
   setThreadId: (projectKey, threadId) =>
-    set((state) => ({
-      sessionIdByProject: {
-        ...state.sessionIdByProject,
-        [projectKey]: threadId,
-      },
-    })),
+    set((state) => updateProject(state, projectKey, { sessionId: threadId })),
 
   getThreadId: (projectKey) => {
-    return get().sessionIdByProject[projectKey] ?? null;
+    return get().projects[projectKey]?.sessionId ?? null;
   },
 
   setAgentBaseUrl: (projectKey, agentBaseUrl) =>
-    set((state) => ({
-      agentBaseUrlByProject: {
-        ...state.agentBaseUrlByProject,
-        [projectKey]: agentBaseUrl,
-      },
-    })),
+    set((state) => updateProject(state, projectKey, { agentBaseUrl })),
 
   getAgentBaseUrl: (projectKey) => {
-    return get().agentBaseUrlByProject[projectKey] ?? null;
+    return get().projects[projectKey]?.agentBaseUrl ?? null;
   },
 
   setAgentTicket: (projectKey, agentTicket, metadata) =>
-    set((state) => ({
-      agentTicketByProject: {
-        ...state.agentTicketByProject,
-        [projectKey]: agentTicket,
-      },
-      agentTicketExpiresAtByProject: {
-        ...state.agentTicketExpiresAtByProject,
-        [projectKey]: agentTicket ? (metadata?.expiresAt ?? null) : null,
-      },
-      agentTicketRefreshAtByProject: {
-        ...state.agentTicketRefreshAtByProject,
-        [projectKey]: agentTicket ? (metadata?.refreshAt ?? null) : null,
-      },
-      agentTicketProjectIdByProject: {
-        ...state.agentTicketProjectIdByProject,
-        [projectKey]: agentTicket ? (metadata?.projectId ?? null) : null,
-      },
-    })),
+    set((state) =>
+      updateProject(state, projectKey, {
+        agentTicket,
+        agentTicketExpiresAt: agentTicket ? (metadata?.expiresAt ?? null) : null,
+        agentTicketRefreshAt: agentTicket ? (metadata?.refreshAt ?? null) : null,
+        agentTicketProjectId: agentTicket ? (metadata?.projectId ?? null) : null,
+      }),
+    ),
 
   getAgentTicket: (projectKey) => {
-    return get().agentTicketByProject[projectKey] ?? null;
+    return get().projects[projectKey]?.agentTicket ?? null;
   },
 
   getAgentTicketInfo: (projectKey) => {
-    const agentTicket = get().agentTicketByProject[projectKey];
-    const expiresAt = get().agentTicketExpiresAtByProject[projectKey];
-    const refreshAt = get().agentTicketRefreshAtByProject[projectKey];
-    const projectId = get().agentTicketProjectIdByProject[projectKey];
-    if (!agentTicket || !expiresAt || !refreshAt || !projectId) {
+    const project = get().projects[projectKey];
+    if (
+      !project?.agentTicket ||
+      !project.agentTicketExpiresAt ||
+      !project.agentTicketRefreshAt ||
+      !project.agentTicketProjectId
+    ) {
       return null;
     }
-    return { agentTicket, expiresAt, refreshAt, projectId };
+    return {
+      agentTicket: project.agentTicket,
+      expiresAt: project.agentTicketExpiresAt,
+      refreshAt: project.agentTicketRefreshAt,
+      projectId: project.agentTicketProjectId,
+    };
   },
 
   getInputMessage: (projectKey) => {
-    return get().inputMessageByProject[projectKey] ?? "";
+    return get().projects[projectKey]?.inputMessage ?? "";
   },
 
   setInputMessage: (projectKey, text) =>
-    set((state) => ({
-      inputMessageByProject: {
-        ...state.inputMessageByProject,
-        [projectKey]: text,
-      },
-    })),
+    set((state) => updateProject(state, projectKey, { inputMessage: text })),
 
   getIsThinking: (projectKey) => {
-    return get().thinkingByProject[projectKey] ?? false;
+    return get().projects[projectKey]?.isThinking ?? false;
   },
 
   setIsThinking: (projectKey, thinking) =>
-    set((state) => ({
-      thinkingByProject: {
-        ...state.thinkingByProject,
-        [projectKey]: thinking,
-      },
-    })),
+    set((state) => updateProject(state, projectKey, { isThinking: thinking })),
 
   resetProjectChat: (projectKey, welcomeMessage) =>
     set((state) => ({
-      messagesByProject: {
-        ...state.messagesByProject,
-        [projectKey]: [{ ...welcomeMessage }],
-      },
-      sessionIdByProject: {
-        ...state.sessionIdByProject,
-        [projectKey]: null,
-      },
-      agentBaseUrlByProject: {
-        ...state.agentBaseUrlByProject,
-        [projectKey]: null,
-      },
-      agentTicketByProject: {
-        ...state.agentTicketByProject,
-        [projectKey]: null,
-      },
-      agentTicketExpiresAtByProject: {
-        ...state.agentTicketExpiresAtByProject,
-        [projectKey]: null,
-      },
-      agentTicketRefreshAtByProject: {
-        ...state.agentTicketRefreshAtByProject,
-        [projectKey]: null,
-      },
-      agentTicketProjectIdByProject: {
-        ...state.agentTicketProjectIdByProject,
-        [projectKey]: null,
-      },
-      inputMessageByProject: {
-        ...state.inputMessageByProject,
-        [projectKey]: "",
-      },
-      thinkingByProject: {
-        ...state.thinkingByProject,
-        [projectKey]: false,
+      projects: {
+        ...state.projects,
+        [projectKey]: { ...createDefaultProjectState(), messages: [{ ...welcomeMessage }] },
       },
     })),
 }));

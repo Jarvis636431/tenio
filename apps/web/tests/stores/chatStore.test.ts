@@ -11,16 +11,8 @@ const welcomeMessage: ChatMessage = {
 describe("chatStore", () => {
   beforeEach(() => {
     useChatStore.setState({
-      messagesByProject: {},
-      sessionIdByProject: {},
-      agentBaseUrlByProject: {},
-      agentTicketByProject: {},
-      agentTicketExpiresAtByProject: {},
-      agentTicketRefreshAtByProject: {},
-      agentTicketProjectIdByProject: {},
+      projects: {},
       activeProjectKey: "__default__",
-      inputMessageByProject: {},
-      thinkingByProject: {},
     });
   });
 
