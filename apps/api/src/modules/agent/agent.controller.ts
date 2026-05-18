@@ -9,24 +9,18 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import type {
-  AgentInitResponse,
   AgentOperationStatusResponse,
-  AgentSessionListResponse,
   AgentSessionMessagesResponse,
-  AgentTicketResponse,
+  AgentSessionListResponse,
+  CreateAgentSessionResponse,
   SendAgentMessageResponse,
 } from "@tenio/shared";
 import { CurrentUser } from "../../common/auth/current-user.decorator.js";
 import { JwtAuthGuard } from "../../common/auth/jwt-auth.guard.js";
 import type { AuthenticatedRequestUser } from "../auth/auth.types.js";
-import { CurrentAgentTicket } from "./current-agent-ticket.decorator.js";
-import type { AuthenticatedAgentTicket } from "./agent.types.js";
-import { AgentTicketGuard } from "./agent-ticket.guard.js";
-import { AgentTicketService } from "./agent-ticket.service.js";
 import { AgentStreamService } from "./agent-stream.service.js";
 import { AgentService } from "./agent.service.js";
-import { AgentInitDto } from "./dto/agent-init.dto.js";
-import { IssueAgentTicketDto } from "./dto/issue-agent-ticket.dto.js";
+import { CreateAgentSessionDto } from "./dto/create-agent-session.dto.js";
 import { ListAgentSessionsDto } from "./dto/list-agent-sessions.dto.js";
 import { SendAgentMessageDto } from "./dto/send-agent-message.dto.js";
 
@@ -41,63 +35,59 @@ interface SseResponseLike {
 export class AgentController {
   constructor(
     private readonly agentService: AgentService,
-    private readonly agentTicketService: AgentTicketService,
     private readonly agentStreamService: AgentStreamService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post("agent/tickets")
-  issueAgentTicket(
+  @Post("projects/:projectId/agent/sessions")
+  createAgentSession(
     @CurrentUser() currentUser: AuthenticatedRequestUser,
-    @Body() payload: IssueAgentTicketDto,
-  ): Promise<AgentTicketResponse> {
-    return this.agentTicketService.issueTicket(currentUser.id, payload.project_id);
+    @Param("projectId") projectId: string,
+    @Body() payload: CreateAgentSessionDto,
+  ): Promise<CreateAgentSessionResponse> {
+    return this.agentService.createSession(currentUser, projectId, payload);
   }
 
-  @UseGuards(AgentTicketGuard)
-  @Post("agent/init")
-  initAgentSession(
-    @CurrentAgentTicket() currentTicket: AuthenticatedAgentTicket,
-    @Body() payload: AgentInitDto,
-  ): Promise<AgentInitResponse> {
-    return this.agentService.issueSession(currentTicket, payload);
-  }
-
-  @UseGuards(AgentTicketGuard)
-  @Get("agent/sessions")
+  @UseGuards(JwtAuthGuard)
+  @Get("projects/:projectId/agent/sessions")
   listAgentSessions(
-    @CurrentAgentTicket() currentTicket: AuthenticatedAgentTicket,
+    @CurrentUser() currentUser: AuthenticatedRequestUser,
+    @Param("projectId") projectId: string,
     @Query() query: ListAgentSessionsDto,
   ): Promise<AgentSessionListResponse> {
-    return this.agentService.listSessions(currentTicket, query);
+    return this.agentService.listSessions(currentUser, projectId, query);
   }
 
-  @UseGuards(AgentTicketGuard)
-  @Get("agent/sessions/:sessionId/messages")
+  @UseGuards(JwtAuthGuard)
+  @Get("projects/:projectId/agent/sessions/:sessionId/messages")
   getAgentSessionMessages(
-    @CurrentAgentTicket() currentTicket: AuthenticatedAgentTicket,
+    @CurrentUser() currentUser: AuthenticatedRequestUser,
+    @Param("projectId") projectId: string,
     @Param("sessionId") sessionId: string,
   ): Promise<AgentSessionMessagesResponse> {
-    return this.agentService.listSessionMessages(currentTicket, sessionId);
+    return this.agentService.listSessionMessages(currentUser, projectId, sessionId);
   }
 
-  @UseGuards(AgentTicketGuard)
-  @Post("agent/sessions/:sessionId/messages")
+  @UseGuards(JwtAuthGuard)
+  @Post("projects/:projectId/agent/sessions/:sessionId/messages")
   sendAgentSessionMessage(
-    @CurrentAgentTicket() currentTicket: AuthenticatedAgentTicket,
+    @CurrentUser() currentUser: AuthenticatedRequestUser,
+    @Param("projectId") projectId: string,
     @Param("sessionId") sessionId: string,
     @Body() payload: SendAgentMessageDto,
   ): Promise<SendAgentMessageResponse> {
-    return this.agentService.sendSessionMessage(currentTicket, sessionId, payload);
+    return this.agentService.sendSessionMessage(currentUser, projectId, sessionId, payload);
   }
 
-  @UseGuards(AgentTicketGuard)
-  @Get("agent/streams/:streamId/sse")
+  @UseGuards(JwtAuthGuard)
+  @Get("projects/:projectId/agent/streams/:streamId/sse")
   async subscribeAgentStream(
-    @CurrentAgentTicket() _currentTicket: AuthenticatedAgentTicket,
+    @CurrentUser() currentUser: AuthenticatedRequestUser,
+    @Param("projectId") projectId: string,
     @Param("streamId") streamId: string,
     @Res() res: SseResponseLike,
   ): Promise<void> {
+    await this.agentService.assertProjectAccess(currentUser, projectId);
     const events = this.agentStreamService.getStream(streamId);
 
     res.setHeader("Content-Type", "text/event-stream");

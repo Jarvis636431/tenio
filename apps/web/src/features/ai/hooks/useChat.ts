@@ -3,16 +3,14 @@ import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { getProjectOperationStatus, projectQueryKeys, useProject } from "@/features/project";
 import {
-  initAgentSession,
-  issueAgentTicket,
+  createAgentSession,
   sendAgentSessionMessage,
   subscribeAgentStreamSse,
 } from "../services/ai-api";
 import { extractChatMessageContent } from "../services/ai-service";
 import { createMessageId } from "@/lib/utils";
 import { logSilentError } from "@/lib/log";
-import { ApiRequestError } from "@/services/http";
-import { useChatStore, type AgentTicketInfo, type ChatMessage } from "@/stores/chatStore";
+import { useChatStore, type ChatMessage } from "@/stores/chatStore";
 
 type ChatPanelOptions = {
   projectId?: string;
@@ -22,11 +20,7 @@ const EMPTY_CHAT_MESSAGES: ChatMessage[] = [];
 
 /**
  * 协调 AI 面板的聊天状态和 SSE 流。
- * 为每个项目维护独立的 agent 会话，支持中断确认消息续写。
- *
- * @param options - 配置选项
- * @param options.projectId - 可选的项目 ID 覆盖（默认为路由参数或当前项目）
- * @returns Chat 组件所需的聊天状态和动作
+ * 为每个项目维护独立会话，并通过 JWT 直接访问后端 agent 模块。
  */
 export function useChat(options: ChatPanelOptions = {}) {
   const { id: routeProjectId } = useParams();
@@ -35,7 +29,6 @@ export function useChat(options: ChatPanelOptions = {}) {
   const abortRef = useRef<AbortController | null>(null);
   const lastContentRef = useRef<string>("");
   const pollingOperationIdsRef = useRef<Set<string>>(new Set());
-  const agentTicketRefreshPromiseRef = useRef<Promise<AgentTicketInfo> | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
 
   const defaultWelcomeMessage = useMemo<ChatMessage>(
@@ -53,7 +46,6 @@ export function useChat(options: ChatPanelOptions = {}) {
     [options.projectId, routeProjectId, currentProject?.project_id],
   );
 
-  // Store 状态（读取值，会触发重渲染）
   const messages = useChatStore(
     (state) => state.projects[activeProjectKey]?.messages ?? EMPTY_CHAT_MESSAGES,
   );
@@ -62,7 +54,6 @@ export function useChat(options: ChatPanelOptions = {}) {
   );
   const isThinking = useChatStore((state) => state.projects[activeProjectKey]?.isThinking ?? false);
 
-  // Store actions（引用稳定，单独选择器不会触发额外重渲染）
   const setActiveProjectKey = useChatStore((state) => state.setActiveProjectKey);
   const setInputMessage = useChatStore((state) => state.setInputMessage);
   const setIsThinking = useChatStore((state) => state.setIsThinking);
@@ -72,15 +63,7 @@ export function useChat(options: ChatPanelOptions = {}) {
   const removeLastAIMessage = useChatStore((state) => state.removeLastAIMessage);
   const setThreadId = useChatStore((state) => state.setThreadId);
   const getThreadId = useChatStore((state) => state.getThreadId);
-  const setAgentBaseUrl = useChatStore((state) => state.setAgentBaseUrl);
-  const setAgentTicket = useChatStore((state) => state.setAgentTicket);
-  const getAgentTicket = useChatStore((state) => state.getAgentTicket);
-  const getAgentTicketInfo = useChatStore((state) => state.getAgentTicketInfo);
 
-  /**
-   * 统一处理 SSE 流或会话中的错误。
-   * 忽略 AbortError，其余错误记录日志并清理最后一条 AI 消息。
-   */
   const handleStreamError = useCallback(
     (error: Error) => {
       if (error.name === "AbortError") {
@@ -100,7 +83,6 @@ export function useChat(options: ChatPanelOptions = {}) {
     return projectRef;
   };
 
-  // 切换项目时重置聊天状态
   useEffect(() => {
     setActiveProjectKey(activeProjectKey);
   }, [activeProjectKey, setActiveProjectKey]);
@@ -112,21 +94,12 @@ export function useChat(options: ChatPanelOptions = {}) {
     }
   }, [activeProjectKey, defaultWelcomeMessage, setMessages]);
 
-  // 清理 AbortController
   useEffect(() => {
     return () => {
-      if (abortRef.current) {
-        abortRef.current.abort();
-      }
+      abortRef.current?.abort();
     };
   }, []);
 
-  /**
-   * 刷新项目在 React Query 缓存中的工作台产物数据。
-   * 当 AI 发送 shouldRefetch 事件时调用。
-   *
-   * @param projectId - 要刷新数据的项目 ID
-   */
   const refreshOverviewArtifacts = async (projectId: string) => {
     await Promise.all([
       queryClient.invalidateQueries({
@@ -141,24 +114,15 @@ export function useChat(options: ChatPanelOptions = {}) {
       queryClient.invalidateQueries({
         queryKey: projectQueryKeys.crewPlanArtifact(projectId),
       }),
+      queryClient.invalidateQueries({
+        queryKey: projectQueryKeys.uploadSummary(projectId),
+      }),
     ]);
   };
 
   const resolveActiveProjectId = () => {
     const projectRef = options.projectId || routeProjectId || currentProject?.project_id || "";
     return resolveProjectId(projectRef);
-  };
-
-  const isAgentTicketExpiredError = (error: unknown) => {
-    if (!(error instanceof ApiRequestError)) {
-      return false;
-    }
-    const data = error.data;
-    if (!data || typeof data !== "object") {
-      return false;
-    }
-    const code = (data as Record<string, unknown>).code;
-    return error.status === 401 && code === "AGENT_TICKET_EXPIRED";
   };
 
   const pollOperationStatus = async (projectId: string, operationId: string) => {
@@ -168,21 +132,21 @@ export function useChat(options: ChatPanelOptions = {}) {
     pollingOperationIdsRef.current.add(operationId);
 
     try {
-      const maxAttempts = 90;
+      const maxAttempts = 60;
       for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
         const status = await getProjectOperationStatus(projectId, operationId);
         const normalizedStatus = status.operation_status?.toLowerCase() ?? "";
 
-        if (normalizedStatus === "succeeded" || normalizedStatus === "completed") {
+        if (normalizedStatus === "completed") {
           await refreshOverviewArtifacts(projectId);
           return;
         }
 
-        if (normalizedStatus === "failed" || normalizedStatus === "error") {
+        if (normalizedStatus === "failed" || normalizedStatus === "canceled") {
           throw new Error(status.error_message ?? "AI 操作执行失败");
         }
 
-        await new Promise((resolve) => window.setTimeout(resolve, 2000));
+        await new Promise((resolve) => window.setTimeout(resolve, 1500));
       }
 
       throw new Error("AI 操作执行超时，请稍后刷新查看结果");
@@ -199,95 +163,16 @@ export function useChat(options: ChatPanelOptions = {}) {
     }
   };
 
-  const issueProjectAgentTicket = async (projectId: string): Promise<AgentTicketInfo> => {
-    const ticket = await issueAgentTicket({
-      product_code: "apm",
-      project_id: projectId,
-      grant_type: "project_agent_access",
-    });
-    const refreshAt = new Date(
-      Date.now() + Math.max(ticket.refresh_after_seconds, 0) * 1000,
-    ).toISOString();
-    const ticketInfo = {
-      agentTicket: ticket.agent_ticket,
-      expiresAt: ticket.expires_at,
-      refreshAt,
-      projectId,
-    };
-    setAgentBaseUrl(activeProjectKey, null);
-    setAgentTicket(activeProjectKey, ticket.agent_ticket, ticketInfo);
-    return ticketInfo;
-  };
-
-  const ensureFreshAgentTicket = async (projectId: string, forceRefresh = false) => {
-    const existingTicket = getAgentTicketInfo(activeProjectKey);
-    const refreshTime = existingTicket ? Date.parse(existingTicket.refreshAt) : Number.NaN;
-    if (
-      !forceRefresh &&
-      existingTicket &&
-      existingTicket.projectId === projectId &&
-      Number.isFinite(refreshTime) &&
-      refreshTime > Date.now()
-    ) {
-      return existingTicket;
-    }
-
-    if (!forceRefresh && agentTicketRefreshPromiseRef.current) {
-      return agentTicketRefreshPromiseRef.current;
-    }
-
-    agentTicketRefreshPromiseRef.current = issueProjectAgentTicket(projectId).finally(() => {
-      agentTicketRefreshPromiseRef.current = null;
-    });
-    return agentTicketRefreshPromiseRef.current;
-  };
-
-  const runWithAgentTicketRetry = async <T>(
-    projectId: string,
-    operation: (agentTicket: string) => Promise<T>,
-  ) => {
-    const ticket = await ensureFreshAgentTicket(projectId);
-    try {
-      return await operation(ticket.agentTicket);
-    } catch (error) {
-      if (!isAgentTicketExpiredError(error)) {
-        throw error;
-      }
-      const refreshedTicket = await ensureFreshAgentTicket(projectId, true);
-      return operation(refreshedTicket.agentTicket);
-    }
-  };
-
   const ensureAgentSession = async (projectId: string) => {
     const existingSessionId = getThreadId(activeProjectKey);
     if (existingSessionId) {
-      const ticket = await ensureFreshAgentTicket(projectId);
-
-      return {
-        chatSessionId: existingSessionId,
-        agentBaseUrl: undefined,
-        agentTicket: ticket.agentTicket,
-      };
+      return existingSessionId;
     }
 
-    const session = await runWithAgentTicketRetry(projectId, (agentTicket) =>
-      initAgentSession(
-        {
-          product_code: "apm",
-          project_id: projectId,
-          agent_ticket: agentTicket,
-        },
-        { agentTicket },
-      ),
-    );
-
-    setThreadId(activeProjectKey, session.chat_session_id);
-
-    return {
-      chatSessionId: session.chat_session_id,
-      agentBaseUrl: undefined,
-      agentTicket: getAgentTicket(activeProjectKey) ?? undefined,
-    };
+    const session = await createAgentSession(projectId);
+    const chatSessionId = session.current_session.chat_session_id;
+    setThreadId(activeProjectKey, chatSessionId);
+    return chatSessionId;
   };
 
   const streamAgentReply = async (
@@ -295,64 +180,45 @@ export function useChat(options: ChatPanelOptions = {}) {
     chatSessionId: string,
     messageText: string,
     signal: AbortSignal,
-    agentBaseUrl?: string,
   ) => {
-    const message = await runWithAgentTicketRetry(projectId, (agentTicket) =>
-      sendAgentSessionMessage(
-        chatSessionId,
-        { content_text: messageText },
-        { agentBaseUrl, agentTicket },
-      ),
-    );
+    const message = await sendAgentSessionMessage(projectId, chatSessionId, {
+      content_text: messageText,
+    });
 
     if (!message.stream_id) {
       throw new Error("发送 AI 消息失败：缺少 stream_id");
     }
 
-    await runWithAgentTicketRetry(projectId, (agentTicket) =>
-      subscribeAgentStreamSse(message.stream_id, {
-        agentBaseUrl,
-        agentTicket,
-        signal,
-        onMessage: (payload) => {
-          const { content, shouldRefetch, operationId } = extractChatMessageContent(payload);
-          const activeProjectId = resolveActiveProjectId();
+    await subscribeAgentStreamSse(projectId, message.stream_id, {
+      signal,
+      onMessage: (payload) => {
+        const { content, shouldPollOperation, shouldRefetch, operationId } =
+          extractChatMessageContent(payload);
+        const activeProjectId = resolveActiveProjectId();
 
-          if (operationId && activeProjectId) {
-            void pollOperationStatus(activeProjectId, operationId);
-          }
+        if (shouldPollOperation && operationId && activeProjectId) {
+          void pollOperationStatus(activeProjectId, operationId);
+        }
 
-          if (shouldRefetch) {
-            if (activeProjectId) {
-              void refreshOverviewArtifacts(activeProjectId);
-            }
-            return;
-          }
+        if (shouldRefetch && activeProjectId) {
+          void refreshOverviewArtifacts(activeProjectId);
+          return;
+        }
 
-          if (content && content.length >= lastContentRef.current.length) {
-            lastContentRef.current = content;
-            updateLastAIMessage(activeProjectKey, content);
-          }
-        },
-        onDone: () => {
-          setIsThinking(activeProjectKey, false);
-        },
-        onError: handleStreamError,
-      }),
-    );
+        if (content && content.length >= lastContentRef.current.length) {
+          lastContentRef.current = content;
+          updateLastAIMessage(activeProjectKey, content);
+        }
+      },
+      onDone: () => {
+        setIsThinking(activeProjectKey, false);
+      },
+      onError: handleStreamError,
+    });
   };
 
-  /**
-   * 使用用户的批准或拒绝恢复被中断的 AI 代理流程。
-   * 创建新的 AI 消息占位符并流式返回响应。
-   *
-   * @param message - 用户对中断提示的回复
-   * @param approved - 用户是否批准了提议的操作
-   */
   const resumeInterrupt = async (message: string, approved: boolean) => {
-    if (abortRef.current) {
-      abortRef.current.abort();
-    }
+    abortRef.current?.abort();
     abortRef.current = new AbortController();
 
     const aiMessageId = createMessageId();
@@ -371,47 +237,33 @@ export function useChat(options: ChatPanelOptions = {}) {
       if (!projectId) {
         throw new Error("缺少项目 ID");
       }
-      const session = await ensureAgentSession(projectId);
+      const sessionId = await ensureAgentSession(projectId);
       await streamAgentReply(
         projectId,
-        session.chatSessionId,
+        sessionId,
         `${approved ? "同意" : "拒绝"}：${message}`,
         abortRef.current.signal,
-        session.agentBaseUrl,
       );
     } catch (error) {
       handleStreamError(error as Error);
     }
   };
 
-  /**
-   * 通过 SSE 流向 AI 代理发送消息。
-   * 创建用户和 AI 消息占位符，流式返回响应，并处理错误。
-   * 当 AI 发送 shouldRefetch 事件时自动刷新项目数据。
-   *
-   * @param messageText - 要发送给 AI 的文本内容
-   */
   const sendMessage = async (messageText: string) => {
-    const userMessage: ChatMessage = {
+    addMessage(activeProjectKey, {
       id: createMessageId(),
       content: messageText,
       sender: "user",
       timestamp: new Date(),
-    };
-
-    addMessage(activeProjectKey, userMessage);
+    });
     setIsThinking(activeProjectKey, true);
 
-    if (abortRef.current) {
-      abortRef.current.abort();
-    }
+    abortRef.current?.abort();
     abortRef.current = new AbortController();
 
-    const aiMessageId = createMessageId();
     lastContentRef.current = "";
-
     addMessage(activeProjectKey, {
-      id: aiMessageId,
+      id: createMessageId(),
       content: "",
       sender: "ai",
       timestamp: new Date(),
@@ -422,23 +274,13 @@ export function useChat(options: ChatPanelOptions = {}) {
       if (!projectId) {
         throw new Error("缺少项目 ID");
       }
-      const session = await ensureAgentSession(projectId);
-      await streamAgentReply(
-        projectId,
-        session.chatSessionId,
-        messageText,
-        abortRef.current.signal,
-        session.agentBaseUrl,
-      );
+      const sessionId = await ensureAgentSession(projectId);
+      await streamAgentReply(projectId, sessionId, messageText, abortRef.current.signal);
     } catch (error) {
       handleStreamError(error as Error);
     }
   };
 
-  /**
-   * 去除首尾空白，通过 sendMessage 发送消息，并清空输入框。
-   * 由 ChatInput 组件在提交时调用。
-   */
   const handleSendMessage = async () => {
     const trimmed = inputMessage.trim();
     if (!trimmed) return;

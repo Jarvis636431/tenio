@@ -1,25 +1,8 @@
-export interface AgentTicketRequest {
-  project_id: string;
-  product_code?: "apm" | string;
-  grant_type?: "project_agent_access" | string;
+export interface CreateAgentSessionRequest {
+  session_title?: string;
 }
 
-export interface AgentTicketResponse {
-  agent_ticket: string;
-  ticket_type: string;
-  expires_at: string;
-  refresh_after_seconds: number;
-  scopes: string[];
-  agent_base_url: string;
-}
-
-export interface AgentInitRequest {
-  product_code: "apm" | string;
-  project_id: string;
-  agent_ticket: string;
-}
-
-export interface AgentInitResponse {
+export interface CreateAgentSessionResponse {
   current_session: AgentSession;
 }
 
@@ -64,4 +47,13 @@ export interface AgentOperationStatusResponse {
   operation_status: string;
   error_code?: string | null;
   error_message?: string | null;
+}
+
+export interface AgentStreamEvent {
+  type: string;
+  content_text?: string;
+  message_type?: string;
+  operation_id?: string;
+  artifact_types?: string[];
+  data?: unknown;
 }

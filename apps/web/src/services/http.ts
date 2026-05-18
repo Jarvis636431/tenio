@@ -1,6 +1,5 @@
 import { API_BASE } from "@/config";
 import { useAuthStore } from "@/stores/authStore";
-import type { ApiResponse } from "@tenio/shared";
 
 interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -11,7 +10,11 @@ interface RequestOptions {
   unwrap?: boolean;
 }
 
-export type { ApiResponse } from "@tenio/shared";
+type ApiResponseEnvelope<T> = {
+  data: T;
+  message?: string;
+  code?: string;
+};
 
 type AuthSessionPayload = {
   access_token: string;
@@ -130,14 +133,14 @@ async function parseResponse<T>(response: Response): Promise<T> {
   throw new ApiRequestError(message ?? `请求失败 (${response.status})`, response.status, data);
 }
 
-function isApiResponseEnvelope<T>(payload: unknown): payload is ApiResponse<T> {
+function isApiResponseEnvelope<T>(payload: unknown): payload is ApiResponseEnvelope<T> {
   if (!payload || typeof payload !== "object") return false;
   const record = payload as Record<string, unknown>;
   if (!("data" in record)) return false;
   return true;
 }
 
-export function unwrapApiResponseData<T>(payload: T | ApiResponse<T>): T {
+export function unwrapApiResponseData<T>(payload: T | ApiResponseEnvelope<T>): T {
   if (isApiResponseEnvelope<T>(payload)) {
     return payload.data;
   }
@@ -174,7 +177,8 @@ async function refreshStoredSession(): Promise<AuthSessionPayload> {
     body: JSON.stringify({ refresh_token: refreshToken }),
   })
     .then(async (response) => {
-      const payload = await parseResponse<ApiResponse<AuthSessionPayload>>(response);
+      const payload: ApiResponseEnvelope<AuthSessionPayload> =
+        await parseResponse<ApiResponseEnvelope<AuthSessionPayload>>(response);
       const session = unwrapApiResponseData(payload);
       useAuthStore.getState().setSession(session);
       return session;
@@ -225,7 +229,10 @@ export async function requestApiData<T>(
   input: RequestInfo | URL,
   options: RequestOptions = {},
 ): Promise<T> {
-  const payload = await requestJson<T | ApiResponse<T>>(input, options);
+  const payload: T | ApiResponseEnvelope<T> = await requestJson<T | ApiResponseEnvelope<T>>(
+    input,
+    options,
+  );
   return unwrapApiResponseData(payload);
 }
 
@@ -293,10 +300,12 @@ export async function requestSse(
   input: RequestInfo | URL,
   options: SseRequestOptions = {},
 ): Promise<Response> {
+  const token = useAuthStore.getState().accessToken ?? undefined;
   const response = await fetch(input, {
     method: options.method ?? "POST",
     headers: {
       Accept: "text/event-stream",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
     body: options.body ?? undefined,

@@ -36,37 +36,26 @@ describe("chatStore", () => {
     expect(useChatStore.getState().getIsThinking("project-b")).toBe(false);
   });
 
-  it("keeps agent tickets isolated by project", () => {
+  it("keeps session ids isolated by project", () => {
     const store = useChatStore.getState();
 
-    store.setAgentTicket("project-a", "ticket-a", {
-      expiresAt: "2026-01-01T00:15:00.000Z",
-      refreshAt: "2026-01-01T00:12:00.000Z",
-      projectId: "project-a",
-    });
-    store.setAgentTicket("project-b", "ticket-b");
+    store.setThreadId("project-a", "session-a");
+    store.setThreadId("project-b", "session-b");
 
-    expect(useChatStore.getState().getAgentTicket("project-a")).toBe("ticket-a");
-    expect(useChatStore.getState().getAgentTicket("project-b")).toBe("ticket-b");
-    expect(useChatStore.getState().getAgentTicket("project-c")).toBeNull();
-    expect(useChatStore.getState().getAgentTicketInfo("project-a")).toEqual({
-      agentTicket: "ticket-a",
-      expiresAt: "2026-01-01T00:15:00.000Z",
-      refreshAt: "2026-01-01T00:12:00.000Z",
-      projectId: "project-a",
-    });
-    expect(useChatStore.getState().getAgentTicketInfo("project-b")).toBeNull();
+    expect(useChatStore.getState().getThreadId("project-a")).toBe("session-a");
+    expect(useChatStore.getState().getThreadId("project-b")).toBe("session-b");
+    expect(useChatStore.getState().getThreadId("project-c")).toBeNull();
   });
 
-  it("resetProjectChat clears only the selected project's input and thinking state", () => {
+  it("resetProjectChat clears only the selected project's input, thinking state and session", () => {
     const store = useChatStore.getState();
 
     store.setInputMessage("project-a", "待清空");
     store.setInputMessage("project-b", "保留");
     store.setIsThinking("project-a", true);
     store.setIsThinking("project-b", true);
-    store.setAgentTicket("project-a", "ticket-a");
-    store.setAgentTicket("project-b", "ticket-b");
+    store.setThreadId("project-a", "session-a");
+    store.setThreadId("project-b", "session-b");
 
     store.resetProjectChat("project-a", welcomeMessage);
 
@@ -75,9 +64,8 @@ describe("chatStore", () => {
     expect(state.getInputMessage("project-b")).toBe("保留");
     expect(state.getIsThinking("project-a")).toBe(false);
     expect(state.getIsThinking("project-b")).toBe(true);
-    expect(state.getAgentTicket("project-a")).toBeNull();
-    expect(state.getAgentTicket("project-b")).toBe("ticket-b");
-    expect(state.getAgentTicketInfo("project-a")).toBeNull();
+    expect(state.getThreadId("project-a")).toBeNull();
+    expect(state.getThreadId("project-b")).toBe("session-b");
     expect(state.getMessages("project-a")).toEqual([welcomeMessage]);
   });
 });

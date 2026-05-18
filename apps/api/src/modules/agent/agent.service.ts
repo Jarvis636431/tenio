@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import {
   AgentMessageRole,
   AgentMessageType,
@@ -6,27 +6,36 @@ import {
   AgentSessionStatus,
 } from "@prisma/client";
 import type {
-  AgentInitResponse,
   AgentMessage,
   AgentOperationStatusResponse,
   AgentSession,
   AgentSessionListResponse,
   AgentSessionMessagesResponse,
+  CreateAgentSessionResponse,
   SendAgentMessageResponse,
 } from "@tenio/shared";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import type { AuthenticatedRequestUser } from "../auth/auth.types.js";
-import type { AgentInitDto } from "./dto/agent-init.dto.js";
+import type { CreateAgentSessionDto } from "./dto/create-agent-session.dto.js";
 import type { ListAgentSessionsDto } from "./dto/list-agent-sessions.dto.js";
 import type { SendAgentMessageDto } from "./dto/send-agent-message.dto.js";
 import { AgentStreamService } from "./agent-stream.service.js";
-import type { AuthenticatedAgentTicket } from "./agent.types.js";
 import {
   toMessageRoleValue,
   toMessageTypeValue,
   toOperationStatusValue,
   toSessionStatusValue,
+  type AgentStreamEnvelope,
 } from "./agent.types.js";
+
+type OwnedSession = {
+  id: string;
+  projectId: string;
+  userId: string;
+  sessionTitle: string;
+  sessionStatus: AgentSessionStatus;
+  lastMessageAt: Date | null;
+};
 
 @Injectable()
 export class AgentService {
@@ -35,33 +44,35 @@ export class AgentService {
     private readonly streamService: AgentStreamService,
   ) {}
 
-  async issueSession(
-    currentUser: AuthenticatedAgentTicket,
-    payload: AgentInitDto,
-  ): Promise<AgentInitResponse> {
-    if (currentUser.projectId !== payload.project_id) {
-      throw new UnauthorizedException("Agent ticket 不匹配当前项目");
-    }
-
-    const existing = await this.prisma.agentSession.findFirst({
+  async assertProjectAccess(currentUser: AuthenticatedRequestUser, projectId: string): Promise<void> {
+    const project = await this.prisma.project.findFirst({
       where: {
-        projectId: payload.project_id,
-        userId: currentUser.userId,
-        sessionStatus: AgentSessionStatus.ACTIVE,
+        id: projectId,
+        ownerId: currentUser.id,
       },
-      orderBy: { updatedAt: "desc" },
+      select: { id: true },
     });
 
-    const session =
-      existing ??
-      (await this.prisma.agentSession.create({
-        data: {
-          projectId: payload.project_id,
-          userId: currentUser.userId,
-          sessionTitle: "新会话",
-          sessionStatus: AgentSessionStatus.ACTIVE,
-        },
-      }));
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`);
+    }
+  }
+
+  async createSession(
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
+    payload: CreateAgentSessionDto,
+  ): Promise<CreateAgentSessionResponse> {
+    await this.assertProjectAccess(currentUser, projectId);
+
+    const session = await this.prisma.agentSession.create({
+      data: {
+        projectId,
+        userId: currentUser.id,
+        sessionTitle: payload.session_title?.trim() || "新会话",
+        sessionStatus: AgentSessionStatus.ACTIVE,
+      },
+    });
 
     return {
       current_session: this.toSession(session),
@@ -69,17 +80,20 @@ export class AgentService {
   }
 
   async listSessions(
-    currentUser: AuthenticatedAgentTicket,
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
     query: ListAgentSessionsDto,
   ): Promise<AgentSessionListResponse> {
-    if (currentUser.projectId !== query.project_id) {
-      throw new UnauthorizedException("Agent ticket 不匹配当前项目");
-    }
+    await this.assertProjectAccess(currentUser, projectId);
 
+    const sessionStatus = query.session_status?.trim().toUpperCase();
     const items = await this.prisma.agentSession.findMany({
       where: {
-        projectId: query.project_id,
-        userId: currentUser.userId,
+        projectId,
+        userId: currentUser.id,
+        ...(sessionStatus === "ACTIVE" || sessionStatus === "ARCHIVED"
+          ? { sessionStatus: sessionStatus as AgentSessionStatus }
+          : {}),
       },
       orderBy: { updatedAt: "desc" },
     });
@@ -93,12 +107,13 @@ export class AgentService {
   }
 
   async listSessionMessages(
-    currentUser: AuthenticatedAgentTicket,
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
     sessionId: string,
   ): Promise<AgentSessionMessagesResponse> {
-    const session = await this.findOwnedSession(currentUser, sessionId);
+    const session = await this.findOwnedSession(currentUser, projectId, sessionId);
     const messages = await this.prisma.agentMessage.findMany({
-      where: { sessionId },
+      where: { sessionId: session.id },
       orderBy: { sentAt: "asc" },
     });
 
@@ -109,48 +124,42 @@ export class AgentService {
   }
 
   async sendSessionMessage(
-    currentUser: AuthenticatedAgentTicket,
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
     sessionId: string,
     payload: SendAgentMessageDto,
   ): Promise<SendAgentMessageResponse> {
-    const session = await this.findOwnedSession(currentUser, sessionId);
+    const session = await this.findOwnedSession(currentUser, projectId, sessionId);
+    const normalizedContent = payload.content_text.trim();
 
     const userMessage = await this.prisma.agentMessage.create({
       data: {
         sessionId: session.id,
         projectId: session.projectId,
-        userId: currentUser.userId,
+        userId: currentUser.id,
         messageRole: AgentMessageRole.USER,
         messageType: AgentMessageType.TEXT,
-        contentText: payload.content_text,
+        contentText: normalizedContent,
       },
     });
 
-    let operationId: string | undefined;
-    if (this.shouldCreateOperation(payload.content_text)) {
-      const operation = await this.prisma.agentOperation.create({
-        data: {
-          projectId: session.projectId,
-          sessionId: session.id,
-          messageId: userMessage.id,
-          createdByUserId: currentUser.userId,
-          operationType: "project_update",
-          operationStatus: AgentOperationStatus.COMPLETED,
-          requiresApproval: false,
-          inputPayloadJson: { content_text: payload.content_text },
-          resultPayloadJson: { mode: "dry-run" },
-        },
-      });
-      operationId = operation.id;
-    }
+    const operationDecision = await this.resolveOperationIntent(
+      currentUser,
+      session,
+      userMessage.id,
+      normalizedContent,
+    );
 
-    const assistantReply = this.buildAssistantReply(payload.content_text);
+    const assistantReply = this.buildAssistantReply(normalizedContent, operationDecision.kind);
     const assistantMessage = await this.prisma.agentMessage.create({
       data: {
         sessionId: session.id,
         projectId: session.projectId,
         messageRole: AgentMessageRole.ASSISTANT,
-        messageType: AgentMessageType.TEXT,
+        messageType:
+          operationDecision.kind === "approval_required"
+            ? AgentMessageType.INTERRUPT
+            : AgentMessageType.TEXT,
         contentText: assistantReply,
       },
     });
@@ -159,11 +168,11 @@ export class AgentService {
       where: { id: session.id },
       data: {
         lastMessageAt: assistantMessage.sentAt,
-        sessionTitle: this.deriveSessionTitle(payload.content_text),
+        sessionTitle: session.lastMessageAt ? session.sessionTitle : this.deriveSessionTitle(normalizedContent),
       },
     });
 
-    const events = this.createStreamEvents(assistantReply, operationId);
+    const events = this.createStreamEvents(assistantReply, operationDecision);
     const streamId = this.streamService.createStream(events);
 
     return {
@@ -199,14 +208,15 @@ export class AgentService {
   }
 
   private async findOwnedSession(
-    currentUser: AuthenticatedAgentTicket,
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
     sessionId: string,
-  ) {
+  ): Promise<OwnedSession> {
     const session = await this.prisma.agentSession.findFirst({
       where: {
         id: sessionId,
-        projectId: currentUser.projectId,
-        userId: currentUser.userId,
+        projectId,
+        userId: currentUser.id,
       },
     });
 
@@ -217,11 +227,111 @@ export class AgentService {
     return session;
   }
 
-  private buildAssistantReply(userInput: string): string {
+  private async resolveOperationIntent(
+    currentUser: AuthenticatedRequestUser,
+    session: OwnedSession,
+    messageId: string,
+    content: string,
+  ): Promise<
+    | { kind: "none" }
+    | { kind: "approval_required"; operationId: string }
+    | { kind: "approved"; operationId: string }
+    | { kind: "rejected"; operationId: string }
+  > {
+    const pendingOperation = await this.prisma.agentOperation.findFirst({
+      where: {
+        sessionId: session.id,
+        operationStatus: AgentOperationStatus.WAITING_APPROVAL,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (pendingOperation && this.isApprovalMessage(content)) {
+      await this.prisma.agentOperation.update({
+        where: { id: pendingOperation.id },
+        data: {
+          operationStatus: AgentOperationStatus.COMPLETED,
+          requiresApproval: false,
+          resultPayloadJson: { approved: true, content_text: content },
+          errorCode: null,
+          errorMessage: null,
+        },
+      });
+
+      return {
+        kind: "approved",
+        operationId: pendingOperation.id,
+      };
+    }
+
+    if (pendingOperation && this.isRejectMessage(content)) {
+      await this.prisma.agentOperation.update({
+        where: { id: pendingOperation.id },
+        data: {
+          operationStatus: AgentOperationStatus.CANCELED,
+          requiresApproval: false,
+          resultPayloadJson: { approved: false, content_text: content },
+          errorCode: "USER_REJECTED",
+          errorMessage: "用户拒绝执行该操作",
+        },
+      });
+
+      return {
+        kind: "rejected",
+        operationId: pendingOperation.id,
+      };
+    }
+
+    if (!this.shouldCreateOperation(content)) {
+      return { kind: "none" };
+    }
+
+    const operation = await this.prisma.agentOperation.create({
+      data: {
+        projectId: session.projectId,
+        sessionId: session.id,
+        messageId,
+        createdByUserId: currentUser.id,
+        operationType: "project_update",
+        operationStatus: AgentOperationStatus.WAITING_APPROVAL,
+        requiresApproval: true,
+        inputPayloadJson: { content_text: content },
+      },
+    });
+
+    return {
+      kind: "approval_required",
+      operationId: operation.id,
+    };
+  }
+
+  private buildAssistantReply(
+    userInput: string,
+    kind: "none" | "approval_required" | "approved" | "rejected",
+  ): string {
+    if (kind === "approval_required") {
+      return [
+        "我已经识别到这是一条会影响项目数据的操作请求。",
+        `拟执行内容：${userInput}`,
+        "请明确回复“同意”或“拒绝”。",
+      ].join("\n");
+    }
+
+    if (kind === "approved") {
+      return [
+        "已收到你的确认。",
+        "当前版本先把该操作标记为已确认完成，并触发相关产物刷新。",
+      ].join("\n");
+    }
+
+    if (kind === "rejected") {
+      return "已取消这次操作，不会对项目数据做变更。";
+    }
+
     return [
       "已收到你的消息。",
       `当前输入：${userInput}`,
-      "这是第一版内置 agent 模块，当前先提供会话、消息、流式输出和操作骨架。",
+      "这是重构后的内置 agent 第一版，当前先收口会话、消息、流和操作边界。",
     ].join("\n");
   }
 
@@ -234,13 +344,23 @@ export class AgentService {
     return /(调整|修改|更新|删除|压缩|变更)/.test(content);
   }
 
-  private createStreamEvents(content: string, operationId?: string) {
-    const events: Array<{
-      type: string;
-      content_text?: string;
-      message_type?: string;
-      operation_id?: string;
-    }> = [];
+  private isApprovalMessage(content: string): boolean {
+    return /^(同意|确认|继续|是|可以|执行)/.test(content.trim());
+  }
+
+  private isRejectMessage(content: string): boolean {
+    return /^(拒绝|取消|否|不用了|停止)/.test(content.trim());
+  }
+
+  private createStreamEvents(
+    content: string,
+    decision:
+      | { kind: "none" }
+      | { kind: "approval_required"; operationId: string }
+      | { kind: "approved"; operationId: string }
+      | { kind: "rejected"; operationId: string },
+  ): AgentStreamEnvelope[] {
+    const events: AgentStreamEnvelope[] = [];
     const segments = content
       .split("\n")
       .map((item) => item.trim())
@@ -248,17 +368,36 @@ export class AgentService {
 
     for (const segment of segments) {
       events.push({
-        type: "update",
+        type: "message.delta",
         content_text: segment,
         message_type: "text",
-        ...(operationId ? { operation_id: operationId } : {}),
       });
     }
 
-    if (operationId) {
+    if (decision.kind === "approval_required") {
       events.push({
-        type: "refetch",
-        operation_id: operationId,
+        type: "operation.requires_approval",
+        operation_id: decision.operationId,
+        message_type: "interrupt",
+      });
+    }
+
+    if (decision.kind === "approved") {
+      events.push({
+        type: "operation.completed",
+        operation_id: decision.operationId,
+      });
+      events.push({
+        type: "artifact.refresh_required",
+        operation_id: decision.operationId,
+        artifact_types: ["document", "graph", "time_cost", "crew_plan"],
+      });
+    }
+
+    if (decision.kind === "rejected") {
+      events.push({
+        type: "operation.canceled",
+        operation_id: decision.operationId,
       });
     }
 

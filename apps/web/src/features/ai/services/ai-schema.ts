@@ -30,6 +30,7 @@ export const aiStreamPayloadSchema = z
     data: z.unknown().optional(),
     operation_id: z.string().optional(),
     operationId: z.string().optional(),
+    artifact_types: z.array(z.string()).optional(),
     message_role: z.string().optional(),
     message_type: z.string().optional(),
     knowledge_query: streamRouteSchema.optional(),
