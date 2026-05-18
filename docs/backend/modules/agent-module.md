@@ -100,16 +100,20 @@
 
 ## 当前已落地的 tools
 
-当前注册了 4 个工具：
+当前注册了 7 个工具：
 
 - `get_project_context`
 - `list_project_files`
+- `get_document_artifact`
+- `get_graph_artifact`
+- `get_time_cost_artifact`
+- `get_crew_plan_artifact`
 - `get_latest_artifacts`
 - `archive_project`
 
 其中：
 
-- 前 3 个是只读工具，可直接执行
+- 前 6 个是只读工具，可直接执行
 - `archive_project` 是写工具，必须先经过 approval
 
 ## 当前 executor 行为
