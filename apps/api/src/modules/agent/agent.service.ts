@@ -11,14 +11,13 @@ import type {
   AgentSession,
   AgentSessionListResponse,
   AgentSessionMessagesResponse,
+  AgentToolListResponse,
   CreateAgentSessionResponse,
   SendAgentMessageResponse,
 } from "@tenio/shared";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import type { AuthenticatedRequestUser } from "../auth/auth.types.js";
-import type { CreateAgentSessionDto } from "./dto/create-agent-session.dto.js";
-import type { ListAgentSessionsDto } from "./dto/list-agent-sessions.dto.js";
-import type { SendAgentMessageDto } from "./dto/send-agent-message.dto.js";
+import { AgentOperationExecutor } from "./agent-operation.executor.js";
 import { AgentStreamService } from "./agent-stream.service.js";
 import {
   toMessageRoleValue,
@@ -27,6 +26,11 @@ import {
   toSessionStatusValue,
   type AgentStreamEnvelope,
 } from "./agent.types.js";
+import type { CreateAgentSessionDto } from "./dto/create-agent-session.dto.js";
+import type { ListAgentSessionsDto } from "./dto/list-agent-sessions.dto.js";
+import type { SendAgentMessageDto } from "./dto/send-agent-message.dto.js";
+import { AgentToolRegistry } from "./tools/agent-tool.registry.js";
+import type { AgentToolExecutionResult } from "./tools/agent-tool.types.js";
 
 type OwnedSession = {
   id: string;
@@ -37,11 +41,21 @@ type OwnedSession = {
   lastMessageAt: Date | null;
 };
 
+type AgentDecision =
+  | { kind: "none" }
+  | { kind: "tool_result"; result: AgentToolExecutionResult }
+  | { kind: "approval_required"; operationId: string; displayName: string }
+  | { kind: "approved"; operationId: string; result: AgentToolExecutionResult }
+  | { kind: "rejected"; operationId: string }
+  | { kind: "failed"; operationId: string; errorMessage: string };
+
 @Injectable()
 export class AgentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly streamService: AgentStreamService,
+    private readonly toolRegistry: AgentToolRegistry,
+    private readonly operationExecutor: AgentOperationExecutor,
   ) {}
 
   async assertProjectAccess(currentUser: AuthenticatedRequestUser, projectId: string): Promise<void> {
@@ -106,6 +120,23 @@ export class AgentService {
     };
   }
 
+  async listTools(
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
+  ): Promise<AgentToolListResponse> {
+    await this.assertProjectAccess(currentUser, projectId);
+
+    return {
+      items: this.toolRegistry.listTools().map((tool) => ({
+        tool_id: tool.toolId,
+        display_name: tool.displayName,
+        description: tool.description,
+        capability: tool.capability,
+        requires_approval: tool.requiresApproval,
+      })),
+    };
+  }
+
   async listSessionMessages(
     currentUser: AuthenticatedRequestUser,
     projectId: string,
@@ -143,24 +174,28 @@ export class AgentService {
       },
     });
 
-    const operationDecision = await this.resolveOperationIntent(
-      currentUser,
-      session,
-      userMessage.id,
-      normalizedContent,
-    );
+    const readTool = this.toolRegistry.resolveReadTool(normalizedContent);
+    const decision = readTool
+      ? await this.executeReadTool(currentUser, session.projectId, readTool.toolId, normalizedContent)
+      : await this.resolveOperationIntent(currentUser, session, userMessage.id, normalizedContent);
 
-    const assistantReply = this.buildAssistantReply(normalizedContent, operationDecision.kind);
+    const assistantReply = this.buildAssistantReply(normalizedContent, decision);
     const assistantMessage = await this.prisma.agentMessage.create({
       data: {
         sessionId: session.id,
         projectId: session.projectId,
         messageRole: AgentMessageRole.ASSISTANT,
         messageType:
-          operationDecision.kind === "approval_required"
+          decision.kind === "approval_required"
             ? AgentMessageType.INTERRUPT
-            : AgentMessageType.TEXT,
+            : decision.kind === "tool_result"
+              ? AgentMessageType.UPDATE
+              : AgentMessageType.TEXT,
         contentText: assistantReply,
+        payloadJson:
+          decision.kind === "tool_result" || decision.kind === "approved"
+            ? { data: decision.result.data ?? null }
+            : undefined,
       },
     });
 
@@ -168,11 +203,13 @@ export class AgentService {
       where: { id: session.id },
       data: {
         lastMessageAt: assistantMessage.sentAt,
-        sessionTitle: session.lastMessageAt ? session.sessionTitle : this.deriveSessionTitle(normalizedContent),
+        sessionTitle: session.lastMessageAt
+          ? session.sessionTitle
+          : this.deriveSessionTitle(normalizedContent),
       },
     });
 
-    const events = this.createStreamEvents(assistantReply, operationDecision);
+    const events = this.createStreamEvents(assistantReply, decision);
     const streamId = this.streamService.createStream(events);
 
     return {
@@ -227,17 +264,35 @@ export class AgentService {
     return session;
   }
 
+  private async executeReadTool(
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
+    toolId: string,
+    content: string,
+  ): Promise<AgentDecision> {
+    const tool = this.toolRegistry.resolveReadTool(content);
+    if (!tool || tool.toolId !== toolId) {
+      return { kind: "none" };
+    }
+
+    const result = await tool.execute({
+      currentUser,
+      projectId,
+      content,
+    });
+
+    return {
+      kind: "tool_result",
+      result,
+    };
+  }
+
   private async resolveOperationIntent(
     currentUser: AuthenticatedRequestUser,
     session: OwnedSession,
     messageId: string,
     content: string,
-  ): Promise<
-    | { kind: "none" }
-    | { kind: "approval_required"; operationId: string }
-    | { kind: "approved"; operationId: string }
-    | { kind: "rejected"; operationId: string }
-  > {
+  ): Promise<AgentDecision> {
     const pendingOperation = await this.prisma.agentOperation.findFirst({
       where: {
         sessionId: session.id,
@@ -247,21 +302,24 @@ export class AgentService {
     });
 
     if (pendingOperation && this.isApprovalMessage(content)) {
-      await this.prisma.agentOperation.update({
-        where: { id: pendingOperation.id },
-        data: {
-          operationStatus: AgentOperationStatus.COMPLETED,
-          requiresApproval: false,
-          resultPayloadJson: { approved: true, content_text: content },
-          errorCode: null,
-          errorMessage: null,
-        },
-      });
+      try {
+        const executed = await this.operationExecutor.executeApprovedOperation(
+          currentUser,
+          pendingOperation.id,
+        );
 
-      return {
-        kind: "approved",
-        operationId: pendingOperation.id,
-      };
+        return {
+          kind: "approved",
+          operationId: executed.operationId,
+          result: executed.result,
+        };
+      } catch (error) {
+        return {
+          kind: "failed",
+          operationId: pendingOperation.id,
+          errorMessage: error instanceof Error ? error.message : "操作执行失败",
+        };
+      }
     }
 
     if (pendingOperation && this.isRejectMessage(content)) {
@@ -282,7 +340,8 @@ export class AgentService {
       };
     }
 
-    if (!this.shouldCreateOperation(content)) {
+    const writeTool = this.toolRegistry.resolveWriteTool(content);
+    if (!writeTool && !this.shouldCreateOperation(content)) {
       return { kind: "none" };
     }
 
@@ -292,7 +351,7 @@ export class AgentService {
         sessionId: session.id,
         messageId,
         createdByUserId: currentUser.id,
-        operationType: "project_update",
+        operationType: writeTool?.toolId ?? "project_update",
         operationStatus: AgentOperationStatus.WAITING_APPROVAL,
         requiresApproval: true,
         inputPayloadJson: { content_text: content },
@@ -302,36 +361,39 @@ export class AgentService {
     return {
       kind: "approval_required",
       operationId: operation.id,
+      displayName: writeTool?.displayName ?? "项目变更",
     };
   }
 
-  private buildAssistantReply(
-    userInput: string,
-    kind: "none" | "approval_required" | "approved" | "rejected",
-  ): string {
-    if (kind === "approval_required") {
+  private buildAssistantReply(userInput: string, decision: AgentDecision): string {
+    if (decision.kind === "tool_result") {
+      return decision.result.summaryText;
+    }
+
+    if (decision.kind === "approval_required") {
       return [
-        "我已经识别到这是一条会影响项目数据的操作请求。",
+        `我已经识别到一条需要确认的操作：${decision.displayName}。`,
         `拟执行内容：${userInput}`,
         "请明确回复“同意”或“拒绝”。",
       ].join("\n");
     }
 
-    if (kind === "approved") {
-      return [
-        "已收到你的确认。",
-        "当前版本先把该操作标记为已确认完成，并触发相关产物刷新。",
-      ].join("\n");
+    if (decision.kind === "approved") {
+      return decision.result.summaryText;
     }
 
-    if (kind === "rejected") {
+    if (decision.kind === "rejected") {
       return "已取消这次操作，不会对项目数据做变更。";
+    }
+
+    if (decision.kind === "failed") {
+      return `操作执行失败：${decision.errorMessage}`;
     }
 
     return [
       "已收到你的消息。",
       `当前输入：${userInput}`,
-      "这是重构后的内置 agent 第一版，当前先收口会话、消息、流和操作边界。",
+      "当前版本已经接入 tool registry，支持只读工具与受控写操作骨架。",
     ].join("\n");
   }
 
@@ -341,7 +403,7 @@ export class AgentService {
   }
 
   private shouldCreateOperation(content: string): boolean {
-    return /(调整|修改|更新|删除|压缩|变更)/.test(content);
+    return /(调整|修改|更新|删除|压缩|变更|归档)/.test(content);
   }
 
   private isApprovalMessage(content: string): boolean {
@@ -352,14 +414,7 @@ export class AgentService {
     return /^(拒绝|取消|否|不用了|停止)/.test(content.trim());
   }
 
-  private createStreamEvents(
-    content: string,
-    decision:
-      | { kind: "none" }
-      | { kind: "approval_required"; operationId: string }
-      | { kind: "approved"; operationId: string }
-      | { kind: "rejected"; operationId: string },
-  ): AgentStreamEnvelope[] {
+  private createStreamEvents(content: string, decision: AgentDecision): AgentStreamEnvelope[] {
     const events: AgentStreamEnvelope[] = [];
     const segments = content
       .split("\n")
@@ -387,16 +442,26 @@ export class AgentService {
         type: "operation.completed",
         operation_id: decision.operationId,
       });
-      events.push({
-        type: "artifact.refresh_required",
-        operation_id: decision.operationId,
-        artifact_types: ["document", "graph", "time_cost", "crew_plan"],
-      });
+
+      if (decision.result.artifactTypesToRefresh?.length) {
+        events.push({
+          type: "artifact.refresh_required",
+          operation_id: decision.operationId,
+          artifact_types: decision.result.artifactTypesToRefresh,
+        });
+      }
     }
 
     if (decision.kind === "rejected") {
       events.push({
         type: "operation.canceled",
+        operation_id: decision.operationId,
+      });
+    }
+
+    if (decision.kind === "failed") {
+      events.push({
+        type: "operation.failed",
         operation_id: decision.operationId,
       });
     }

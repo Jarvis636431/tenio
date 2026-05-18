@@ -49,6 +49,18 @@ export interface AgentOperationStatusResponse {
   error_message?: string | null;
 }
 
+export interface AgentToolDescriptor {
+  tool_id: string;
+  display_name: string;
+  description: string;
+  capability: "read" | "write";
+  requires_approval: boolean;
+}
+
+export interface AgentToolListResponse {
+  items: AgentToolDescriptor[];
+}
+
 export interface AgentStreamEvent {
   type: string;
   content_text?: string;

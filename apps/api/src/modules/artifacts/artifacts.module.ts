@@ -8,5 +8,6 @@ import { ArtifactsService } from "./artifacts.service.js";
   imports: [PrismaModule, FilesModule],
   controllers: [ArtifactsController],
   providers: [ArtifactsService],
+  exports: [ArtifactsService],
 })
 export class ArtifactsModule {}
