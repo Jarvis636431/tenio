@@ -44,7 +44,7 @@ const project: ProjectListItem = {
   ready_artifact_count: 3,
   progress_percent: 42,
   current_phase: "主体施工",
-  status: "in_progress",
+  project_status: "active",
   status_label: "进行中",
   planned_start_date: "2026-01-01",
   planned_finish_date: "2026-12-31",
@@ -52,6 +52,7 @@ const project: ProjectListItem = {
   remaining_days: 180,
   is_artifact_ready: true,
   created_at: "2026-01-01T00:00:00Z",
+  updated_at: "2026-01-01T00:00:00Z",
 };
 
 const metrics: ProjectMetrics = {

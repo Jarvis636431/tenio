@@ -12,10 +12,10 @@ describe("projectQueryKeys", () => {
   });
 
   it("list includes normalized params", () => {
-    expect(projectQueryKeys.list({ status: "completed", keyword: "住宅", page: 2 })).toEqual([
+    expect(projectQueryKeys.list({ status: "active", keyword: "住宅", page: 2 })).toEqual([
       "projects",
       "list",
-      { status: "completed", keyword: "住宅", page: 2, page_size: 20 },
+      { status: "active", keyword: "住宅", page: 2, page_size: 20 },
     ]);
   });
 

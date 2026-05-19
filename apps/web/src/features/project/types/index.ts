@@ -2,6 +2,10 @@
 // API 响应类型
 // ============================================================================
 
+import type { Project, ProjectStatus } from "@tenio/shared";
+
+export type { ProjectStatus } from "@tenio/shared";
+
 export type ApiListResponse<T> = {
   items: T[];
   total?: number;
@@ -10,7 +14,7 @@ export type ApiListResponse<T> = {
 };
 
 export interface ProjectListParams {
-  status?: string;
+  status?: ProjectStatus;
   keyword?: string;
   page?: number;
   page_size?: number;
@@ -21,12 +25,7 @@ export interface ProjectCreatePayload {
   source_type?: string;
 }
 
-export interface ProjectCreateResponse {
-  project_id: string;
-  project_name: string;
-  status: string;
-  created_at: string;
-}
+export type ProjectCreateResponse = Project;
 
 export interface MockProjectCreatePayload {
   mock_dataset_code: string;
@@ -44,27 +43,23 @@ export interface ProjectMetrics {
   managed_count: number;
 }
 
-export interface ProjectListItem {
-  project_id: string;
-  project_name: string;
-  short_name: string;
-  location: string;
-  project_type: string;
-  building_area_sqm: number;
-  contract_duration_days: number;
-  contract_amount_cents: number;
-  contract_amount_display: string;
-  ready_artifact_count: number;
-  progress_percent: number;
-  current_phase: string;
-  status: string;
-  status_label: string;
-  planned_start_date: string;
-  planned_finish_date: string;
-  actual_finish_date: string | null;
-  remaining_days: number;
-  is_artifact_ready: boolean;
-  created_at: string;
+export interface ProjectListItem extends Project {
+  short_name?: string;
+  location?: string;
+  project_type?: string;
+  building_area_sqm?: number;
+  contract_duration_days?: number;
+  contract_amount_cents?: number;
+  contract_amount_display?: string;
+  ready_artifact_count?: number;
+  progress_percent?: number;
+  current_phase?: string;
+  status_label?: string;
+  planned_start_date?: string;
+  planned_finish_date?: string;
+  actual_finish_date?: string | null;
+  remaining_days?: number;
+  is_artifact_ready?: boolean;
 }
 
 export type ProjectDetail = ProjectListItem & Record<string, unknown>;

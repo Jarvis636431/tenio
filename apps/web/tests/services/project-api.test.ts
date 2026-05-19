@@ -75,7 +75,7 @@ describe("project api", () => {
     } as Response);
 
     const result = await getProjectList({
-      status: "completed",
+      status: "active",
       keyword: "住宅",
       page: 2,
       page_size: 20,
@@ -83,7 +83,7 @@ describe("project api", () => {
 
     expect(result.page).toBe(2);
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8000/api/projects?status=completed&keyword=%E4%BD%8F%E5%AE%85&page=2&page_size=20",
+      "http://localhost:8000/api/projects?status=active&q=%E4%BD%8F%E5%AE%85&page=2&page_size=20",
       {
         method: undefined,
         headers: {},
@@ -102,8 +102,9 @@ describe("project api", () => {
           data: {
             project_id: "p-001",
             project_name: "项目",
-            status: "created",
+            project_status: "draft",
             created_at: "2026-04-30T00:00:00Z",
+            updated_at: "2026-04-30T00:00:00Z",
           },
         }),
     } as Response);

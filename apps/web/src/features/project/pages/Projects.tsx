@@ -28,21 +28,26 @@ import { useProject, useProjectMetrics } from "../hooks/useProject";
 import { ProjectGenerationStatusDialog } from "../components/ProjectGenerationStatusDialog";
 import { deleteProject } from "../services/project-api";
 import { projectQueryKeys } from "../queryKeys";
-import type { ProjectListItem } from "../types";
+import type { ProjectListItem, ProjectStatus } from "../types";
 
-type ProjectFilter = "all" | "in_progress" | "completed" | "pending";
+type ProjectFilter = "all" | ProjectStatus;
 
 const FILTER_LABELS: Record<ProjectFilter, string> = {
   all: "全部项目",
-  in_progress: "进行中",
-  completed: "已完成",
-  pending: "待启动",
+  draft: "草稿",
+  active: "进行中",
+  archived: "已归档",
 };
 
-function normalizeStatus(status?: string): ProjectFilter {
-  if (status === "completed") return "completed";
-  if (status === "pending") return "pending";
-  return "in_progress";
+const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  draft: "草稿",
+  active: "进行中",
+  archived: "已归档",
+};
+
+function normalizeStatus(status?: ProjectStatus): ProjectStatus {
+  if (status === "draft" || status === "archived") return status;
+  return "active";
 }
 
 function formatDate(dateString?: string) {
@@ -56,24 +61,30 @@ function formatDate(dateString?: string) {
   }).format(date);
 }
 
-function getStatusStyle(status: ProjectFilter) {
-  if (status === "completed") {
+function getStatusStyle(status: ProjectStatus) {
+  if (status === "archived") {
     return "border-emerald-400/20 bg-emerald-500/10 text-emerald-200";
   }
-  if (status === "pending") {
+  if (status === "draft") {
     return "border-amber-400/20 bg-amber-500/10 text-amber-200";
   }
   return "border-cyan-400/20 bg-cyan-400/10 text-cyan-200";
 }
 
-function getProgressColor(status: ProjectFilter) {
-  if (status === "completed") {
+function getProgressColor(status: ProjectStatus) {
+  if (status === "archived") {
     return "from-emerald-400 to-emerald-500";
   }
-  if (status === "pending") {
+  if (status === "draft") {
     return "bg-white/10";
   }
   return "from-cyan-400 to-sky-500";
+}
+
+function getDefaultProgress(status: ProjectStatus) {
+  if (status === "archived") return 100;
+  if (status === "draft") return 0;
+  return 42;
 }
 
 function formatDuration(days: number) {
@@ -293,9 +304,12 @@ function ProjectsPage() {
             </div>
           )}
           {projects.map((project, index) => {
-            const status = normalizeStatus(project.status);
+            const status = normalizeStatus(project.project_status);
+            const statusLabel = project.status_label ?? PROJECT_STATUS_LABELS[status];
             const accent = getAccentStyle(index);
-            const progress = project.progress_percent;
+            const progress = project.progress_percent ?? getDefaultProgress(status);
+            const plannedStartDate = project.planned_start_date ?? project.created_at;
+            const plannedFinishDate = project.planned_finish_date ?? project.updated_at;
 
             return (
               <article
@@ -333,7 +347,7 @@ function ProjectsPage() {
                       {project.project_name}
                     </h2>
                     <p className="text-[10px] text-apm-muted">
-                      {project.location} · {project.project_type}
+                      {project.location ?? "未设置地点"} · {project.project_type ?? "项目"}
                     </p>
                   </div>
                 </div>
@@ -346,7 +360,7 @@ function ProjectsPage() {
                         合同工期
                       </span>
                       <span className="mt-0.5 text-[13px] font-semibold text-white">
-                        {formatDuration(project.contract_duration_days)}
+                        {formatDuration(project.contract_duration_days ?? 0)}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -354,7 +368,7 @@ function ProjectsPage() {
                         发包价
                       </span>
                       <span className="mt-0.5 text-[13px] font-semibold text-white">
-                        {project.contract_amount_display}
+                        {project.contract_amount_display ?? "—"}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -362,7 +376,7 @@ function ProjectsPage() {
                         AI 文档
                       </span>
                       <span className="mt-0.5 text-[13px] font-semibold text-white">
-                        {project.ready_artifact_count}
+                        {project.ready_artifact_count ?? 0}
                       </span>
                     </div>
                   </div>
@@ -371,15 +385,13 @@ function ProjectsPage() {
                   <div className="mt-3">
                     <div className="mb-1.5 flex items-center justify-between text-[10px] text-apm-muted">
                       <span>项目进度</span>
-                      <span className="font-semibold text-cyan-400">
-                        {project.progress_percent}%
-                      </span>
+                      <span className="font-semibold text-cyan-400">{progress}%</span>
                     </div>
                     <div className="h-0.5 bg-white/6">
                       <div
                         className={cn(
                           "h-full",
-                          status !== "pending"
+                          status !== "draft"
                             ? `bg-gradient-to-r ${getProgressColor(status)}`
                             : "bg-white/10",
                         )}
@@ -392,29 +404,29 @@ function ProjectsPage() {
                   <div className="mt-2 flex items-center justify-between text-[9px] text-apm-dim">
                     <span>
                       <Calendar className="inline h-3 w-3" style={{ marginRight: 3 }} />
-                      {status === "completed"
+                      {status === "archived"
                         ? "实际结束"
-                        : status === "pending"
+                        : status === "draft"
                           ? "预计开工"
                           : "预计结束"}
                       ：
-                      {status === "pending"
-                        ? formatDate(project.planned_start_date)
-                        : formatDate(project.planned_finish_date)}
+                      {status === "draft"
+                        ? formatDate(plannedStartDate)
+                        : formatDate(plannedFinishDate)}
                     </span>
-                    {status === "completed" && (
+                    {status === "archived" && (
                       <span className="text-emerald-400">
                         <FileText className="inline h-3 w-3" style={{ marginRight: 2 }} />
-                        {project.status_label}
+                        {statusLabel}
                       </span>
                     )}
-                    {status === "in_progress" && (
-                      <span className="text-cyan-400">{project.current_phase}</span>
+                    {status === "active" && (
+                      <span className="text-cyan-400">{project.current_phase ?? statusLabel}</span>
                     )}
-                    {status === "pending" && (
+                    {status === "draft" && (
                       <span className="text-amber-400">
                         <Search className="inline h-3 w-3" style={{ marginRight: 2 }} />
-                        {project.status_label}
+                        {statusLabel}
                       </span>
                     )}
                   </div>
@@ -428,15 +440,15 @@ function ProjectsPage() {
                       getStatusStyle(status),
                     )}
                   >
-                    {project.status_label}
+                    {statusLabel}
                   </span>
                   <span className="text-[10px] text-apm-dim">
                     <CalendarCheck className="inline h-3 w-3" style={{ marginRight: 3 }} />
-                    开工 {formatDate(project.planned_start_date)}
+                    开工 {formatDate(plannedStartDate)}
                   </span>
                   <span className="ml-auto text-[10px] text-apm-dim">
                     <Calendar className="inline h-3 w-3" style={{ marginRight: 3 }} />
-                    剩余 {formatRemainingDays(project.remaining_days)}
+                    剩余 {formatRemainingDays(project.remaining_days ?? 0)}
                   </span>
                 </div>
               </article>

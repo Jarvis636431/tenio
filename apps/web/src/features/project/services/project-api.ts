@@ -59,7 +59,7 @@ export async function getProjectList(
 ): Promise<ApiListResponse<ProjectListItem>> {
   const url = buildUrl(APM_API_BASE, "/projects", {
     status: params.status ?? "",
-    keyword: params.keyword ?? "",
+    q: params.keyword ?? "",
     page: params.page == null ? "" : String(params.page),
     page_size: params.page_size == null ? "" : String(params.page_size),
   });
