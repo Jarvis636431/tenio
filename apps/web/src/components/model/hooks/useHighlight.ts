@@ -47,7 +47,7 @@ export function useHighlight({
   highlightRetryDelay,
 }: UseHighlightParams) {
   const applyHighlightRef = useRef<
-    ((model: THREE.Object3D & { modelID: number }, attempt?: number) => void | Promise<void>) | null
+    ((model: THREE.Object3D & { modelID: number }, attempt?: number) => void) | null
   >(null);
 
   const scheduleHighlightRetry = useCallback(
@@ -66,7 +66,7 @@ export function useHighlight({
   );
 
   const applyHighlight = useCallback(
-    async (model: THREE.Object3D & { modelID: number }, attempt = 0) => {
+    (model: THREE.Object3D & { modelID: number }, attempt = 0) => {
       const hasHighlightRequest =
         (highlightGroups && highlightGroups.length > 0) ||
         (Array.isArray(highlightIds) && highlightIds.length > 0);

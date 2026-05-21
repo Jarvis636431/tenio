@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import * as THREE from "three";
 import { IFCLoader } from "web-ifc-three/IFCLoader";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import type { LoadingState } from "@/types/domain/worker";
 import { buildGlobalIdMap, buildTagMap } from "./utils/ifcCaches";
 import { setupCameraAndControls } from "./utils/cameraControls";
 import { useRenderLoop } from "./hooks/useRenderLoop";
@@ -26,6 +25,30 @@ const modelMetadataCache = new Map<
 type MaterialOverrides = Omit<THREE.MeshStandardMaterialParameters, "color"> & {
   color?: string | number;
 };
+
+type LoadingState = {
+  isLoading: boolean;
+  progress: number;
+  message: string;
+  error: string | null;
+};
+
+type ModelMesh = THREE.Mesh<THREE.BufferGeometry, THREE.Material | THREE.Material[]> & {
+  expressID?: number;
+};
+
+function isModelMesh(child: THREE.Object3D): child is ModelMesh {
+  return child instanceof THREE.Mesh;
+}
+
+function disposeMaterial(material: THREE.Material | THREE.Material[]) {
+  if (Array.isArray(material)) {
+    material.forEach((mat) => mat.dispose());
+    return;
+  }
+
+  material.dispose();
+}
 
 async function loadModelBuffer(src: string, signal?: AbortSignal): Promise<ArrayBuffer> {
   if (modelBufferCache.has(src)) {
@@ -142,7 +165,7 @@ export function ModelViewer({
       string,
       {
         model: THREE.Object3D & { modelID: number };
-        meshes: THREE.Mesh[];
+        meshes: ModelMesh[];
         originalMaterials: Map<string, THREE.Material | THREE.Material[]>;
       }
     >
@@ -501,7 +524,7 @@ export function ModelViewer({
 
       let matchedMeshes = 0;
       entry.meshes.forEach((mesh) => {
-        const expressID = (mesh as THREE.Mesh & { expressID?: number }).expressID;
+        const expressID = mesh.expressID;
         const originalMaterial = entry.originalMaterials.get(mesh.uuid);
         if (expressID !== undefined && expressToMaterial.has(expressID)) {
           mesh.material = expressToMaterial.get(expressID)!;
@@ -535,16 +558,9 @@ export function ModelViewer({
 
   const disposeModel = useCallback((model: THREE.Object3D) => {
     model.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        if (child.geometry) {
-          child.geometry.dispose();
-        }
-        const material = child.material;
-        if (Array.isArray(material)) {
-          material.forEach((mat) => mat.dispose());
-        } else if (material) {
-          material.dispose();
-        }
+      if (isModelMesh(child)) {
+        child.geometry.dispose();
+        disposeMaterial(child.material);
       }
     });
   }, []);
@@ -571,16 +587,9 @@ export function ModelViewer({
     }
     if (rootGroupRef.current) {
       rootGroupRef.current.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          if (child.geometry) {
-            child.geometry.dispose();
-          }
-          const material = child.material;
-          if (Array.isArray(material)) {
-            material.forEach((mat) => mat.dispose());
-          } else if (material) {
-            material.dispose();
-          }
+        if (isModelMesh(child)) {
+          child.geometry.dispose();
+          disposeMaterial(child.material);
         }
       });
     }
@@ -673,7 +682,7 @@ export function ModelViewer({
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = false;
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.outputEncoding = THREE.sRGBEncoding;
         container.appendChild(renderer.domElement);
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -748,7 +757,7 @@ export function ModelViewer({
             if (abortControllerRef.current?.signal.aborted) return;
 
             model.traverse((child: THREE.Object3D) => {
-              if (child instanceof THREE.Mesh) {
+              if (isModelMesh(child)) {
                 child.material = baseMaterial;
                 child.renderOrder = 0;
               }
@@ -756,10 +765,10 @@ export function ModelViewer({
 
             rootGroupRef.current?.add(model);
 
-            const meshes: THREE.Mesh[] = [];
+            const meshes: ModelMesh[] = [];
             const originalMaterials = new Map<string, THREE.Material | THREE.Material[]>();
             model.traverse((child: THREE.Object3D) => {
-              if (child instanceof THREE.Mesh) {
+              if (isModelMesh(child)) {
                 meshes.push(child);
                 if (!originalMaterials.has(child.uuid)) {
                   originalMaterials.set(child.uuid, child.material);
