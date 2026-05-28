@@ -79,46 +79,104 @@ enum ArtifactStatus {
   ARCHIVED
 }
 
+enum GenerationJobStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELED
+}
+
+enum GenerationStepStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  SKIPPED
+}
+
 model User {
-  id                   String         @id @default(cuid())
-  phone                String?        @unique
-  account              String         @unique
-  username             String?
-  displayName          String?
-  role                 UserRole       @default(MEMBER)
-  passwordHash         String?
-  isProfileCompleted   Boolean        @default(false)
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
-  refreshTokens        RefreshToken[]
-  projects             Project[]
-  uploadedFiles        ProjectFile[]   @relation("UploadedFiles")
-  agentTickets         AgentTicket[]
-  agentSessions        AgentSession[]
-  agentMessages        AgentMessage[]
-  agentOperations      AgentOperation[]
+  id                 String           @id @default(cuid())
+  phone              String?          @unique
+  account            String           @unique
+  username           String?
+  displayName        String?
+  role               UserRole         @default(MEMBER)
+  passwordHash       String?
+  isProfileCompleted Boolean          @default(false)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  refreshTokens      RefreshToken[]
+  projects           Project[]
+  uploadedFiles      ProjectFile[]    @relation("UploadedFiles")
+  agentTickets       AgentTicket[]
+  agentSessions      AgentSession[]
+  agentMessages      AgentMessage[]
+  agentOperations    AgentOperation[]
+  generationJobs     GenerationJob[]
 
   @@index([phone])
 }
 
 model Project {
-  id          String        @id @default(cuid())
-  ownerId     String
-  name        String
-  status      ProjectStatus @default(DRAFT)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  files       ProjectFile[]
-  artifacts   ProjectArtifact[]
-  agentTickets AgentTicket[]
-  agentSessions AgentSession[]
-  agentMessages AgentMessage[]
+  id              String            @id @default(cuid())
+  ownerId         String
+  name            String
+  status          ProjectStatus     @default(DRAFT)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  owner           User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  files           ProjectFile[]
+  artifacts       ProjectArtifact[]
+  agentTickets    AgentTicket[]
+  agentSessions   AgentSession[]
+  agentMessages   AgentMessage[]
   agentOperations AgentOperation[]
+  generationJobs  GenerationJob[]
 
   @@index([ownerId])
   @@index([status])
   @@index([createdAt])
+}
+
+model GenerationJob {
+  id              String              @id @default(cuid())
+  projectId       String
+  createdByUserId String?
+  triggerSource   String
+  jobStatus       GenerationJobStatus @default(PENDING)
+  currentStepCode String?
+  progressPercent Int                 @default(0)
+  requestJson     Json?
+  errorCode       String?
+  errorMessage    String?
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  project         Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdByUser   User?               @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+  steps           GenerationStep[]
+
+  @@index([projectId])
+  @@index([jobStatus])
+  @@index([createdAt])
+}
+
+model GenerationStep {
+  id           String               @id @default(cuid())
+  jobId        String
+  stepCode     String
+  stepName     String
+  stepOrder    Int
+  stepStatus   GenerationStepStatus @default(PENDING)
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  errorMessage String?
+  job          GenerationJob        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, stepCode])
+  @@index([jobId, stepOrder])
 }
 
 model ProjectArtifact {
@@ -203,19 +261,19 @@ model AgentSession {
 }
 
 model AgentMessage {
-  id            String           @id @default(cuid())
-  sessionId     String
-  projectId     String
-  userId        String?
-  messageRole   AgentMessageRole
-  messageType   AgentMessageType @default(TEXT)
-  contentText   String
-  payloadJson   Json?
-  sentAt        DateTime         @default(now())
-  session       AgentSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user          User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
-  operations    AgentOperation[]
+  id          String           @id @default(cuid())
+  sessionId   String
+  projectId   String
+  userId      String?
+  messageRole AgentMessageRole
+  messageType AgentMessageType @default(TEXT)
+  contentText String
+  payloadJson Json?
+  sentAt      DateTime         @default(now())
+  session     AgentSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  operations  AgentOperation[]
 
   @@index([sessionId])
   @@index([projectId])
@@ -223,24 +281,24 @@ model AgentMessage {
 }
 
 model AgentOperation {
-  id               String               @id @default(cuid())
-  projectId        String
-  sessionId        String
-  messageId        String?
-  createdByUserId  String?
-  operationType    String
-  operationStatus  AgentOperationStatus @default(PENDING)
-  requiresApproval Boolean              @default(false)
-  inputPayloadJson Json?
+  id                String               @id @default(cuid())
+  projectId         String
+  sessionId         String
+  messageId         String?
+  createdByUserId   String?
+  operationType     String
+  operationStatus   AgentOperationStatus @default(PENDING)
+  requiresApproval  Boolean              @default(false)
+  inputPayloadJson  Json?
   resultPayloadJson Json?
-  errorCode        String?
-  errorMessage     String?
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  project          Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  session          AgentSession         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  message          AgentMessage?        @relation(fields: [messageId], references: [id], onDelete: SetNull)
-  createdByUser    User?                @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+  errorCode         String?
+  errorMessage      String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  project           Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  session           AgentSession         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  message           AgentMessage?        @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  createdByUser     User?                @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
 
   @@index([projectId])
   @@index([sessionId])
@@ -249,27 +307,27 @@ model AgentOperation {
 }
 
 model RefreshToken {
-  id         String   @id @default(cuid())
-  userId     String
-  jti        String   @unique
-  tokenHash  String
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(cuid())
+  userId    String
+  jti       String    @unique
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
 }
 
 model SmsCode {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   phone      String
   codeHash   String
   expiresAt  DateTime
   consumedAt DateTime?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
 
   @@index([phone])
   @@index([expiresAt])

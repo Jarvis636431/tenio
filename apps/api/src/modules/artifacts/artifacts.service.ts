@@ -38,6 +38,16 @@ type ArtifactRecord = {
   summaryJson: Prisma.JsonValue | null;
 };
 
+export interface CreateArtifactVersionInput {
+  projectId: string;
+  artifactType: PrismaArtifactType;
+  artifactStatus?: PrismaArtifactStatus;
+  title?: string;
+  payloadJson: Prisma.InputJsonValue;
+  summaryJson?: Prisma.InputJsonValue;
+  source?: string;
+}
+
 @Injectable()
 export class ArtifactsService {
   constructor(
@@ -65,7 +75,11 @@ export class ArtifactsService {
     currentUser: AuthenticatedRequestUser,
     projectId: string,
   ): Promise<DocumentArtifact> {
-    const artifact = await this.findLatestArtifact(currentUser, projectId, PrismaArtifactType.DOCUMENT);
+    const artifact = await this.findLatestArtifact(
+      currentUser,
+      projectId,
+      PrismaArtifactType.DOCUMENT,
+    );
     return this.toDocumentArtifact(artifact);
   }
 
@@ -73,7 +87,11 @@ export class ArtifactsService {
     currentUser: AuthenticatedRequestUser,
     projectId: string,
   ): Promise<ScheduleArtifact> {
-    const artifact = await this.findLatestArtifact(currentUser, projectId, PrismaArtifactType.GRAPH);
+    const artifact = await this.findLatestArtifact(
+      currentUser,
+      projectId,
+      PrismaArtifactType.GRAPH,
+    );
     return this.toGraphArtifact(artifact);
   }
 
@@ -81,7 +99,11 @@ export class ArtifactsService {
     currentUser: AuthenticatedRequestUser,
     projectId: string,
   ): Promise<TimeCostArtifact> {
-    const artifact = await this.findLatestArtifact(currentUser, projectId, PrismaArtifactType.TIME_COST);
+    const artifact = await this.findLatestArtifact(
+      currentUser,
+      projectId,
+      PrismaArtifactType.TIME_COST,
+    );
     return this.toTimeCostArtifact(artifact);
   }
 
@@ -89,7 +111,11 @@ export class ArtifactsService {
     currentUser: AuthenticatedRequestUser,
     projectId: string,
   ): Promise<CrewPlanArtifact> {
-    const artifact = await this.findLatestArtifact(currentUser, projectId, PrismaArtifactType.CREW_PLAN);
+    const artifact = await this.findLatestArtifact(
+      currentUser,
+      projectId,
+      PrismaArtifactType.CREW_PLAN,
+    );
     return this.toCrewPlanArtifact(artifact);
   }
 
@@ -115,10 +141,39 @@ export class ArtifactsService {
       project_info: projectInfo,
       files: files.items,
       artifact_summary: {
-        ready_artifact_count: summaries.items.filter((item) => item.artifact_status === "ready").length,
+        ready_artifact_count: summaries.items.filter((item) => item.artifact_status === "ready")
+          .length,
         latest_artifacts: summaries.items,
       },
     };
+  }
+
+  async createNextArtifactVersion(
+    input: CreateArtifactVersionInput,
+  ): Promise<ProjectArtifactSummary> {
+    const latest = await this.prisma.projectArtifact.findFirst({
+      where: {
+        projectId: input.projectId,
+        artifactType: input.artifactType,
+      },
+      orderBy: { artifactVersion: "desc" },
+      select: { artifactVersion: true },
+    });
+
+    const artifact = await this.prisma.projectArtifact.create({
+      data: {
+        projectId: input.projectId,
+        artifactType: input.artifactType,
+        artifactVersion: (latest?.artifactVersion ?? 0) + 1,
+        artifactStatus: input.artifactStatus ?? PrismaArtifactStatus.READY,
+        title: input.title,
+        payloadJson: input.payloadJson,
+        summaryJson: input.summaryJson,
+        source: input.source,
+      },
+    });
+
+    return this.toArtifactSummary(artifact);
   }
 
   private async ensureOwnedProject(currentUser: AuthenticatedRequestUser, projectId: string) {
@@ -179,11 +234,16 @@ export class ArtifactsService {
     const payload = this.asRecord(artifact.payloadJson);
     return {
       ...this.toArtifactBase(artifact, "document"),
-      document_title: this.getString(payload, "document_title") ?? this.getString(payload, "title") ?? "施工组织设计文档",
+      document_title:
+        this.getString(payload, "document_title") ??
+        this.getString(payload, "title") ??
+        "施工组织设计文档",
       chapter_count: this.getNumber(payload, "chapter_count") ?? 0,
       word_count: this.getNumber(payload, "word_count") ?? 0,
       can_edit: this.getBoolean(payload, "can_edit") ?? false,
-      toc_items: this.getArray(payload, "toc_items").map((item, index) => this.toTocItem(item, index)),
+      toc_items: this.getArray(payload, "toc_items").map((item, index) =>
+        this.toTocItem(item, index),
+      ),
       content_markdown: this.getString(payload, "content_markdown") ?? "",
     };
   }
@@ -206,7 +266,9 @@ export class ArtifactsService {
             resource_pool: this.toNumberMap(versionSummary.resource_pool),
           }
         : undefined,
-      compression_summary: this.getArray(payload, "compression_summary").map((item) => this.asRecord(item)),
+      compression_summary: this.getArray(payload, "compression_summary").map((item) =>
+        this.asRecord(item),
+      ),
       summary: summary
         ? {
             task_count: this.getNumber(summary, "task_count"),
@@ -251,10 +313,13 @@ export class ArtifactsService {
     };
   }
 
-  private toArtifactBase<TType extends DocumentArtifact["artifact_type"] | ScheduleArtifact["artifact_type"] | TimeCostArtifact["artifact_type"] | CrewPlanArtifact["artifact_type"]>(
-    artifact: ArtifactRecord,
-    type: TType,
-  ) {
+  private toArtifactBase<
+    TType extends
+      | DocumentArtifact["artifact_type"]
+      | ScheduleArtifact["artifact_type"]
+      | TimeCostArtifact["artifact_type"]
+      | CrewPlanArtifact["artifact_type"],
+  >(artifact: ArtifactRecord, type: TType) {
     return {
       artifact_id: artifact.id,
       artifact_type: type,
@@ -289,7 +354,8 @@ export class ArtifactsService {
       dependencies: this.getArray(task, "dependencies").map((item) =>
         typeof item === "number" || typeof item === "string" ? item : String(item),
       ),
-      taskStatus: this.getString(task, "taskStatus") ?? this.getString(task, "task_status") ?? undefined,
+      taskStatus:
+        this.getString(task, "taskStatus") ?? this.getString(task, "task_status") ?? undefined,
       indentLevel:
         this.getNumber(task, "indentLevel") ?? this.getNumber(task, "indent_level") ?? undefined,
       isSummaryTask:
@@ -297,7 +363,9 @@ export class ArtifactsService {
         this.getBoolean(task, "is_summary_task") ??
         undefined,
       isCriticalPath:
-        this.getBoolean(task, "isCriticalPath") ?? this.getBoolean(task, "is_critical_path") ?? false,
+        this.getBoolean(task, "isCriticalPath") ??
+        this.getBoolean(task, "is_critical_path") ??
+        false,
     };
   }
 
@@ -411,7 +479,10 @@ export class ArtifactsService {
     return typeof value === "string" ? value : undefined;
   }
 
-  private getNullableString(record: Record<string, unknown>, key: string): string | null | undefined {
+  private getNullableString(
+    record: Record<string, unknown>,
+    key: string,
+  ): string | null | undefined {
     const value = record[key];
     if (value == null) return value as null | undefined;
     return typeof value === "string" ? value : undefined;
@@ -422,7 +493,10 @@ export class ArtifactsService {
     return typeof value === "number" && Number.isFinite(value) ? value : undefined;
   }
 
-  private getNullableNumber(record: Record<string, unknown>, key: string): number | null | undefined {
+  private getNullableNumber(
+    record: Record<string, unknown>,
+    key: string,
+  ): number | null | undefined {
     const value = record[key];
     if (value == null) return value as null | undefined;
     return typeof value === "number" && Number.isFinite(value) ? value : undefined;
@@ -438,7 +512,9 @@ export class ArtifactsService {
     if (!record) return undefined;
 
     return Object.fromEntries(
-      Object.entries(record).filter(([, entry]) => typeof entry === "number" && Number.isFinite(entry)),
+      Object.entries(record).filter(
+        ([, entry]) => typeof entry === "number" && Number.isFinite(entry),
+      ),
     ) as Record<string, number>;
   }
 
@@ -456,7 +532,9 @@ export class ArtifactsService {
     throw new Error(`Unsupported artifact type: ${String(type)}`);
   }
 
-  private toArtifactStatus(status: PrismaArtifactStatus): ProjectArtifactSummary["artifact_status"] {
+  private toArtifactStatus(
+    status: PrismaArtifactStatus,
+  ): ProjectArtifactSummary["artifact_status"] {
     switch (status) {
       case PrismaArtifactStatus.PROCESSING:
         return "processing";
