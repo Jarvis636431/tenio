@@ -132,8 +132,8 @@ export class AgentService {
 
     return {
       items: this.toolRegistry.listTools().map((tool) => ({
-        tool_id: tool.toolId,
-        display_name: tool.displayName,
+        id: tool.toolId,
+        name: tool.displayName,
         description: tool.description,
         capability: tool.capability,
         requires_approval: tool.requiresApproval,
@@ -153,7 +153,7 @@ export class AgentService {
     });
 
     return {
-      chat_session_id: session.id,
+      session_id: session.id,
       messages: messages.map((item) => this.toMessage(item)),
     };
   }
@@ -165,7 +165,7 @@ export class AgentService {
     payload: SendAgentMessageDto,
   ): Promise<SendAgentMessageResponse> {
     const session = await this.findOwnedSession(currentUser, projectId, sessionId);
-    const normalizedContent = payload.content_text.trim();
+    const normalizedContent = payload.content.trim();
 
     const userMessage = await this.prisma.agentMessage.create({
       data: {
@@ -247,9 +247,9 @@ export class AgentService {
     }
 
     return {
-      operation_id: operation.id,
+      id: operation.id,
       project_id: operation.projectId,
-      operation_status: toOperationStatusValue(operation.operationStatus),
+      status: toOperationStatusValue(operation.operationStatus),
       error_code: operation.errorCode,
       error_message: operation.errorMessage,
     };
@@ -340,7 +340,7 @@ export class AgentService {
         data: {
           operationStatus: AgentOperationStatus.CANCELED,
           requiresApproval: false,
-          resultPayloadJson: { approved: false, content_text: content },
+          resultPayloadJson: { approved: false, content },
           errorCode: "USER_REJECTED",
           errorMessage: "用户拒绝执行该操作",
         },
@@ -367,7 +367,7 @@ export class AgentService {
         operationStatus: AgentOperationStatus.WAITING_APPROVAL,
         requiresApproval: true,
         inputPayloadJson: {
-          content_text: content,
+          content,
           intent: intent ? (JSON.parse(JSON.stringify(intent)) as Prisma.InputJsonValue) : null,
         },
       },
@@ -439,8 +439,7 @@ export class AgentService {
     for (const segment of segments) {
       events.push({
         type: "message.delta",
-        content_text: segment,
-        message_type: "text",
+        content: segment,
       });
     }
 
@@ -448,7 +447,6 @@ export class AgentService {
       events.push({
         type: "operation.requires_approval",
         operation_id: decision.operationId,
-        message_type: "interrupt",
       });
     }
 
@@ -462,7 +460,7 @@ export class AgentService {
         events.push({
           type: "artifact.refresh_required",
           operation_id: decision.operationId,
-          artifact_types: decision.result.artifactTypesToRefresh,
+          types: decision.result.artifactTypesToRefresh,
         });
       }
     }
@@ -491,9 +489,9 @@ export class AgentService {
     lastMessageAt: Date | null;
   }): AgentSession {
     return {
-      chat_session_id: session.id,
-      session_title: session.sessionTitle,
-      session_status: toSessionStatusValue(session.sessionStatus),
+      id: session.id,
+      title: session.sessionTitle,
+      status: toSessionStatusValue(session.sessionStatus),
       last_message_at: session.lastMessageAt?.toISOString() ?? null,
     };
   }
@@ -506,10 +504,10 @@ export class AgentService {
     sentAt: Date;
   }): AgentMessage {
     return {
-      message_id: message.id,
-      message_role: toMessageRoleValue(message.messageRole),
-      message_type: toMessageTypeValue(message.messageType),
-      content_text: message.contentText,
+      id: message.id,
+      role: toMessageRoleValue(message.messageRole),
+      type: toMessageTypeValue(message.messageType),
+      content: message.contentText,
       sent_at: message.sentAt.toISOString(),
     };
   }

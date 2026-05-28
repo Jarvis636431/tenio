@@ -3,5 +3,5 @@ import { IsNotEmpty, IsString } from "class-validator";
 export class UploadCompleteDto {
   @IsString()
   @IsNotEmpty()
-  file_id!: string;
+  id!: string;
 }

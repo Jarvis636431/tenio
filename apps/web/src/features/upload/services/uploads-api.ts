@@ -17,26 +17,30 @@ interface UploadFilePayload {
   tags?: string[];
 }
 
-type BackendFileCategory = "model" | "drawing" | "schedule" | "cost" | "contract" | "other";
+type BackendFileCategory =
+  | "model"
+  | "drawing"
+  | "schedule"
+  | "bill"
+  | "contract"
+  | "site_photo"
+  | "other";
 type BackendFileStatus = "pending" | "uploading" | "uploaded" | "processing" | "ready" | "failed";
 
 interface BackendCreateProjectResponse {
-  project_id: string;
-  project_name: string;
-  project_status: "draft" | "active" | "archived";
+  id: string;
+  name: string;
+  status: "draft" | "uploading" | "generating" | "active" | "failed" | "archived";
   created_at: string;
   updated_at: string;
 }
 
 interface BackendProjectFile {
-  file_id: string;
+  id: string;
   project_id: string;
-  original_file_name: string;
-  stored_file_name: string;
+  original_name: string;
   mime_type?: string;
-  file_size: number;
-  storage_bucket: string;
-  storage_key: string;
+  size_bytes: number;
   category: BackendFileCategory;
   status: BackendFileStatus;
   created_at: string;
@@ -59,24 +63,24 @@ interface BackendProjectFileStatsResponse {
 }
 
 interface BackendUploadInitRequest {
-  original_file_name: string;
-  file_size: number;
+  original_name: string;
+  size_bytes: number;
   mime_type?: string;
   category: BackendFileCategory;
 }
 
 interface BackendUploadInitResponse {
-  file_id: string;
-  project_id: string;
-  storage_bucket: string;
-  storage_key: string;
-  upload_url: string;
-  expires_at: string;
-  headers: Record<string, string>;
+  file: BackendProjectFile;
+  upload: {
+    url: string;
+    method: "PUT";
+    expires_at: string;
+    headers: Record<string, string>;
+  };
 }
 
 interface BackendUploadCompleteRequest {
-  file_id: string;
+  id: string;
 }
 
 interface BackendUploadCompleteResponse {
@@ -102,7 +106,7 @@ export async function createUploadProject(
   projectName: string,
 ): Promise<BackendCreateProjectResponse> {
   return jsonRequest<BackendCreateProjectResponse>("/projects", {
-    project_name: projectName,
+    name: projectName,
   });
 }
 
@@ -157,10 +161,9 @@ function toBackendFileCategory(category: FileCategory) {
     case "drawing":
       return "drawing";
     case "document":
-      return "cost";
+      return "bill";
     case "bim":
       return "model";
-    case "core":
     case "photo":
     case "other":
       return "other";
@@ -173,8 +176,10 @@ function toFrontendFileCategory(category: BackendFileCategory): FileCategory {
       return "contract";
     case "drawing":
       return "drawing";
-    case "cost":
+    case "bill":
       return "document";
+    case "site_photo":
+      return "photo";
     case "model":
       return "bim";
     case "schedule":
@@ -200,15 +205,15 @@ function toFrontendFileStatus(status: BackendFileStatus): ProjectFile["status"] 
 
 function toFeatureFile(item: BackendProjectFile): ProjectFile {
   const category = toFrontendFileCategory(item.category);
-  const fileName = item.original_file_name;
+  const fileName = item.original_name;
   const extension = getFileExtension(fileName);
 
   return {
-    id: item.file_id,
+    id: item.id,
     projectId: item.project_id,
     name: fileName,
     originalName: fileName,
-    size: item.file_size,
+    size: item.size_bytes,
     type: extension ? `.${extension}` : "",
     category,
     extension,
@@ -267,20 +272,19 @@ export async function uploadFile(
   onProgress?.(0);
 
   const projectId =
-    payload.projectId ??
-    (await createUploadProject(payload.file.name.replace(/\.[^.]+$/, ""))).project_id;
+    payload.projectId ?? (await createUploadProject(payload.file.name.replace(/\.[^.]+$/, ""))).id;
 
   const init = await initProjectFileUpload(projectId, {
-    original_file_name: payload.file.name,
-    file_size: payload.file.size,
+    original_name: payload.file.name,
+    size_bytes: payload.file.size,
     mime_type: payload.file.type || undefined,
     category: toBackendFileCategory(payload.category),
   });
   onProgress?.(40);
 
-  const uploadResponse = await fetch(init.upload_url, {
-    method: "PUT",
-    headers: init.headers,
+  const uploadResponse = await fetch(init.upload.url, {
+    method: init.upload.method,
+    headers: init.upload.headers,
     body: payload.file,
   });
   if (!uploadResponse.ok) {
@@ -289,7 +293,7 @@ export async function uploadFile(
   onProgress?.(80);
 
   const completed = await completeProjectFileUpload(projectId, {
-    file_id: init.file_id,
+    id: init.file.id,
   });
   onProgress?.(100);
 

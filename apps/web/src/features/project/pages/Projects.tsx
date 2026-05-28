@@ -35,18 +35,24 @@ type ProjectFilter = "all" | ProjectStatus;
 const FILTER_LABELS: Record<ProjectFilter, string> = {
   all: "全部项目",
   draft: "草稿",
+  uploading: "上传中",
+  generating: "生成中",
   active: "进行中",
+  failed: "失败",
   archived: "已归档",
 };
 
 const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   draft: "草稿",
+  uploading: "上传中",
+  generating: "生成中",
   active: "进行中",
+  failed: "失败",
   archived: "已归档",
 };
 
 function normalizeStatus(status?: ProjectStatus): ProjectStatus {
-  if (status === "draft" || status === "archived") return status;
+  if (status === "draft" || status === "archived" || status === "failed") return status;
   return "active";
 }
 
@@ -139,8 +145,8 @@ function ProjectsPage() {
   const metrics = metricsQuery.data;
   const displayName = auth.user?.display_name ?? auth.user?.username ?? "未登录用户";
 
-  const openProject = (project: { project_id: string }) => {
-    navigate(`/project/${project.project_id}`);
+  const openProject = (project: { id: string }) => {
+    navigate(`/project/${project.id}`);
   };
 
   const closeDeleteDialog = (open: boolean) => {
@@ -157,7 +163,7 @@ function ProjectsPage() {
     setIsDeleting(true);
     setDeleteError(null);
     try {
-      await deleteProject(deleteTarget.project_id);
+      await deleteProject(deleteTarget.id);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: projectQueryKeys.list(projectListParams) }),
         queryClient.invalidateQueries({ queryKey: projectQueryKeys.metrics }),
@@ -304,7 +310,7 @@ function ProjectsPage() {
             </div>
           )}
           {projects.map((project, index) => {
-            const status = normalizeStatus(project.project_status);
+            const status = normalizeStatus(project.status);
             const statusLabel = project.status_label ?? PROJECT_STATUS_LABELS[status];
             const accent = getAccentStyle(index);
             const progress = project.progress_percent ?? getDefaultProgress(status);
@@ -313,13 +319,13 @@ function ProjectsPage() {
 
             return (
               <article
-                key={project.project_id}
+                key={project.id}
                 onClick={() => openProject(project)}
                 className="group relative flex cursor-pointer flex-col border border-cyan-400/20 bg-[rgba(4,18,37,0.85)] transition-all hover:border-cyan-400 hover:bg-cyan-400/5"
               >
                 <button
                   type="button"
-                  aria-label={`删除项目 ${project.project_name}`}
+                  aria-label={`删除项目 ${project.name}`}
                   onClick={(event) => {
                     event.stopPropagation();
                     setDeleteTarget(project);
@@ -344,7 +350,7 @@ function ProjectsPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <h2 className="mb-1 line-clamp-2 text-[14px] font-semibold leading-5 text-white">
-                      {project.project_name}
+                      {project.name}
                     </h2>
                     <p className="text-[10px] text-apm-muted">
                       {project.location ?? "未设置地点"} · {project.project_type ?? "项目"}
@@ -486,7 +492,7 @@ function ProjectsPage() {
             <div className="border border-cyan-400/15 bg-cyan-400/5 px-4 py-3">
               <div className="text-xs text-apm-muted">将删除项目</div>
               <div className="mt-1 truncate text-sm font-semibold text-white">
-                {deleteTarget?.project_name}
+                {deleteTarget?.name}
               </div>
             </div>
             {deleteError && (

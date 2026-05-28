@@ -26,7 +26,7 @@ export class ArchiveProjectTool implements AgentTool {
     const project = await this.projectsService.archive(context.currentUser, context.projectId);
 
     return {
-      summaryText: `项目“${project.project_name}”已归档。`,
+      summaryText: `项目“${project.name}”已归档。`,
       data: {
         project,
       },

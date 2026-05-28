@@ -26,7 +26,7 @@ export class ListProjectFilesTool implements AgentTool {
     const files = await this.filesService.listProjectFiles(context.currentUser, context.projectId);
     const preview = files.items
       .slice(0, 8)
-      .map((file) => `${file.original_file_name}（${file.category} / ${file.status}）`)
+      .map((file) => `${file.original_name}（${file.category} / ${file.status}）`)
       .join("\n");
 
     return {

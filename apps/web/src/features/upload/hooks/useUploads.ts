@@ -53,9 +53,9 @@ export function useUploads({ projectId, pageSize = 10 }: UseUploadsOptions) {
         const projectName = fileName.replace(/\.[^.]+$/, "");
         createProjectPromiseRef.current = createUploadProject(projectName)
           .then((project) => {
-            createdProjectIdRef.current = project.project_id;
-            setCreatedProjectId(project.project_id);
-            return project.project_id;
+            createdProjectIdRef.current = project.id;
+            setCreatedProjectId(project.id);
+            return project.id;
           })
           .finally(() => {
             createProjectPromiseRef.current = null;

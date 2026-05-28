@@ -32,8 +32,8 @@ const projectApiMocks = vi.hoisted(() => ({
 vi.mock("@/features/project/services/project-api", () => projectApiMocks);
 
 const project: ProjectListItem = {
-  project_id: "project-001",
-  project_name: "城南综合体",
+  id: "project-001",
+  name: "城南综合体",
   short_name: "城南",
   location: "杭州",
   project_type: "商业综合体",
@@ -44,7 +44,7 @@ const project: ProjectListItem = {
   ready_artifact_count: 3,
   progress_percent: 42,
   current_phase: "主体施工",
-  project_status: "active",
+  status: "active",
   status_label: "进行中",
   planned_start_date: "2026-01-01",
   planned_finish_date: "2026-12-31",

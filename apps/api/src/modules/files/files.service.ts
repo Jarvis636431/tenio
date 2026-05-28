@@ -33,17 +33,17 @@ export class FilesService {
   ): Promise<UploadInitResponse> {
     await this.ensureProjectOwner(currentUser, projectId);
 
-    const storedFileName = this.sanitizeFileName(payload.original_file_name);
+    const storedFileName = this.sanitizeFileName(payload.original_name);
     const objectPrefix = `projects/${projectId}/files/${Date.now()}-${storedFileName}`;
 
     const file = await this.prisma.projectFile.create({
       data: {
         projectId,
         uploadedById: currentUser.id,
-        originalFileName: payload.original_file_name,
+        originalFileName: payload.original_name,
         storedFileName,
         mimeType: payload.mime_type,
-        fileSize: payload.file_size,
+        fileSize: payload.size_bytes,
         storageBucket: this.storageService.bucket,
         storageKey: objectPrefix,
         category: this.toPrismaCategory(payload.category),
@@ -56,19 +56,19 @@ export class FilesService {
       contentType: payload.mime_type,
     });
 
-    await this.prisma.projectFile.update({
+    const uploadingFile = await this.prisma.projectFile.update({
       where: { id: file.id },
       data: { status: PrismaProjectFileStatus.UPLOADING },
     });
 
     return {
-      file_id: file.id,
-      project_id: projectId,
-      storage_bucket: file.storageBucket,
-      storage_key: file.storageKey,
-      upload_url: presigned.url,
-      expires_at: presigned.expires_at,
-      headers: presigned.headers,
+      file: this.toProjectFile(uploadingFile),
+      upload: {
+        url: presigned.url,
+        method: "PUT",
+        expires_at: presigned.expires_at,
+        headers: presigned.headers,
+      },
     };
   }
 
@@ -79,14 +79,14 @@ export class FilesService {
   ): Promise<UploadCompleteResponse> {
     const file = await this.prisma.projectFile.findFirst({
       where: {
-        id: payload.file_id,
+        id: payload.id,
         projectId,
         project: { ownerId: currentUser.id },
       },
     });
 
     if (!file) {
-      throw new NotFoundException(`File ${payload.file_id} not found`);
+      throw new NotFoundException(`File ${payload.id} not found`);
     }
 
     const headResult = await this.storageService.headObject(file.storageKey);
@@ -174,8 +174,7 @@ export class FilesService {
     });
 
     return {
-      file_id: file.id,
-      deleted_at: new Date().toISOString(),
+      id: file.id,
     };
   }
 
@@ -188,8 +187,8 @@ export class FilesService {
     const download = await this.storageService.createPresignedDownloadUrl(file.storageKey);
 
     return {
-      file_id: file.id,
-      download_url: download.url,
+      id: file.id,
+      url: download.url,
       expires_at: download.expires_at,
     };
   }
@@ -242,15 +241,12 @@ export class FilesService {
     updatedAt: Date;
   }): ProjectFile {
     return {
-      file_id: file.id,
+      id: file.id,
       project_id: file.projectId,
-      original_file_name: file.originalFileName,
-      stored_file_name: file.storedFileName,
+      original_name: file.originalFileName,
       mime_type: file.mimeType ?? undefined,
-      file_size: file.fileSize,
-      storage_bucket: file.storageBucket,
-      storage_key: file.storageKey,
-      category: file.category.toLowerCase() as ProjectFile["category"],
+      size_bytes: file.fileSize,
+      category: this.toProjectFileCategory(file.category),
       status: file.status.toLowerCase() as ProjectFile["status"],
       created_at: file.createdAt.toISOString(),
       updated_at: file.updatedAt.toISOString(),
@@ -265,12 +261,31 @@ export class FilesService {
         return PrismaProjectFileCategory.DRAWING;
       case "schedule":
         return PrismaProjectFileCategory.SCHEDULE;
-      case "cost":
+      case "bill":
         return PrismaProjectFileCategory.COST;
       case "contract":
         return PrismaProjectFileCategory.CONTRACT;
+      case "site_photo":
+        return PrismaProjectFileCategory.OTHER;
       case "other":
         return PrismaProjectFileCategory.OTHER;
+    }
+  }
+
+  private toProjectFileCategory(category: PrismaProjectFileCategory): ProjectFile["category"] {
+    switch (category) {
+      case PrismaProjectFileCategory.MODEL:
+        return "model";
+      case PrismaProjectFileCategory.DRAWING:
+        return "drawing";
+      case PrismaProjectFileCategory.SCHEDULE:
+        return "schedule";
+      case PrismaProjectFileCategory.COST:
+        return "bill";
+      case PrismaProjectFileCategory.CONTRACT:
+        return "contract";
+      case PrismaProjectFileCategory.OTHER:
+        return "other";
     }
   }
 

@@ -3,7 +3,6 @@ import { z } from "zod";
 const streamMessageSchema = z.object({
   type: z.string().optional(),
   content: z.string().optional(),
-  content_text: z.string().optional(),
 });
 
 const streamRouteSchema = z.object({
@@ -26,13 +25,10 @@ export const aiStreamPayloadSchema = z
     type: z.string().optional(),
     message: z.string().optional(),
     content: z.string().optional(),
-    content_text: z.string().optional(),
     data: z.unknown().optional(),
     operation_id: z.string().optional(),
     operationId: z.string().optional(),
-    artifact_types: z.array(z.string()).optional(),
-    message_role: z.string().optional(),
-    message_type: z.string().optional(),
+    types: z.array(z.string()).optional(),
     knowledge_query: streamRouteSchema.optional(),
     project_info_query: streamRouteSchema.optional(),
     conversation: streamRouteSchema.optional(),

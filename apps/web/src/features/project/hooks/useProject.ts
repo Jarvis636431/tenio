@@ -25,16 +25,16 @@ export function useProject(params: ProjectListParams = {}) {
 
   const projects = useMemo(() => projectsQuery.data?.items ?? [], [projectsQuery.data]);
   const currentProject = useMemo(
-    () => projects.find((project) => project.project_id === currentProjectId) ?? null,
+    () => projects.find((project) => project.id === currentProjectId) ?? null,
     [projects, currentProjectId],
   );
 
   // 路由同步：当 URL 中的项目 ID 变化时，自动切换当前项目
   useEffect(() => {
     if (id && projects.length > 0) {
-      const project = projects.find((p) => p.project_id === id);
-      if (project && project.project_id !== currentProjectId) {
-        setCurrentProjectId(project.project_id);
+      const project = projects.find((p) => p.id === id);
+      if (project && project.id !== currentProjectId) {
+        setCurrentProjectId(project.id);
       }
     }
   }, [id, projects, currentProjectId, setCurrentProjectId]);
@@ -44,7 +44,7 @@ export function useProject(params: ProjectListParams = {}) {
   };
 
   const setCurrentProject = (project: ProjectListItem | null) => {
-    setCurrentProjectId(project?.project_id ?? null);
+    setCurrentProjectId(project?.id ?? null);
   };
 
   return {

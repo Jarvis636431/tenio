@@ -7,9 +7,9 @@ export interface CreateAgentSessionResponse {
 }
 
 export interface AgentSession {
-  chat_session_id: string;
-  session_title: string;
-  session_status: string;
+  id: string;
+  title: string;
+  status: string;
   last_message_at: string | null;
 }
 
@@ -21,20 +21,20 @@ export interface AgentSessionListResponse {
 }
 
 export interface AgentMessage {
-  message_id: string;
-  message_role: string;
-  message_type: string;
-  content_text: string;
+  id: string;
+  role: string;
+  type: string;
+  content: string;
   sent_at: string;
 }
 
 export interface AgentSessionMessagesResponse {
-  chat_session_id: string;
+  session_id: string;
   messages: AgentMessage[];
 }
 
 export interface SendAgentMessageRequest {
-  content_text: string;
+  content: string;
 }
 
 export interface SendAgentMessageResponse extends AgentMessage {
@@ -42,16 +42,16 @@ export interface SendAgentMessageResponse extends AgentMessage {
 }
 
 export interface AgentOperationStatusResponse {
-  operation_id: string;
+  id: string;
   project_id: string;
-  operation_status: string;
+  status: string;
   error_code?: string | null;
   error_message?: string | null;
 }
 
 export interface AgentToolDescriptor {
-  tool_id: string;
-  display_name: string;
+  id: string;
+  name: string;
   description: string;
   capability: "read" | "write";
   requires_approval: boolean;
@@ -63,9 +63,8 @@ export interface AgentToolListResponse {
 
 export interface AgentStreamEvent {
   type: string;
-  content_text?: string;
-  message_type?: string;
+  content?: string;
   operation_id?: string;
-  artifact_types?: string[];
+  types?: string[];
   data?: unknown;
 }

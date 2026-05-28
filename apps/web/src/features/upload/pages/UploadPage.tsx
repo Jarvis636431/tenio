@@ -280,8 +280,8 @@ function UploadPage() {
         });
         startGenerationTask({
           projectId: targetProjectId,
-          generationJobId: generation.generation_job_id,
-          generationStatus: generation.generation_status,
+          generationJobId: generation.id,
+          generationStatus: generation.status,
           startedAt: generation.started_at,
           deleteProjectOnCancel: true,
         });
@@ -309,7 +309,6 @@ function UploadPage() {
         return accumulator;
       },
       {
-        core: [],
         drawing: [],
         document: [],
         contract: [],

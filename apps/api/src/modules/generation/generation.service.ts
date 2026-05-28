@@ -72,7 +72,7 @@ export class GenerationService {
       createdByUserId: currentUser.id,
       triggerSource: "regenerate",
       requestJson: {
-        artifact_types: payload.artifact_types ?? null,
+        types: payload.types ?? null,
         reason: payload.reason ?? null,
       },
     });
@@ -204,35 +204,51 @@ export class GenerationService {
 
   private toStartResponse(job: GenerationJob): StartGenerationResponse {
     return {
-      generation_job_id: job.id,
-      generation_status: toGenerationJobStatusValue(job.jobStatus),
-      started_at: (job.startedAt ?? job.createdAt).toISOString(),
+      id: job.id,
+      project_id: job.projectId,
+      status: toGenerationJobStatusValue(job.jobStatus),
+      progress_percent: job.progressPercent,
+      started_at: job.startedAt?.toISOString() ?? null,
     };
   }
 
   private toStatusResponse(job: GenerationJobWithSteps): GenerationStatusResponse {
     const currentStep =
       job.steps.find((step) => step.stepCode === job.currentStepCode) ?? job.steps[0];
+    const steps = job.steps.map((step) => ({
+      code: step.stepCode,
+      name: step.stepName,
+      order: step.stepOrder,
+      status: toGenerationStepStatusValue(step.stepStatus),
+      started_at: step.startedAt?.toISOString() ?? null,
+      finished_at: step.finishedAt?.toISOString() ?? null,
+    }));
 
     return {
-      generation_job_id: job.id,
+      id: job.id,
       project_id: job.projectId,
-      generation_status: toGenerationJobStatusValue(job.jobStatus),
-      current_step_code: currentStep?.stepCode ?? "",
-      current_step_name: currentStep?.stepName ?? "",
-      step_progress_percent: job.progressPercent,
-      started_at: (job.startedAt ?? job.createdAt).toISOString(),
+      status: toGenerationJobStatusValue(job.jobStatus),
+      progress_percent: job.progressPercent,
+      current_step: currentStep
+        ? {
+            code: currentStep.stepCode,
+            name: currentStep.stepName,
+            order: currentStep.stepOrder,
+            status: toGenerationStepStatusValue(currentStep.stepStatus),
+            started_at: currentStep.startedAt?.toISOString() ?? null,
+            finished_at: currentStep.finishedAt?.toISOString() ?? null,
+          }
+        : null,
+      started_at: job.startedAt?.toISOString() ?? null,
       finished_at: job.finishedAt?.toISOString() ?? null,
-      steps: job.steps.map((step) => ({
-        step_code: step.stepCode,
-        step_name: step.stepName,
-        step_order: step.stepOrder,
-        step_status: toGenerationStepStatusValue(step.stepStatus),
-        step_started_at: step.startedAt?.toISOString() ?? null,
-        step_finished_at: step.finishedAt?.toISOString() ?? null,
-      })),
-      error_code: job.errorCode,
-      error_message: job.errorMessage,
+      steps,
+      error:
+        job.errorCode || job.errorMessage
+          ? {
+              code: job.errorCode ?? "GENERATION_FAILED",
+              message: job.errorMessage ?? "生成任务失败",
+            }
+          : null,
     };
   }
 }

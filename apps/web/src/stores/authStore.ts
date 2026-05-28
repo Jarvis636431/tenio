@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>()(
           user: state.user
             ? {
                 ...state.user,
-                user_id: profile.user_id,
+                id: profile.id,
                 username: profile.username,
                 display_name: profile.username,
                 account: profile.account,

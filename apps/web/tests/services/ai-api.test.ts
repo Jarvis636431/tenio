@@ -24,9 +24,9 @@ describe("ai-api", () => {
         Promise.resolve({
           data: {
             current_session: {
-              chat_session_id: "session-001",
-              session_title: "新会话",
-              session_status: "active",
+              id: "session-001",
+              title: "新会话",
+              status: "active",
               last_message_at: null,
             },
           },
@@ -55,17 +55,17 @@ describe("ai-api", () => {
       json: () =>
         Promise.resolve({
           data: {
-            message_id: "message-001",
-            message_role: "user",
-            message_type: "text",
-            content_text: "压缩工期",
+            id: "message-001",
+            role: "user",
+            type: "text",
+            content: "压缩工期",
             sent_at: "2026-05-01T00:00:00.000Z",
             stream_id: "stream-001",
           },
         }),
     } as Response);
 
-    await sendAgentSessionMessage("project-001", "session-001", { content_text: "压缩工期" });
+    await sendAgentSessionMessage("project-001", "session-001", { content: "压缩工期" });
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:8000/api/projects/project-001/agent/sessions/session-001/messages",
@@ -74,7 +74,7 @@ describe("ai-api", () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ content_text: "压缩工期" }),
+        body: JSON.stringify({ content: "压缩工期" }),
       },
     );
   });

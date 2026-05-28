@@ -99,9 +99,9 @@ export function ProjectGenerationStatusDialog() {
         .slice()
         .sort((a, b) => a.step_order - b.step_order)
         .map((step) => ({
-          key: step.step_code,
-          label: step.step_name,
-          status: step.step_status,
+          key: step.code,
+          label: step.name,
+          status: step.status,
         }));
     }
     return FALLBACK_GENERATION_STEPS.map((step, index) => ({
@@ -125,15 +125,15 @@ export function ProjectGenerationStatusDialog() {
           if (abortController.signal.aborted) return;
 
           updateGeneration({
-            generationJobId: status.generation_job_id,
-            generationStatus: status.generation_status,
-            currentStepName: status.current_step_name,
-            progressPercent: status.step_progress_percent,
+            generationJobId: status.id,
+            generationStatus: status.status,
+            currentStepName: status.current_step?.name,
+            progressPercent: status.progress_percent,
             steps: status.steps ?? [],
-            errorMessage: status.error_message ?? null,
+            errorMessage: status.error?.message ?? null,
           });
 
-          if (isGenerationDone(status.generation_status)) {
+          if (isGenerationDone(status.status)) {
             await Promise.all([
               queryClient.invalidateQueries({ queryKey: ["projects"] }),
               queryClient.invalidateQueries({
@@ -158,8 +158,8 @@ export function ProjectGenerationStatusDialog() {
             return;
           }
 
-          if (isGenerationFailed(status.generation_status)) {
-            failGeneration(status.error_message ?? "生成失败，请稍后重试");
+          if (isGenerationFailed(status.status)) {
+            failGeneration(status.error?.message ?? "生成失败，请稍后重试");
             return;
           }
 

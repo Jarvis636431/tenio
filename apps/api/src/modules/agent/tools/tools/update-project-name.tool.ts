@@ -35,7 +35,7 @@ export class UpdateProjectNameTool implements AgentTool {
     );
 
     return {
-      summaryText: `项目名称已更新为“${project.project_name}”。`,
+      summaryText: `项目名称已更新为“${project.name}”。`,
       data: { project },
       artifactTypesToRefresh: ["project_context"],
     };

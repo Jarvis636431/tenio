@@ -1,14 +1,16 @@
 import type { ProjectFile } from "../file/file.types.js";
 
-export type ArtifactType = "document" | "graph" | "time_cost" | "crew_plan";
+export type ArtifactType = "document" | "schedule" | "time_cost" | "crew_plan";
 
 export type ArtifactStatus = "processing" | "ready" | "failed" | "archived";
 
 export interface ArtifactBase {
-  artifact_id: string;
-  artifact_type: ArtifactType;
-  artifact_version: number;
-  artifact_status: ArtifactStatus;
+  id: string;
+  project_id: string;
+  type: ArtifactType;
+  version: number;
+  status: ArtifactStatus;
+  title?: string | null;
   generated_at: string;
   source?: string;
 }
@@ -38,7 +40,7 @@ export interface ScheduleTask {
 }
 
 export interface ScheduleArtifact extends ArtifactBase {
-  artifact_type: "graph";
+  type: "schedule";
   graph: ScheduleTask[];
   resource_pool?: Record<string, number>;
   version_summary?: {
@@ -65,7 +67,7 @@ export interface DocumentTocItem {
 }
 
 export interface DocumentArtifact extends ArtifactBase {
-  artifact_type: "document";
+  type: "document";
   document_title: string;
   chapter_count: number;
   word_count: number;
@@ -103,7 +105,7 @@ export interface CrewPlanGroup {
 }
 
 export interface CrewPlanArtifact extends ArtifactBase {
-  artifact_type: "crew_plan";
+  type: "crew_plan";
   crew_types: CrewPlanGroup[];
   summary: {
     crew_type_count: number;
@@ -145,7 +147,7 @@ export interface TimeCostCurve {
 }
 
 export interface TimeCostArtifact extends ArtifactBase {
-  artifact_type: "time_cost";
+  type: "time_cost";
   scheme_id?: string | null;
   process_version_id?: string | null;
   contract_duration_days: number;
@@ -158,7 +160,7 @@ export interface TimeCostArtifact extends ArtifactBase {
 }
 
 export interface WorkbenchProjectInfo {
-  project_name?: string | null;
+  name?: string | null;
   project_subtitle?: string | null;
   location?: string | null;
   building_area_sqm?: number | null;

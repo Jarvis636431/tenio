@@ -4,7 +4,7 @@ export class RegenerateArtifactsDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  artifact_types?: string[] | null;
+  types?: string[] | null;
 
   @IsOptional()
   @IsString()

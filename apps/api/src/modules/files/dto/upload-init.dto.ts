@@ -5,19 +5,20 @@ const PROJECT_FILE_CATEGORIES: ProjectFileCategory[] = [
   "model",
   "drawing",
   "schedule",
-  "cost",
+  "bill",
   "contract",
+  "site_photo",
   "other",
 ];
 
 export class UploadInitDto {
   @IsString()
   @MaxLength(255)
-  original_file_name!: string;
+  original_name!: string;
 
   @IsInt()
   @Min(1)
-  file_size!: number;
+  size_bytes!: number;
 
   @IsOptional()
   @IsString()

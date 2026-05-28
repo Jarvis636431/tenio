@@ -100,22 +100,22 @@ describe("project api", () => {
       json: () =>
         Promise.resolve({
           data: {
-            project_id: "p-001",
-            project_name: "项目",
-            project_status: "draft",
+            id: "p-001",
+            name: "项目",
+            status: "draft",
             created_at: "2026-04-30T00:00:00Z",
             updated_at: "2026-04-30T00:00:00Z",
           },
         }),
     } as Response);
 
-    await createProject({ project_name: "项目", source_type: "manual_create" });
+    await createProject({ name: "项目", source_type: "manual_create" });
     await createMockProject({ mock_dataset_code: "demo" });
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:8000/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ project_name: "项目", source_type: "manual_create" }),
+      body: JSON.stringify({ name: "项目", source_type: "manual_create" }),
     });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "http://localhost:8000/api/projects/mock", {
       method: "POST",
@@ -167,7 +167,7 @@ describe("project api", () => {
       json: () => Promise.resolve({ data: [] }),
     } as Response);
 
-    await regenerateProjectArtifacts("p-001", { artifact_types: ["graph"], reason: "重算" });
+    await regenerateProjectArtifacts("p-001", { types: ["schedule"], reason: "重算" });
     await getProjectOperationStatus("p-001", "op-001");
     await getWorkbenchUploadSummary("p-001");
     await getWorkbenchConsoleLogs("p-001");
@@ -178,7 +178,7 @@ describe("project api", () => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ artifact_types: ["graph"], reason: "重算" }),
+        body: JSON.stringify({ types: ["schedule"], reason: "重算" }),
       },
     );
     expect(fetchMock).toHaveBeenNthCalledWith(

@@ -6,9 +6,9 @@ export interface CreateAgentSessionRequest {
 }
 
 export interface AgentSessionItem {
-  chat_session_id: string;
-  session_title: string;
-  session_status: string;
+  id: string;
+  title: string;
+  status: string;
   last_message_at: string | null;
 }
 
@@ -24,20 +24,20 @@ export interface AgentSessionListResponse {
 }
 
 export interface AgentMessageItem {
-  message_id: string;
-  message_role: string;
-  message_type: string;
-  content_text: string;
+  id: string;
+  role: string;
+  type: string;
+  content: string;
   sent_at: string;
 }
 
 export interface AgentSessionMessagesResponse {
-  chat_session_id: string;
+  session_id: string;
   messages: AgentMessageItem[];
 }
 
 export interface SendAgentMessageRequest {
-  content_text: string;
+  content: string;
 }
 
 export interface SendAgentMessageResponse extends AgentMessageItem {
@@ -45,9 +45,9 @@ export interface SendAgentMessageResponse extends AgentMessageItem {
 }
 
 export interface AgentOperationStatusResponse {
-  operation_id: string;
+  id: string;
   project_id: string;
-  operation_status: string;
+  status: string;
   error_code?: string | null;
   error_message?: string | null;
 }

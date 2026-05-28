@@ -1,32 +1,35 @@
 import type { GenerationJobStatus, GenerationStepStatus } from "@prisma/client";
 
 export interface StartGenerationResponse {
-  generation_job_id: string;
-  generation_status: string;
-  started_at: string;
+  id: string;
+  project_id: string;
+  status: string;
+  progress_percent: number;
+  started_at: string | null;
 }
 
 export interface GenerationStepResponse {
-  step_code: string;
-  step_name: string;
-  step_order: number;
-  step_status: string;
-  step_started_at?: string | null;
-  step_finished_at?: string | null;
+  code: string;
+  name: string;
+  order: number;
+  status: string;
+  started_at?: string | null;
+  finished_at?: string | null;
 }
 
 export interface GenerationStatusResponse {
-  generation_job_id: string;
+  id: string;
   project_id: string;
-  generation_status: string;
-  current_step_code: string;
-  current_step_name: string;
-  step_progress_percent: number;
-  started_at: string;
+  status: string;
+  progress_percent: number;
+  current_step?: GenerationStepResponse | null;
+  started_at: string | null;
   finished_at?: string | null;
   steps: GenerationStepResponse[];
-  error_code?: string | null;
-  error_message?: string | null;
+  error?: {
+    code: string;
+    message: string;
+  } | null;
 }
 
 export interface GenerationStepDefinition {

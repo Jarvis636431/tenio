@@ -30,14 +30,13 @@ export class GetLatestArtifactsTool implements AgentTool {
 
     const latestByType = new Map<string, (typeof artifacts.items)[number]>();
     for (const artifact of artifacts.items) {
-      if (!latestByType.has(artifact.artifact_type)) {
-        latestByType.set(artifact.artifact_type, artifact);
+      if (!latestByType.has(artifact.type)) {
+        latestByType.set(artifact.type, artifact);
       }
     }
 
     const lines = [...latestByType.values()].map(
-      (artifact) =>
-        `${artifact.artifact_type} v${artifact.artifact_version}（${artifact.artifact_status}）`,
+      (artifact) => `${artifact.type} v${artifact.version}（${artifact.status}）`,
     );
 
     return {

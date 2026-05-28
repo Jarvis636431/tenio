@@ -42,8 +42,8 @@ export function useChat(options: ChatPanelOptions = {}) {
   );
 
   const activeProjectKey = useMemo(
-    () => options.projectId || routeProjectId || currentProject?.project_id || "__default__",
-    [options.projectId, routeProjectId, currentProject?.project_id],
+    () => options.projectId || routeProjectId || currentProject?.id || "__default__",
+    [options.projectId, routeProjectId, currentProject?.id],
   );
 
   const messages = useChatStore(
@@ -78,8 +78,8 @@ export function useChat(options: ChatPanelOptions = {}) {
 
   const resolveProjectId = (projectRef: string) => {
     if (!projectRef) return "";
-    const directMatch = projects.find((project) => project.project_id === projectRef);
-    if (directMatch) return directMatch.project_id;
+    const directMatch = projects.find((project) => project.id === projectRef);
+    if (directMatch) return directMatch.id;
     return projectRef;
   };
 
@@ -121,7 +121,7 @@ export function useChat(options: ChatPanelOptions = {}) {
   };
 
   const resolveActiveProjectId = () => {
-    const projectRef = options.projectId || routeProjectId || currentProject?.project_id || "";
+    const projectRef = options.projectId || routeProjectId || currentProject?.id || "";
     return resolveProjectId(projectRef);
   };
 
@@ -134,8 +134,8 @@ export function useChat(options: ChatPanelOptions = {}) {
     try {
       const maxAttempts = 60;
       for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-        const status = await getProjectOperationStatus(projectId, operationId);
-        const normalizedStatus = status.operation_status?.toLowerCase() ?? "";
+        const operation = await getProjectOperationStatus(projectId, operationId);
+        const normalizedStatus = operation.status?.toLowerCase() ?? "";
 
         if (normalizedStatus === "completed") {
           await refreshOverviewArtifacts(projectId);
@@ -143,7 +143,7 @@ export function useChat(options: ChatPanelOptions = {}) {
         }
 
         if (normalizedStatus === "failed" || normalizedStatus === "canceled") {
-          throw new Error(status.error_message ?? "AI 操作执行失败");
+          throw new Error(operation.error_message ?? "AI 操作执行失败");
         }
 
         await new Promise((resolve) => window.setTimeout(resolve, 1500));
@@ -170,7 +170,7 @@ export function useChat(options: ChatPanelOptions = {}) {
     }
 
     const session = await createAgentSession(projectId);
-    const chatSessionId = session.current_session.chat_session_id;
+    const chatSessionId = session.current_session.id;
     setThreadId(activeProjectKey, chatSessionId);
     return chatSessionId;
   };
@@ -182,7 +182,7 @@ export function useChat(options: ChatPanelOptions = {}) {
     signal: AbortSignal,
   ) => {
     const message = await sendAgentSessionMessage(projectId, chatSessionId, {
-      content_text: messageText,
+      content: messageText,
     });
 
     if (!message.stream_id) {

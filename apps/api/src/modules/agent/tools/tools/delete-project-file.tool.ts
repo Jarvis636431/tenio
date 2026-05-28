@@ -30,17 +30,12 @@ export class DeleteProjectFileTool implements AgentTool {
     }
 
     const files = await this.filesService.listProjectFiles(context.currentUser, context.projectId);
-    const exactMatch =
-      files.items.find((file) => file.original_file_name === targetName) ??
-      files.items.find((file) => file.stored_file_name === targetName);
+    const exactMatch = files.items.find((file) => file.original_name === targetName);
 
     const file =
       exactMatch ??
       this.resolveSingleFuzzyMatch(
-        files.items.filter(
-          (item) =>
-            item.original_file_name.includes(targetName) || item.stored_file_name.includes(targetName),
-        ),
+        files.items.filter((item) => item.original_name.includes(targetName)),
         targetName,
       );
 
@@ -48,21 +43,22 @@ export class DeleteProjectFileTool implements AgentTool {
       throw new Error(`未找到文件“${targetName}”`);
     }
 
-    await this.filesService.deleteProjectFile(context.currentUser, context.projectId, file.file_id);
+    await this.filesService.deleteProjectFile(context.currentUser, context.projectId, file.id);
 
     return {
-      summaryText: `文件“${file.original_file_name}”已删除。`,
+      summaryText: `文件“${file.original_name}”已删除。`,
       data: {
-        file_id: file.file_id,
-        original_file_name: file.original_file_name,
+        id: file.id,
+        original_name: file.original_name,
       },
       artifactTypesToRefresh: ["upload_summary"],
     };
   }
 
-  private resolveSingleFuzzyMatch<
-    T extends { original_file_name: string; stored_file_name: string },
-  >(matches: T[], targetName: string): T | null {
+  private resolveSingleFuzzyMatch<T extends { original_name: string }>(
+    matches: T[],
+    targetName: string,
+  ): T | null {
     if (matches.length === 1) {
       return matches[0];
     }

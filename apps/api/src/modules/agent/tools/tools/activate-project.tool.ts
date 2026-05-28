@@ -26,7 +26,7 @@ export class ActivateProjectTool implements AgentTool {
     const project = await this.projectsService.activate(context.currentUser, context.projectId);
 
     return {
-      summaryText: `项目“${project.project_name}”已激活，当前状态为 ${project.project_status}。`,
+      summaryText: `项目“${project.name}”已激活，当前状态为 ${project.status}。`,
       data: { project },
       artifactTypesToRefresh: ["project_context"],
     };

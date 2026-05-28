@@ -120,7 +120,7 @@ export class AuthTokenService {
   }
 
   private decodeRefreshExpiry(token: string) {
-    const payload = this.jwtService.decode(token) as { exp?: number } | null;
+    const payload = this.jwtService.decode<{ exp?: number }>(token);
     if (!payload?.exp) {
       throw new UnauthorizedException("刷新令牌缺少过期时间");
     }

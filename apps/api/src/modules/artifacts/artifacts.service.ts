@@ -3,7 +3,6 @@ import {
   ArtifactStatus as PrismaArtifactStatus,
   ArtifactType as PrismaArtifactType,
   type Prisma,
-  ProjectStatus as PrismaProjectStatus,
 } from "@prisma/client";
 import type {
   CrewPlanArtifact,
@@ -29,9 +28,11 @@ import { FilesService } from "../files/files.service.js";
 
 type ArtifactRecord = {
   id: string;
+  projectId: string;
   artifactType: PrismaArtifactType;
   artifactVersion: number;
   artifactStatus: PrismaArtifactStatus;
+  title: string | null;
   generatedAt: Date;
   source: string | null;
   payloadJson: Prisma.JsonValue;
@@ -130,19 +131,17 @@ export class ArtifactsService {
     ]);
 
     const projectInfo: WorkbenchProjectInfo = {
-      project_name: project.name,
+      name: project.name,
       contract_duration_days: null,
       contract_amount_cents: null,
       location: null,
-      project_subtitle: this.toProjectSubtitle(project.status),
     };
 
     return {
       project_info: projectInfo,
       files: files.items,
       artifact_summary: {
-        ready_artifact_count: summaries.items.filter((item) => item.artifact_status === "ready")
-          .length,
+        ready_artifact_count: summaries.items.filter((item) => item.status === "ready").length,
         latest_artifacts: summaries.items,
       },
     };
@@ -220,10 +219,12 @@ export class ArtifactsService {
 
   private toArtifactSummary(artifact: ArtifactRecord): ProjectArtifactSummary {
     return {
-      artifact_id: artifact.id,
-      artifact_type: this.toArtifactType(artifact.artifactType),
-      artifact_version: artifact.artifactVersion,
-      artifact_status: this.toArtifactStatus(artifact.artifactStatus),
+      id: artifact.id,
+      project_id: artifact.projectId,
+      type: this.toArtifactType(artifact.artifactType),
+      version: artifact.artifactVersion,
+      status: this.toArtifactStatus(artifact.artifactStatus),
+      title: artifact.title,
       generated_at: artifact.generatedAt.toISOString(),
       source: artifact.source ?? undefined,
       summary: this.asRecordOrUndefined(artifact.summaryJson),
@@ -253,7 +254,7 @@ export class ArtifactsService {
     const summary = this.asRecordOrUndefined(artifact.summaryJson);
     const versionSummary = this.asRecordOrUndefined(payload.version_summary);
     return {
-      ...this.toArtifactBase(artifact, "graph"),
+      ...this.toArtifactBase(artifact, "schedule"),
       graph: this.getArray(payload, "graph").map((item) => this.toScheduleTask(item)),
       resource_pool: this.toNumberMap(payload.resource_pool),
       version_summary: versionSummary
@@ -315,16 +316,18 @@ export class ArtifactsService {
 
   private toArtifactBase<
     TType extends
-      | DocumentArtifact["artifact_type"]
-      | ScheduleArtifact["artifact_type"]
-      | TimeCostArtifact["artifact_type"]
-      | CrewPlanArtifact["artifact_type"],
+      | DocumentArtifact["type"]
+      | ScheduleArtifact["type"]
+      | TimeCostArtifact["type"]
+      | CrewPlanArtifact["type"],
   >(artifact: ArtifactRecord, type: TType) {
     return {
-      artifact_id: artifact.id,
-      artifact_type: type,
-      artifact_version: artifact.artifactVersion,
-      artifact_status: this.toArtifactStatus(artifact.artifactStatus),
+      id: artifact.id,
+      project_id: artifact.projectId,
+      type,
+      version: artifact.artifactVersion,
+      status: this.toArtifactStatus(artifact.artifactStatus),
+      title: artifact.title,
       generated_at: artifact.generatedAt.toISOString(),
       source: artifact.source ?? undefined,
     };
@@ -484,7 +487,7 @@ export class ArtifactsService {
     key: string,
   ): string | null | undefined {
     const value = record[key];
-    if (value == null) return value as null | undefined;
+    if (value == null) return value;
     return typeof value === "string" ? value : undefined;
   }
 
@@ -498,7 +501,7 @@ export class ArtifactsService {
     key: string,
   ): number | null | undefined {
     const value = record[key];
-    if (value == null) return value as null | undefined;
+    if (value == null) return value;
     return typeof value === "number" && Number.isFinite(value) ? value : undefined;
   }
 
@@ -518,12 +521,12 @@ export class ArtifactsService {
     ) as Record<string, number>;
   }
 
-  private toArtifactType(type: PrismaArtifactType): ProjectArtifactSummary["artifact_type"] {
+  private toArtifactType(type: PrismaArtifactType): ProjectArtifactSummary["type"] {
     switch (type) {
       case PrismaArtifactType.DOCUMENT:
         return "document";
       case PrismaArtifactType.GRAPH:
-        return "graph";
+        return "schedule";
       case PrismaArtifactType.TIME_COST:
         return "time_cost";
       case PrismaArtifactType.CREW_PLAN:
@@ -532,9 +535,7 @@ export class ArtifactsService {
     throw new Error(`Unsupported artifact type: ${String(type)}`);
   }
 
-  private toArtifactStatus(
-    status: PrismaArtifactStatus,
-  ): ProjectArtifactSummary["artifact_status"] {
+  private toArtifactStatus(status: PrismaArtifactStatus): ProjectArtifactSummary["status"] {
     switch (status) {
       case PrismaArtifactStatus.PROCESSING:
         return "processing";
@@ -548,14 +549,4 @@ export class ArtifactsService {
     throw new Error(`Unsupported artifact status: ${String(status)}`);
   }
 
-  private toProjectSubtitle(status: PrismaProjectStatus): string {
-    switch (status) {
-      case PrismaProjectStatus.DRAFT:
-        return "草稿项目";
-      case PrismaProjectStatus.ACTIVE:
-        return "进行中";
-      case PrismaProjectStatus.ARCHIVED:
-        return "已归档";
-    }
-  }
 }

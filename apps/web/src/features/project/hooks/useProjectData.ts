@@ -59,16 +59,16 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
   const navigate = useNavigate();
   const { currentProject, projects } = useProject();
 
-  const projectRef = propsProjectId || paramProjectId || currentProject?.project_id || "";
+  const projectRef = propsProjectId || paramProjectId || currentProject?.id || "";
   const matchedProject = useMemo(
-    () => projects.find((project) => project.project_id === projectRef),
+    () => projects.find((project) => project.id === projectRef),
     [projects, projectRef],
   );
-  const resolvedProjectId = matchedProject?.project_id ?? projectRef;
+  const resolvedProjectId = matchedProject?.id ?? projectRef;
 
   useEffect(() => {
-    if (paramProjectId && matchedProject && paramProjectId !== matchedProject.project_id) {
-      navigate(`/project/${matchedProject.project_id}`, { replace: true });
+    if (paramProjectId && matchedProject && paramProjectId !== matchedProject.id) {
+      navigate(`/project/${matchedProject.id}`, { replace: true });
     }
   }, [paramProjectId, matchedProject, navigate]);
 
@@ -93,11 +93,10 @@ export function useProjectData({ projectId: propsProjectId }: UseProjectDataOpti
   // ===== useOverviewMetrics 逻辑 =====
   const currentProjectName = useMemo(() => {
     if (!projectRef && !resolvedProjectId) {
-      return currentProject?.project_name || "项目详情";
+      return currentProject?.name || "项目详情";
     }
-    const project =
-      matchedProject ?? projects.find((item) => item.project_id === resolvedProjectId);
-    return project?.project_name || currentProject?.project_name || "项目详情";
+    const project = matchedProject ?? projects.find((item) => item.id === resolvedProjectId);
+    return project?.name || currentProject?.name || "项目详情";
   }, [projectRef, resolvedProjectId, matchedProject, projects, currentProject]);
 
   const totalDurationLabel = useMemo(() => {

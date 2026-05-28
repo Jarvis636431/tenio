@@ -65,8 +65,8 @@ export function Overview({ projectId: propsProjectId }: OverviewProps = {}) {
       });
       startGenerationTask({
         projectId: resolvedProjectId,
-        generationJobId: generation.generation_job_id,
-        generationStatus: generation.generation_status,
+        generationJobId: generation.id,
+        generationStatus: generation.status,
         startedAt: generation.started_at,
         deleteProjectOnCancel: false,
       });

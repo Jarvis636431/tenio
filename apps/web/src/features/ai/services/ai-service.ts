@@ -71,12 +71,8 @@ export function extractChatMessageContent(payload: unknown): {
     return { content: messageContent, type: messageType, operationId };
   }
 
-  if (obj.content_text) {
-    return { content: obj.content_text, type: obj.message_type ?? messageType, operationId };
-  }
-
   if (obj.content) {
-    return { content: obj.content, type: obj.message_type ?? messageType, operationId };
+    return { content: obj.content, type: messageType, operationId };
   }
 
   const dataContent = extractString(obj.data);
@@ -173,7 +169,7 @@ function extractRouteContent(value: unknown): string | null {
   });
 
   if (!message) return null;
-  return extractString(message.content) ?? extractString(message.content_text);
+  return extractString(message.content);
 }
 
 function extractInterruptContent(obj: Record<string, unknown>): string | null {

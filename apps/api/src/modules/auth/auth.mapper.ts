@@ -14,7 +14,7 @@ export function toAuthUser(user: User): AuthUser {
   const displayName = user.displayName ?? username;
 
   return {
-    user_id: user.id,
+    id: user.id,
     username,
     display_name: displayName,
     role: user.role.toLowerCase(),
@@ -27,7 +27,7 @@ export function toAuthUser(user: User): AuthUser {
 
 export function toSetupProfileResponse(user: User): SetupProfileResponse {
   return {
-    user_id: user.id,
+    id: user.id,
     username: user.username ?? user.account,
     account: user.account,
     is_profile_completed: user.isProfileCompleted,

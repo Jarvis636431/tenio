@@ -14,7 +14,10 @@ enum UserRole {
 
 enum ProjectStatus {
   DRAFT
+  UPLOADING
+  GENERATING
   ACTIVE
+  FAILED
   ARCHIVED
 }
 

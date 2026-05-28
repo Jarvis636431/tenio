@@ -21,7 +21,7 @@ type AuthSessionPayload = {
   refresh_token: string;
   expires_at: string;
   user: {
-    user_id: string;
+    id: string;
     username: string;
     display_name: string;
     role: string;

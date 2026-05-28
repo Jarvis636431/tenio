@@ -1,17 +1,17 @@
 import type { PaginatedResponse } from "../common/pagination.js";
 
-export type ProjectStatus = "draft" | "active" | "archived";
+export type ProjectStatus = "draft" | "uploading" | "generating" | "active" | "failed" | "archived";
 
 export interface Project {
-  project_id: string;
-  project_name: string;
-  project_status: ProjectStatus;
+  id: string;
+  name: string;
+  status: ProjectStatus;
   created_at: string;
   updated_at: string;
 }
 
 export interface CreateProjectRequest {
-  project_name: string;
+  name: string;
 }
 
 export type CreateProjectResponse = Project;

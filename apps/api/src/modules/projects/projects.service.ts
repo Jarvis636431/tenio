@@ -80,7 +80,7 @@ export class ProjectsService {
     const project = await this.prisma.project.create({
       data: {
         ownerId: currentUser.id,
-        name: payload.project_name,
+        name: payload.name,
         status: PrismaProjectStatus.DRAFT,
       },
     });
@@ -154,20 +154,26 @@ export class ProjectsService {
     updatedAt: Date;
   }): Project {
     return {
-      project_id: project.id,
-      project_name: project.name,
-      project_status: project.status.toLowerCase() as Project["project_status"],
+      id: project.id,
+      name: project.name,
+      status: project.status.toLowerCase() as Project["status"],
       created_at: project.createdAt.toISOString(),
       updated_at: project.updatedAt.toISOString(),
     };
   }
 
-  private toPrismaStatus(status: Project["project_status"]): PrismaProjectStatus {
+  private toPrismaStatus(status: Project["status"]): PrismaProjectStatus {
     switch (status) {
       case "draft":
         return PrismaProjectStatus.DRAFT;
+      case "uploading":
+        return PrismaProjectStatus.UPLOADING;
+      case "generating":
+        return PrismaProjectStatus.GENERATING;
       case "active":
         return PrismaProjectStatus.ACTIVE;
+      case "failed":
+        return PrismaProjectStatus.FAILED;
       case "archived":
         return PrismaProjectStatus.ARCHIVED;
     }

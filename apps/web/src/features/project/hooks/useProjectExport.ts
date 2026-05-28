@@ -249,9 +249,7 @@ export function useProjectExport(
     if (!documentArtifact?.content_markdown.trim()) return;
 
     const baseName = normalizeFileName(options.projectName);
-    const version = documentArtifact.artifact_version
-      ? `-v${documentArtifact.artifact_version}`
-      : "";
+    const version = documentArtifact.version ? `-v${documentArtifact.version}` : "";
     const fileName = `${baseName}-施工组织设计${version}.docx`;
     const title = documentArtifact.document_title || `${options.projectName ?? "项目"}施工组织设计`;
 

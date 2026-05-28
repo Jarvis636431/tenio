@@ -7,10 +7,9 @@ import type {
 
 export interface AgentStreamEnvelope {
   type: string;
-  content_text?: string;
-  message_type?: string;
+  content?: string;
   operation_id?: string;
-  artifact_types?: string[];
+  types?: string[];
   data?: unknown;
 }
 

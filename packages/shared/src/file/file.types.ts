@@ -4,8 +4,9 @@ export type ProjectFileCategory =
   | "model"
   | "drawing"
   | "schedule"
-  | "cost"
+  | "bill"
   | "contract"
+  | "site_photo"
   | "other";
 
 export type ProjectFileStatus =
@@ -17,14 +18,11 @@ export type ProjectFileStatus =
   | "failed";
 
 export interface ProjectFile {
-  file_id: string;
+  id: string;
   project_id: string;
-  original_file_name: string;
-  stored_file_name: string;
-  mime_type?: string;
-  file_size: number;
-  storage_bucket: string;
-  storage_key: string;
+  original_name: string;
+  mime_type?: string | null;
+  size_bytes: number;
   category: ProjectFileCategory;
   status: ProjectFileStatus;
   created_at: string;
@@ -32,24 +30,24 @@ export interface ProjectFile {
 }
 
 export interface UploadInitRequest {
-  original_file_name: string;
-  file_size: number;
-  mime_type?: string;
+  original_name: string;
+  size_bytes: number;
+  mime_type?: string | null;
   category: ProjectFileCategory;
 }
 
 export interface UploadInitResponse {
-  file_id: string;
-  project_id: string;
-  storage_bucket: string;
-  storage_key: string;
-  upload_url: string;
-  expires_at: string;
-  headers: Record<string, string>;
+  file: ProjectFile;
+  upload: {
+    url: string;
+    method: "PUT";
+    headers: Record<string, string>;
+    expires_at: string;
+  };
 }
 
 export interface UploadCompleteRequest {
-  file_id: string;
+  id: string;
 }
 
 export interface UploadCompleteResponse {
@@ -71,12 +69,11 @@ export interface ProjectFileStatsResponse {
 }
 
 export interface DeleteProjectFileResponse {
-  file_id: string;
-  deleted_at: string;
+  id: string;
 }
 
 export interface ProjectFileDownloadUrlResponse {
-  file_id: string;
-  download_url: string;
+  id: string;
+  url: string;
   expires_at: string;
 }

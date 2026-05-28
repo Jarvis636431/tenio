@@ -1,5 +1,5 @@
 export interface AuthUser {
-  user_id: string;
+  id: string;
   username: string;
   display_name: string;
   role: string;
@@ -48,7 +48,7 @@ export interface SetupProfileRequest {
 }
 
 export interface SetupProfileResponse {
-  user_id: string;
+  id: string;
   username: string;
   account: string;
   is_profile_completed: boolean;

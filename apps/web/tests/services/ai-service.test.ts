@@ -96,11 +96,10 @@ describe("ai-service extractChatMessageContent", () => {
   });
 
   describe("update type", () => {
-    it("extracts content_text from new agent session messages", () => {
+    it("extracts content from new agent session messages", () => {
       const result = extractChatMessageContent({
-        message_role: "assistant",
-        message_type: "text",
-        content_text: "新会话消息",
+        type: "text",
+        content: "新会话消息",
       });
       expect(result.type).toBe("text");
       expect(result.content).toBe("新会话消息");

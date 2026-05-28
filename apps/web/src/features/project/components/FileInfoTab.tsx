@@ -144,7 +144,7 @@ export function FileInfoTab({
     () => [
       {
         label: "项目名称",
-        value: formatText(projectInfo?.project_name ?? projectSummary?.projectName),
+        value: formatText(projectInfo?.name ?? projectSummary?.projectName),
         sub: formatText(projectInfo?.project_subtitle ?? projectInfo?.location),
       },
       {
@@ -193,7 +193,7 @@ export function FileInfoTab({
       projectInfo?.employer_name,
       projectInfo?.funding_source,
       projectInfo?.location,
-      projectInfo?.project_name,
+      projectInfo?.name,
       projectInfo?.project_subtitle,
       projectInfo?.quality_standard,
       projectInfo?.qualification_requirement_text,

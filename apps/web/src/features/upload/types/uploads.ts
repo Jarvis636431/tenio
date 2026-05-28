@@ -2,7 +2,7 @@
  * 项目资料上传管理类型定义
  */
 
-export type FileCategory = "core" | "drawing" | "document" | "contract" | "photo" | "bim" | "other";
+export type FileCategory = "drawing" | "document" | "contract" | "photo" | "bim" | "other";
 
 export type FileStatus = "pending" | "uploading" | "completed" | "error";
 
@@ -80,7 +80,6 @@ export interface FileStatsResponse {
 }
 
 export const FILE_CATEGORY_LABELS: Record<FileCategory, string> = {
-  core: "核心资料",
   drawing: "图纸",
   document: "文档",
   contract: "合同",
@@ -90,7 +89,6 @@ export const FILE_CATEGORY_LABELS: Record<FileCategory, string> = {
 };
 
 export const FILE_CATEGORY_ICONS: Record<FileCategory, string> = {
-  core: "📦",
   drawing: "📐",
   document: "📄",
   contract: "📝",

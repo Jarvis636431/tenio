@@ -21,7 +21,7 @@ export interface ProjectListParams {
 }
 
 export interface ProjectCreatePayload {
-  project_name?: string | null;
+  name?: string | null;
   source_type?: string;
 }
 
@@ -29,10 +29,10 @@ export type ProjectCreateResponse = Project;
 
 export interface MockProjectCreatePayload {
   mock_dataset_code: string;
-  project_name?: string | null;
-  original_file_name?: string | null;
+  name?: string | null;
+  original_name?: string | null;
   file_extension?: string | null;
-  file_size_bytes?: number | null;
+  size_bytes?: number | null;
 }
 
 export interface ProjectMetrics {
@@ -65,10 +65,11 @@ export interface ProjectListItem extends Project {
 export type ProjectDetail = ProjectListItem & Record<string, unknown>;
 
 export interface ArtifactBase {
-  artifact_id?: string;
-  artifact_type: string;
-  artifact_version?: number;
-  artifact_status: string;
+  id?: string;
+  project_id?: string;
+  type: string;
+  version?: number;
+  status: string;
   is_latest_version?: boolean;
   generated_at?: string;
   scheme_id?: string;
@@ -92,7 +93,7 @@ export interface ScheduleTask {
 }
 
 export interface ScheduleArtifact extends ArtifactBase {
-  artifact_type: "graph" | string;
+  type: "schedule" | string;
   graph: ScheduleTask[];
   resource_pool?: Record<string, number>;
   version_summary?: {
@@ -119,7 +120,7 @@ export interface DocumentTocItem {
 }
 
 export interface DocumentArtifact extends ArtifactBase {
-  artifact_type: "document" | string;
+  type: "document" | string;
   document_title: string;
   chapter_count: number;
   word_count: number;
@@ -157,7 +158,7 @@ export interface CrewPlanGroup {
 }
 
 export interface CrewPlanArtifact extends ArtifactBase {
-  artifact_type: "crew_plan" | string;
+  type: "crew_plan" | string;
   crew_types: CrewPlanGroup[];
   summary: {
     crew_type_count: number;
@@ -169,7 +170,7 @@ export interface CrewPlanArtifact extends ArtifactBase {
 }
 
 export interface TimeCostArtifact extends ArtifactBase {
-  artifact_type: "time_cost" | string;
+  type: "time_cost" | string;
   scheme_id?: string | null;
   process_version_id?: string | null;
   contract_duration_days: number;
@@ -216,42 +217,42 @@ export interface StartGenerationPayload {
 }
 
 export interface StartGenerationResponse {
-  generation_job_id: string;
-  generation_status: string;
-  started_at: string;
+  id: string;
+  project_id: string;
+  status: string;
+  progress_percent: number;
+  started_at: string | null;
 }
 
 export interface RegeneratePayload {
-  artifact_types?: string[] | null;
+  types?: string[] | null;
   reason?: string | null;
 }
 
 export interface GenerationStep {
-  step_code: string;
-  step_name: string;
-  step_order: number;
-  step_status: string;
-  step_started_at?: string | null;
-  step_finished_at?: string | null;
+  code: string;
+  name: string;
+  order: number;
+  status: string;
+  started_at?: string | null;
+  finished_at?: string | null;
 }
 
 export interface GenerationStatus {
-  generation_job_id: string;
+  id: string;
   project_id: string;
-  generation_status: string;
-  current_step_code: string;
-  current_step_name: string;
-  step_progress_percent: number;
-  started_at: string;
+  status: string;
+  progress_percent: number;
+  current_step?: GenerationStep | null;
+  started_at: string | null;
   finished_at?: string | null;
   steps: GenerationStep[];
-  error_code?: string | null;
-  error_message?: string | null;
+  error?: { code: string; message: string } | null;
 }
 
 export interface OperationStatus {
-  operation_id: string;
-  operation_status?: string;
+  id: string;
+  status?: string;
   project_id?: string;
   error_code?: string | null;
   error_message?: string | null;
@@ -259,7 +260,7 @@ export interface OperationStatus {
 }
 
 export interface WorkbenchProjectInfo {
-  project_name?: string | null;
+  name?: string | null;
   project_subtitle?: string | null;
   location?: string | null;
   building_area_sqm?: number | null;

@@ -37,8 +37,8 @@ export class GetProjectContextTool implements AgentTool {
 
     const latestByType = new Map<string, string>();
     for (const artifact of artifacts.items) {
-      if (!latestByType.has(artifact.artifact_type)) {
-        latestByType.set(artifact.artifact_type, artifact.artifact_status);
+      if (!latestByType.has(artifact.type)) {
+        latestByType.set(artifact.type, artifact.status);
       }
     }
 
@@ -48,8 +48,8 @@ export class GetProjectContextTool implements AgentTool {
 
     return {
       summaryText: [
-        `项目：${project.project_name}`,
-        `状态：${project.project_status}`,
+        `项目：${project.name}`,
+        `状态：${project.status}`,
         `文件：共 ${fileStats.total_files} 个，已上传 ${fileStats.uploaded_files} 个，已就绪 ${fileStats.ready_files} 个`,
         artifactSummary ? `最新产物：${artifactSummary}` : "最新产物：暂无",
       ].join("\n"),

@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
 export interface GenerationProgressStep {
-  step_code: string;
-  step_name: string;
-  step_order: number;
-  step_status: string;
+  code: string;
+  name: string;
+  order: number;
+  status: string;
 }
 
 export interface GenerationTask {

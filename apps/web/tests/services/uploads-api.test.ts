@@ -53,14 +53,23 @@ describe("uploads-api", () => {
         json: () =>
           Promise.resolve({
             data: {
-              file_id: "file-001",
-              project_id: "project-001",
-              storage_bucket: "tenio-dev",
-              upload_url:
-                "http://host.docker.internal:18000/internal/files/upload/projects/project-001/contract.pdf",
-              storage_key: "projects/project-001/contract.pdf",
-              expires_at: "2026-04-24T01:00:00.000Z",
-              headers: {},
+              file: {
+                id: "file-001",
+                project_id: "project-001",
+                original_name: "contract.pdf",
+                mime_type: "application/pdf",
+                size_bytes: 7,
+                category: "contract",
+                status: "uploading",
+                created_at: "2026-04-24T00:00:00.000Z",
+                updated_at: "2026-04-24T00:00:00.000Z",
+              },
+              upload: {
+                url: "http://host.docker.internal:18000/internal/files/upload/projects/project-001/contract.pdf",
+                method: "PUT",
+                expires_at: "2026-04-24T01:00:00.000Z",
+                headers: {},
+              },
             },
           }),
       } as Response)
@@ -76,14 +85,11 @@ describe("uploads-api", () => {
           Promise.resolve({
             data: {
               file: {
-                file_id: "file-001",
+                id: "file-001",
                 project_id: "project-001",
-                original_file_name: "contract.pdf",
-                stored_file_name: "contract.pdf",
+                original_name: "contract.pdf",
                 mime_type: "application/pdf",
-                file_size: 1200,
-                storage_bucket: "tenio-dev",
-                storage_key: "projects/project-001/contract.pdf",
+                size_bytes: 1200,
                 category: "contract",
                 status: "uploaded",
                 created_at: "2026-04-24T00:00:00.000Z",
@@ -119,8 +125,8 @@ describe("uploads-api", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          original_file_name: "contract.pdf",
-          file_size: 7,
+          original_name: "contract.pdf",
+          size_bytes: 7,
           mime_type: "application/pdf",
           category: "contract",
         }),
@@ -141,7 +147,7 @@ describe("uploads-api", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          file_id: "file-001",
+          id: "file-001",
         }),
       },
     );
@@ -156,13 +162,23 @@ describe("uploads-api", () => {
         json: () =>
           Promise.resolve({
             data: {
-              file_id: "file-bid",
-              project_id: "project-001",
-              storage_bucket: "tenio-dev",
-              upload_url: "https://upload.example.com/bid.doc",
-              storage_key: "projects/project-001/bid.doc",
-              expires_at: "2026-04-24T01:00:00.000Z",
-              headers: {},
+              file: {
+                id: "file-bid",
+                project_id: "project-001",
+                original_name: "招标文件.doc",
+                mime_type: "application/msword",
+                size_bytes: 7,
+                category: "contract",
+                status: "uploading",
+                created_at: "2026-04-24T00:00:00.000Z",
+                updated_at: "2026-04-24T00:00:00.000Z",
+              },
+              upload: {
+                url: "https://upload.example.com/bid.doc",
+                method: "PUT",
+                expires_at: "2026-04-24T01:00:00.000Z",
+                headers: {},
+              },
             },
           }),
       } as Response)
@@ -178,13 +194,10 @@ describe("uploads-api", () => {
           Promise.resolve({
             data: {
               file: {
-                file_id: "file-bid",
+                id: "file-bid",
                 project_id: "project-001",
-                original_file_name: "招标文件.doc",
-                stored_file_name: "招标文件.doc",
-                file_size: 7,
-                storage_bucket: "tenio-dev",
-                storage_key: "projects/project-001/bid.doc",
+                original_name: "招标文件.doc",
+                size_bytes: 7,
                 category: "contract",
                 status: "uploaded",
                 created_at: "2026-04-24T00:00:00.000Z",
@@ -209,8 +222,8 @@ describe("uploads-api", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          original_file_name: "招标文件.doc",
-          file_size: 7,
+          original_name: "招标文件.doc",
+          size_bytes: 7,
           mime_type: "application/msword",
           category: "contract",
         }),
@@ -227,9 +240,9 @@ describe("uploads-api", () => {
         json: () =>
           Promise.resolve({
             data: {
-              project_id: "project-created",
-              project_name: "contract",
-              project_status: "draft",
+              id: "project-created",
+              name: "contract",
+              status: "draft",
               created_at: "2026-04-24T00:00:00.000Z",
               updated_at: "2026-04-24T00:00:00.000Z",
             },
@@ -241,13 +254,23 @@ describe("uploads-api", () => {
         json: () =>
           Promise.resolve({
             data: {
-              file_id: "file-temp",
-              project_id: "project-created",
-              storage_bucket: "tenio-dev",
-              upload_url: "https://upload.example.com/temp.pdf",
-              storage_key: "projects/project-created/temp.pdf",
-              expires_at: "2026-04-24T01:00:00.000Z",
-              headers: {},
+              file: {
+                id: "file-temp",
+                project_id: "project-created",
+                original_name: "contract.pdf",
+                mime_type: "application/pdf",
+                size_bytes: 7,
+                category: "contract",
+                status: "uploading",
+                created_at: "2026-04-24T00:00:00.000Z",
+                updated_at: "2026-04-24T00:00:00.000Z",
+              },
+              upload: {
+                url: "https://upload.example.com/temp.pdf",
+                method: "PUT",
+                expires_at: "2026-04-24T01:00:00.000Z",
+                headers: {},
+              },
             },
           }),
       } as Response)
@@ -263,13 +286,10 @@ describe("uploads-api", () => {
           Promise.resolve({
             data: {
               file: {
-                file_id: "file-temp",
+                id: "file-temp",
                 project_id: "project-created",
-                original_file_name: "contract.pdf",
-                stored_file_name: "contract.pdf",
-                file_size: 7,
-                storage_bucket: "tenio-dev",
-                storage_key: "projects/project-created/temp.pdf",
+                original_name: "contract.pdf",
+                size_bytes: 7,
                 category: "contract",
                 status: "uploaded",
                 created_at: "2026-04-24T00:00:00.000Z",
@@ -291,7 +311,7 @@ describe("uploads-api", () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        project_name: "contract",
+        name: "contract",
       }),
     });
   });
