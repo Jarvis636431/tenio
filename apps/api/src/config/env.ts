@@ -14,6 +14,7 @@ export interface ApiEnv {
   storageBucket: string;
   storageForcePathStyle: boolean;
   storagePresignExpiresInSeconds: number;
+  corsOrigins: string[];
 }
 
 function requireEnv(name: string, fallback?: string) {
@@ -22,6 +23,13 @@ function requireEnv(name: string, fallback?: string) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
   return value;
+}
+
+function parseCsv(value: string | undefined, fallback: string): string[] {
+  return (value ?? fallback)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 export function getApiEnv(): ApiEnv {
@@ -42,6 +50,10 @@ export function getApiEnv(): ApiEnv {
     storageForcePathStyle: (process.env.STORAGE_FORCE_PATH_STYLE ?? "true") === "true",
     storagePresignExpiresInSeconds: Number(
       process.env.STORAGE_PRESIGN_EXPIRES_IN_SECONDS ?? 900,
+    ),
+    corsOrigins: parseCsv(
+      process.env.CORS_ORIGINS,
+      "http://localhost:8080,http://127.0.0.1:8080",
     ),
   };
 }

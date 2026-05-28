@@ -54,10 +54,13 @@ describe("uploads-api", () => {
           Promise.resolve({
             data: {
               file_id: "file-001",
+              project_id: "project-001",
+              storage_bucket: "tenio-dev",
               upload_url:
                 "http://host.docker.internal:18000/internal/files/upload/projects/project-001/contract.pdf",
               storage_key: "projects/project-001/contract.pdf",
-              expire_at: "2026-04-24T01:00:00.000Z",
+              expires_at: "2026-04-24T01:00:00.000Z",
+              headers: {},
             },
           }),
       } as Response)
@@ -69,26 +72,23 @@ describe("uploads-api", () => {
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ data: null }),
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
         json: () =>
           Promise.resolve({
             data: {
-              items: [
-                {
-                  file_id: "file-001",
-                  file_category: "core",
-                  file_role: "construction_contract",
-                  original_file_name: "contract.pdf",
-                  file_extension: "pdf",
-                  file_size_bytes: 1200,
-                  upload_status: "completed",
-                  uploaded_at: "2026-04-24T00:00:00.000Z",
-                },
-              ],
+              file: {
+                file_id: "file-001",
+                project_id: "project-001",
+                original_file_name: "contract.pdf",
+                stored_file_name: "contract.pdf",
+                mime_type: "application/pdf",
+                file_size: 1200,
+                storage_bucket: "tenio-dev",
+                storage_key: "projects/project-001/contract.pdf",
+                category: "contract",
+                status: "uploaded",
+                created_at: "2026-04-24T00:00:00.000Z",
+                updated_at: "2026-04-24T00:00:00.000Z",
+              },
             },
           }),
       } as Response);
@@ -112,7 +112,7 @@ describe("uploads-api", () => {
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      "http://localhost:8000/api/projects/project-001/files/upload-init",
+      "http://localhost:8000/api/projects/project-001/uploads/init",
       {
         method: "POST",
         headers: {
@@ -120,21 +120,21 @@ describe("uploads-api", () => {
         },
         body: JSON.stringify({
           original_file_name: "contract.pdf",
-          file_size_bytes: 7,
-          file_category: "core",
-          file_role: "construction_contract",
+          file_size: 7,
+          mime_type: "application/pdf",
+          category: "contract",
         }),
       },
     );
     const [uploadUrl, uploadInit] = fetchMock.mock.calls[1];
     expect(uploadUrl).toBe(
-      "http://localhost:8000/internal/files/upload/projects/project-001/contract.pdf",
+      "http://host.docker.internal:18000/internal/files/upload/projects/project-001/contract.pdf",
     );
     expect(uploadInit?.method).toBe("PUT");
     expect(uploadInit?.body).toBeInstanceOf(File);
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
-      "http://localhost:8000/api/projects/project-001/files/complete",
+      "http://localhost:8000/api/projects/project-001/uploads/complete",
       {
         method: "POST",
         headers: {
@@ -142,14 +142,12 @@ describe("uploads-api", () => {
         },
         body: JSON.stringify({
           file_id: "file-001",
-          storage_key: "projects/project-001/contract.pdf",
-          upload_status: "uploaded",
         }),
       },
     );
   });
 
-  it("uses bidding_document role for uploaded bidding documents", async () => {
+  it("uses contract category for uploaded bidding documents", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock
       .mockResolvedValueOnce({
@@ -159,9 +157,12 @@ describe("uploads-api", () => {
           Promise.resolve({
             data: {
               file_id: "file-bid",
+              project_id: "project-001",
+              storage_bucket: "tenio-dev",
               upload_url: "https://upload.example.com/bid.doc",
               storage_key: "projects/project-001/bid.doc",
-              expire_at: "2026-04-24T01:00:00.000Z",
+              expires_at: "2026-04-24T01:00:00.000Z",
+              headers: {},
             },
           }),
       } as Response)
@@ -173,12 +174,24 @@ describe("uploads-api", () => {
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ data: null }),
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ data: { items: [] } }),
+        json: () =>
+          Promise.resolve({
+            data: {
+              file: {
+                file_id: "file-bid",
+                project_id: "project-001",
+                original_file_name: "招标文件.doc",
+                stored_file_name: "招标文件.doc",
+                file_size: 7,
+                storage_bucket: "tenio-dev",
+                storage_key: "projects/project-001/bid.doc",
+                category: "contract",
+                status: "uploaded",
+                created_at: "2026-04-24T00:00:00.000Z",
+                updated_at: "2026-04-24T00:00:00.000Z",
+              },
+            },
+          }),
       } as Response);
 
     await uploadFile({
@@ -189,7 +202,7 @@ describe("uploads-api", () => {
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      "http://localhost:8000/api/projects/project-001/files/upload-init",
+      "http://localhost:8000/api/projects/project-001/uploads/init",
       {
         method: "POST",
         headers: {
@@ -197,9 +210,9 @@ describe("uploads-api", () => {
         },
         body: JSON.stringify({
           original_file_name: "招标文件.doc",
-          file_size_bytes: 7,
-          file_category: "core",
-          file_role: "bidding_document",
+          file_size: 7,
+          mime_type: "application/msword",
+          category: "contract",
         }),
       },
     );
@@ -216,8 +229,9 @@ describe("uploads-api", () => {
             data: {
               project_id: "project-created",
               project_name: "contract",
-              status: "created",
+              project_status: "draft",
               created_at: "2026-04-24T00:00:00.000Z",
+              updated_at: "2026-04-24T00:00:00.000Z",
             },
           }),
       } as Response)
@@ -228,9 +242,12 @@ describe("uploads-api", () => {
           Promise.resolve({
             data: {
               file_id: "file-temp",
+              project_id: "project-created",
+              storage_bucket: "tenio-dev",
               upload_url: "https://upload.example.com/temp.pdf",
               storage_key: "projects/project-created/temp.pdf",
-              expire_at: "2026-04-24T01:00:00.000Z",
+              expires_at: "2026-04-24T01:00:00.000Z",
+              headers: {},
             },
           }),
       } as Response)
@@ -242,12 +259,24 @@ describe("uploads-api", () => {
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ data: null }),
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ data: { items: [] } }),
+        json: () =>
+          Promise.resolve({
+            data: {
+              file: {
+                file_id: "file-temp",
+                project_id: "project-created",
+                original_file_name: "contract.pdf",
+                stored_file_name: "contract.pdf",
+                file_size: 7,
+                storage_bucket: "tenio-dev",
+                storage_key: "projects/project-created/temp.pdf",
+                category: "contract",
+                status: "uploaded",
+                created_at: "2026-04-24T00:00:00.000Z",
+                updated_at: "2026-04-24T00:00:00.000Z",
+              },
+            },
+          }),
       } as Response);
 
     await uploadFile({
@@ -263,12 +292,11 @@ describe("uploads-api", () => {
       },
       body: JSON.stringify({
         project_name: "contract",
-        source_type: "upload",
       }),
     });
   });
 
-  it("derives file stats from the new project file list", async () => {
+  it("fetches file stats from the backend", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue({
       ok: true,
@@ -276,31 +304,30 @@ describe("uploads-api", () => {
       json: () =>
         Promise.resolve({
           data: {
-            items: [
-              {
-                file_id: "file-001",
-                file_category: "core",
-                file_role: "construction_contract",
-                original_file_name: "contract.pdf",
-                file_size_bytes: 1200,
-                upload_status: "completed",
-                uploaded_at: "2026-04-24T00:00:00.000Z",
-              },
-            ],
+            total_files: 1,
+            pending_files: 0,
+            uploaded_files: 1,
+            ready_files: 0,
+            failed_files: 0,
           },
         }),
     } as Response);
 
     await expect(getFileStats("project-001")).resolves.toEqual({
       totalFiles: 1,
-      totalSize: 1200,
-      categories: [{ category: "core", count: 1, totalSize: 1200 }],
+      pendingFiles: 0,
+      uploadedFiles: 1,
+      readyFiles: 0,
+      failedFiles: 0,
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/projects/project-001/files", {
-      method: undefined,
-      headers: {},
-      body: undefined,
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8000/api/projects/project-001/files/stats",
+      {
+        method: undefined,
+        headers: {},
+        body: undefined,
+      },
+    );
   });
 });
