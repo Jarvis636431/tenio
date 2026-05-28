@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { UserRole } from "@prisma/client";
 import { compare, hash } from "bcryptjs";
 import { createHash } from "node:crypto";
@@ -22,6 +22,7 @@ import type { SmsLoginDto } from "./dto/sms-login.dto.js";
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private readonly env = getApiEnv();
 
   constructor(
@@ -41,7 +42,9 @@ export class AuthService {
       },
     });
 
-    console.log(`[auth] sms code for ${payload.phone}: ${DEV_SMS_LOGIN_CODE}`);
+    if (process.env.NODE_ENV !== "production") {
+      this.logger.debug(`sms code for ${payload.phone}: ${DEV_SMS_LOGIN_CODE}`);
+    }
 
     return {
       phone: payload.phone,

@@ -29,7 +29,7 @@
     "typecheck:api": "pnpm --filter api typecheck",
     "typecheck:shared": "pnpm --filter @tenio/shared typecheck",
     "typecheck:all": "pnpm typecheck:shared && pnpm typecheck:web && pnpm typecheck:api",
-    "check": "pnpm check:web",
+    "check": "pnpm check:all",
     "check:web": "pnpm --filter web check",
     "check:api": "pnpm --filter api check",
     "check:shared": "pnpm --filter @tenio/shared typecheck",

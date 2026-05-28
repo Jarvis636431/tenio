@@ -1,6 +1,6 @@
 import "dotenv/config";
 import "reflect-metadata";
-import { ValidationPipe } from "@nestjs/common";
+import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module.js";
 import { ApiExceptionFilter } from "./common/filters/api-exception.filter.js";
@@ -8,6 +8,7 @@ import { ApiResponseInterceptor } from "./common/interceptors/api-response.inter
 import { getApiEnv } from "./config/env.js";
 
 async function bootstrap() {
+  const logger = new Logger("Bootstrap");
   const app = await NestFactory.create(AppModule);
   const env = getApiEnv();
 
@@ -27,7 +28,7 @@ async function bootstrap() {
   );
 
   await app.listen(env.port);
-  console.log(`API listening on http://localhost:${env.port}`);
+  logger.log(`API listening on http://localhost:${env.port}`);
 }
 
 void bootstrap();
