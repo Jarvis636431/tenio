@@ -1,9 +1,9 @@
-name: Tenio Lite CI/CD
+name: Tenio Monorepo CI/CD
 
 on:
   push:
     branches:
-      - tenio-lite
+      - main
   pull_request:
 
 permissions:
@@ -40,13 +40,13 @@ jobs:
         run: pnpm format:check
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm lint:all
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: pnpm typecheck:all
 
       - name: Test
-        run: pnpm test
+        run: pnpm test:all
 
   build-pr:
     name: Build PR
@@ -73,7 +73,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm build
+        run: pnpm build:all
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_AI_SERVICE_URL: ${{ vars.VITE_AI_SERVICE_URL }}
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     environment:
-      name: tenio-lite
+      name: production
 
     steps:
       - name: Check deployment gate
@@ -143,8 +143,8 @@ jobs:
         if: steps.deploy-gate.outputs.enabled == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: web-dist-tenio-lite
-          path: dist
+          name: web-dist-production
+          path: apps/web/dist
           if-no-files-found: error
           retention-days: 7
 
@@ -187,7 +187,7 @@ jobs:
         run: |
           rsync -az --delete \
             -e "ssh -i ~/.ssh/deploy_key -p $DEPLOY_PORT" \
-            dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+            apps/web/dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
 
       - name: Reload server
         if: steps.deploy-gate.outputs.enabled == 'true'

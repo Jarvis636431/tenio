@@ -1,48 +1,45 @@
 # 部署说明
 
-当前前端按静态站点部署：GitHub Actions 构建 `dist/`，再通过 SSH + rsync 同步到服务器目录，服务器由 Nginx 或其他静态服务托管。
+当前前端按静态站点部署：GitHub Actions 构建 `apps/web/dist/`，再通过 SSH + rsync 同步到服务器目录，服务器由 Nginx 或其他静态服务托管。
 
 ## GitHub Actions 流程
 
-- `Tenio Lite CI/CD` workflow：PR、`tenio-lite` 推送都会运行校验。
-- 校验步骤：`format:check`、`lint`、`typecheck`、`test`。
-- PR 会额外运行一次普通构建，验证前端可以正常打包。
-- `tenio-lite` 推送会在部署 job 中使用 `tenio-lite` Environment 的变量构建一次发布产物。
-- `tenio-lite` 推送会在校验通过后触发 lite 产品服务部署流程。
+- `Tenio Monorepo CI/CD` workflow：PR、`main` 推送都会运行校验。
+- 校验步骤：`format:check`、`lint:all`、`typecheck:all`、`test:all`。
+- PR 会额外运行一次 monorepo 构建，验证 shared、web、api 都可以正常打包或通过类型构建。
+- `main` 推送会在部署 job 中使用 `production` Environment 的变量构建一次发布产物。
+- `main` 推送会在校验通过后触发生产服务部署流程。
 - 部署 job 通过 `needs: verify` 等待校验成功后运行；发布构建只在部署 job 内执行一次，不再重复 build。
-- `tenio-lite` Environment 需要设置 `ENABLE_DEPLOY=true`，否则不会部署。
-
-`main` 和 `tenio-lite` 是两条独立业务路线，本分支的 workflow 只维护 lite 产品服务，不包含 main 产品服务的 CI/CD 逻辑。
+- `production` Environment 需要设置 `ENABLE_DEPLOY=true`，否则不会部署。
 
 ## 产品服务分层
 
-当前分支只需要配置 lite 产品服务的 GitHub Environment：
+当前主线只需要配置生产服务的 GitHub Environment：
 
 | GitHub Environment | 触发分支 | 用途 | 后端/AI 地址 | 部署目标 |
 | --- | --- | --- | --- | --- |
-| `tenio-lite` | `tenio-lite` | lite 产品服务 | lite 服务对应的后端和 AI 服务 | lite 前端服务器目录 |
+| `production` | `main` | 生产服务 | 生产服务对应的后端和 AI 服务 | 生产前端服务器目录 |
 
 前端代码仍只读取 `VITE_API_BASE_URL`、`VITE_AI_SERVICE_URL` 等标准变量，不需要引入 `LITE_` 前缀。
 
 建议分支策略：
 
 - PR：只运行校验，不部署。
-- `tenio-lite`：运行校验，校验通过后发布到 `tenio-lite` Environment。
-- `main` 分支由 main 分支自己的 workflow 维护，本分支不关心 main 的部署方式。
+- `main`：运行校验，校验通过后发布到 `production` Environment。
 
-当前 lite 服务的部署目录为：
+当前生产服务的部署目录示例：
 
 ```text
-/usr/share/nginx/tenio-lite
+/usr/share/nginx/tenio
 ```
 
 部署时会执行：
 
 ```text
-rsync -az --delete dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+rsync -az --delete apps/web/dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
 ```
 
-所以 `DEPLOY_PATH` 目录下会直接出现 `index.html`、`assets/` 等构建产物，不会再嵌套一层 `dist`。
+所以 `DEPLOY_PATH` 目录下会直接出现 `index.html`、`assets/` 等构建产物，不会再嵌套 `apps/web/dist`。
 
 ## 关键配置原则
 
@@ -50,11 +47,11 @@ rsync -az --delete dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
 - `VITE_AI_SERVICE_URL` 必须指向当前环境对应的 agent-service。
 - 上传文件时，前端会用 `VITE_API_BASE_URL` 重建后端返回的上传地址 origin。
 - AI 会话请求会用 `VITE_AI_SERVICE_URL`，不使用 ticket 响应里的 `agent_base_url` 作为前端请求 base。
-- `tenio-lite` 不应误连 main 产品服务的后端或数据库。即使部署在同一服务器，也要通过独立 API 地址、部署目录和域名隔离。
+- 生产环境不应误连测试或旧 lite 服务的后端、AI 服务或数据库。即使部署在同一服务器，也要通过独立 API 地址、部署目录和域名隔离。
 
 ## 需要配置的 GitHub Variables
 
-在 GitHub 仓库的 `Settings -> Environments` 中创建 `tenio-lite`，然后在该 Environment 的 Variables 中配置：
+在 GitHub 仓库的 `Settings -> Environments` 中创建 `production`，然后在该 Environment 的 Variables 中配置：
 
 | 名称 | 是否必需 | 说明 |
 | --- | --- | --- |
@@ -74,20 +71,20 @@ rsync -az --delete dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
 | --- | --- | --- |
 | `DEPLOY_HOST` | 必需 | 服务器 IP 或域名 |
 | `DEPLOY_USER` | 必需 | SSH 登录用户 |
-| `DEPLOY_PATH` | 必需 | 服务器上的静态文件目录，例如 `/usr/share/nginx/tenio-lite` |
+| `DEPLOY_PATH` | 必需 | 服务器上的静态文件目录，例如 `/usr/share/nginx/tenio` |
 | `DEPLOY_SSH_PRIVATE_KEY` | 必需 | 对应部署用户的 SSH 私钥 |
 | `DEPLOY_PORT` | 可选 | SSH 端口，默认 `22` |
 | `DEPLOY_RELOAD_COMMAND` | 可选 | 部署后执行的重载命令，例如 `sudo systemctl reload nginx`；不配置时会跳过 reload |
 | `VITE_VOLC_APP_ID` | 可选 | 火山语音 App ID |
 | `VITE_VOLC_ACCESS_TOKEN` | 可选 | 火山语音 Access Token |
 
-当前 lite 服务示例：
+当前生产服务示例：
 
 ```text
 DEPLOY_HOST=47.93.156.146
 DEPLOY_PORT=22
 DEPLOY_USER=root
-DEPLOY_PATH=/usr/share/nginx/tenio-lite
+DEPLOY_PATH=/usr/share/nginx/tenio
 ```
 
 ## 服务器侧要求
@@ -105,9 +102,9 @@ DEPLOY_PATH=/usr/share/nginx/tenio-lite
 ```nginx
 server {
   listen 80;
-  server_name lite.example.com;
+  server_name tenio.example.com;
 
-  root /usr/share/nginx/tenio-lite;
+  root /usr/share/nginx/tenio;
   index index.html;
 
   location / {
