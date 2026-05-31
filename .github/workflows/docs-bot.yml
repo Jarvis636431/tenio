@@ -1,0 +1,94 @@
+name: Repo Docs Bot
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "docs/**"
+      - ".github/workflows/**"
+      - ".rules/**"
+      - "scripts/docs-bot/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".nvmrc"
+      - "README.md"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update-docs:
+    name: Update repo docs
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Update documentation with LLM
+        env:
+          DOCS_BOT_API_KEY: ${{ secrets.DOCS_BOT_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DOCS_BOT_API_BASE: ${{ vars.DOCS_BOT_API_BASE }}
+          DOCS_BOT_MODEL: ${{ vars.DOCS_BOT_MODEL }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: node scripts/docs-bot/update-repo-docs.mjs
+
+      - name: Format generated docs
+        run: pnpm exec prettier --write README.md AGENTS.md CLAUDE.md
+
+      - name: Verify docs bot scope
+        run: |
+          changed_files="$(git diff --name-only)"
+          if [ -z "$changed_files" ]; then
+            echo "No documentation changes generated."
+            exit 0
+          fi
+
+          disallowed="$(printf '%s\n' "$changed_files" | grep -Ev '^(README\.md|AGENTS\.md|CLAUDE\.md)$' || true)"
+          if [ -n "$disallowed" ]; then
+            echo "Docs bot attempted to change files outside the allowed scope:"
+            printf '%s\n' "$disallowed"
+            exit 1
+          fi
+
+      - name: Commit and push docs
+        run: |
+          if git diff --quiet; then
+            echo "No documentation changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md AGENTS.md CLAUDE.md
+          git commit -m "docs: refresh repo guidance"
+          git push
