@@ -83,7 +83,12 @@ export const calculateSpanUnits = (
   scale: TimelineScale,
   durationUnits?: number,
 ) => {
-  if (scale === "day" && Number.isFinite(durationUnits) && durationUnits > 0) {
+  if (
+    scale === "day" &&
+    durationUnits !== undefined &&
+    Number.isFinite(durationUnits) &&
+    durationUnits > 0
+  ) {
     return Math.max(1, Math.ceil(durationUnits));
   }
 

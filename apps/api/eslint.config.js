@@ -6,10 +6,7 @@ import globals from "globals";
 export default tseslint.config(
   { ignores: ["dist", "node_modules", "eslint.config.js"] },
   {
-    extends: [
-      eslint.configs.recommended,
-      ...tseslint.configs.recommended,
-    ],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
     files: ["src/**/*.ts", "tests/**/*.ts"],
     languageOptions: {
       ecmaVersion: 2022,

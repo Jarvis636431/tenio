@@ -11,7 +11,7 @@ export interface GenerationTask {
   projectId: string;
   generationJobId: string;
   generationStatus: string;
-  startedAt: string;
+  startedAt: string | null;
   deleteProjectOnCancel?: boolean;
   currentStepName?: string;
   progressPercent?: number;

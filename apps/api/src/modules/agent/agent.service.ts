@@ -62,7 +62,10 @@ export class AgentService {
     private readonly operationExecutor: AgentOperationExecutor,
   ) {}
 
-  async assertProjectAccess(currentUser: AuthenticatedRequestUser, projectId: string): Promise<void> {
+  async assertProjectAccess(
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
+  ): Promise<void> {
     const project = await this.prisma.project.findFirst({
       where: {
         id: projectId,

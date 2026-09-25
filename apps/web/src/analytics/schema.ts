@@ -171,5 +171,5 @@ export function parseAnalyticsPayload<TName extends AnalyticsEventName>(
   name: TName,
   payload: unknown,
 ): AnalyticsEventMap[TName] {
-  return analyticsPayloadSchemas[name].parse(payload);
+  return analyticsPayloadSchemas[name].parse(payload) as AnalyticsEventMap[TName];
 }

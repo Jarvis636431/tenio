@@ -97,7 +97,7 @@ export function ProjectGenerationStatusDialog() {
     if (task.steps.length > 0) {
       return task.steps
         .slice()
-        .sort((a, b) => a.step_order - b.step_order)
+        .sort((a, b) => a.order - b.order)
         .map((step) => ({
           key: step.code,
           label: step.name,
@@ -114,6 +114,7 @@ export function ProjectGenerationStatusDialog() {
   useEffect(() => {
     if (!pollingProjectId) return;
 
+    const projectId = pollingProjectId;
     const abortController = new AbortController();
 
     async function pollGenerationStatus() {
@@ -121,7 +122,7 @@ export function ProjectGenerationStatusDialog() {
         for (let attempt = 0; attempt < MAX_GENERATION_POLL_ATTEMPTS; attempt += 1) {
           if (abortController.signal.aborted) return;
 
-          const status = await getProjectGenerationStatus(pollingProjectId);
+          const status = await getProjectGenerationStatus(projectId);
           if (abortController.signal.aborted) return;
 
           updateGeneration({
@@ -137,22 +138,22 @@ export function ProjectGenerationStatusDialog() {
             await Promise.all([
               queryClient.invalidateQueries({ queryKey: ["projects"] }),
               queryClient.invalidateQueries({
-                queryKey: projectQueryKeys.generationStatus(pollingProjectId),
+                queryKey: projectQueryKeys.generationStatus(projectId),
               }),
               queryClient.invalidateQueries({
-                queryKey: projectQueryKeys.graphArtifact(pollingProjectId),
+                queryKey: projectQueryKeys.graphArtifact(projectId),
               }),
               queryClient.invalidateQueries({
-                queryKey: projectQueryKeys.documentArtifact(pollingProjectId),
+                queryKey: projectQueryKeys.documentArtifact(projectId),
               }),
               queryClient.invalidateQueries({
-                queryKey: projectQueryKeys.timeCostArtifact(pollingProjectId),
+                queryKey: projectQueryKeys.timeCostArtifact(projectId),
               }),
               queryClient.invalidateQueries({
-                queryKey: projectQueryKeys.crewPlanArtifact(pollingProjectId),
+                queryKey: projectQueryKeys.crewPlanArtifact(projectId),
               }),
               queryClient.invalidateQueries({
-                queryKey: projectQueryKeys.uploadSummary(pollingProjectId),
+                queryKey: projectQueryKeys.uploadSummary(projectId),
               }),
             ]);
             return;

@@ -1,10 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { ProjectStatus as PrismaProjectStatus } from "@prisma/client";
-import type {
-  CreateProjectRequest,
-  ListProjectsResponse,
-  Project,
-} from "@tenio/shared";
+import type { CreateProjectRequest, ListProjectsResponse, Project } from "@tenio/shared";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import type { AuthenticatedRequestUser } from "../auth/auth.types.js";
 import type { ListProjectsDto } from "./dto/list-projects.dto.js";

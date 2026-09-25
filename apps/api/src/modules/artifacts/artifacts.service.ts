@@ -548,5 +548,4 @@ export class ArtifactsService {
     }
     throw new Error(`Unsupported artifact status: ${String(status)}`);
   }
-
 }

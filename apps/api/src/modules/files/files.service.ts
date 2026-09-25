@@ -210,7 +210,11 @@ export class FilesService {
     }
   }
 
-  private async findOwnedFile(currentUser: AuthenticatedRequestUser, projectId: string, fileId: string) {
+  private async findOwnedFile(
+    currentUser: AuthenticatedRequestUser,
+    projectId: string,
+    fileId: string,
+  ) {
     const file = await this.prisma.projectFile.findFirst({
       where: {
         id: fileId,

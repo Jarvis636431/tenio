@@ -12,9 +12,10 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context
-      .switchToHttp()
-      .getRequest<{ headers: Record<string, string | string[] | undefined>; user?: AuthenticatedRequestUser }>();
+    const request = context.switchToHttp().getRequest<{
+      headers: Record<string, string | string[] | undefined>;
+      user?: AuthenticatedRequestUser;
+    }>();
 
     const authHeader = request.headers.authorization;
     const rawToken = Array.isArray(authHeader) ? authHeader[0] : authHeader;

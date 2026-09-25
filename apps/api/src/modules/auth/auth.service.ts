@@ -2,12 +2,7 @@ import { BadRequestException, Injectable, Logger, UnauthorizedException } from "
 import { UserRole } from "@prisma/client";
 import { compare, hash } from "bcryptjs";
 import { createHash } from "node:crypto";
-import type {
-  AuthSession,
-  AuthUser,
-  SendSmsResponse,
-  SetupProfileResponse,
-} from "@tenio/shared";
+import type { AuthSession, AuthUser, SendSmsResponse, SetupProfileResponse } from "@tenio/shared";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import { getApiEnv } from "../../config/env.js";
 import { DEV_SMS_LOGIN_CODE } from "./auth.constants.js";

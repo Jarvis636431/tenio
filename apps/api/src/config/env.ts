@@ -48,12 +48,7 @@ export function getApiEnv(): ApiEnv {
     storageSecretKey: requireEnv("STORAGE_SECRET_KEY", "minioadmin"),
     storageBucket: requireEnv("STORAGE_BUCKET", "tenio-dev"),
     storageForcePathStyle: (process.env.STORAGE_FORCE_PATH_STYLE ?? "true") === "true",
-    storagePresignExpiresInSeconds: Number(
-      process.env.STORAGE_PRESIGN_EXPIRES_IN_SECONDS ?? 900,
-    ),
-    corsOrigins: parseCsv(
-      process.env.CORS_ORIGINS,
-      "http://localhost:8080,http://127.0.0.1:8080",
-    ),
+    storagePresignExpiresInSeconds: Number(process.env.STORAGE_PRESIGN_EXPIRES_IN_SECONDS ?? 900),
+    corsOrigins: parseCsv(process.env.CORS_ORIGINS, "http://localhost:8080,http://127.0.0.1:8080"),
   };
 }

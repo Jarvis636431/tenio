@@ -41,7 +41,9 @@ export class GetLatestArtifactsTool implements AgentTool {
 
     return {
       summaryText:
-        lines.length === 0 ? "当前项目还没有可读取的产物。" : ["最新产物如下：", ...lines].join("\n"),
+        lines.length === 0
+          ? "当前项目还没有可读取的产物。"
+          : ["最新产物如下：", ...lines].join("\n"),
       data: {
         artifacts: [...latestByType.values()],
       },

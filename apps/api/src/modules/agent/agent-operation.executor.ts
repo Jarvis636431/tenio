@@ -98,5 +98,4 @@ export class AgentOperationExecutor {
       ? (value as Record<string, unknown>)
       : {};
   }
-
 }

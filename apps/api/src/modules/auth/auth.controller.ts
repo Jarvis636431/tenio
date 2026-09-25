@@ -1,10 +1,5 @@
 import { Body, Controller, Get, HttpCode, Post, UseGuards } from "@nestjs/common";
-import type {
-  AuthSession,
-  AuthUser,
-  SendSmsResponse,
-  SetupProfileResponse,
-} from "@tenio/shared";
+import type { AuthSession, AuthUser, SendSmsResponse, SetupProfileResponse } from "@tenio/shared";
 import { CurrentUser } from "../../common/auth/current-user.decorator.js";
 import { JwtAuthGuard } from "../../common/auth/jwt-auth.guard.js";
 import type { AuthenticatedRequestUser } from "./auth.types.js";

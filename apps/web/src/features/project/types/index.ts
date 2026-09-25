@@ -72,8 +72,8 @@ export interface ArtifactBase {
   status: string;
   is_latest_version?: boolean;
   generated_at?: string;
-  scheme_id?: string;
-  process_version_id?: string;
+  scheme_id?: string | null;
+  process_version_id?: string | null;
 }
 
 export interface ScheduleTask {

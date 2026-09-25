@@ -23,7 +23,8 @@ export class UpdateProjectNameTool implements AgentTool {
   }
 
   async execute(context: AgentToolExecutionContext): Promise<AgentToolExecutionResult> {
-    const projectName = context.intent.intentType === this.intentType ? context.intent.projectName : null;
+    const projectName =
+      context.intent.intentType === this.intentType ? context.intent.projectName : null;
     if (!projectName) {
       throw new Error("当前 intent 缺少目标项目名称");
     }

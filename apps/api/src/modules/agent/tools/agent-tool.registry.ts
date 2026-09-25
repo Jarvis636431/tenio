@@ -56,14 +56,10 @@ export class AgentToolRegistry {
   }
 
   resolveReadTool(intent: AgentIntent): AgentTool | null {
-    return (
-      this.tools.find((tool) => tool.capability === "read" && tool.canHandle(intent)) ?? null
-    );
+    return this.tools.find((tool) => tool.capability === "read" && tool.canHandle(intent)) ?? null;
   }
 
   resolveWriteTool(intent: AgentIntent): AgentTool | null {
-    return (
-      this.tools.find((tool) => tool.capability === "write" && tool.canHandle(intent)) ?? null
-    );
+    return this.tools.find((tool) => tool.capability === "write" && tool.canHandle(intent)) ?? null;
   }
 }

@@ -33,9 +33,7 @@ export class GetTimeCostArtifactTool implements AgentTool {
         `合同工期：${artifact.contract_duration_days} 天`,
         `最优工期：${artifact.optimal_duration_days} 天`,
         `最低总成本：${artifact.minimum_total_cost_cents} 分`,
-        artifact.saving_rate_percent != null
-          ? `节约比例：${artifact.saving_rate_percent}%`
-          : null,
+        artifact.saving_rate_percent != null ? `节约比例：${artifact.saving_rate_percent}%` : null,
         `推荐说明：${artifact.recommendation.recommendation_text}`,
       ]
         .filter(Boolean)

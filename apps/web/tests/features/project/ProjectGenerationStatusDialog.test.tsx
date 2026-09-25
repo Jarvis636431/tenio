@@ -37,6 +37,34 @@ describe("ProjectGenerationStatusDialog", () => {
     vi.clearAllMocks();
   });
 
+  it("shows generation steps in backend order", async () => {
+    const user = userEvent.setup();
+    useGenerationStore.getState().startGeneration({
+      projectId: "project-001",
+      generationJobId: "job-001",
+      generationStatus: "succeeded",
+      startedAt: null,
+      steps: [
+        { code: "second", name: "第二步", order: 2, status: "succeeded" },
+        { code: "first", name: "第一步", order: 1, status: "succeeded" },
+      ],
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+          <ProjectGenerationStatusDialog />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.getByText("第一步").compareDocumentPosition(screen.getByText("第二步")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "留在控制台" }));
+  });
+
   it("cancels active generation and deletes the pending project", async () => {
     const user = userEvent.setup();
 
