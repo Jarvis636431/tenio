@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import {
   GenerationJobStatus,
   GenerationStepStatus,
+  ProjectStatus,
   type GenerationJob,
   type GenerationStep,
   type Prisma,
@@ -51,6 +52,12 @@ export class GenerationService {
       },
     });
 
+    if (payload.trigger_source === "upload") {
+      await this.prisma.project.update({
+        where: { id: projectId },
+        data: { status: ProjectStatus.GENERATING },
+      });
+    }
     this.runner.run(job.id);
     return this.toStartResponse(job);
   }
@@ -135,6 +142,13 @@ export class GenerationService {
       },
       data: { stepStatus: GenerationStepStatus.SKIPPED },
     });
+
+    if (job.triggerSource === "upload") {
+      await this.prisma.project.update({
+        where: { id: projectId },
+        data: { status: ProjectStatus.DRAFT },
+      });
+    }
 
     const canceled = await this.prisma.generationJob.findUniqueOrThrow({
       where: { id: updated.id },

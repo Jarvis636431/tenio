@@ -1,5 +1,20 @@
-import { Body, Controller, Get, Inject, Param, Post, Query, UseGuards } from "@nestjs/common";
-import type { CreateProjectResponse, ListProjectsResponse, Project } from "@tenio/shared";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
+import type {
+  CreateProjectResponse,
+  ListProjectsResponse,
+  Project,
+  ProjectMetrics,
+} from "@tenio/shared";
 import { CurrentUser } from "../../common/auth/current-user.decorator.js";
 import { JwtAuthGuard } from "../../common/auth/jwt-auth.guard.js";
 import type { AuthenticatedRequestUser } from "../auth/auth.types.js";
@@ -11,6 +26,11 @@ import { ProjectsService } from "./projects.service.js";
 @UseGuards(JwtAuthGuard)
 export class ProjectsController {
   constructor(@Inject(ProjectsService) private readonly projectsService: ProjectsService) {}
+
+  @Get("metrics")
+  getMetrics(@CurrentUser() currentUser: AuthenticatedRequestUser): Promise<ProjectMetrics> {
+    return this.projectsService.getMetrics(currentUser);
+  }
 
   @Get()
   listProjects(
@@ -34,5 +54,13 @@ export class ProjectsController {
     @Body() payload: CreateProjectDto,
   ): Promise<CreateProjectResponse> {
     return this.projectsService.create(currentUser, payload);
+  }
+
+  @Delete(":projectId")
+  deleteProject(
+    @CurrentUser() currentUser: AuthenticatedRequestUser,
+    @Param("projectId") projectId: string,
+  ): Promise<{ id: string }> {
+    return this.projectsService.delete(currentUser, projectId);
   }
 }

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import {
+  ProjectStatus as PrismaProjectStatus,
   ProjectFileCategory as PrismaProjectFileCategory,
   ProjectFileStatus as PrismaProjectFileStatus,
 } from "@prisma/client";
@@ -59,6 +60,10 @@ export class FilesService {
     const uploadingFile = await this.prisma.projectFile.update({
       where: { id: file.id },
       data: { status: PrismaProjectFileStatus.UPLOADING },
+    });
+    await this.prisma.project.updateMany({
+      where: { id: projectId, status: PrismaProjectStatus.DRAFT },
+      data: { status: PrismaProjectStatus.UPLOADING },
     });
 
     return {

@@ -1,19 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  activateProjectScheme,
   cancelProjectGeneration,
-  createMockProject,
-  createProject,
   deleteProject,
   getLatestCrewPlanArtifact,
   getLatestDocumentArtifact,
   getLatestGraphArtifact,
-  getProjectDetail,
   getProjectList,
   getProjectMetrics,
   getProjectOperationStatus,
-  getProjectSchemes,
-  getWorkbenchConsoleLogs,
   getWorkbenchUploadSummary,
   regenerateProjectArtifacts,
 } from "@/features/project";
@@ -92,39 +86,7 @@ describe("project api", () => {
     );
   });
 
-  it("creates standard and mock projects through documented endpoints", async () => {
-    const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () =>
-        Promise.resolve({
-          data: {
-            id: "p-001",
-            name: "项目",
-            status: "draft",
-            created_at: "2026-04-30T00:00:00Z",
-            updated_at: "2026-04-30T00:00:00Z",
-          },
-        }),
-    } as Response);
-
-    await createProject({ name: "项目", source_type: "manual_create" });
-    await createMockProject({ mock_dataset_code: "demo" });
-
-    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:8000/api/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "项目", source_type: "manual_create" }),
-    });
-    expect(fetchMock).toHaveBeenNthCalledWith(2, "http://localhost:8000/api/projects/mock", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mock_dataset_code: "demo" }),
-    });
-  });
-
-  it("gets project detail and latest artifact endpoints from current OpenAPI", async () => {
+  it("gets latest artifact endpoints used by the workbench", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue({
       ok: true,
@@ -132,28 +94,22 @@ describe("project api", () => {
       json: () => Promise.resolve({ data: {} }),
     } as Response);
 
-    await getProjectDetail("p-001");
     await getLatestDocumentArtifact("p-001");
     await getLatestGraphArtifact("p-001");
     await getLatestCrewPlanArtifact("p-001");
 
-    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:8000/api/projects/p-001", {
-      method: undefined,
-      headers: {},
-      body: undefined,
-    });
     expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
+      1,
       "http://localhost:8000/api/projects/p-001/artifacts/document/latest",
       { method: undefined, headers: {}, body: undefined },
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
-      3,
+      2,
       "http://localhost:8000/api/projects/p-001/artifacts/graph/latest",
       { method: undefined, headers: {}, body: undefined },
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
-      4,
+      3,
       "http://localhost:8000/api/projects/p-001/artifacts/crew-plan/latest",
       { method: undefined, headers: {}, body: undefined },
     );
@@ -170,7 +126,6 @@ describe("project api", () => {
     await regenerateProjectArtifacts("p-001", { types: ["schedule"], reason: "重算" });
     await getProjectOperationStatus("p-001", "op-001");
     await getWorkbenchUploadSummary("p-001");
-    await getWorkbenchConsoleLogs("p-001");
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -189,11 +144,6 @@ describe("project api", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
       "http://localhost:8000/api/projects/p-001/workbench/upload-summary",
-      { method: undefined, headers: {}, body: undefined },
-    );
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      4,
-      "http://localhost:8000/api/projects/p-001/workbench/console-logs",
       { method: undefined, headers: {}, body: undefined },
     );
   });
@@ -223,32 +173,5 @@ describe("project api", () => {
       headers: {},
       body: undefined,
     });
-  });
-
-  it("calls project schemes endpoints", async () => {
-    const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ data: { items: [] } }),
-    } as Response);
-
-    await getProjectSchemes("p-001");
-    await activateProjectScheme("p-001", "scheme-001");
-
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
-      "http://localhost:8000/api/projects/p-001/schemes",
-      { method: undefined, headers: {}, body: undefined },
-    );
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      "http://localhost:8000/api/projects/p-001/schemes/scheme-001/activate",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: undefined,
-      },
-    );
   });
 });

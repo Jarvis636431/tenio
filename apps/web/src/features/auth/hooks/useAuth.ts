@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isUnauthorizedError } from "@/services/http";
+import { logSilentError } from "@/lib/log";
 import { useAuthStore } from "@/stores/authStore";
 import {
   getCurrentUser,
   loginWithPassword,
   loginWithSms,
+  logoutSession,
   sendLoginSms,
   setupProfile,
 } from "../services/auth-api";
@@ -80,6 +82,11 @@ export function useAuth() {
   });
 
   const logout = () => {
+    if (accessToken) {
+      void logoutSession().catch((error: unknown) => {
+        logSilentError("[Auth]", "注销会话失败", error);
+      });
+    }
     clearSession();
     queryClient.removeQueries({ queryKey: authQueryKeys.me });
   };

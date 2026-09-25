@@ -110,19 +110,17 @@ src/
 
 **AI Chat Flow:**
 
-1. Request `agent_ticket` from backend: `POST /api/agent/tickets`
-2. Init agent session: `POST {aiService}/api/agent/init`
-3. Send messages: `POST {aiService}/api/agent/sessions/{id}/messages`
-4. Read SSE stream: `GET {aiService}/api/agent/streams/{stream_id}/sse`
-5. On `401 + AGENT_TICKET_EXPIRED`: re-request ticket and retry
-6. SSE `refetch` event → invalidate React Query caches
+1. Create a session: `POST /api/projects/:projectId/agent/sessions`
+2. Send a message: `POST /api/projects/:projectId/agent/sessions/:sessionId/messages`
+3. Read events: `GET /api/projects/:projectId/agent/streams/:streamId/sse`
+4. SSE `artifact.refresh_required` event → invalidate React Query caches
 
 ### apps/api — NestJS Backend
 
 Modules:
 
 - `auth/` — JWT auth (password + SMS login, refresh, profile setup)
-- `agent/` — Agent ticket management and session orchestration
+- `agent/` — Agent sessions, tool operations, and SSE responses
 - `artifacts/` — Artifact CRUD (document, graph, time_cost, crew_plan)
 - `files/` — File upload with S3 presigned URLs
 - `projects/` — Project management
@@ -144,13 +142,7 @@ Used by both web and api (via moduleNameMapper). Raw TypeScript source, no build
 Root `.env` file (shared by all apps):
 
 ```bash
-VITE_API_BASE_URL=http://localhost:8000
-VITE_AI_SERVICE_URL=http://127.0.0.1:8123
-VITE_RESOURCE_BASE_URL=https://apmoss.emio.cn/public/resources
-
-# Volc speech recognition (optional)
-VITE_VOLC_APP_ID=your_volc_app_id
-VITE_VOLC_ACCESS_TOKEN=your_volc_access_token
+VITE_API_BASE_URL=http://localhost:3001
 
 # Analytics (optional)
 VITE_ANALYTICS_ENABLED=false
@@ -164,7 +156,7 @@ VITE_ANALYTICS_PROVIDER=noop
 - `docs/backend/` — API backend module architecture docs
 - `apps/web/src/services/http.ts` — Fetch wrapper with auth, token refresh, SSE
 - `apps/web/src/config/index.ts` — Runtime config single source of truth
-- `apps/web/src/features/ai/hooks/useChat.ts` — AI chat state, SSE, agent ticket
+- `apps/web/src/features/ai/hooks/useChat.ts` — AI chat state and SSE
 - `apps/web/src/stores/chatStore.ts` — Zustand per-project message isolation pattern
 - `apps/api/src/modules/` — NestJS module implementations
 

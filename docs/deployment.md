@@ -18,9 +18,9 @@
 
 | GitHub Environment | 触发分支 | 用途 | 后端/AI 地址 | 部署目标 |
 | --- | --- | --- | --- | --- |
-| `production` | `main` | 生产服务 | 生产服务对应的后端和 AI 服务 | 生产前端服务器目录 |
+| `production` | `main` | 生产服务 | 生产服务对应的 API 后端 | 生产前端服务器目录 |
 
-前端代码仍只读取 `VITE_API_BASE_URL`、`VITE_AI_SERVICE_URL` 等标准变量，不需要引入 `LITE_` 前缀。
+前端通过 `VITE_API_BASE_URL` 访问 NestJS API，不需要引入 `LITE_` 前缀。
 
 建议分支策略：
 
@@ -44,10 +44,9 @@ rsync -az --delete apps/web/dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
 ## 关键配置原则
 
 - `VITE_API_BASE_URL` 必须指向当前环境对应的 APM 后端。
-- `VITE_AI_SERVICE_URL` 必须指向当前环境对应的 agent-service。
-- 上传文件时，前端会用 `VITE_API_BASE_URL` 重建后端返回的上传地址 origin。
-- AI 会话请求会用 `VITE_AI_SERVICE_URL`，不使用 ticket 响应里的 `agent_base_url` 作为前端请求 base。
-- 生产环境不应误连测试或旧 lite 服务的后端、AI 服务或数据库。即使部署在同一服务器，也要通过独立 API 地址、部署目录和域名隔离。
+- 文件上传直接使用后端返回的对象存储预签名 URL，浏览器必须能够访问该地址。
+- AI 会话请求也使用 `VITE_API_BASE_URL` 指向的 NestJS API。
+- 生产环境应使用独立 API 地址、部署目录和数据库，避免误连测试或旧服务。
 
 ## 需要配置的 GitHub Variables
 
@@ -57,7 +56,6 @@ rsync -az --delete apps/web/dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
 | --- | --- | --- |
 | `ENABLE_DEPLOY` | 必需 | 设置为 `true` 后启用当前 Environment 对应服务的自动部署 |
 | `VITE_API_BASE_URL` | 必需 | 当前产品服务的后端 API 地址，例如 `https://api.example.com` |
-| `VITE_AI_SERVICE_URL` | 必需 | 当前产品服务的 AI 服务地址 |
 | `VITE_ANALYTICS_ENABLED` | 可选 | 是否启用埋点 |
 | `VITE_ANALYTICS_DEBUG` | 可选 | 是否启用埋点调试 |
 | `VITE_ANALYTICS_ENDPOINT` | 可选 | 埋点上报地址 |

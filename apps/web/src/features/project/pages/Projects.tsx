@@ -87,17 +87,13 @@ function getProgressColor(status: ProjectStatus) {
   return "from-cyan-400 to-sky-500";
 }
 
-function getDefaultProgress(status: ProjectStatus) {
-  if (status === "archived") return 100;
-  if (status === "draft") return 0;
-  return 42;
-}
-
-function formatDuration(days: number) {
+function formatDuration(days?: number) {
+  if (days === undefined) return "—";
   return `${days}天`;
 }
 
-function formatRemainingDays(days: number) {
+function formatRemainingDays(days?: number) {
+  if (days === undefined) return "—";
   return days <= 0 ? "0天" : `${days}天`;
 }
 
@@ -313,9 +309,9 @@ function ProjectsPage() {
             const status = normalizeStatus(project.status);
             const statusLabel = project.status_label ?? PROJECT_STATUS_LABELS[status];
             const accent = getAccentStyle(index);
-            const progress = project.progress_percent ?? getDefaultProgress(status);
-            const plannedStartDate = project.planned_start_date ?? project.created_at;
-            const plannedFinishDate = project.planned_finish_date ?? project.updated_at;
+            const progress = project.progress_percent;
+            const plannedStartDate = project.planned_start_date;
+            const plannedFinishDate = project.planned_finish_date;
 
             return (
               <article
@@ -366,7 +362,7 @@ function ProjectsPage() {
                         合同工期
                       </span>
                       <span className="mt-0.5 text-[13px] font-semibold text-white">
-                        {formatDuration(project.contract_duration_days ?? 0)}
+                        {formatDuration(project.contract_duration_days)}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -391,7 +387,9 @@ function ProjectsPage() {
                   <div className="mt-3">
                     <div className="mb-1.5 flex items-center justify-between text-[10px] text-apm-muted">
                       <span>项目进度</span>
-                      <span className="font-semibold text-cyan-400">{progress}%</span>
+                      <span className="font-semibold text-cyan-400">
+                        {progress === undefined ? "—" : `${progress}%`}
+                      </span>
                     </div>
                     <div className="h-0.5 bg-white/6">
                       <div
@@ -401,7 +399,7 @@ function ProjectsPage() {
                             ? `bg-gradient-to-r ${getProgressColor(status)}`
                             : "bg-white/10",
                         )}
-                        style={{ width: `${progress}%` }}
+                        style={{ width: `${progress ?? 0}%` }}
                       />
                     </div>
                   </div>
@@ -454,7 +452,7 @@ function ProjectsPage() {
                   </span>
                   <span className="ml-auto text-[10px] text-apm-dim">
                     <Calendar className="inline h-3 w-3" style={{ marginRight: 3 }} />
-                    剩余 {formatRemainingDays(project.remaining_days ?? 0)}
+                    剩余 {formatRemainingDays(project.remaining_days)}
                   </span>
                 </div>
               </article>

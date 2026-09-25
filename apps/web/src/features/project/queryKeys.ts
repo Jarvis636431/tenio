@@ -21,6 +21,4 @@ export const projectQueryKeys = {
     ["project", "operation", projectId, operationId] as const,
   uploadSummary: (projectId: string) =>
     ["project", "workbench", "upload-summary", projectId] as const,
-  consoleLogs: (projectId: string) => ["project", "workbench", "console-logs", projectId] as const,
-  schemes: (projectId: string) => ["project", "schemes", projectId] as const,
 };

@@ -18,7 +18,6 @@ const booleanFlag = z
 export const envSchema = z.object({
   MODE: z.string().default("development"),
   VITE_API_BASE_URL: optionalUrl,
-  VITE_AI_SERVICE_URL: optionalUrl,
   VITE_ANALYTICS_ENABLED: booleanFlag,
   VITE_ANALYTICS_DEBUG: booleanFlag,
   VITE_ANALYTICS_ENDPOINT: optionalUrl,

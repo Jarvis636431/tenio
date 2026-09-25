@@ -14,10 +14,5 @@ function resolveBaseUrl(value: string | undefined, fallback: string, name: strin
 }
 
 export const API_BASE = {
-  backend: resolveBaseUrl(appEnv.VITE_API_BASE_URL, "http://localhost:8000", "VITE_API_BASE_URL"),
-  aiService: resolveBaseUrl(
-    appEnv.VITE_AI_SERVICE_URL,
-    "http://127.0.0.1:8123",
-    "VITE_AI_SERVICE_URL",
-  ),
+  backend: resolveBaseUrl(appEnv.VITE_API_BASE_URL, "http://localhost:3001", "VITE_API_BASE_URL"),
 };

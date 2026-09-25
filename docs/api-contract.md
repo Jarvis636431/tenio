@@ -110,10 +110,26 @@ Response data:
 Request:
 
 ```json
-{ "name": "城南综合体", "source_type": "manual_create" }
+{ "name": "城南综合体" }
 ```
 
 `GET /api/projects/metrics`
+
+Response data:
+
+```json
+{
+  "total_count": 4,
+  "in_progress_count": 2,
+  "ready_artifact_count": 7,
+  "average_generation_seconds": 45,
+  "managed_count": 4
+}
+```
+
+`DELETE /api/projects/:project_id`
+
+Response data: `{ "id": "project-001" }`。项目记录及关联记录级联删除，上传文件的对象存储内容同步清理。
 
 ## Files
 
@@ -365,4 +381,3 @@ Response data:
 ## Health
 
 `GET /api/health`
-

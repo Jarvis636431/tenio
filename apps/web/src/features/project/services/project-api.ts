@@ -5,21 +5,15 @@ import type {
   CrewPlanArtifact,
   DocumentArtifact,
   GenerationStatus,
-  MockProjectCreatePayload,
   OperationStatus,
-  ProjectCreatePayload,
-  ProjectCreateResponse,
-  ProjectDetail,
   ProjectListItem,
   ProjectListParams,
   ProjectMetrics,
-  ProjectScheme,
   RegeneratePayload,
   ScheduleArtifact,
   StartGenerationPayload,
   StartGenerationResponse,
   TimeCostArtifact,
-  WorkbenchConsoleLog,
   WorkbenchUploadSummary,
 } from "../types";
 
@@ -64,38 +58,6 @@ export async function getProjectList(
     page_size: params.page_size == null ? "" : String(params.page_size),
   });
   return request<ApiListResponse<ProjectListItem>>(url);
-}
-
-/**
- * 创建项目。
- *
- * @param payload - 项目创建参数
- * @returns 创建后的项目信息
- */
-export function createProject(payload: ProjectCreatePayload = {}): Promise<ProjectCreateResponse> {
-  return jsonRequest<ProjectCreateResponse>("/projects", payload);
-}
-
-/**
- * 创建 mock 数据集项目。
- *
- * @param payload - mock 数据集创建参数
- * @returns 创建后的项目信息
- */
-export function createMockProject(
-  payload: MockProjectCreatePayload,
-): Promise<ProjectCreateResponse> {
-  return jsonRequest<ProjectCreateResponse>("/projects/mock", payload);
-}
-
-/**
- * 获取项目详情。
- *
- * @param projectId - 项目 ID
- * @returns 项目详情
- */
-export function getProjectDetail(projectId: string): Promise<ProjectDetail> {
-  return request<ProjectDetail>(`${APM_API_BASE}/projects/${projectId}`);
 }
 
 /**
@@ -231,37 +193,4 @@ export function getWorkbenchUploadSummary(projectId: string): Promise<WorkbenchU
   return request<WorkbenchUploadSummary>(
     `${APM_API_BASE}/projects/${projectId}/workbench/upload-summary`,
   );
-}
-
-/**
- * 获取工作台控制台日志。
- *
- * @param projectId - 项目 ID
- * @returns 控制台日志列表
- */
-export function getWorkbenchConsoleLogs(projectId: string): Promise<WorkbenchConsoleLog[]> {
-  return request<WorkbenchConsoleLog[]>(
-    `${APM_API_BASE}/projects/${projectId}/workbench/console-logs`,
-  );
-}
-
-/**
- * 获取项目施工方案列表。
- *
- * @param projectId - 项目 ID
- * @returns 施工方案列表
- */
-export function getProjectSchemes(projectId: string): Promise<ApiListResponse<ProjectScheme>> {
-  return request<ApiListResponse<ProjectScheme>>(`${APM_API_BASE}/projects/${projectId}/schemes`);
-}
-
-/**
- * 激活项目施工方案。
- *
- * @param projectId - 项目 ID
- * @param schemeId - 方案 ID
- * @returns 激活后的方案状态
- */
-export function activateProjectScheme(projectId: string, schemeId: string): Promise<ProjectScheme> {
-  return jsonRequest<ProjectScheme>(`/projects/${projectId}/schemes/${schemeId}/activate`);
 }

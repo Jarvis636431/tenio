@@ -5,6 +5,7 @@
 import type { Project, ProjectStatus } from "@tenio/shared";
 
 export type { ProjectStatus } from "@tenio/shared";
+export type { ProjectMetrics } from "@tenio/shared";
 
 export type ApiListResponse<T> = {
   items: T[];
@@ -20,29 +21,6 @@ export interface ProjectListParams {
   page_size?: number;
 }
 
-export interface ProjectCreatePayload {
-  name?: string | null;
-  source_type?: string;
-}
-
-export type ProjectCreateResponse = Project;
-
-export interface MockProjectCreatePayload {
-  mock_dataset_code: string;
-  name?: string | null;
-  original_name?: string | null;
-  file_extension?: string | null;
-  size_bytes?: number | null;
-}
-
-export interface ProjectMetrics {
-  total_count: number;
-  in_progress_count: number;
-  ready_artifact_count: number;
-  average_generation_seconds: number;
-  managed_count: number;
-}
-
 export interface ProjectListItem extends Project {
   short_name?: string;
   location?: string;
@@ -51,7 +29,6 @@ export interface ProjectListItem extends Project {
   contract_duration_days?: number;
   contract_amount_cents?: number;
   contract_amount_display?: string;
-  ready_artifact_count?: number;
   progress_percent?: number;
   current_phase?: string;
   status_label?: string;
@@ -61,8 +38,6 @@ export interface ProjectListItem extends Project {
   remaining_days?: number;
   is_artifact_ready?: boolean;
 }
-
-export type ProjectDetail = ProjectListItem & Record<string, unknown>;
 
 export interface ArtifactBase {
   id?: string;
@@ -277,16 +252,5 @@ export interface WorkbenchProjectInfo {
 
 export interface WorkbenchUploadSummary {
   project_info?: WorkbenchProjectInfo | null;
-  [key: string]: unknown;
-}
-
-export interface WorkbenchConsoleLog {
-  [key: string]: unknown;
-}
-
-export interface ProjectScheme {
-  scheme_id: string;
-  scheme_name?: string;
-  is_active?: boolean;
   [key: string]: unknown;
 }

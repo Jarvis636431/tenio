@@ -439,10 +439,12 @@ export class AgentService {
       .map((item) => item.trim())
       .filter(Boolean);
 
+    let accumulatedContent = "";
     for (const segment of segments) {
+      accumulatedContent += `${accumulatedContent ? "\n" : ""}${segment}`;
       events.push({
         type: "message.delta",
-        content: segment,
+        content: accumulatedContent,
       });
     }
 

@@ -1,13 +1,75 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { ProjectStatus as PrismaProjectStatus } from "@prisma/client";
-import type { CreateProjectRequest, ListProjectsResponse, Project } from "@tenio/shared";
+import {
+  ArtifactStatus as PrismaArtifactStatus,
+  GenerationJobStatus as PrismaGenerationJobStatus,
+  ProjectStatus as PrismaProjectStatus,
+} from "@prisma/client";
+import type {
+  CreateProjectRequest,
+  ListProjectsResponse,
+  Project,
+  ProjectMetrics,
+} from "@tenio/shared";
 import { PrismaService } from "../../prisma/prisma.service.js";
+import { StorageService } from "../../storage/storage.service.js";
 import type { AuthenticatedRequestUser } from "../auth/auth.types.js";
 import type { ListProjectsDto } from "./dto/list-projects.dto.js";
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
+  ) {}
+
+  async getMetrics(currentUser: AuthenticatedRequestUser): Promise<ProjectMetrics> {
+    const ownedProjects = { ownerId: currentUser.id };
+    const [totalCount, inProgressCount, readyArtifactCount, completedJobs] = await Promise.all([
+      this.prisma.project.count({ where: ownedProjects }),
+      this.prisma.project.count({
+        where: {
+          ...ownedProjects,
+          status: {
+            in: [
+              PrismaProjectStatus.UPLOADING,
+              PrismaProjectStatus.GENERATING,
+              PrismaProjectStatus.ACTIVE,
+            ],
+          },
+        },
+      }),
+      this.prisma.projectArtifact.count({
+        where: {
+          project: ownedProjects,
+          artifactStatus: PrismaArtifactStatus.READY,
+        },
+      }),
+      this.prisma.generationJob.findMany({
+        where: {
+          project: ownedProjects,
+          jobStatus: PrismaGenerationJobStatus.SUCCEEDED,
+          startedAt: { not: null },
+          finishedAt: { not: null },
+        },
+        select: { startedAt: true, finishedAt: true },
+      }),
+    ]);
+
+    const totalDurationMs = completedJobs.reduce((sum, job) => {
+      if (!job.startedAt || !job.finishedAt) return sum;
+      return sum + Math.max(0, job.finishedAt.getTime() - job.startedAt.getTime());
+    }, 0);
+
+    return {
+      total_count: totalCount,
+      in_progress_count: inProgressCount,
+      ready_artifact_count: readyArtifactCount,
+      average_generation_seconds: completedJobs.length
+        ? Math.round(totalDurationMs / completedJobs.length / 1000)
+        : 0,
+      managed_count: totalCount,
+    };
+  }
 
   async findAll(
     currentUser: AuthenticatedRequestUser,
@@ -43,11 +105,21 @@ export class ProjectsService {
         orderBy: { createdAt: "desc" },
         skip: start,
         take: pageSize,
+        include: {
+          _count: {
+            select: {
+              artifacts: { where: { artifactStatus: PrismaArtifactStatus.READY } },
+            },
+          },
+        },
       }),
     ]);
 
     return {
-      items: items.map((item) => this.toProject(item)),
+      items: items.map((item) => ({
+        ...this.toProject(item),
+        ready_artifact_count: item._count.artifacts,
+      })),
       total,
       page,
       page_size: pageSize,
@@ -82,6 +154,22 @@ export class ProjectsService {
     });
 
     return this.toProject(project);
+  }
+
+  async delete(currentUser: AuthenticatedRequestUser, projectId: string): Promise<{ id: string }> {
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, ownerId: currentUser.id },
+      select: { id: true, files: { select: { storageKey: true } } },
+    });
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`);
+    }
+
+    for (const file of project.files) {
+      await this.storageService.deleteObject(file.storageKey);
+    }
+    await this.prisma.project.delete({ where: { id: project.id } });
+    return { id: project.id };
   }
 
   async archive(currentUser: AuthenticatedRequestUser, projectId: string): Promise<Project> {

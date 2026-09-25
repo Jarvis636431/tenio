@@ -151,12 +151,10 @@ Rules (enforced by ESLint `no-restricted-imports`):
 
 ### AI Chat Flow
 
-1. Frontend requests `agent_ticket` from backend API: `POST /api/agent/tickets`
-2. Initiates agent session: `POST {aiService}/api/agent/init`
-3. Sends messages: `POST {aiService}/api/agent/sessions/{id}/messages`
-4. Reads SSE stream: `GET {aiService}/api/agent/streams/{stream_id}/sse`
-5. On `401 + AGENT_TICKET_EXPIRED`: re-request ticket and retry once
-6. SSE `refetch` event triggers React Query invalidation for core graph, curves, documents, crew plan
+1. Creates a session: `POST /api/projects/:projectId/agent/sessions`
+2. Sends a message: `POST /api/projects/:projectId/agent/sessions/:sessionId/messages`
+3. Reads events: `GET /api/projects/:projectId/agent/streams/:streamId/sse`
+4. SSE `artifact.refresh_required` invalidates React Query caches for graph, cost, documents, and crew plan
 
 ### Upload Flow
 
@@ -164,7 +162,7 @@ Rules (enforced by ESLint `no-restricted-imports`):
 - Flow: get upload credentials → `PUT` file content → notify backend → start generation task
 - File categories in `src/features/upload/types/uploads.ts`
 - Generation progress polled up to 30 min; user can cancel (triggers backend cancel + project deletion)
-- `upload_url` origin replaced with `VITE_API_BASE_URL` to avoid internal addresses
+- Browser uploads directly to the presigned object storage URL returned by the API
 
 ## apps/api — NestJS Backend
 
@@ -200,10 +198,7 @@ src/modules/
 
 ### Agent Auth
 
-Two-layer ticket system:
-
-1. JWT login → `POST /api/agent/tickets` → short-lived `agent_ticket` (with `expires_at` + `refresh_after_seconds`)
-2. `agent_ticket` used for agent service calls; guard at `agent-ticket.guard.ts`
+Agent routes use the same JWT guard as other protected NestJS API routes.
 
 ### Testing (Jest)
 
@@ -240,13 +235,7 @@ Root `.env` file (shared by all apps, `envDir: "../.."` in vite config):
 
 ```bash
 # Required
-VITE_API_BASE_URL=http://localhost:8000
-VITE_AI_SERVICE_URL=http://127.0.0.1:8123
-VITE_RESOURCE_BASE_URL=https://apmoss.emio.cn/public/resources
-
-# Volc speech recognition (optional)
-VITE_VOLC_APP_ID=your_volc_app_id
-VITE_VOLC_ACCESS_TOKEN=your_volc_access_token
+VITE_API_BASE_URL=http://localhost:3001
 
 # Analytics (optional)
 VITE_ANALYTICS_ENABLED=false

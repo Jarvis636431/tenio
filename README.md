@@ -50,19 +50,18 @@ pnpm check             # 前端完整检查 (lint + typecheck + test + build)
 # API 数据库
 pnpm --filter api prisma:generate
 pnpm --filter api prisma:migrate:dev
+pnpm --filter api prisma:migrate:deploy # 部署到全新数据库
 pnpm --filter api prisma:studio
 ```
+
+仓库包含从空 PostgreSQL 数据库建表的初始迁移。已有 Python 后端数据库需要先核对表结构和数据映射，不能直接将初始迁移当作升级脚本执行。
 
 ## 环境变量
 
 在项目根目录配置 `.env`：
 
 ```bash
-VITE_API_BASE_URL=http://localhost:8000
-VITE_AI_SERVICE_URL=http://127.0.0.1:8123
-VITE_RESOURCE_BASE_URL=https://apmoss.emio.cn/public/resources
-VITE_VOLC_APP_ID=your_volc_app_id
-VITE_VOLC_ACCESS_TOKEN=your_volc_access_token
+VITE_API_BASE_URL=http://localhost:3001
 ```
 
 运行时配置统一在 `apps/web/src/config/index.ts` 管理。
@@ -94,12 +93,10 @@ AI 能力由常驻左侧聊天面板提供。
 
 ### Agent 会话流程
 
-1. `POST ${API_BASE.backend}/api/agent/tickets` — 申请短期 `agent_ticket`
-2. `POST ${API_BASE.aiService}/api/agent/init` — 初始化会话
-3. `POST ${API_BASE.aiService}/api/agent/sessions/{id}/messages` — 发送消息
-4. `GET ${API_BASE.aiService}/api/agent/streams/{stream_id}/sse` — 流式输出
-5. `401 + AGENT_TICKET_EXPIRED` — 重新申请 ticket 并重试
-6. `refetch` 事件 — 刷新工作台缓存
+1. `POST /api/projects/:projectId/agent/sessions` — 创建会话
+2. `POST /api/projects/:projectId/agent/sessions/:sessionId/messages` — 发送消息
+3. `GET /api/projects/:projectId/agent/streams/:streamId/sse` — 读取响应事件
+4. `artifact.refresh_required` 事件 — 刷新工作台缓存
 
 ### 当前限制
 
@@ -112,11 +109,7 @@ AI 能力由常驻左侧聊天面板提供。
 2. 启动生成任务 → 轮询状态（最长 30 分钟）
 3. 成功后进入工作台
 
-`upload_url` origin 会被替换为 `VITE_API_BASE_URL`，避免内部地址。
-
-## Mock
-
-前端开发环境支持 MSW（`apps/web/src/main.tsx`，worker 位于 `public/mockServiceWorker.js`）。
+浏览器直接使用后端返回的对象存储预签名 URL 上传文件。当前生成器写入的是模板产物，尚未解析上传资料。
 
 ## 测试
 

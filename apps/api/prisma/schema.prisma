@@ -112,7 +112,6 @@ model User {
   refreshTokens      RefreshToken[]
   projects           Project[]
   uploadedFiles      ProjectFile[]    @relation("UploadedFiles")
-  agentTickets       AgentTicket[]
   agentSessions      AgentSession[]
   agentMessages      AgentMessage[]
   agentOperations    AgentOperation[]
@@ -131,7 +130,6 @@ model Project {
   owner           User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   files           ProjectFile[]
   artifacts       ProjectArtifact[]
-  agentTickets    AgentTicket[]
   agentSessions   AgentSession[]
   agentMessages   AgentMessage[]
   agentOperations AgentOperation[]
@@ -223,25 +221,6 @@ model ProjectFile {
   @@index([uploadedById])
   @@index([status])
   @@index([category])
-}
-
-model AgentTicket {
-  id                  String   @id @default(cuid())
-  userId              String
-  projectId           String
-  ticketHash          String
-  ticketType          String
-  grantType           String
-  scopesJson          Json
-  refreshAfterSeconds Int
-  expiresAt           DateTime
-  createdAt           DateTime @default(now())
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([projectId])
-  @@index([expiresAt])
 }
 
 model AgentSession {

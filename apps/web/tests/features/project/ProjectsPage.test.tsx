@@ -9,21 +9,15 @@ import type { ProjectListItem, ProjectMetrics } from "@/features/project";
 import { useGenerationStore } from "@/stores/generationStore";
 
 const projectApiMocks = vi.hoisted(() => ({
-  activateProjectScheme: vi.fn(),
   cancelProjectGeneration: vi.fn(),
-  createMockProject: vi.fn(),
-  createProject: vi.fn(),
   deleteProject: vi.fn<() => Promise<void>>(),
   getLatestCrewPlanArtifact: vi.fn(),
   getLatestDocumentArtifact: vi.fn(),
   getLatestGraphArtifact: vi.fn(),
-  getProjectDetail: vi.fn(),
   getProjectGenerationStatus: vi.fn(),
   getProjectList: vi.fn(),
   getProjectMetrics: vi.fn(),
   getProjectOperationStatus: vi.fn(),
-  getProjectSchemes: vi.fn(),
-  getWorkbenchConsoleLogs: vi.fn(),
   getWorkbenchUploadSummary: vi.fn(),
   regenerateProjectArtifacts: vi.fn(),
   startProjectGeneration: vi.fn(),

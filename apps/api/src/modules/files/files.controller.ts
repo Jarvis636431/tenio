@@ -46,6 +46,14 @@ export class FilesController {
     return this.filesService.listProjectFiles(currentUser, projectId);
   }
 
+  @Get("files/stats")
+  getFileStats(
+    @CurrentUser() currentUser: AuthenticatedRequestUser,
+    @Param("projectId") projectId: string,
+  ): Promise<ProjectFileStatsResponse> {
+    return this.filesService.getProjectFileStats(currentUser, projectId);
+  }
+
   @Get("files/:fileId")
   getFile(
     @CurrentUser() currentUser: AuthenticatedRequestUser,
@@ -53,14 +61,6 @@ export class FilesController {
     @Param("fileId") fileId: string,
   ): Promise<GetProjectFileResponse> {
     return this.filesService.getProjectFile(currentUser, projectId, fileId);
-  }
-
-  @Get("files/stats")
-  getFileStats(
-    @CurrentUser() currentUser: AuthenticatedRequestUser,
-    @Param("projectId") projectId: string,
-  ): Promise<ProjectFileStatsResponse> {
-    return this.filesService.getProjectFileStats(currentUser, projectId);
   }
 
   @Get("files/:fileId/download-url")

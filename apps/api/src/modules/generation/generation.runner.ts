@@ -57,17 +57,17 @@ export class GenerationRunner {
 
     if (!job || job.jobStatus === GenerationJobStatus.CANCELED) return;
 
-    await this.prisma.generationJob.update({
-      where: { id: jobId },
+    const started = await this.prisma.generationJob.updateMany({
+      where: { id: jobId, jobStatus: GenerationJobStatus.PENDING },
       data: {
         jobStatus: GenerationJobStatus.RUNNING,
         startedAt: job.startedAt ?? new Date(),
       },
     });
-
-    const context = await this.buildContext(job.project.id);
+    if (started.count === 0) return;
 
     try {
+      const context = await this.buildContext(job.project.id);
       await this.runStep(jobId, "parse_files", () => undefined);
       await this.runStep(jobId, "extract_project_info", () => undefined);
       await this.runStep(jobId, "generate_schedule", async () => {
@@ -84,8 +84,11 @@ export class GenerationRunner {
       });
       await this.runStep(jobId, "sync_artifacts", () => undefined);
 
-      await this.prisma.generationJob.update({
-        where: { id: jobId },
+      const completed = await this.prisma.generationJob.updateMany({
+        where: {
+          id: jobId,
+          jobStatus: GenerationJobStatus.RUNNING,
+        },
         data: {
           jobStatus: GenerationJobStatus.SUCCEEDED,
           progressPercent: 100,
@@ -93,15 +96,17 @@ export class GenerationRunner {
           finishedAt: new Date(),
         },
       });
-      await this.prisma.project.update({
-        where: { id: context.project.id },
-        data: { status: ProjectStatus.ACTIVE },
-      });
+      if (completed.count > 0) {
+        await this.prisma.project.update({
+          where: { id: context.project.id },
+          data: { status: ProjectStatus.ACTIVE },
+        });
+      }
     } catch (error) {
       if (error instanceof GenerationCanceledError) return;
 
-      await this.prisma.generationJob.update({
-        where: { id: jobId },
+      const failed = await this.prisma.generationJob.updateMany({
+        where: { id: jobId, jobStatus: GenerationJobStatus.RUNNING },
         data: {
           jobStatus: GenerationJobStatus.FAILED,
           errorCode: "GENERATION_FAILED",
@@ -109,6 +114,13 @@ export class GenerationRunner {
           finishedAt: new Date(),
         },
       });
+      if (failed.count === 0) return;
+      if (job.triggerSource === "upload") {
+        await this.prisma.project.update({
+          where: { id: job.project.id },
+          data: { status: ProjectStatus.FAILED },
+        });
+      }
       throw error;
     }
   }
@@ -183,6 +195,13 @@ export class GenerationRunner {
 
     try {
       await executor();
+      const currentJob = await this.prisma.generationJob.findUnique({
+        where: { id: jobId },
+        select: { jobStatus: true },
+      });
+      if (!currentJob || currentJob.jobStatus === GenerationJobStatus.CANCELED) {
+        throw new GenerationCanceledError();
+      }
       await this.prisma.$transaction([
         this.prisma.generationStep.update({
           where: { jobId_stepCode: { jobId, stepCode } },
@@ -199,12 +218,20 @@ export class GenerationRunner {
         }),
       ]);
     } catch (error) {
-      await this.prisma.generationStep.update({
-        where: { jobId_stepCode: { jobId, stepCode } },
+      await this.prisma.generationStep.updateMany({
+        where: { jobId, stepCode },
         data: {
-          stepStatus: GenerationStepStatus.FAILED,
+          stepStatus:
+            error instanceof GenerationCanceledError
+              ? GenerationStepStatus.SKIPPED
+              : GenerationStepStatus.FAILED,
           finishedAt: new Date(),
-          errorMessage: error instanceof Error ? error.message : "步骤执行失败",
+          errorMessage:
+            error instanceof GenerationCanceledError
+              ? null
+              : error instanceof Error
+                ? error.message
+                : "步骤执行失败",
         },
       });
       throw error;
